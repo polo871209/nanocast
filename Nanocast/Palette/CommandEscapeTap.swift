@@ -1,7 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// C entry point: the decision is a key-code compare, so it is made here rather than crossing out.
 private func commandEscapeTapCallback(
     proxy: CGEventTapProxy, type: CGEventType, event: CGEvent,
     userInfo: UnsafeMutableRawPointer?
@@ -22,14 +21,8 @@ private func commandEscapeTapCallback(
     return claimed ? nil : Unmanaged.passUnretained(event)
 }
 
-/// ⌘⎋ is claimed upstream of every app, so the palette takes it where it enters the system.
-///
-/// The window server binds the chord itself, so it never reaches `onCommandShortcut` the way ⌘.
-/// and ⌘w do: no keystroke is left by the time the responder chain runs, and a head-inserted HID
-/// tap is the one place earlier than that. See docs/features/palette.md.
 @MainActor
 final class CommandEscapeTap {
-    /// Claims the chord and returns true, or declines it so the rest of the system still gets it.
     private let onChord: () -> Bool
 
     private var tapPort: CFMachPort?
@@ -43,14 +36,12 @@ final class CommandEscapeTap {
         tearDown()
     }
 
-    /// True only for a bare ⌘⎋: any further modifier spells somebody else's chord.
     nonisolated static func isChord(keyCode: Int64, flags: CGEventFlags) -> Bool {
         keyCode == Int64(kVK_Escape)
             && flags.intersection([.maskCommand, .maskAlternate, .maskControl, .maskShift])
                 == .maskCommand
     }
 
-    /// Called on every show: a tap refused for want of Accessibility is retried the next time.
     func enable() {
         guard let port = installIfNeeded() else { return }
         CGEvent.tapEnable(tap: port, enable: true)

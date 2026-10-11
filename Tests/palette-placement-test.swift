@@ -1,14 +1,12 @@
 import CoreGraphics
 import Foundation
 
-/// Against the real `Theme`, so retuning cannot restore the palette off-display.
 @main
 @MainActor
 struct PalettePlacementTests {
     static var failures = 0
     static var passes = 0
 
-    // Exactly what `PaletteWindowController` passes, at the size the user picked.
     static let metrics = InterfaceMetrics.standard
     static let width = metrics.size.panelWidth
     static let graspable = CGSize(width: width, height: metrics.size.compactHeight)
@@ -16,9 +14,7 @@ struct PalettePlacementTests {
     static let snap = Theme.Size.paletteSnapDistance
     static let topFraction = Theme.Size.paletteTopMarginFraction
 
-    /// A 1440p display with the menu bar taken off the top.
     static let laptop = CGRect(x: 0, y: 0, width: 2560, height: 1415)
-    /// A second display stacked to the right, as `NSScreen.screens` would report it.
     static let external = CGRect(x: 2560, y: 0, width: 1920, height: 1055)
 
     static func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
@@ -59,8 +55,6 @@ struct PalettePlacementTests {
         if failures > 0 { exit(1) }
     }
 
-    // MARK: - The untouched placement
-
     static func theDefaultPlacement() {
         let anchor = home(laptop)
         expect(anchor.x, laptop.midX - width / 2, "the panel centres horizontally")
@@ -69,20 +63,16 @@ struct PalettePlacementTests {
             "its top edge sits the margin fraction below the top of the visible area")
         expect(anchor.y < laptop.maxY, "the top edge is inside the screen, not on its edge")
 
-        // The panel grows downward from the anchor, so a full-height list must still fit.
         expect(
             anchor.y - metrics.size.panelHeight > laptop.minY,
             "an expanded palette clears the bottom of the screen it opened on")
 
-        // A screen offset from the origin must not shift the panel off it.
         let offset = home(external)
         expect(offset.x, external.midX - width / 2, "a non-origin display centres the same way")
         expect(
             offset.y, external.maxY - external.height * topFraction,
             "and its top edge is measured from its own maxY")
     }
-
-    // MARK: - Restoring a stored position
 
     static func restoringOnItsOwnDisplay() {
         let onExternal = CGPoint(x: 2700, y: 900)
@@ -93,13 +83,11 @@ struct PalettePlacementTests {
             restored(onExternal, on: laptop) == nil,
             "and is never read onto the neighbouring display the palette is summoned on")
 
-        // The fallback has to be reachable, not merely different.
         expect(
             restored(home(laptop), on: laptop) != nil,
             "the default placement is always restorable on its own screen")
     }
 
-    /// Stored against the display, so rearranging or rescaling it keeps the drop.
     static func offsetsFollowTheirDisplay() {
         let dropped = CGPoint(x: external.minX + 400, y: external.maxY - 260)
         let offset = PalettePlacement.offset(of: dropped, on: external)
@@ -109,14 +97,12 @@ struct PalettePlacementTests {
             PalettePlacement.anchor(for: offset, on: external) == dropped,
             "reading it back on the unchanged display returns the point that was dropped")
 
-        // Same display, moved to the other side in Displays settings.
         let rearranged = CGRect(x: -1920, y: 0, width: 1920, height: 1055)
         let moved = PalettePlacement.anchor(for: offset, on: rearranged)
         expect(moved.x, rearranged.minX + 400, "a rearranged display keeps the drop on itself")
         expect(moved.y, rearranged.maxY - 260, "wherever the global origin left it")
         expect(restored(moved, on: rearranged) != nil, "and the bar is grabbable there")
 
-        // A resolution change shortens it from the bottom, so a top offset holds.
         let scaled = CGRect(x: 2560, y: 0, width: 1440, height: 775)
         let resized = PalettePlacement.anchor(for: offset, on: scaled)
         expect(resized.y, scaled.maxY - 260, "a rescaled display keeps the distance from the top")
@@ -130,7 +116,6 @@ struct PalettePlacementTests {
     }
 
     static func restoringPartlyOffscreen() {
-        // Deliberately slid off to the right: still restorable while a grabbable sliver shows.
         let sliver = CGPoint(x: laptop.maxX - minimumVisible, y: 900)
         expect(
             restored(sliver, on: laptop) != nil,
@@ -140,7 +125,6 @@ struct PalettePlacementTests {
             restored(tooFar, on: laptop) == nil,
             "one point less than that is not, and falls back to the default")
 
-        // Slid off the top, where the whole grab strip is what goes missing first.
         let peeking = CGPoint(x: 800, y: laptop.maxY + graspable.height - minimumVisible)
         expect(
             restored(peeking, on: laptop) != nil,
@@ -150,8 +134,6 @@ struct PalettePlacementTests {
             restored(gone, on: laptop) == nil,
             "pushed one point further up it is dropped")
     }
-
-    // MARK: - Invisible centre line
 
     static func snapping() {
         for screen in [laptop, external] {
@@ -237,8 +219,6 @@ struct PalettePlacementTests {
                 "the expanded detent stays centred after display or Interface Size changes")
         }
     }
-
-    // MARK: - Menu panels
 
     static func menuPanelAnchors() {
         let parent = CGRect(x: 100, y: 200, width: 750, height: 475)
@@ -326,10 +306,7 @@ struct PalettePlacementTests {
         expect(flippedCanvas.minY, flipped.minY, "a flipped input expansion grows away from its field")
     }
 
-    // MARK: - The tokens these rules depend on
-
     static func tokenGrammar() {
-        // Raise it past the bar's own height and no stored position is ever restorable again.
         expect(
             minimumVisible <= graspable.height,
             "the minimum visible sliver fits inside the compact bar")
@@ -339,9 +316,6 @@ struct PalettePlacementTests {
         expect(topFraction > 0 && topFraction < 1, "the top margin is a real fraction of the screen")
     }
 
-    // MARK: - The same rules at every Interface Size
-
-    /// The largest palette still has to land on the smallest display Nanocast supports.
     static let smallest = CGRect(x: 0, y: 0, width: 1440, height: 875)
 
     static func everyInterfaceSize() {
@@ -360,7 +334,6 @@ struct PalettePlacementTests {
                 )
             }
 
-            // The wider bar needs more of itself on screen, so a stored edge position can lapse.
             let graspable = CGSize(width: width, height: metrics.size.compactHeight)
             let sliver = CGPoint(x: laptop.maxX - minimumVisible, y: 900)
             expect(

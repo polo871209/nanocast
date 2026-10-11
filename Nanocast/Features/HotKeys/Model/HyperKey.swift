@@ -27,7 +27,6 @@ enum HyperKeyPhysicalKey: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Virtual key code of the physical key, `nil` only for `.none`.
     var keyCode: Int? {
         switch self {
         case .none: return nil
@@ -43,12 +42,10 @@ enum HyperKeyPhysicalKey: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Keys that do something on their own when not remapped — these get the Quick Press row.
     var hasOriginalFunction: Bool { self == .capsLock }
 
     var supportsSecureInputCompatibility: Bool { self == .capsLock }
 
-    /// The generic flag this key contributes, so the tap can strip it when outside the set.
     var ownFlag: CGEventFlags? {
         switch self {
         case .none: return nil
@@ -101,7 +98,6 @@ struct HyperKeyRoute: Equatable, Sendable {
     let remap: HIDKeyMapping?
 }
 
-/// What a quick lone press of the Hyper key does (only offered for keys with an original function).
 enum HyperKeyQuickPress: String, CaseIterable, Sendable {
     case none
     case originalKey

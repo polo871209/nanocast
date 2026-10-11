@@ -2,11 +2,7 @@ import SwiftUI
 
 enum PopoverMenuIcon: Equatable {
     case symbol(String)
-    case asset(String)
     case file(path: String)
-    /// A picture's own preview, decoded once per id: a staged file's row shows what it removes.
-    case thumbnail(id: UUID, data: Data)
-    /// No glyph and no slot: a run of rows under one repeated icon says more without it.
     case blank
 
     static func paste(_ target: PasteTarget?, fallback: String) -> PopoverMenuIcon {
@@ -23,12 +19,10 @@ struct PopoverMenuItem {
     var sectionTitle: String?
     var startsSection: Bool
     var shortcut: String?
-    /// A value the row states rather than a chord it runs — what a "Copy as" row copies.
     var detail: String?
     var isDestructive: Bool = false
     let action: () -> Void
 
-    /// What the keyboard and pointer may land on; a loading or disabled row only states itself.
     var isSelectable: Bool { isEnabled && !isLoading }
 
     init(
@@ -60,13 +54,11 @@ struct PopoverMenuItem {
     }
 }
 
-/// A menu's header and rows, built once and consumed by render and keyboard alike.
 struct PopoverMenuContent {
     var header: String?
     let items: [PopoverMenuItem]
 }
 
-/// The palette's own menu, hosted by `MenuPanelController` in a window of its own.
 struct PopoverMenu: View {
     enum Attachment {
         case none
@@ -103,7 +95,6 @@ struct PopoverMenu: View {
     var header: String?
     let items: [PopoverMenuItem]
     @Binding var selection: Int
-    /// Fixed, never intrinsic: a width tracking the longest row would jitter as rows change.
     var width: CGFloat?
     var visibleRows: CGFloat?
     let onActivate: (Int) -> Void
@@ -111,16 +102,13 @@ struct PopoverMenu: View {
     let search: Search
     var extraRowsHeight: CGFloat = 0
 
-    /// The palette arms this only once the pointer has moved of its own accord.
     @Environment(PaletteState.self) private var palette
     @Environment(\.metrics) private var metrics
     @Environment(\.displayScale) private var displayScale
     @FocusState private var searchFocused: Bool
-    /// Set by the pointer so the reveal can tell its own move from a keyboard one.
     @State private var pointerSelection: Int?
 
     private var listInset: CGFloat { metrics.spacing.md }
-    /// One device pixel: a point-wide rule reads heavy against the glass.
     private var hairline: CGFloat { 1 / displayScale }
     var body: some View {
         let shape = SurfaceShape(
@@ -212,17 +200,13 @@ struct PopoverMenu: View {
             .padding(.bottom, metrics.spacing.xs / 2)
     }
 
-    /// The title and rows move as one surface, while row IDs still drive keyboard reveal.
     private var rows: some View {
         let extent = listExtent
         return ScrollViewReader { proxy in
             ScrollView {
-                // Lazy: a model menu runs to hundreds of rows, and only the viewport's are seen.
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    // Index-as-id is stable: a menu's rows never reorder while it is open.
                     ForEach(items.indices, id: \.self) { index in
                         VStack(alignment: .leading, spacing: 0) {
-                            // In the first row's target, so revealing that row brings the title.
                             if index == 0, let header {
                                 headerLabel(header)
                                 Color.clear.frame(height: metrics.size.menuRowSpacing)
@@ -246,13 +230,11 @@ struct PopoverMenu: View {
                 }
                 .padding(.horizontal, listInset)
             }
-            // A margin, not padding: a revealed end row keeps its inset, never meeting the edge.
             .contentMargins(.vertical, listInset, for: .scrollContent)
             .frame(height: extent.viewport + listInset * 2)
             // `never`, not `hidden`: hidden still lets AppKit claim the scroller's gutter.
             .scrollIndicators(.never)
             .scrollBounceBehavior(extent.content > extent.viewport ? .always : .basedOnSize)
-            // The hosting view outlives a presentation, so a fresh one must not inherit the offset.
             .id(palette.menuPresentationToken)
             .onAppear { proxy.scrollTo(selection, anchor: .center) }
             .onChange(of: selection) {
@@ -271,7 +253,6 @@ struct PopoverMenu: View {
                 .fill(Theme.Colors.separator)
                 .frame(height: hairline)
                 .padding(.horizontal, metrics.spacing.md)
-                // The list inset, so a row sits as far from this hairline as from the search one.
                 .padding(.vertical, listInset)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
@@ -280,7 +261,6 @@ struct PopoverMenu: View {
         }
     }
 
-    /// The default cap ends mid-row, never on a separator or section title.
     private var listExtent: (content: CGFloat, viewport: CGFloat) {
         let rowHeight = metrics.size.menuRowHeight
         let rowsMaxHeight =
@@ -311,7 +291,6 @@ struct PopoverMenu: View {
             + metrics.size.menuRowSpacing
     }
 
-    /// Tighter below than above, so a header belongs to the rows under it, not between two groups.
     private func sectionLabel(_ title: String, isFirst: Bool) -> some View {
         Text(title)
             .font(metrics.typography.sectionHeader)
@@ -322,13 +301,11 @@ struct PopoverMenu: View {
                 maxWidth: .infinity, minHeight: metrics.size.menuSectionHeader,
                 maxHeight: metrics.size.menuSectionHeader, alignment: .leading
             )
-            // `md`, matching a row's own inset, so header and icon share one edge.
             .padding(.horizontal, metrics.spacing.md)
             .padding(.top, isFirst ? 0 : metrics.spacing.md)
             .padding(.bottom, metrics.spacing.xxs)
     }
 
-    /// Armed only once the pointer has moved of its own accord, so a scroll past it lights nothing.
     private func hover(_ index: Int) {
         guard palette.hoverHighlightArmed, items[index].isSelectable, index != selection else {
             return
@@ -338,7 +315,6 @@ struct PopoverMenu: View {
     }
 }
 
-/// One menu row; highlight is selection-driven, so only one row is ever active.
 private struct PopoverMenuRow: View {
     let item: PopoverMenuItem
     let selected: Bool
@@ -369,17 +345,8 @@ private struct PopoverMenuRow: View {
                                 item.isDestructive ? Color.red : Theme.Colors.menuSymbol
                             )
                             .frame(width: metrics.size.menuIcon, height: metrics.size.menuIcon)
-                    case .asset(let name):
-                        Image(name)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .foregroundStyle(item.isDestructive ? Color.red : Color.secondary)
-                            .frame(width: metrics.size.menuBrandIcon, height: metrics.size.menuBrandIcon)
-                            .frame(width: metrics.size.menuIcon, height: metrics.size.menuIcon)
                     case .file(let path):
                         MenuFileIcon(path: path).id(path)
-                    case .thumbnail(let id, let data):
-                        MenuThumbnail(id: id, data: data)
                     }
                 }
                 Text(item.title)
@@ -389,11 +356,9 @@ private struct PopoverMenuRow: View {
                 Spacer(minLength: metrics.spacing.sm)
                 if let detail = item.detail {
                     Text(detail)
-                        // Smaller than the title it trails: a stated value, not a second label.
                         .font(metrics.typography.keyCap)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
-                        // A notation opens with what identifies it, so the tail is what can go.
                         .truncationMode(.tail)
                 }
                 if let shortcut = item.shortcut {
@@ -405,7 +370,6 @@ private struct PopoverMenuRow: View {
                 }
             }
             .padding(.horizontal, metrics.spacing.md)
-            // Stated, not padded: the height maths above counts rows, so a row is one exact height.
             .frame(
                 maxWidth: .infinity, minHeight: metrics.size.menuRowHeight,
                 maxHeight: metrics.size.menuRowHeight, alignment: .leading
@@ -422,28 +386,6 @@ private struct PopoverMenuRow: View {
     }
 }
 
-/// A menu row's picture, cropped to the icon slot; the task keys on the id, so a redraw reuses it.
-struct MenuThumbnail: View {
-    let id: UUID
-    let data: Data
-    @State private var image: NSImage?
-    @Environment(\.metrics) private var metrics
-
-    var body: some View {
-        Group {
-            if let image {
-                Image(nsImage: image).resizable().scaledToFill()
-            } else {
-                Color.clear
-            }
-        }
-        .frame(width: metrics.size.menuIcon, height: metrics.size.menuIcon)
-        .clipShape(RoundedRectangle(cornerRadius: metrics.radius.thumbnail, style: .continuous))
-        .task(id: id) { image = NSImage(data: data) }
-    }
-}
-
-/// A menu row's app icon, seeded warm so the paste target paints on the first frame.
 struct MenuFileIcon: View {
     let path: String
     @State private var image: NSImage?

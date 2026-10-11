@@ -8,7 +8,6 @@ struct FormTextArea: NSViewRepresentable {
     var minimumHeight: CGFloat
     let label: String
     var isCode = false
-    /// False for a value that wraps on screen but must stay one line, such as a link.
     var allowsLineBreaks = true
     var moveFocus: (Bool) -> Void
 
@@ -187,7 +186,6 @@ struct FormTextArea: NSViewRepresentable {
             case #selector(NSResponder.insertBacktab(_:)):
                 input.moveFocus(true)
                 return true
-            // ⇥ walks the form's fields, so ⌥⇥ is the way to type a tab.
             case #selector(NSResponder.insertTabIgnoringFieldEditor(_:)):
                 textView.insertText("\t", replacementRange: textView.selectedRange())
                 return true

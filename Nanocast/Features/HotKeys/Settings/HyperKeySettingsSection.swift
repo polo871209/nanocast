@@ -9,14 +9,12 @@ struct HyperKeySettingsSection: View {
 
     private var hyperGlyphs: String { settings.hyperKeyIncludesShift ? "⌃⌥⇧⌘" : "⌃⌥⌘" }
 
-    /// Only a choice made here resets Quick Press: settings.json may set both keys at once.
     private var hyperKeySelection: Binding<HyperKeyPhysicalKey> {
         Binding(
             get: { settings.hyperKey },
             set: { key in
                 guard key != settings.hyperKey else { return }
                 settings.hyperKey = key
-                // A Quick Press choice is meaningless for a different key.
                 settings.hyperKeyQuickPress = .none
                 if key != .none { Permissions.ensureAccessibility() }
             })
@@ -64,7 +62,6 @@ struct HyperKeySettingsSection: View {
             Toggle(isOn: $settings.hyperKeyIncludesShift) {
                 SettingsRowTitle(.generalHyperKey, "Include Shift (⇧)")
             }
-            // Flipping it re-points recorded chords, so it needs a chord to mean.
             .settingsEnabled(settings.hyperKey != .none)
 
             if settings.hyperKey.supportsSecureInputCompatibility {

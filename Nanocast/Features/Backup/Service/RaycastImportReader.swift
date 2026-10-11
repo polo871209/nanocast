@@ -18,18 +18,12 @@ enum RaycastImportReader {
         let (clipboard, missing) = RaycastClipboardImport.parse(
             json["clipboardHistory"], now: Date.init,
             fileExists: { FileManager.default.fileExists(atPath: $0) })
-        let snippets = RaycastSnippetImport.parse(
-            (json["snippets"] as? [String: Any])?["snippets"])
-        let quicklinks = RaycastQuicklinkImport.parse(json["quicklinks"])
         return RaycastImport.Result(
             backup: backup,
             clipboard: clipboard,
-            snippets: snippets,
-            quicklinks: quicklinks,
             missingImages: missing)
     }
 
-    /// Raycast's hyper key code → ours; nothing maps to `.none`, so none is cleared.
     private static let hyperKeyCodes: [String: HyperKeyPhysicalKey] = [
         "caps_lock": .capsLock,
         "right_control": .rightControl,
@@ -50,7 +44,6 @@ enum RaycastImportReader {
             data.hyperKeyIncludesShift = includeShift
             mapped = true
         }
-        // Without the physical key the imported chord shortcuts can't be triggered.
         if let code = general?["hyperKeyCode"] as? String, let key = hyperKeyCodes[code] {
             data.hyperKey = key.rawValue
             mapped = true
@@ -63,7 +56,6 @@ enum RaycastImportReader {
             data.emojiSkinTone = tone
             mapped = true
         }
-        // Exact-match only: a timeout outside our option set is skipped, not clamped.
         if let secs = general?["popToRootTimeout"] as? Int,
             let timeout = PopToRootTimeout(rawValue: secs)
         {
@@ -145,7 +137,6 @@ enum RaycastImportReader {
                 carbonKeyCode: code, carbonModifiers: KeyShortcut.carbonModifiers(from: flags)))
     }
 
-    /// Only app favorites map over, keyed by bundle ID, preserving Raycast's order.
     private static func mapFavorites(_ json: [String: Any]) -> [String]? {
         guard let commands = (json["settings"] as? [String: Any])?["commands"] as? [[String: Any]]
         else { return nil }
@@ -164,7 +155,6 @@ enum RaycastImportReader {
         return favorites.isEmpty ? nil : favorites
     }
 
-    /// Only application aliases map over, keyed by bundle ID like the hotkeys above.
     private static func mapAliases(_ json: [String: Any]) -> [String: String]? {
         guard let commands = (json["settings"] as? [String: Any])?["commands"] as? [[String: Any]]
         else { return nil }
@@ -189,14 +179,11 @@ enum RaycastImportReader {
         return path.isEmpty ? nil : path
     }
 
-    /// A recursive search, avoiding a brittle path; the raw values line up already.
     private static func mapSkinTone(_ json: [String: Any]) -> String? {
         guard let raw = firstValue(forKey: "skinTone", in: json) as? String else { return nil }
         if raw == "default" { return EmojiSkinTone.none.rawValue }
         return EmojiSkinTone(rawValue: raw)?.rawValue
     }
-
-    // MARK: - Helpers
 
     private static func firstValue(forKey key: String, in object: Any) -> Any? {
         if let dict = object as? [String: Any] {

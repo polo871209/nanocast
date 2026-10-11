@@ -1,20 +1,17 @@
 import Foundation
 
-/// The parsed catalog: sections precomputed at load, search memoized one query deep.
 @MainActor
 @Observable
 final class EmojiIndex {
     private(set) var entries: [EmojiEntry] = []
     private(set) var categorySections: [(category: EmojiCategory, entries: [EmojiEntry])] = []
 
-    /// `order` is the catalog index, the tie-break that keeps equal scores in catalog order.
     private struct ScoredEntry {
         let entry: EmojiEntry
         let score: Int
         let order: Int
     }
 
-    /// An entry's text folded once at load, so a keystroke folds only the query.
     private struct FoldedEntry: Sendable {
         let name: FuzzyMatch.Candidate
         let keywords: FuzzyMatch.Candidate
@@ -36,15 +33,12 @@ final class EmojiIndex {
     }
 
     private var byGlyph: [String: EmojiEntry] = [:]
-    /// Parallel to `entries`.
     private var foldedEntries: [FoldedEntry] = []
     @ObservationIgnored private var searchMemo = Memo<SearchKey, [EmojiEntry]>()
-    /// Bumped on each load, so the key above names the catalog it scored.
     private var revision = 0
 
     var isLoaded: Bool { !entries.isEmpty }
 
-    /// `languages` pick which of the bundle's keyword packs join the catalog's English keywords.
     func load(_ raw: String = EmojiData.raw, languages: [String] = [], bundle: Bundle = .main) async {
         let (parsed, folded) = await Task.detached(priority: .utility) {
             let parsed = EmojiCatalog.parse(raw, localized: Self.keywordPacks(for: languages, in: bundle))
@@ -73,7 +67,6 @@ final class EmojiIndex {
 
     func entry(for glyph: String) -> EmojiEntry? { byGlyph[glyph] }
 
-    /// Ranked fuzzy matches over names and keywords; an empty query returns nothing.
     func search(_ query: String, frequent: FrequentEmojiStore, limit: Int = 320) -> [EmojiEntry] {
         let trimmed = FuzzyMatch.normalized(query).trimmingCharacters(in: .whitespacesAndNewlines)
         let unwrapped =
@@ -108,12 +101,9 @@ final class EmojiIndex {
         }
     }
 
-    /// Just under half a tier, so an equal-quality name match always wins.
     private static let keywordPenalty = 500
     private static let frecencyLimit = 100
-    /// A complete leading name word: above an exact keyword, below the exact name.
     private static let leadingWordScore = 95_000
-    /// Scattered query words rank below every literal phrase, name-only words first.
     private static let nameWordsScore = 60_000
     private static let mixedWordsScore = 50_000
 

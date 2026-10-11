@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// `UCKeyTranslate` answers a named key's keycode with a control character the ASCII test admits.
 @main
 @MainActor
 struct ASCIILayoutTests {
@@ -17,7 +16,6 @@ struct ASCIILayoutTests {
         }
     }
 
-    /// What `UCKeyTranslate` hands back for each keycode under ⌘, against SwiftUI's own spelling.
     static let namedKeys: [(name: String, key: KeyEquivalent, translated: Character)] = [
         ("↑", .upArrow, "\u{1e}"),
         ("↓", .downArrow, "\u{1f}"),
@@ -30,7 +28,6 @@ struct ASCIILayoutTests {
         ("↘", .end, "\u{4}")
     ]
 
-    /// These four agree with SwiftUI already, and must keep resolving once the arrows are excluded.
     static let controlKeys: [(name: String, key: KeyEquivalent, translated: Character)] = [
         ("↩", .return, "\u{d}"),
         ("⌫", .delete, "\u{8}"),

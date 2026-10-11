@@ -4,14 +4,12 @@ struct FileSearchSurface: View {
     let url: URL
     @State private var sniffed: Sniffed?
 
-    /// The head of a file whose extension left its kind open, read once per selection.
     private struct Sniffed: Sendable {
         let url: URL
         let kind: FileSearchPreviewKind
         let text: String?
     }
 
-    /// Enough of a source file to read, and a bound on what a binary costs to rule out.
     private nonisolated static let headLimit = 256 * 1024
 
     var body: some View {
@@ -33,7 +31,6 @@ struct FileSearchSurface: View {
         guard FileSearchPreviewKind(pathExtension: url.pathExtension) == nil else { return }
         let url = url
         let read = await Task.detached(priority: .userInitiated) { Self.readHead(of: url) }.value
-        // Cancelling the selection does not stop the read, so a late one must not land on the next.
         guard !Task.isCancelled else { return }
         sniffed = read
     }

@@ -9,9 +9,7 @@ final class ClipboardCoordinator {
     private let palette: PaletteState
     private let windowController: PaletteWindowController
     private let paletteCoordinator: PaletteCoordinator
-    /// Dialogs, for the one action here that can't be undone.
     private unowned let core: AppCore
-    /// One Copy Text at a time: a newer trigger cancels the helper an older one is waiting on.
     private var textTask: Task<Void, Never>?
     private var pasteSequence: PasteSequence?
 
@@ -35,7 +33,6 @@ final class ClipboardCoordinator {
         self.core = core
     }
 
-    /// Off means the poller stops, the database closes and nothing new is ever recorded.
     func applyEnabled() {
         appIndex.setCommandsVisible([.clipboardHistory, .pasteSequentially], settings.clipboardEnabled)
         guard settings.clipboardEnabled else {
@@ -49,7 +46,6 @@ final class ClipboardCoordinator {
         clipboardStore.maxAge = settings.clipboardRetention.maxAge
         clipboardManager.start()
         core.applyClipboardTextSearch()
-        // Deferred off the launch path: the palette fills in behind the SQLite read and prune.
         Task { clipboardStore.load() }
     }
 
@@ -69,7 +65,6 @@ final class ClipboardCoordinator {
         clipboardStore.enforceLimits()
     }
 
-    /// ↵ runs the configured default and the other chords follow it; false when `chord` has none.
     @discardableResult
     func activate(_ item: ClipboardItem, chord: ClipboardChord = .return) -> Bool {
         guard let action = settings.clipboardDefaultAction.action(for: chord, on: item) else {
@@ -90,7 +85,6 @@ final class ClipboardCoordinator {
     func paste(_ item: ClipboardItem) {
         let previous = windowController.previousApp
         paletteCoordinator.hidePalette(restoreFocus: false)
-        // A paste promotes the item, so follow it and keep the moved row highlighted.
         if Paster.paste(item, store: clipboardStore, previousApp: previous) {
             selectClip(item)
         } else {
@@ -98,7 +92,6 @@ final class ClipboardCoordinator {
         }
     }
 
-    /// A file's path stays valid text after the file goes, so this never reports it missing.
     func pasteAsPlainText(_ item: ClipboardItem) {
         let previous = windowController.previousApp
         paletteCoordinator.hidePalette(restoreFocus: false)
@@ -113,18 +106,14 @@ final class ClipboardCoordinator {
         }
     }
 
-    /// Each press pastes the next older entry into the app in front, never promoting it.
     func pasteNextInSequence() {
         let now = Date()
-        // Dropped rather than queued, so a held shortcut cannot paste a burst of entries.
         if let pasteSequence, pasteSequence.isSettling(at: now) { return }
         guard let target = paletteCoordinator.targetApp else { return }
-        // A copy made just before the press must reach history, or the walk starts one entry late.
         clipboardManager.prepareForNanocastPasteboardMutation()
         var sequence = continuingPasteSequence(at: now)
         while let item = sequence.next(in: clipboardStore.items) {
             if paletteCoordinator.isVisible { paletteCoordinator.hidePalette() }
-            // An image or file gone from disk writes nothing, so the press moves on to the next.
             guard Paster.pasteInPlace(item, store: clipboardStore, into: target) else { continue }
             sequence.recordPaste(changeCount: NSPasteboard.general.changeCount, at: now)
             pasteSequence = sequence
@@ -133,7 +122,6 @@ final class ClipboardCoordinator {
         core.showMessage(String(localized: "Nothing left to paste"), tone: .neutral)
     }
 
-    /// A copy since the last press, or a long pause, starts the walk over from the newest entry.
     private func continuingPasteSequence(at now: Date) -> PasteSequence {
         let changeCount = NSPasteboard.general.changeCount
         if let pasteSequence, pasteSequence.continues(changeCount: changeCount, at: now) {
@@ -142,13 +130,11 @@ final class ClipboardCoordinator {
         return PasteSequence(history: clipboardStore.items, changeCount: changeCount, now: now)
     }
 
-    /// A write only fails on a vanished file, and a palette that just closes explains nothing.
     private func reportUnavailable(_ item: ClipboardItem) {
         guard item.kind == .file else { return }
         core.showMessage(String(localized: "That file has moved or been deleted."), tone: .danger)
     }
 
-    /// Both the ⌃⇧X chord and the menu row land here, so neither can skip the confirmation.
     func deleteAllClips() async {
         guard
             await core.confirm(
@@ -162,7 +148,6 @@ final class ClipboardCoordinator {
         clearHistory()
     }
 
-    /// Reachable with the feature off, so what was kept before can still be erased afterwards.
     func clearHistory() {
         clipboardStore.open()
         clipboardStore.clearAll()
@@ -178,7 +163,6 @@ final class ClipboardCoordinator {
         }
     }
 
-    /// Unmarked, so a converted colour enters history itself — it is one you meant to keep.
     func copyColor(_ color: ColorValue, as format: ColorFormat) {
         paletteCoordinator.hidePalette(restoreFocus: false)
         Paster.copyPlainText(format.string(for: color))
@@ -190,7 +174,6 @@ final class ClipboardCoordinator {
         AppLauncher.showInFinder(url)
     }
 
-    /// Nil only for a vanished file, which the HUD reports rather than hand over a dead path.
     func dragPayload(for item: ClipboardItem) -> ClipDragPayload? {
         let payload = item.dragPayload
         guard case .file = payload else { return payload }
@@ -203,7 +186,6 @@ final class ClipboardCoordinator {
         AppLauncher.open(url)
     }
 
-    /// Unmarked, so the path enters history like any other copy the reader meant to make.
     func copyClipPath(_ item: ClipboardItem) {
         guard let path = item.filePath else { return }
         paletteCoordinator.hidePalette(restoreFocus: false)
@@ -219,7 +201,6 @@ final class ClipboardCoordinator {
         textTask?.cancel()
         textTask = Task {
             do {
-                // A stat on an unmounted or network volume can stall, so it stays off-main.
                 let exists = await Task.detached { FileManager.default.fileExists(atPath: path) }.value
                 try Task.checkCancellation()
                 guard exists else {
@@ -245,7 +226,6 @@ final class ClipboardCoordinator {
         }
     }
 
-    /// Nil once the file is gone, so every action reports rather than silently no-opping.
     private func clipURL(for item: ClipboardItem) -> URL? {
         let url = clipboardStore.imageURL(for: item) ?? clipboardStore.fileURL(for: item)
         guard let url, FileManager.default.fileExists(atPath: url.path) else {
@@ -255,14 +235,12 @@ final class ClipboardCoordinator {
         return url
     }
 
-    /// Pin or unpin an entry; the selection and scroll follow the row as it moves.
     func togglePinnedClip(_ item: ClipboardItem) {
         clipboardStore.togglePinned(item)
         selectClip(item)
         palette.followToken = UUID()
     }
 
-    /// Select `item`'s row as currently filtered; a moved row isn't always index 0.
     private func selectClip(_ item: ClipboardItem) {
         palette.selection =
             clipboardStore.rowIndex(

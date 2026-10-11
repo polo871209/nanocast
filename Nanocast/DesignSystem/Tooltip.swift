@@ -5,7 +5,6 @@ private enum TooltipLabel {
     case keyCap(String)
 }
 
-/// A hover label in Nanocast's own vocabulary, replacing a system `.help()` tooltip.
 private struct TooltipModifier: ViewModifier {
     let label: TooltipLabel?
     let alignment: HorizontalAlignment
@@ -53,7 +52,6 @@ private struct TooltipModifier: ViewModifier {
                 y: metrics.spacing.xxs
             )
             .fixedSize()
-            // A zero-height frame on the control's edge, so a label of any height hangs off it.
             .frame(height: 0, alignment: edge == .top ? .bottom : .top)
             .offset(y: edge == .top ? -metrics.spacing.sm : metrics.spacing.sm)
             .transition(.opacity)
@@ -75,7 +73,6 @@ private struct TooltipModifier: ViewModifier {
 }
 
 extension View {
-    /// Align it against a side edge, and hang it `.bottom` from a control at the window's top.
     func tooltip(
         _ text: String?, alignment: HorizontalAlignment = .center, edge: VerticalEdge = .top,
         dismissOnPress: Bool = false

@@ -150,7 +150,6 @@ private struct FileSearchIndexSection: View {
 
 private struct FileSearchScopesSection: View {
     @Environment(AppSettings.self) private var settings
-    /// Recomputed only on change: a `fileExists` per row is too much per body render.
     @State private var missing: Set<String> = []
 
     private let home = FileManager.default.homeDirectoryForCurrentUser
@@ -226,7 +225,6 @@ private struct FileSearchIgnoreSection: View {
                 PatternRow(pattern: pattern) { remove(pattern) }
             }
 
-            // Titled, a grouped form squeezes the field into a sliver too narrow to click.
             HStack(spacing: Theme.Spacing.lg) {
                 TextField("Pattern", text: $draft, prompt: Text("node_modules, *.tmp or ~/Movies"))
                     .labelsHidden()

@@ -2,7 +2,6 @@ import AppKit
 import UniformTypeIdentifiers
 
 extension UTType {
-    /// Not per-channel: a UTI names an interchange format, so Dev must read stable's exports.
     static let nanocastBackup = UTType(exportedAs: "com.nanocast.backup")
 }
 
@@ -11,17 +10,8 @@ enum BackupActions {
     struct RaycastOutcome {
         var summary: SettingsBackup.ApplySummary
         var clipboardImported: Int
-        var snippetsImported: Int
-        var snippetsNeedEnabling: Bool
-        /// Set when the snippet files couldn't be written; the rest of the import still applied.
-        var snippetsError: String?
-        var quicklinksImported: Int
-        /// Set when the library wouldn't open; the rest of the import still applied.
-        var quicklinksError: String?
         var missingImages: Int
     }
-
-    // MARK: - Nanocast native (own file panels; dialogs come from `AppCore`)
 
     /// The shared save panel; an accessory app must activate first or it opens behind.
     static func chooseSaveLocation(named base: String, type: UTType = .json) -> URL? {
@@ -35,8 +25,6 @@ enum BackupActions {
         return panel.url
     }
 
-    static func chooseJSONFile() -> URL? { chooseFile(ofType: .json) }
-
     static func chooseBackupFile() -> URL? { chooseFile(ofType: .nanocastBackup) }
 
     private static func chooseFile(ofType type: UTType) -> URL? {
@@ -48,9 +36,6 @@ enum BackupActions {
         return panel.url
     }
 
-    // MARK: - Nanocast backups
-
-    /// Composes off-main, then seals — a clipboard history runs to gigabytes.
     static func exportBackup(
         core: AppCore, categories: Set<BackupCategory>
     ) async throws
@@ -69,7 +54,6 @@ enum BackupActions {
         }.value
     }
 
-    /// Opens the archive and reads its manifest, leaving staging for the caller to apply and discard.
     static func openBackup(at file: URL) async throws -> (BackupStaging, BackupManifest) {
         try await Task.detached(priority: .userInitiated) {
             let staging = try BackupStaging()
@@ -99,7 +83,6 @@ enum BackupActions {
         return await BackupApplier.apply(categories, from: bundle, to: core)
     }
 
-    /// The launcher has no picker, so its commands take everything; the pane is where you choose.
     static func runExportCommand(core: AppCore) async {
         do {
             let result = try await exportBackup(core: core, categories: BackupCategory.all)
@@ -132,44 +115,14 @@ enum BackupActions {
         }
     }
 
-    // MARK: - Raycast (the pane owns the passphrase field + inline status)
-
     static func importRaycast(
         core: AppCore, file: URL, passphrase: String, options: RaycastImportOptions = .all
     ) async throws -> RaycastOutcome {
-        // Off-main in an autoreleasepool, so the large JSON tree drains at once.
         let result = try await Task.detached(priority: .userInitiated) {
             try autoreleasepool {
                 try RaycastImportReader.read(file: file, passphrase: passphrase).selecting(options)
             }
         }.value
-        // Reported, not thrown: it must not abort the rest of what was asked for.
-        var snippetsImported = 0
-        var snippetsError: String?
-        if !result.snippets.isEmpty {
-            do {
-                // Start the store first, so imported snippets reach the launcher at once.
-                if core.settings.snippetsEnabled {
-                    await core.snippetsStore.start()
-                }
-                snippetsImported =
-                    try await core.snippetsStore.importSnippets(result.snippets).count
-            } catch {
-                snippetsError = error.localizedDescription
-            }
-        }
-        var quicklinksImported = 0
-        var quicklinksError: String?
-        if !result.quicklinks.isEmpty {
-            if core.quicklinks.isAvailable {
-                quicklinksImported =
-                    core.quicklinkCoordinator.addImportedQuicklinks(result.quicklinks).count
-                // Opening a link grants no permission class, so landing a library turns the switch on.
-                if quicklinksImported > 0 { core.settings.quicklinksEnabled = true }
-            } else {
-                quicklinksError = QuicklinkError.storageUnavailable.errorDescription
-            }
-        }
         let summary = result.backup.apply(to: core)
         let imported =
             result.clipboard.isEmpty
@@ -177,20 +130,13 @@ enum BackupActions {
         return RaycastOutcome(
             summary: summary,
             clipboardImported: imported,
-            snippetsImported: snippetsImported,
-            snippetsNeedEnabling: snippetsImported > 0 && !core.settings.snippetsEnabled,
-            snippetsError: snippetsError,
-            quicklinksImported: quicklinksImported,
-            quicklinksError: quicklinksError,
             missingImages: result.missingImages)
     }
 
-    /// Every Raycast channel (stable, beta, alpha, internal) shares this bundle-id prefix.
     static let raycastBundleIDPrefix = "com.raycast"
 
     static func isRaycastBundleID(_ id: String) -> Bool { id.hasPrefix(raycastBundleIDPrefix) }
 
-    /// Quit any running Raycast so its hotkeys stop clashing; background helpers stay.
     static func quitRaycast() {
         for app in NSWorkspace.shared.runningApplications
         where app.bundleIdentifier.map(isRaycastBundleID) == true
@@ -208,15 +154,11 @@ enum BackupActions {
         return panel.runModal() == .OK ? panel.url : nil
     }
 
-    /// Reads only the leading bytes, mapped, so a file is labelled before a passphrase is typed.
     static func isRaycastExport(_ file: URL) -> Bool {
         guard let raw = try? Data(contentsOf: file, options: .mappedIfSafe) else { return false }
         return RaycastDecoder.isExport(raw)
     }
 
-    // MARK: - Helpers
-
-    /// One sentence per category that actually moved, so an import is never silent.
     static func summaryText(_ summary: BackupApplier.Summary) -> String {
         var parts: [String] = []
         if let settings = summary.settings, let applied = appliedText(settings) {
@@ -224,7 +166,6 @@ enum BackupActions {
         }
         var imported: [String] = []
         if summary.clipboard > 0 { imported.append(String(localized: "\(summary.clipboard) clips")) }
-        if summary.snippets > 0 { imported.append(String(localized: "\(summary.snippets) snippets")) }
         if summary.notes > 0 { imported.append(String(localized: "\(summary.notes) notes")) }
         if summary.learning > 0 {
             imported.append(String(localized: "\(summary.learning) learning records"))
@@ -232,8 +173,6 @@ enum BackupActions {
         if !imported.isEmpty {
             parts.append(String(localized: "Imported \(imported.formatted(.list(type: .and)))."))
         }
-        if summary.snippetsNeedEnabling { parts.append(snippetsNeedEnablingText) }
-        parts.append(contentsOf: summary.problems)
         return parts.isEmpty ? nothingImportedText : parts.joined(separator: " ")
     }
 
@@ -251,31 +190,14 @@ enum BackupActions {
 
     static let nothingImportedText = String(localized: "Nothing to import from this file.")
 
-    /// No import may grant keystroke listening, so say the switch an imported keyword needs is off.
-    private static let snippetsNeedEnablingText =
-        String(localized: "Turn on Snippets in Settings to use their keywords.")
-
-    /// Not everything an import applies settles in the running app, so say to relaunch.
-    private static let restartAfterImportText = String(localized: "Quit and reopen Nanocast to finish.")
+    private static let restartAfterImportText = String(
+        localized: "Quit and reopen Nanocast to finish.")
 
     static func raycastText(_ outcome: RaycastOutcome) -> String {
         var parts: [String] = []
         if let applied = appliedText(outcome.summary) { parts.append(applied) }
         if outcome.clipboardImported > 0 {
             parts.append(String(localized: "Imported \(outcome.clipboardImported) clipboard entries."))
-        }
-        if outcome.snippetsImported > 0 {
-            parts.append(String(localized: "Imported \(outcome.snippetsImported) snippets."))
-        }
-        if outcome.snippetsNeedEnabling { parts.append(snippetsNeedEnablingText) }
-        if let snippetsError = outcome.snippetsError {
-            parts.append(String(localized: "Couldn’t import snippets: \(snippetsError)"))
-        }
-        if outcome.quicklinksImported > 0 {
-            parts.append(String(localized: "Imported \(outcome.quicklinksImported) quicklinks."))
-        }
-        if let quicklinksError = outcome.quicklinksError {
-            parts.append(String(localized: "Couldn’t import quicklinks: \(quicklinksError)"))
         }
         var message = parts.isEmpty ? nothingImportedText : parts.joined(separator: " ")
         if outcome.missingImages > 0 {
@@ -286,7 +208,6 @@ enum BackupActions {
         return message
     }
 
-    /// nil when no settings applied, so a caller can compose one combined sentence.
     static func appliedText(_ s: SettingsBackup.ApplySummary) -> String? {
         var parts: [String] = []
         if s.settingsFields > 0 { parts.append(String(localized: "\(s.settingsFields) settings")) }
@@ -300,7 +221,6 @@ enum BackupActions {
         if s.customCommands > 0 {
             parts.append(String(localized: "\(s.customCommands) custom commands"))
         }
-        if s.quicklinks > 0 { parts.append(String(localized: "\(s.quicklinks) quicklinks")) }
         if s.windowLayouts > 0 { parts.append(String(localized: "\(s.windowLayouts) window layouts")) }
         if s.windowRooms > 0 { parts.append(String(localized: "\(s.windowRooms) rooms")) }
         if s.customWindowSizes > 0 {
@@ -310,13 +230,10 @@ enum BackupActions {
         return String(localized: "Applied \(parts.formatted(.list(type: .and))).")
     }
 
-    // MARK: - Settings file
-
     static var settingsFilePath: String {
         (AppPaths.settingsFile().path as NSString).abbreviatingWithTildeInPath
     }
 
-    /// Turning the mirror on over a file that already exists asks which side wins.
     static func setSettingsFileEnabled(_ enabled: Bool, core: AppCore) async {
         guard enabled else { return core.stopSettingsFile() }
         guard FileManager.default.fileExists(atPath: AppPaths.settingsFile().path) else {
@@ -353,7 +270,6 @@ enum BackupActions {
         -> Bool
     {
         guard commands > 0 || shortcuts > 0 else { return true }
-        // Red glyph for a real warning, plain button: importing destroys nothing.
         return await core.confirm(
             title: String(localized: "Import executable commands?"),
             message: String(
@@ -370,7 +286,6 @@ enum BackupActions {
         return formatter.string(from: Date())
     }
 
-    /// Every import dialog carries the same glyph, so the flow reads as one thing.
     private static let importSymbol = "square.and.arrow.down"
     private static let exportSymbol = "square.and.arrow.up"
 

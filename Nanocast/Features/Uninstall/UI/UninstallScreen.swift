@@ -17,7 +17,6 @@ struct UninstallScreen: PaletteScreen {
 
     var primaryActionTitle: String { String(localized: "Uninstall Application") }
 
-    /// Stands in for the section headers the other lists use.
     private var summary: String {
         let total = session.plan?.removableIDs.count ?? 0
         let size = MeasuredSize(bytes: session.selectedBytes).formatted
@@ -34,7 +33,6 @@ struct UninstallScreen: PaletteScreen {
         return UninstallActionsMenu.content(candidate: candidate, session: session, core: core)
     }
 
-    /// The primary action trashes the session's checked set, not the highlighted row.
     func activate(at selection: Int) {
         core.uninstallCoordinator.performUninstall()
     }
@@ -53,7 +51,6 @@ struct UninstallScreen: PaletteScreen {
     private func content(selection: Int, scroll: ScrollIntent) -> some View {
         switch session.state {
         case .idle, .scanning:
-            // Blank, not copy: discovery is milliseconds, so anything here would only flash.
             Color.clear
         case .failed(let message):
             EmptyResults(text: message)

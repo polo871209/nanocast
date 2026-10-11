@@ -7,7 +7,6 @@ final class SecureInputMonitor {
     private(set) var isActive = false
     var onChange: ((Bool) -> Void)?
 
-    /// Polled on the Hyper Key's health tick; reports each transition once.
     func refresh() {
         let active = IsSecureEventInputEnabled()
         guard active != isActive else { return }

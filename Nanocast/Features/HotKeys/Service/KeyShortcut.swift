@@ -1,18 +1,15 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// A shortcut in Carbon's encoding, which is also the on-disk shape. See docs/features/hotkeys.md.
 struct KeyShortcut: Hashable, Sendable {
     let carbonKeyCode: Int
     let carbonModifiers: Int
 
     init(carbonKeyCode: Int, carbonModifiers: Int) {
         self.carbonKeyCode = carbonKeyCode
-        // Mask to the supported modifiers, so device bits can't throw equality off.
         self.carbonModifiers = carbonModifiers & Self.allModifiers
     }
 
-    /// Captures from a key-down, or nil: one of ⌘⌥⌃🌐 is required, bar function keys.
     init?(keyCode: Int, modifierFlags: NSEvent.ModifierFlags) {
         let flags = modifierFlags.intersection([.command, .option, .control, .shift, .function])
         let hasCommandingModifier = !flags.isDisjoint(with: [.command, .option, .control, .function])
@@ -20,10 +17,8 @@ struct KeyShortcut: Hashable, Sendable {
         self.init(carbonKeyCode: keyCode, carbonModifiers: Self.carbonModifiers(from: flags))
     }
 
-    /// The chord ✦ stands for, nil without a Hyper key; a closure, so a toggle re-renders keycaps.
     @MainActor static var displayedHyperChord: () -> NSEvent.ModifierFlags? = { nil }
 
-    /// One string per keycap in canonical order (🌐⌃⌥⇧⌘), with the key glyph last.
     @MainActor var keycaps: [String] {
         Self.collapsedModifierSymbols(from: modifierFlags, hyperChord: Self.displayedHyperChord())
             + [keyGlyph]
@@ -51,14 +46,10 @@ struct KeyShortcut: Hashable, Sendable {
         return carbon
     }
 
-    // MARK: - The Hyper chord
-
-    /// ⌃⌥⌘, plus ⇧ when Include Shift is on — the one place the chord is spelled out.
     static func hyperChord(includesShift: Bool) -> NSEvent.ModifierFlags {
         includesShift ? [.control, .option, .shift, .command] : [.control, .option, .command]
     }
 
-    /// Re-points a chord recorded against the other Hyper set. docs/features/hotkeys.md
     func retargetingHyper(includesShift: Bool) -> KeyShortcut {
         let stale = Self.hyperChord(includesShift: !includesShift)
         guard modifierFlags.isSuperset(of: stale) else { return self }
@@ -84,7 +75,6 @@ struct KeyShortcut: Hashable, Sendable {
         return [HyperKeyPhysicalKey.hyperGlyph] + modifierSymbols(from: flags.subtracting(hyperChord))
     }
 
-    /// Modifier symbols in fixed 🌐⌃⌥⇧⌘ order.
     static func modifierSymbols(from flags: NSEvent.ModifierFlags) -> [String] {
         var symbols: [String] = []
         if flags.contains(.function) { symbols.append("🌐︎") }
@@ -104,9 +94,6 @@ struct KeyShortcut: Hashable, Sendable {
 
     private static let allModifiers = cmdKey | optionKey | controlKey | shiftKey | kEventKeyModifierFnMask
 
-    // MARK: - Key glyph
-
-    /// A fixed table for keys with no character, else translated through the current layout.
     @MainActor private var keyGlyph: String {
         if isDictationKey { return "🎤" }
         if let special = Self.specialKeyGlyphs[carbonKeyCode] { return special }
@@ -130,7 +117,6 @@ struct KeyShortcut: Hashable, Sendable {
 
 }
 
-// Decoding routes through the masking initializer. See docs/features/hotkeys.md#persistence.
 extension KeyShortcut: Codable {
     private enum CodingKeys: String, CodingKey {
         case carbonKeyCode, carbonModifiers

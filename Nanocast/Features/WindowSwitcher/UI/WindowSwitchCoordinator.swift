@@ -8,7 +8,6 @@ final class WindowSwitchCoordinator {
     private let palette: PaletteState
     private let paletteCoordinator: PaletteCoordinator
     private unowned let core: AppCore
-    /// Armed by a repeat press with its modifiers held: letting go switches, as ⌘Tab does.
     private var releaseMonitor: Any?
     private static let chordModifiers: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
 
@@ -39,7 +38,6 @@ final class WindowSwitchCoordinator {
         paletteCoordinator.togglePalette(mode: .switchWindows)
     }
 
-    /// The first step lands on the window behind the current one, which the list opens on.
     private func step(by offset: Int) {
         let count = session.filtered.count
         guard count > 0 else { return }
@@ -48,7 +46,6 @@ final class WindowSwitchCoordinator {
         armSwitchOnRelease()
     }
 
-    /// A single press still searches: only a held chord, stepped again, switches on release.
     private func armSwitchOnRelease() {
         let held = NSEvent.modifierFlags.intersection(Self.chordModifiers)
         guard !held.isEmpty, releaseMonitor == nil else { return }
@@ -73,7 +70,6 @@ final class WindowSwitchCoordinator {
         activate(rows[palette.selection])
     }
 
-    /// Every open sweeps anew, a restore included: hiding dropped the last snapshot.
     func load() {
         guard hasAccessibility() else { return }
         session.present(WindowSwitchSweep.snapshot(ranks: WindowZOrder.appRanks()))
@@ -81,12 +77,10 @@ final class WindowSwitchCoordinator {
 
     func activate(_ entry: WindowSwitchEntry) {
         guard hasAccessibility() else { return }
-        // Resolved before the hide: hiding resets the session, which drops the element table.
         guard let element = liveElement(for: entry) else {
             Task { await self.reportGone(entry) }
             return
         }
-        // Restoring focus reactivates the displaced app, which races the raise below.
         paletteCoordinator.hidePalette(restoreFocus: false)
         if entry.isMinimized { _ = AXWindowAccess.unminimize(element.window) }
         AXWindowAccess.focus(element.window, in: element.application, of: element.app)
@@ -127,8 +121,6 @@ final class WindowSwitchCoordinator {
         }
         return true
     }
-
-    // MARK: - Reporting
 
     private func reportPermissionFailure() async {
         let openSettings = await core.reportFailure(

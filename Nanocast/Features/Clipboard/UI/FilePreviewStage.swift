@@ -5,7 +5,6 @@ struct FilePreviewStage: View {
     @Environment(\.metrics) private var metrics
     let path: String
 
-    /// One stat, off the render path: `body` re-runs per keystroke and must not touch the disk.
     struct Probe: Equatable, Sendable {
         var exists = false
         var isDirectory = false
@@ -41,7 +40,6 @@ struct FilePreviewStage: View {
     }
 }
 
-/// The recorded path is still the answer to "where was it?", so the row keeps it and says this.
 private struct MissingFileStage: View {
     @Environment(\.metrics) private var metrics
     var body: some View {
@@ -57,7 +55,6 @@ private struct MissingFileStage: View {
     }
 }
 
-/// A still, framed exactly as the image preview is, so every preview kind is one shape.
 private struct FileThumbnailStage: View {
     @Environment(\.metrics) private var metrics
     let url: URL
@@ -95,7 +92,6 @@ private struct FileThumbnailStage: View {
     }
 }
 
-/// Owns the `AVPlayer`. Never autoplays: arrow-keying a list must not start twenty decodes.
 private struct MediaPreviewPlayer: View {
     @Environment(\.metrics) private var metrics
     let url: URL
@@ -104,7 +100,6 @@ private struct MediaPreviewPlayer: View {
     @Environment(PaletteState.self) private var palette
     @State private var player: AVPlayer?
 
-    /// One key for both teardown triggers, so no `onChange` races the task.
     private struct PlaybackKey: Equatable {
         let url: URL
         let isVisible: Bool
@@ -113,7 +108,6 @@ private struct MediaPreviewPlayer: View {
     var body: some View {
         PlayerSurface(player: player)
             .background { if isAudio { AudioPoster(url: url) } }
-            // A cap, not a height: a fixed one outgrows the pane and pushes the panel taller.
             .frame(maxHeight: metrics.size.clipboardMediaHeight)
             .clipShape(RoundedRectangle(cornerRadius: metrics.radius.card, style: .continuous))
             .task(id: PlaybackKey(url: url, isVisible: palette.isVisible)) {
@@ -124,7 +118,6 @@ private struct MediaPreviewPlayer: View {
             .onDisappear(perform: stop)
     }
 
-    /// Dropping the item too: a paused player still holds its asset reader and decoder open.
     private func stop() {
         player?.pause()
         player?.replaceCurrentItem(with: nil)
@@ -149,17 +142,14 @@ private struct PlayerSurface: NSViewRepresentable {
         view.player = player
     }
 
-    /// AppKit keeps decoding until the player is cleared, and dismantling is the last chance.
     static func dismantleNSView(_ view: AVPlayerView, coordinator: ()) {
         view.player?.pause()
         view.player = nil
     }
 }
 
-/// Clicking play must not move the keyboard off the search field, and a transport button would.
 private final class PreviewPlayerView: AVPlayerView, KeyboardFocusRefusing {}
 
-/// An audio asset draws nothing of its own, so its artwork sits behind the transport.
 private struct AudioPoster: View {
     let url: URL
 

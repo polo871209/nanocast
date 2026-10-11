@@ -1,0 +1,24 @@
+name: Cask
+
+on:
+  pull_request:
+    paths: [Casks/**, Scripts/link-tap.sh, .github/workflows/cask.yml]
+  push:
+    branches: [polo]
+    paths: [Casks/**, Scripts/link-tap.sh, .github/workflows/cask.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Style and audit
+        run: |
+          ./Scripts/link-tap.sh
+          brew style Casks/
+          brew audit --cask --strict polo871209/nanocast/nanocast

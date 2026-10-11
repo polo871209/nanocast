@@ -1,29 +1,23 @@
 import CoreGraphics
 import Foundation
 
-/// One in-flight edit of a layout. Owned by the editor sheet and gone when it closes.
 @MainActor
 @Observable
 final class WindowLayoutDraft {
-    /// What the editor's steppers allow; the model itself accepts any fraction in 0…1.
     static let percentRange: ClosedRange<Int> = 5...100
     static let offsetRange: ClosedRange<Int> = -4000...4000
 
-    /// Nil for a new layout; kept so saving an edit keeps the UUID and every reference on it.
     let existingID: UUID?
-    let isCapture: Bool
     var name: String
     var iconSymbol: String?
     var usesPreferredGap: Bool
     private(set) var entries: [WindowLayoutEntry]
     private var frontmostEntryID: UUID?
-    /// Identity, never an index: removing an entry must not strand a field's binding.
     private(set) var selectedEntryID: UUID?
     private(set) var selectedDisplayUUID: String?
 
-    init(layout: WindowLayout?, isCapture: Bool = false, displays: [WindowLayoutDisplay]) {
+    init(layout: WindowLayout?, displays: [WindowLayoutDisplay]) {
         existingID = layout?.id
-        self.isCapture = isCapture
         name = layout?.name ?? ""
         iconSymbol = layout?.iconSymbol
         usesPreferredGap = layout?.usesPreferredGap ?? true
@@ -42,7 +36,6 @@ final class WindowLayoutDraft {
         entries.first { $0.id == selectedEntryID }
     }
 
-    /// Marking a second entry moves the mark, so a layout never names two.
     var isSelectedEntryFrontmost: Bool {
         get { selectedEntryID != nil && frontmostEntryID == selectedEntryID }
         set {
@@ -59,7 +52,6 @@ final class WindowLayoutDraft {
         entries.filter { $0.display.uuid == uuid }
     }
 
-    /// Every display the sheet must offer a tab for: the connected ones plus any an entry names.
     func tabs(connected: [WindowLayoutDisplay]) -> [WindowLayoutDisplay] {
         var seen = Set(connected.map(\.uuid))
         var result = connected
@@ -69,9 +61,6 @@ final class WindowLayoutDraft {
         return result
     }
 
-    // MARK: - Selection
-
-    /// One selection with two views of it, so the tab and the entry picker can never disagree.
     func select(entryID: UUID) {
         guard let entry = entries.first(where: { $0.id == entryID }) else { return }
         selectedEntryID = entryID
@@ -84,8 +73,6 @@ final class WindowLayoutDraft {
             selectedEntryID = entries(onDisplay: displayUUID).first?.id
         }
     }
-
-    // MARK: - Editing
 
     func addEntry(bundleID: String, on display: WindowLayoutDisplay) {
         let entry = WindowLayoutEntry(bundleID: bundleID, display: display)
@@ -104,11 +91,6 @@ final class WindowLayoutDraft {
 
     func setArgument(_ argument: String?) {
         update { $0.argument = argument?.isEmpty == true ? nil : argument }
-    }
-
-    func setDisplay(_ display: WindowLayoutDisplay) {
-        update { $0.display = display }
-        selectedDisplayUUID = display.uuid
     }
 
     func setAnchor(_ anchor: WindowLayoutAnchor) {
@@ -131,9 +113,6 @@ final class WindowLayoutDraft {
         update { $0.offset.y = CGFloat(points.clamped(to: Self.offsetRange)) }
     }
 
-    // MARK: - Output
-
-    /// What the preview draws — unvalidated, so an unnamed draft still shows its windows.
     var previewLayout: WindowLayout {
         WindowLayout(
             id: existingID ?? UUID(), name: name, iconSymbol: iconSymbol,
@@ -141,14 +120,11 @@ final class WindowLayoutDraft {
             frontmostEntryID: frontmostEntryID)
     }
 
-    /// What Save persists; the sheet never assembles a record itself.
     func layout() -> WindowLayout {
         var value = previewLayout
         value.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         return value
     }
-
-    // MARK: - Primitives
 
     static func percent(_ fraction: CGFloat) -> Int {
         guard fraction.isFinite else { return 100 }
@@ -166,7 +142,6 @@ final class WindowLayoutDraft {
 }
 
 extension Int {
-    /// Saturating, so a typed-in number is corrected rather than rejected.
     fileprivate func clamped(to range: ClosedRange<Int>) -> Int {
         Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
     }

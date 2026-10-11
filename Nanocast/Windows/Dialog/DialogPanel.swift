@@ -1,9 +1,7 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// One dialog's panel; keys go through `sendEvent`, so Esc/↵ need no focused subview.
 final class DialogPanel: NSPanel {
-    /// What the panel saw, not what it means: how far a step moves is the caller's business.
     enum Key {
         case cancel
         case confirm
@@ -12,7 +10,6 @@ final class DialogPanel: NSPanel {
     }
 
     var onKey: ((Key) -> Void)?
-    /// Arrows are a control's keys, not the panel's; a text field needs them for its caret.
     var handlesArrowKeys = false
 
     init(content: NSView, cornerRadius: CGFloat) {
@@ -63,16 +60,4 @@ final class DialogPanel: NSPanel {
 
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
-
-    func focusFirstTextField() {
-        // SwiftUI builds its text fields on first layout, which may not have run by turning key.
-        contentView?.layoutSubtreeIfNeeded()
-        guard let field = contentView.flatMap(Self.firstTextField(in:)) else { return }
-        makeFirstResponder(field)
-    }
-
-    private static func firstTextField(in view: NSView) -> NSTextField? {
-        if let field = view as? NSTextField, field.isEditable { return field }
-        return view.subviews.lazy.compactMap(firstTextField(in:)).first
-    }
 }

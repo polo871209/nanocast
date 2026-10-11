@@ -2,7 +2,6 @@ import AppKit
 import Carbon.HIToolbox
 import Foundation
 
-/// Drives `DoubleTapDetector` on a virtual clock, so every boundary is exact.
 @MainActor
 private struct Keyboard {
     var detector = DoubleTapDetector()
@@ -77,9 +76,6 @@ struct DoubleTapDetectorTests {
         if failures > 0 { exit(1) }
     }
 
-    // MARK: - Spelling
-
-    /// Enough of a US layout to spell with; the app reads its own through `ASCIIKeyboardLayout`.
     private static let usKeys = [
         kVK_ANSI_K: "k", kVK_ANSI_1: "1", kVK_ANSI_Keypad1: "1", kVK_ANSI_Slash: "/",
         kVK_ANSI_Equal: "="
@@ -138,8 +134,6 @@ struct DoubleTapDetectorTests {
         expect(plain.binding(from: "cmd+key-999") == nil, "a raw key code must be a real one")
         expect(plain.binding(from: "double-tap fn") == nil, "fn has no double-tap")
     }
-
-    // MARK: - Model
 
     static func globeTap() {
         var detector = ModifierKeyDetector()
@@ -332,8 +326,6 @@ struct DoubleTapDetectorTests {
             "a layout's Command table resolves the same keys, so ⌘ chords never lose their letter")
     }
 
-    // MARK: - Built-in command mappings
-
     static func commandActions() {
         expect(
             HotKeyAction.systemAction(id: .toggleMicrophoneMute).defaultsKey
@@ -345,7 +337,7 @@ struct DoubleTapDetectorTests {
             "microphone and output mute can have independent hotkeys")
         let unbindable = Set(CommandID.allCases.filter { $0.hotKeyAction == nil })
         expect(
-            unbindable == [.openInBrowser, .runShellCommand, .quit],
+            unbindable == [.openInBrowser, .quit],
             "only the query-driven pair and Quit are unbindable — got \(unbindable.map(\.name))")
         expect(
             CommandID.allCases.allSatisfy {
@@ -353,7 +345,6 @@ struct DoubleTapDetectorTests {
             },
             "every other command binds to its own action, so every row gets a recorder")
 
-        // Keyed on the raw value, not the position, so reordering the enum cannot move a binding.
         for id in CommandID.allCases where !unbindable.contains(id) {
             expect(
                 id.hotKeyAction?.defaultsKey == "hotkey.\(id.rawValue)",
@@ -366,20 +357,11 @@ struct DoubleTapDetectorTests {
             HotKeyAction.builtInActions.contains(.togglePalette),
             "the launcher toggle is bindable without a command row of its own")
 
-        // Every action reaches the launcher as well as a shortcut; `CommandID.init` is exhaustive.
-        expect(
-            BuiltInQuickAction.allCases.allSatisfy { CommandID($0).name == $0.title },
-            "each Quick Action's command carries the action's own title")
-        expect(
-            Set(BuiltInQuickAction.allCases.map(CommandID.init)).count == BuiltInQuickAction.allCases.count,
-            "no two Quick Actions share a launcher command")
         expect(
             Set(HotKeyAction.builtInActions.map(\.defaultsKey)).count
                 == HotKeyAction.builtInActions.count,
             "no two built-in actions share a defaults key, which would bind them together")
     }
-
-    // MARK: - The Hyper chord
 
     private static func combo(_ flags: NSEvent.ModifierFlags) -> KeyShortcut {
         KeyShortcut(
@@ -413,7 +395,6 @@ struct DoubleTapDetectorTests {
                 "with no Hyper key configured the chord renders literally (shift \(includesShift))")
         }
 
-        // ⌃⌥⌘ is a subset of ⌃⌥⇧⌘, so only the shift-off chord can collapse under the wider set.
         expect(
             caps([.control, .option, .command], includesShift: true) == ["⌃", "⌥", "⌘"],
             "the narrower chord doesn't collapse while Include Shift is on")
@@ -458,7 +439,6 @@ struct DoubleTapDetectorTests {
                 == wide,
             "the masking initializer keeps a stray flag out of the retargeted chord")
 
-        // Anything that isn't the other chord is left exactly as recorded.
         for flags in [[.command, .shift], [.option], [.control, .option], []]
             as [NSEvent
             .ModifierFlags]
@@ -517,7 +497,6 @@ struct DoubleTapDetectorTests {
         for includesShift in [false, true] {
             let chord = KeyShortcut.hyperChord(includesShift: includesShift)
             KeyShortcut.displayedHyperChord = { chord }
-            // Hyper adds left device bits; a remapped right key may retain its own bit too.
             let leftBits: UInt64 = includesShift ? 0x2B : 0x29
             let residues: [(HyperKeyPhysicalKey, UInt64)] = [
                 (.capsLock, 0), (.rightControl, 0x2000), (.rightOption, 0x40),
@@ -591,8 +570,6 @@ struct DoubleTapDetectorTests {
         }
     }
 
-    // MARK: - Firing
-
     static func firing() {
         for modifier in DoubleTapModifier.allCases {
             var keyboard = Keyboard()
@@ -602,7 +579,6 @@ struct DoubleTapDetectorTests {
             expect(keyboard.fired, [modifier], "\(modifier.rawValue): a clean double-tap fires")
         }
 
-        // Firing is on the second release, not the second press.
         var keyboard = Keyboard()
         keyboard.tap(.command, at: 0)
         keyboard.press([.command], at: 0.15)
@@ -610,8 +586,6 @@ struct DoubleTapDetectorTests {
         keyboard.release(at: 0.20)
         expect(keyboard.fired, [.command], "the second release fires")
     }
-
-    // MARK: - Timing
 
     static func timing() {
         var slowFirst = Keyboard()
@@ -629,7 +603,6 @@ struct DoubleTapDetectorTests {
         lateGap.tap(.command, at: 0.05 + DoubleTapDetector.maxGap + 0.01)
         expect(lateGap.fired, [], "a second tap after the gap doesn't fire")
 
-        // Just inside both windows: the slowest double-tap that still counts.
         let epsilon = 0.001
         var atLimit = Keyboard()
         atLimit.tap(.command, at: 0, hold: DoubleTapDetector.maxHold - epsilon)
@@ -638,7 +611,6 @@ struct DoubleTapDetectorTests {
             hold: DoubleTapDetector.maxHold - epsilon)
         expect(atLimit.fired, [.command], "the slowest qualifying double-tap still fires")
 
-        // A late second tap becomes the new first tap rather than being discarded.
         var rolling = Keyboard()
         rolling.tap(.command, at: 0)
         rolling.tap(.command, at: 1.0)
@@ -646,8 +618,6 @@ struct DoubleTapDetectorTests {
         rolling.tap(.command, at: 1.15)
         expect(rolling.fired, [.command], "but it seeds the next pair")
     }
-
-    // MARK: - Chords
 
     static func chords() {
         var joined = Keyboard()
@@ -677,10 +647,8 @@ struct DoubleTapDetectorTests {
         withFn.release(other: true, at: 0.05)
         withFn.press([.command], other: true, at: 0.10)
         withFn.release(other: true, at: 0.15)
-        // A latched bit like Caps Lock would disqualify every press while it stays set.
         expect(withFn.fired, [], "fn held alongside disqualifies the press")
 
-        // The poison clears once the extra modifier is gone.
         var recovered = Keyboard()
         recovered.press([.command], other: true, at: 0)
         recovered.release(at: 0.05)
@@ -688,8 +656,6 @@ struct DoubleTapDetectorTests {
         recovered.tap(.command, at: 0.25)
         expect(recovered.fired, [.command], "a clean pair after the poisoned one still fires")
     }
-
-    // MARK: - Interruptions
 
     static func interruptions() {
         var typed = Keyboard()
@@ -712,8 +678,6 @@ struct DoubleTapDetectorTests {
         expect(clicked.fired, [], "a click between taps cancels the pair")
     }
 
-    // MARK: - Repeats
-
     static func repeats() {
         var keyboard = Keyboard()
         keyboard.tap(.command, at: 0)
@@ -725,8 +689,6 @@ struct DoubleTapDetectorTests {
         expect(keyboard.fired, [.command, .command], "the next full pair fires again")
     }
 
-    // MARK: - Reset
-
     static func resetting() {
         var keyboard = Keyboard()
         keyboard.tap(.command, at: 0)
@@ -734,7 +696,6 @@ struct DoubleTapDetectorTests {
         keyboard.tap(.command, at: 0.15)
         expect(keyboard.fired, [], "reset drops the pending tap")
 
-        // Reset also forgets held modifiers, so the next press still reads as a clean start.
         var stuck = Keyboard()
         stuck.press([.command], at: 0)
         stuck.detector.reset()

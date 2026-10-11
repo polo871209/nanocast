@@ -1,7 +1,6 @@
 import CoreGraphics
 import Foundation
 
-/// The room library. Authored data, so a bad record is cleaned rather than discarded.
 @MainActor
 @Observable
 final class RoomStore {
@@ -25,16 +24,11 @@ final class RoomStore {
         rooms.first { $0.id == id }
     }
 
-    func room(entryID: String) -> Room? {
-        Room.id(fromEntryID: entryID).flatMap(room)
-    }
-
     func room(named name: String) -> Room? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         return rooms.first { $0.name.compare(trimmed, options: .caseInsensitive) == .orderedSame }
     }
 
-    /// Window IDs other rooms hold, so a room missing a window takes a free one first.
     func claimedWindowIDs(excluding id: UUID?) -> Set<UInt32> {
         Set(rooms.filter { $0.id != id }.flatMap { $0.windows.compactMap(\.windowID) })
     }
@@ -63,7 +57,6 @@ final class RoomStore {
         return removed
     }
 
-    /// Replaces the whole library on backup import, cleaning rather than rejecting.
     @discardableResult
     func replace(with incoming: [Room]) -> Int {
         let updated = Self.sanitized(incoming)
@@ -115,7 +108,6 @@ final class RoomStore {
         defaults.set(data, forKey: Self.defaultsKey)
     }
 
-    /// Decodes one record on its own, so a bad one is dropped without taking the library with it.
     private struct LossyRoom: Decodable {
         let room: Room?
 
@@ -129,7 +121,6 @@ final class RoomStore {
         var names = Set<String>()
         var result: [Room] = []
         for value in values {
-            // Copy-and-clean rather than rebuild, so a new field can never be dropped on import.
             var cleaned = value
             cleaned.name = value.name.trimmingCharacters(in: .whitespacesAndNewlines)
             cleaned.windows = sanitized(value.windows)
@@ -142,7 +133,6 @@ final class RoomStore {
         return result.sorted(by: Room.precedes)
     }
 
-    /// A window with no app is dropped; a bad frame or cell is reset rather than trusted.
     private static func sanitized(_ windows: [RoomWindow]) -> [RoomWindow] {
         windows.compactMap { window in
             var cleaned = window

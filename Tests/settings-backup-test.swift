@@ -14,10 +14,34 @@ struct SettingsBackupTest {
             }
         }
 
-        // Offenders go in the description so a failure names the key rather than just the rule.
         func naming(_ rule: String, _ offenders: [String]) -> String {
             offenders.isEmpty ? rule : "\(rule) — \(offenders.sorted().joined(separator: ", "))"
         }
+
+        let persistedKeys: Set<String> = [
+            "clipboardEnabled", "clipboardTextSearchEnabled", "clipboardRetentionDays",
+            "clipboardDefaultAction", "clipboardDisabledApps", "hyperKeyPhysicalKey",
+            "hyperKeyIncludesShift", "hyperKeyQuickPress", "hyperKeySecureInputCompatibility",
+            "emojiSkinTone", "emojiGridColumns", "showInMenuBar", "automaticallyCheckForUpdates",
+            "popToRootTimeout", "escapeKeyBehavior", "appearance", "calculatorNumberStyle",
+            "interfaceSize", "compactMode", "showFavoritesInCompactMode", "launcherSearchScopes",
+            "launcherShowsSuggestions", "rootSearchSensitivity", "openOnCursorScreen",
+            "autoSwitchInputSource", "paletteDraggable", "palettePosition",
+            "paletteExpandedCenterDisplays", "fileSearchEnabled", "fileSearchScopes",
+            "fileSearchIgnorePatterns", "fileSearchRemovedDefaultPatterns", "fileSearchShowInLauncher",
+            "notesEnabled", "notesRendersMarkdown",
+            "notesShowsFormattingBar", "notesFolder", "customCommandsEnabled",
+            "customCommandsShowInLauncher", "navigationEnabled", "menuSearchDisabledApps",
+            "menuSearchShowsAppleMenu", "windowManagementEnabled", "windowManagementShowInLauncher",
+            "windowManagementGap", "windowManagementCycleMode", "windowLayoutsShowInLauncher",
+            "windowRoomsShowInLauncher", "dictationEnabled", "dictationMode", "dictationModel",
+            "dictationMicrophone", "dictationDestination", "dictationAdaptsCapitalization",
+            "dictationLiveInsertion", "dictationIdleReleaseMinutes", "dictationLanguage",
+            "settingsFileEnabled", "AppleLanguages"
+        ]
+        check(
+            "every AppSettingsKey raw value is a persisted spelling, so a case rename cannot move one",
+            Set(AppSettingsKey.allCases.map(\.rawValue)) == persistedKeys)
 
         let mirrored = SettingsBackupCoverage.mirrored
         let excluded = SettingsBackupCoverage.deliberatelyExcluded
@@ -69,17 +93,14 @@ struct SettingsBackupTest {
             "emoji grid density rides the settings backup",
             mirrored["emojiGridColumns"] == .emojiGridColumns)
 
-        // Named one by one: a backup now carries content, so it is far likelier to be sent on.
         for key: AppSettingsKey in [
-            .snippetsEnabled, .extensionsEnabled, .calendarEnabled, .autoJoinMeetings,
-            .cameraPreview, .quickActionsEnabled
+            .dictationEnabled, .clipboardTextSearchEnabled, .settingsFileEnabled
         ] {
             check(
                 "\(key.rawValue) stays out of a backup",
                 excluded[key.rawValue] != nil && mirrored.values.allSatisfy { $0 != key })
         }
 
-        // A reason that only echoes the key name explains nothing, so it fails like a missing one.
         let emptyReasons = excluded.filter { key, reason in
             let trimmed = reason.trimmingCharacters(in: .whitespaces)
             return trimmed.count <= key.count || !trimmed.contains(" ")
@@ -87,14 +108,6 @@ struct SettingsBackupTest {
         check(
             naming("every exclusion carries a real reason", Array(emptyReasons)),
             emptyReasons.isEmpty)
-
-        // The privacy property this whole harness exists to protect.
-        check(
-            "snippetsEnabled stays out of a backup",
-            excluded[AppSettingsKey.snippetsEnabled.rawValue] != nil)
-        check(
-            "snippetsEnabled is not backed up under another field",
-            !mirroredKeys.contains(AppSettingsKey.snippetsEnabled.rawValue))
 
         let claimedTwice = external.keys.filter { mirrored[$0] != nil }
         check(

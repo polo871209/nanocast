@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Overflow is a button rather than a slot, so no favorite loses its digit to it.
 struct CompactFavoritesRow: View {
     let favorites: [AppEntry]
     let showsOverflow: Bool
@@ -10,12 +9,10 @@ struct CompactFavoritesRow: View {
 
     var body: some View {
         HStack(spacing: metrics.spacing.xs) {
-            // Identified by the app, so a reorder moves an icon with its app, not by position.
             ForEach(Array(favorites.enumerated()), id: \.element.id) { index, app in
                 CompactFavoriteButton(help: help(for: app, at: index)) {
                     onLaunch(app)
                 } content: {
-                    // The result rows' size, so collapsing and expanding share one cached bitmap.
                     AppIconView(app: app, pointSize: metrics.size.resultRowIcon)
                         .frame(width: metrics.size.rowIcon, height: metrics.size.rowIcon)
                 }
@@ -42,7 +39,6 @@ struct CompactFavoritesRow: View {
     }
 }
 
-/// One compact favorite: bare icon, tooltip, action; no hover chrome, so it reads tight.
 private struct CompactFavoriteButton<Content: View>: View {
     let help: String
     let action: () -> Void

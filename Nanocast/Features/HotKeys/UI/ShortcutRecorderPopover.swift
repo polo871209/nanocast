@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Bounds of the open recorder, so an ancestor outside the `ScrollView` can draw it.
 struct ShortcutRecorderAnchorKey: PreferenceKey {
     static let defaultValue: Anchor<CGRect>? = nil
 
@@ -97,9 +96,6 @@ struct ShortcutRecorderPopover: View {
     }
 }
 
-// MARK: - Host
-
-/// Draws the open recorder's callout over the pane, where the pane's `ScrollView` can't clip it.
 private struct ShortcutRecorderPopoverHost: ViewModifier {
     @Environment(HotKeyManager.self) private var hotKeys
 
@@ -110,7 +106,6 @@ private struct ShortcutRecorderPopoverHost: ViewModifier {
                     placement: anchor.map { placement(field: proxy[$0], in: proxy.size) },
                     recordingAction: hotKeys.recordingAction)
             }
-            // Informational: clicks fall through to the session's mouse monitor, which closes.
             .allowsHitTesting(false)
         }
     }
@@ -123,7 +118,6 @@ private struct ShortcutRecorderPopoverHost: ViewModifier {
     }
 }
 
-/// Retains the last anchor while the callout animates away from it.
 private struct ShortcutRecorderPopoverLayer: View {
     let placement: CalloutPlacement?
     let recordingAction: HotKeyAction?

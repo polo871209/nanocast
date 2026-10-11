@@ -1,9 +1,7 @@
 import Foundation
 
-/// Values are passed positionally, so what the user types is never re-parsed by zsh.
 struct CustomCommandArgument: Codable, Hashable, Sendable {
     var name: String
-    /// An optional argument may be submitted empty; a required one holds ↵ until it has a value.
     var isOptional: Bool
 
     init(name: String, isOptional: Bool = false) {
@@ -11,13 +9,10 @@ struct CustomCommandArgument: Codable, Hashable, Sendable {
         self.isOptional = isOptional
     }
 
-    /// Raycast's own cap, and what keeps the inline fields beside the search field on screen.
     static let limit = 3
 
-    /// The inline field holding `$n`, keyed by position since two arguments may share a name.
     static func fieldID(at index: Int) -> String { "$\(index + 1)" }
 
-    /// A blank name is dropped rather than rejected, so an import can't lose the whole command.
     static func sanitized(_ arguments: [CustomCommandArgument]) -> [CustomCommandArgument] {
         let cleaned = arguments.compactMap { argument -> CustomCommandArgument? in
             var cleaned = argument
@@ -31,26 +26,19 @@ struct CustomCommandArgument: Codable, Hashable, Sendable {
 
 struct CustomCommand: Codable, Hashable, Identifiable, Sendable {
     static let entryIDPrefix = "custom-command:"
-    /// One glyph for every custom command, so every surface reads as the same thing.
     static let sfSymbol = "terminal"
 
     let id: UUID
     var name: String
     var command: String
-    /// Off keeps the command and everything attached to it, but nothing may offer or run it.
     var isEnabled: Bool
     var showsInRootSearch: Bool
-    /// Sources the shell config so aliases resolve; opt-in, a heavy one costing more.
     var loadsShellEnvironment: Bool
     var requiresConfirmation: Bool
     var showsConfirmation: Bool
-    /// Filled in the launcher row's inline fields; empty for the commands that take no input.
     var arguments: [CustomCommandArgument]
-    /// Captures what the command prints and opens the output window once it exits.
     var showsOutput: Bool
-    /// Kept abbreviated, so a `~` path survives a home directory that moves.
     var workingDirectory: String?
-    /// The launcher glyph; nil falls back to the shared terminal symbol.
     var iconSymbol: String?
 
     init(
@@ -78,7 +66,6 @@ struct CustomCommand: Codable, Hashable, Identifiable, Sendable {
 
     var entryID: String { Self.entryIDPrefix + id.uuidString.lowercased() }
 
-    /// The values in `$n` order, keyed by `fieldID(at:)`; nil while a required one is empty.
     func positionalValues(from values: [String: String]) -> [String]? {
         let positional = arguments.indices.map {
             values[CustomCommandArgument.fieldID(at: $0)] ?? ""
@@ -92,7 +79,6 @@ struct CustomCommand: Codable, Hashable, Identifiable, Sendable {
         return UUID(uuidString: String(entryID.dropFirst(entryIDPrefix.count)))
     }
 
-    // Hand-written, so an added field keeps stored commands and older backups readable.
     private enum CodingKeys: String, CodingKey {
         case id, name, command, isEnabled, showsInRootSearch, loadsShellEnvironment
         case requiresConfirmation, showsConfirmation, arguments, showsOutput, workingDirectory
@@ -122,7 +108,6 @@ struct CustomCommand: Codable, Hashable, Identifiable, Sendable {
 }
 
 extension String {
-    /// Trimmed, and nil when that leaves nothing — an empty optional field means "unset", not "".
     fileprivate var cleanedPathComponent: String? {
         let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty || trimmed.contains("\0") ? nil : trimmed
@@ -178,7 +163,6 @@ final class CustomCommandStore {
         }
     }
 
-    // Takes a whole draft, so adding an option doesn't churn every call site.
     @discardableResult
     func add(_ draft: CustomCommand) throws -> CustomCommand {
         let value = try validated(draft, against: commands)
@@ -186,7 +170,6 @@ final class CustomCommandStore {
         return value
     }
 
-    /// One commit for a whole import, and it returns how many of the drafts were new.
     @discardableResult
     func add(contentsOf drafts: [CustomCommand]) -> Int {
         var updated = commands
@@ -234,7 +217,6 @@ final class CustomCommandStore {
         return removed
     }
 
-    /// Replaces the whole set on backup import, dropping invalid and duplicate records.
     @discardableResult
     func replace(with newCommands: [CustomCommand]) -> Int {
         let updated = Self.sanitized(newCommands)
@@ -242,7 +224,6 @@ final class CustomCommandStore {
         return updated.count
     }
 
-    /// `existing` is what the name must be unique against: the library, or a batch in progress.
     private func validated(
         _ draft: CustomCommand, against existing: [CustomCommand]
     ) throws -> CustomCommand {
@@ -283,7 +264,6 @@ final class CustomCommandStore {
         var names = Set<String>()
         var result: [CustomCommand] = []
         for value in values {
-            // Copy-and-clean rather than rebuild, so a new option can never be dropped on import.
             var cleaned = value
             cleaned.name = value.name.trimmingCharacters(in: .whitespacesAndNewlines)
             cleaned.command = value.command.trimmingCharacters(in: .whitespacesAndNewlines)

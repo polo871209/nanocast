@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// The search field is the term; the entry fills the palette instead of competing with a list.
 struct DictionaryScreen: PaletteScreen {
     let session: DictionarySession
     let core: AppCore
@@ -8,10 +7,8 @@ struct DictionaryScreen: PaletteScreen {
 
     private var term: String { vm.query.trimmingCharacters(in: .whitespacesAndNewlines) }
 
-    /// The page on screen: it stays up while the next term resolves, and ↵ acts on what is shown.
     private var entry: DictionaryEntry? { session.lookup?.entry }
 
-    /// The one entry, so the footer and ⌘K act on it exactly as on a selected row.
     var rows: [DictionaryEntry] { entry.map { [$0] } ?? [] }
 
     var primaryActionTitle: String { String(localized: "Copy Definition") }

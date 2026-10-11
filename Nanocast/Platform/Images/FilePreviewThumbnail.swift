@@ -5,7 +5,6 @@ enum FilePreviewThumbnail {
     private static let cache = ThumbnailCache(
         rowBytes: 8 * 1024 * 1024, previewBytes: 32 * 1024 * 1024)
 
-    /// Cache-only, never touching disk, so a warm tile renders on the same frame.
     static func cached(_ url: URL, maxPixel: CGFloat) -> NSImage? {
         cache.cached(url, maxPixel: maxPixel)
     }
@@ -14,7 +13,6 @@ enum FilePreviewThumbnail {
         cache.purgePreviews()
     }
 
-    /// Returns the render directly, so an eviction mid-flight can't strand a placeholder.
     static func loadAsync(_ url: URL, maxPixel: CGFloat) async -> NSImage? {
         if let cached = cached(url, maxPixel: maxPixel) { return cached }
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }

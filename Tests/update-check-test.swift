@@ -86,7 +86,7 @@ struct UpdateCheckTests {
     static func seedCache(at file: URL) throws {
         guard
             let release = ReleaseFeed.newest(
-                from: feed(version: "1.1.0"), channel: .stable, architecture: .current)
+                from: feed(version: "1.1.0"), channel: .stable)
         else { fatalError("the fixture release must be installable") }
         let cache: [String: Any] = [
             "lastCheckedAt": Date.distantPast.timeIntervalSinceReferenceDate,

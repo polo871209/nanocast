@@ -1,7 +1,6 @@
 // Adapted from Rooms (MIT): https://github.com/saragordic/rooms/blob/main/LICENSE
 import SwiftUI
 
-/// One picker row: an open window, or an app that joins the room without one open.
 enum RoomPickerRow: Identifiable {
     case window(RoomLiveWindow)
     case app(RoomSession.App)
@@ -21,7 +20,6 @@ enum RoomPickerRow: Identifiable {
     }
 }
 
-/// Choose a room's members: the field filters, ↵ adds or removes one, ⌘↵ saves and walks in.
 struct RoomPickerScreen: PaletteScreen {
     let coordinator: RoomCoordinator
     let session: RoomSession
@@ -49,7 +47,6 @@ struct RoomPickerScreen: PaletteScreen {
         return true
     }
 
-    /// ⇥ would otherwise leave for the launcher and drop everything picked so far.
     func tab(at selection: Int, backwards: Bool) -> Bool { true }
 
     func actions(at selection: Int) -> PopoverMenuContent? {

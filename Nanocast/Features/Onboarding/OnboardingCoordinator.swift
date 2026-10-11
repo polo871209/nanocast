@@ -3,7 +3,6 @@ import SwiftUI
 @MainActor
 final class OnboardingCoordinator {
     private let window: AppWindowController
-    /// Environment injection only — never for state this type owns.
     private unowned let core: AppCore
 
     init(core: AppCore) {
@@ -13,7 +12,6 @@ final class OnboardingCoordinator {
             activation: core.activationPolicy)
     }
 
-    /// The window takes the height the current step measured, so no step is clipped or padded out.
     func fit(height: CGFloat) {
         window.fitContent(width: OnboardingView.width, height: height)
     }

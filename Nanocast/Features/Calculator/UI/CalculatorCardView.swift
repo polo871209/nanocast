@@ -1,11 +1,9 @@
 import SwiftUI
 
 extension AppCore {
-    /// Reads both observables, so a changed setting or region re-renders every calculator surface.
     var calcNumberFormat: CalcNumberFormat { regionNumberFormat.format(for: settings.calcNumberStyle) }
 }
 
-/// One-deep memo over `CalcEngine.evaluate`, keyed on the rate snapshot's `fetchedAt`.
 @MainActor
 enum CalcMemo {
     private struct Cache {
@@ -18,7 +16,6 @@ enum CalcMemo {
 
     private static var cache: Cache?
 
-    /// The answer stays canonical, so history keeps one spelling whatever the format becomes.
     static func evaluate(_ query: String, rates: CurrencyRates?, format: CalcNumberFormat) -> CalcResult? {
         let region = RegionCurrency.code
         if let cache, cache.query == query, cache.stamp == rates?.fetchedAt, cache.region == region,
@@ -74,12 +71,10 @@ struct CalculatorCard: View {
     }
 }
 
-/// Dims the words that join an expression, so the values they join read first.
 private enum CalcSyntax {
     static func highlighted(_ text: String) -> AttributedString {
         var attributed = AttributedString()
         let words = text.split(separator: " ", omittingEmptySubsequences: false)
-        // Rebuilt word by word, so a connector is only ever matched whole — `min` is not `in`.
         for (index, word) in words.enumerated() {
             if index > 0 { attributed.append(AttributedString(" ")) }
             var piece = AttributedString(String(word))
@@ -91,7 +86,6 @@ private enum CalcSyntax {
         return attributed
     }
 
-    /// `in` joins two units and follows one; in `10 in in cm` only the second joins.
     private static func isConnector(
         _ word: Substring, at index: Int, of words: [Substring]
     ) -> Bool {
@@ -101,7 +95,6 @@ private enum CalcSyntax {
         return words[index + 1].lowercased() != "in"
     }
 
-    /// Words only, never a unit: `min` and `in` are also units, so they are matched by position.
     private static let connectors: Set<String> = [
         "to", "of", "off", "on", "as", "from", "ago", "at", "tip", "ratio", "average", "avg",
         "mean", "sum", "total", "round", "nearest", "and", "is", "what", "the", "next", "last",
@@ -109,7 +102,6 @@ private enum CalcSyntax {
     ]
 }
 
-/// Actions menu for the card; only answers copy, so an error card is never passed one.
 @MainActor
 enum CalcActionsMenu {
     static func content(result: CalcResult, core: AppCore) -> PopoverMenuContent {

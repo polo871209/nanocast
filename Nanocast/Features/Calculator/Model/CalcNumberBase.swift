@@ -1,3 +1,5 @@
+import Foundation
+
 enum CalcNumberBase: Int, Sendable {
     case binary = 2
     case octal = 8

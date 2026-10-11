@@ -1,7 +1,6 @@
 import CoreServices
 import Foundation
 
-/// A process of its own, so every byte the crawl allocates leaves when it exits.
 @main
 nonisolated enum FileIndexHelper {
     static func main() {

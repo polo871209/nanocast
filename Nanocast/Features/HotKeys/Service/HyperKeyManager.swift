@@ -1,7 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// Owns the Hyper Key's lifecycle and policy. See docs/features/hotkeys.md#the-hyper-key.
 @MainActor
 @Observable
 final class HyperKeyManager: HealthCheckable {
@@ -78,9 +77,6 @@ final class HyperKeyManager: HealthCheckable {
             secureInput: secureInput.report())
     }
 
-    // MARK: - Applying
-
-    /// Idempotent: every input funnels here, and it converges on what the settings ask for.
     private func apply() {
         let key = settings.hyperKey
         guard let route = key.route(secureInputCompatible: isSecureInputCompatible) else {
@@ -115,7 +111,6 @@ final class HyperKeyManager: HealthCheckable {
         hotKeys.capture.hyperRoute = route
     }
 
-    /// That press latched Caps Lock on a keyboard that lost the remap, so undo it once repaired.
     private func repairRemap() {
         guard status == .active, remapper.repair() else { return }
         tap.unlatchCapsLock()
@@ -125,7 +120,6 @@ final class HyperKeyManager: HealthCheckable {
         settings.hyperKey.supportsSecureInputCompatibility && settings.hyperKeySecureInputCompatibility
     }
 
-    /// One-second watchdog while a key is live. See docs/features/hotkeys.md#lifecycle.
     func healthCheck() {
         guard tap.route != nil else { return }
         secureInput.refresh()
@@ -140,8 +134,6 @@ final class HyperKeyManager: HealthCheckable {
         }
         if status != previous { syncSecureInputHotKeys() }
     }
-
-    // MARK: - Secure Input
 
     private func secureInputChanged() {
         // The tap saw neither end of anything typed inside, so a half-held chord is stale.
@@ -161,8 +153,6 @@ final class HyperKeyManager: HealthCheckable {
             self?.onProblem?(String(localized: "The Hyper Key can't work while Secure Input is on"))
         }
     }
-
-    // MARK: - Observation
 
     /// Fires synchronously on main before the write lands, so the task re-arms, then applies.
     private func observeSettings() {

@@ -61,19 +61,16 @@ struct ClipboardScreen: PaletteScreen {
         return true
     }
 
-    /// ⌘↵ — the action ↵ is not set to.
     func secondary(at selection: Int) -> Bool {
         guard let item = item(at: selection) else { return false }
         return core.clipboardCoordinator.activate(item, chord: .command)
     }
 
-    /// ⌃⌘↵ — Paste as Plain Text, or Paste while that is the default.
     func tertiary(at selection: Int) -> Bool {
         guard let item = item(at: selection) else { return false }
         return core.clipboardCoordinator.activate(item, chord: .controlCommand)
     }
 
-    /// ⌥↵ — the palette stays up, so a run of entries goes over without re-summoning it.
     func pasteKeepingWindowOpen(at selection: Int) -> Bool {
         guard let item = item(at: selection) else { return false }
         core.clipboardCoordinator.pasteKeepingWindowOpen(item)
@@ -86,20 +83,16 @@ struct ClipboardScreen: PaletteScreen {
         return true
     }
 
-    /// ⌘⌫ / ⌃X — the screen owns the chord whether or not a row sits under the selection.
     private func delete(at selection: Int) {
         guard let item = item(at: selection) else { return }
         store.remove(item)
     }
 
-    /// ⌃⇧X — mirrors the Actions row, confirmation included; pinned entries go with the rest.
     private func deleteAll() {
         Task { await core.clipboardCoordinator.deleteAllClips() }
     }
 
-    /// Follow a row the store moved; with a query typed the highlight stays put.
     private func follow(from old: ClipFollowKey, to new: ClipFollowKey) {
-        // A nil `old.id` is the first load landing, not a row that moved.
         guard old.id != nil else { return }
         let rows = rows
         if vm.query.trimmingCharacters(in: .whitespaces).isEmpty, old.id != new.id, let id = new.id,
@@ -113,8 +106,7 @@ struct ClipboardScreen: PaletteScreen {
     func body(selection: Int, scroll: ScrollIntent) -> AnyView {
         AnyView(
             content(selection: selection, scroll: scroll)
-                .onChange(of: ClipFollowKey(id: store.items.first?.id, token: vm.followToken)) {
-                    old, new in
+                .onChange(of: ClipFollowKey(id: store.items.first?.id, token: vm.followToken)) { old, new in
                     follow(from: old, to: new)
                 }
         )
@@ -123,9 +115,7 @@ struct ClipboardScreen: PaletteScreen {
     @ViewBuilder
     private func content(selection: Int, scroll: ScrollIntent) -> some View {
         let rows = rows
-        // Empty history: centre one message across the panel, not in the list column.
         if rows.isEmpty {
-            // Names the filter, so one hiding every entry doesn't read as an empty history.
             EmptyResults(text: vm.clipboardFilter.emptyMessage)
         } else {
             let selected = item(at: selection)
@@ -153,7 +143,6 @@ struct ClipboardScreen: PaletteScreen {
     }
 }
 
-/// Change key for the follow-the-moved-row handler, read from the store, not the results.
 private struct ClipFollowKey: Equatable {
     let id: ClipboardItem.ID?
     let token: UUID
@@ -165,7 +154,6 @@ enum ClipboardActionsMenu {
         item: ClipboardItem, core: AppCore, store: ClipboardStore, target: PasteTarget?
     ) -> PopoverMenuContent {
         let defaultAction = core.settings.clipboardDefaultAction
-        // Chord order puts the default first, beside the ↵ it answers.
         var items: [PopoverMenuItem] = ClipboardChord.allCases.compactMap { chord in
             defaultAction.action(for: chord, on: item).map { action in
                 PopoverMenuItem(
@@ -259,7 +247,6 @@ enum ClipboardActionsMenu {
     private static func headerText(_ item: ClipboardItem) -> String {
         switch item.kind {
         case .text:
-            // Collapse whitespace so a multi-line copy stays a clean one-line title.
             let oneLine = (item.text ?? "").split(whereSeparator: \.isWhitespace).joined(
                 separator: " ")
             return String(oneLine.prefix(40))

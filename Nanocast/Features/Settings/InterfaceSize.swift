@@ -1,6 +1,6 @@
 import CoreGraphics
+import Foundation
 
-/// How large the palette and its floating siblings render; an unset key reads as `.standard`.
 enum InterfaceSize: String, CaseIterable, Identifiable, Sendable {
     case standard
     case large

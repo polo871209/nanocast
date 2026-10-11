@@ -3,17 +3,14 @@ import SwiftUI
 
 struct WindowLayoutPreview: View {
     let draft: WindowLayoutDraft
-    /// Resolved once by the panel: an AX read per render would cost a round trip per keystroke.
     let screens: [WindowLayoutScreen]
     let gap: CGFloat
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
-            // Greedy: the canvas letterboxes itself, so slack spent here is drawing, not margin.
             WindowLayoutPreviewCanvas(draft: draft, screen: selectedScreen, gap: gap)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // Beside the caption, not over the canvas: a tab must never cover a window rect.
             HStack(spacing: Theme.Spacing.md) {
                 Text(caption)
                     .font(.caption)
@@ -30,7 +27,6 @@ struct WindowLayoutPreview: View {
         draft.tabs(connected: screens.map(\.display))
     }
 
-    /// The geometry for the selected tab, or nil when that display is not connected.
     private var selectedScreen: WindowLayoutScreen? {
         guard let uuid = draft.selectedDisplayUUID else { return nil }
         return screens.first { $0.display.uuid == uuid }
@@ -43,7 +39,6 @@ struct WindowLayoutPreview: View {
         guard let screen = selectedScreen else {
             return String(localized: "\(display.name) · not connected")
         }
-        // Points, not pixels: nothing in this feature touches `backingScaleFactor`.
         let size = screen.screen.frame.size
         return "\(display.name) · \(Int(size.width)) × \(Int(size.height))"
     }
@@ -60,7 +55,6 @@ struct WindowLayoutPreviewCanvas: View {
         GeometryReader { proxy in
             ZStack {
                 if let screen {
-                    // The plate is the display itself, at its own aspect ratio.
                     let ground = ground(in: proxy.size, display: screen.screen.visibleFrame)
                     plate
                         .frame(width: ground.width, height: ground.height)
@@ -90,7 +84,6 @@ struct WindowLayoutPreviewCanvas: View {
         let frame: CGRect
     }
 
-    /// Every rect comes from the resolver the runner uses; nothing here re-derives geometry.
     private func placements(on screen: WindowLayoutScreen) -> [Placed] {
         draft.entries(onDisplay: screen.display.uuid).compactMap { entry in
             WindowLayoutGeometry.resolve(entry, on: screen.screen, gap: gap)
@@ -98,7 +91,6 @@ struct WindowLayoutPreviewCanvas: View {
         }
     }
 
-    /// Fit, not fill: a 16:10 display stretched into a 16:9 box misdraws every rect inside it.
     private func ground(in box: CGSize, display: CGRect) -> CGRect {
         guard display.width > 0, display.height > 0 else { return .zero }
         let scale = min(box.width / display.width, box.height / display.height)
@@ -127,11 +119,9 @@ struct WindowLayoutPreviewCanvas: View {
             .overlay(icon(for: placed.entry.bundleID))
             .frame(width: max(1, rect.width), height: max(1, rect.height))
             .position(x: rect.midX, y: rect.midY)
-            // Drawn last, since a layout may legitimately stack two windows.
             .zIndex(isSelected ? 1 : 0)
     }
 
-    /// Through the index's cache: a `urlForApplication` per rect would touch disk every keystroke.
     private func icon(for bundleID: String) -> some View {
         Image(nsImage: AppPresentation.resolve(bundleID: bundleID, in: appIndex).icon)
             .resizable()

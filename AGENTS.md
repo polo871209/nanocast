@@ -1,14 +1,14 @@
 # Nanocast
 
 A native macOS menu-bar launcher: fuzzy app launcher, global and per-app hotkeys, a text/image
-clipboard history, an inline calculator, a floating note, snippets, quicklinks, window management
-and an emoji picker. It also **runs Raycast extensions** natively, in JavaScriptCore.
+clipboard history, an inline calculator, a floating note, file search, window management and an
+emoji picker.
 SwiftUI + AppKit, running as an accessory with no Dock icon (`LSUIElement`). Zero third-party
 dependencies.
 
 ## Posture: modern-first, always
 
-**Nanocast supports macOS 26 and later, with macOS 27 strongly preferred.** Swift 6+ with complete
+**Nanocast supports macOS 27 and later, on Apple silicon only.** Swift 6+ with complete
 strict concurrency is required. Prefer the latest Swift patterns and modern Apple APIs.
 
 Prefer current APIs and language features:
@@ -25,9 +25,9 @@ Prefer current APIs and language features:
   keep wrappers that only preserve an old spelling.
 - **A deprecated API is a defect**, not a warning to live with.
 - **Verify API and language-feature availability** against the SDK and compiler used by the build
-  and CI. Use direct availability checks where macOS 27+ APIs require them to preserve macOS 26 support.
+  and CI. Every macOS 27 API is available unconditionally: no `#available` check or OS-version branch.
 - **No compatibility layers, legacy workarounds or obsolete patterns.** No migration scaffolding,
-  support below macOS 26 or speculative fallbacks. Keep the implementation direct.
+  support below macOS 27, an Intel slice, or speculative fallbacks. Keep the implementation direct.
 
 Carbon is a deliberate capability-gap dependency rather than inertia: nothing modern registers a
 system-wide chord, and HIToolbox's TIS APIs remain the public input-source mechanism. Full reasoning in
@@ -35,16 +35,17 @@ system-wide chord, and HIToolbox's TIS APIs remain the public input-source mecha
 
 ## Where things are
 
-| Folder                   | Holds                                                                                   |
-| ------------------------ | --------------------------------------------------------------------------------------- |
+| Folder                    | Holds                                                                                   |
+| ------------------------- | --------------------------------------------------------------------------------------- |
 | `Nanocast/App/`          | `@main`, `AppDelegate`, `AppCore` — the composition root                                |
 | `Nanocast/DesignSystem/` | shared visual primitives; `Theme.swift` is the only design-token source                 |
 | `Nanocast/Platform/`     | system shims: `Permissions`, `AppPaths`, `Signposts`, `NotificationToken`, …            |
 | `Nanocast/Palette/`      | the palette shell: panel, window controller, `RootPaletteView`, `PaletteScreen`         |
 | `Nanocast/Windows/`      | the non-palette AppKit surfaces: `Dialog/`, `HUD/`, `About/`, `AppWindowController`     |
 | `Nanocast/Features/`     | one folder per feature; larger ones split `Model/` `Service/` `UI/` `Settings/`         |
-| `Tests/`                 | the standalone harnesses — one Swift file each, no XCTest target                        |
-| `Scripts/`               | every executable script: test runner, data generators, packaging, linting, editor setup |
+| `Tests/`                  | the standalone harnesses — one Swift file each, no XCTest target                        |
+| `Scripts/`                | every executable script: test runner, data generators, packaging, linting, editor setup |
+| `Casks/`                  | the Homebrew cask; this repo is its own tap and `release.yml` bumps it                  |
 
 | Read it before you                                          | Doc                                                          |
 | ----------------------------------------------------------- | ------------------------------------------------------------ |
@@ -84,28 +85,14 @@ feature's doc, under its own `## Invariants`.
 - **A networked feature fetches on a private `.ephemeral`, `urlCache = nil` session**, never
   `URLSession.shared`, so its own cache file stays the only copy on disk. `CurrencyRateStore` is the
   reference — copy it rather than inventing a second shape. A flag that grants a capability is never
-  carried by a backup or by `settings.json`: `snippetsEnabled` is excluded from settings backups so an
-  import cannot grant keystroke listening.
-- **Extensions stay inside `Features/Extensions/`.** Every view, row, menu, geometry and sizing
-  constant an extension needs is written and owned there — never added to `DesignSystem/`, never bolted
-  onto `Theme`, and never lifted somewhere another feature can build on it. Another surface may render
-  one as an opaque box — `LauncherScreen` does exactly that with `ExtensionArgumentsAccessory` — but it
-  never reaches inside one. An extension renders untrusted third-party code whose shape we do not
-  control, so it must never be able to force a change on a launcher surface.
-  **Duplicating a view or a piece of layout maths to keep it here is the correct trade**, and the one
-  place the no-duplication rule yields. What _is_ shared: `Theme`'s base tokens (spacing, radius,
-  colour), `InterfaceMetrics` as the view over those same base tokens, `PopoverMenuItem` as a data
-  shape, and `Platform/`. What is never shared: anything with
-  "how an extension looks or moves" in it. `ExtensionActionsPanel` and `ExtensionGridGeometry` exist
-  precisely because the palette's own menu and the emoji grid must stay free to change without them.
+  carried by a backup or by `settings.json`: `dictationEnabled` is excluded from settings backups so an
+  import cannot grant microphone capture.
 - **`AppEntry.Kind` is the only thing that says what an entry is.** One case per launcher section and
   per `VisibilityStore` category — never re-derive a category by sniffing an entry ID. Which _pane_
   lists a command is a separate fact, and `SettingsTab.ownedCommands` is the only place that states it.
 - **Generated files are never hand-edited.** `EmojiData.generated.swift` and
   `Resources/EmojiKeywords/` come from `node Scripts/gen-emoji.js`, `CurrencyData.generated.swift` from `node Scripts/gen-currencies.js`,
-  `CountryZoneData.generated.swift` from `node Scripts/gen-countries.js`, and
-  `Resources/RaycastRuntime.generated.js` from `Scripts/raycast-runtime/build.mjs` — the runtime is
-  committed so building the app never needs Node.
+  and `CountryZoneData.generated.swift` from `node Scripts/gen-countries.js`.
 - **`DesignSystem/Scrolling/EdgeDissolve.swift` and `ThinScrollbar.swift` are off-limits.** Both are
   tuned by eye against the palette's floating bars, so any edit is a visual regression. Needing to touch
   one to fix a scroll bug means the real fix belongs elsewhere.
