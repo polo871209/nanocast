@@ -6,8 +6,6 @@ struct MenuSearchScreen: PaletteScreen {
 
     var rows: [MenuSearchItem] { session.filtered }
 
-    var primaryActionTitle: String { String(localized: "Activate Menu Item") }
-
     func hasActions(at selection: Int) -> Bool { false }
 
     private func item(at selection: Int) -> MenuSearchItem? {

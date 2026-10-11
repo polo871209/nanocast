@@ -232,7 +232,7 @@ comment is written buys a second edit; these are cheap to get right on the first
 ## Accessibility
 
 Every custom control carries a label and the traits that describe it. The palette is an entirely custom
-control surface, so nothing comes for free — a row, a keycap chip, a footer pill and a dialog button all
+control surface, so nothing comes for free — a row, a keycap chip, a menu row and a dialog button all
 need saying explicitly. Adding it as the view is written costs a line; retrofitting it costs a rewrite.
 
 ## Localization

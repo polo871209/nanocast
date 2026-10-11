@@ -89,22 +89,6 @@ struct LauncherScreen: PaletteScreen {
         }
     }
 
-    private var clampedSelection: Int {
-        let count = rows.count
-        return count == 0 ? 0 : min(max(vm.selection, 0), count - 1)
-    }
-
-    var primaryActionTitle: String {
-        switch row(at: clampedSelection) {
-        case .calc: return String(localized: "Copy Answer")
-        case .color: return String(localized: "Copy Color")
-        case .entry(let app): return String(localized: app.kind.descriptor.openVerb)
-        case .file(let result):
-            return result.isDirectory ? String(localized: "Open Folder") : String(localized: "Open File")
-        case nil: return String(localized: "Open Application")
-        }
-    }
-
     private func row(at selection: Int) -> Row? {
         rows.indices.contains(selection) ? rows[selection] : nil
     }

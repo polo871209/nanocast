@@ -81,14 +81,12 @@ enum PalettePlacement {
 }
 
 enum MenuPanelCorner: Equatable {
-    case bottomLeading
     case bottomTrailing
     case belowHeaderTrailing
     case belowControl(CGRect, trailing: Bool = true)
 
     func layerAnchor(for frame: CGRect, parentFrame: CGRect) -> CGPoint {
         switch self {
-        case .bottomLeading: CGPoint(x: 0, y: 0)
         case .bottomTrailing: CGPoint(x: 1, y: 0)
         case .belowHeaderTrailing: CGPoint(x: 1, y: 1)
         case .belowControl(let control, let trailing):
@@ -102,8 +100,6 @@ enum MenuPanelCorner: Equatable {
     ) -> CGRect {
         let origin: CGPoint =
             switch self {
-            case .bottomLeading:
-                CGPoint(x: parentFrame.minX + inset, y: parentFrame.minY + inset)
             case .bottomTrailing:
                 CGPoint(
                     x: parentFrame.maxX - inset - contentSize.width,

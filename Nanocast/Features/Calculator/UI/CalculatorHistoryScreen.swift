@@ -29,8 +29,6 @@ struct CalculatorHistoryScreen: PaletteScreen {
         return [.calc(calc)] + entries
     }
 
-    var primaryActionTitle: String { String(localized: "Copy Answer") }
-
     private func row(at selection: Int) -> Row? {
         let rows = rows
         return rows.indices.contains(selection) ? rows[selection] : nil
