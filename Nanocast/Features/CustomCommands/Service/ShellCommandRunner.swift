@@ -1,14 +1,12 @@
 import Darwin
 import Foundation
+import Synchronization
 
-/// How a run ended. `launchFailed` means the shell never started, so nothing was captured.
 enum ShellCommandTermination: Sendable, Equatable {
     case exited(status: Int32)
     case launchFailed(String)
-    /// Apart from the status, which a signalled shell reports as 143 or 15.
     case stopped
 
-    /// A signal death reports the signal as its status, so it fails here like any non-zero exit.
     var succeeded: Bool { self == .exited(status: 0) }
 }
 
@@ -17,16 +15,13 @@ enum ShellCommandEvent: Sendable {
     case finished(ShellCommandResult)
 }
 
-/// `stop` is not the stream's cancellation: abandoning events must not kill the command.
 struct ShellCommandSession: Sendable {
     let events: AsyncStream<ShellCommandEvent>
     let stop: @Sendable () -> Void
 }
 
-/// Both tails are filled only by the non-streaming path; a streamed run reports events.
 struct ShellCommandResult: Sendable, Equatable {
     let termination: ShellCommandTermination
-    /// Kept short: all it feeds is the one-line report a finished command shows.
     let standardOutput: String?
     let standardError: String?
 
@@ -50,24 +45,16 @@ struct ShellCommandResult: Sendable, Equatable {
 }
 
 enum ShellCommandRunner {
-    /// Only ever surfaces on failure, where the last few lines are the whole story.
     private static let standardErrorLimit = 8 * 1024
-    /// Only the last line is ever shown, so this is a generous bound on one of them.
     private static let standardOutputLimit = 4 * 1024
     private static let shell = "/bin/zsh"
-    /// Big enough that a chatty command needs few reads, small enough to stay live.
     private static let readSize = 16 * 1024
-    /// Coalesces bursts so a flood cannot drive a redraw per line.
     private static let flushInterval: Duration = .milliseconds(40)
-    /// A prompt or a progress bar never ends a line; past this it is shown anyway.
     private static let unlinedLimit = 4 * 1024
-    /// How long a stopped command is given to leave politely before it is killed.
     private static let stopGrace: DispatchTimeInterval = .seconds(2)
-    /// The exit wait blocks, so it stays off the cooperative pool; concurrent, not serial.
     private static let queue = DispatchQueue(
         label: "com.nanocast.shell-command", qos: .userInitiated, attributes: .concurrent)
 
-    /// Fire-and-forget, keeping only the error tail; shown output goes through `stream`.
     nonisolated static func run(
         _ command: String, arguments: [String] = [], loadingShellEnvironment: Bool = false,
         workingDirectory: String? = nil
@@ -101,11 +88,9 @@ enum ShellCommandRunner {
         process.executableURL = URL(fileURLWithPath: shell)
         process.arguments = launch.arguments
         process.currentDirectoryURL = URL(fileURLWithPath: launch.directory)
-        // Lets a shell config skip slow sections when Nanocast is the caller.
         process.environment = ProcessInfo.processInfo.environment.merging(["NANOCAST": "1"]) { _, new in
             new
         }
-        // Load-bearing: a config that prompts reads EOF and moves on, never hanging.
         process.standardInput = FileHandle.nullDevice
 
         let output = StreamCapture.make()
@@ -129,9 +114,6 @@ enum ShellCommandRunner {
             standardError: errors?.readSuffix(limit: standardErrorLimit))
     }
 
-    // MARK: - Streaming
-
-    /// Runs under a pseudo-terminal; see `PseudoTerminal` for why a pipe cannot do this.
     nonisolated static func stream(
         _ command: String, arguments: [String] = [], loadingShellEnvironment: Bool = false,
         workingDirectory: String? = nil
@@ -147,7 +129,6 @@ enum ShellCommandRunner {
 
         var environment = ProcessInfo.processInfo.environment
         environment["NANOCAST"] = "1"
-        // A terminal makes tools colour output, so ask for colour the window can draw.
         environment["TERM"] = "xterm-256color"
 
         guard
@@ -156,7 +137,7 @@ enum ShellCommandRunner {
                 workingDirectory: launch.directory)
         else {
             launch.removeScript()
-            return failedSession(String(localized: "The shell could not be started."))
+            return failedSession("The shell could not be started.")
         }
 
         let stopped = StopFlag()
@@ -171,7 +152,6 @@ enum ShellCommandRunner {
             stop: { [weak stopFlag = stopped] in
                 stopFlag?.mark()
                 terminal.signalSession(SIGTERM)
-                // The backstop, for a command that ignores a polite ask.
                 queue.asyncAfter(deadline: .now() + stopGrace) {
                     terminal.signalSession(SIGKILL)
                 }
@@ -187,7 +167,6 @@ enum ShellCommandRunner {
             stop: {})
     }
 
-    /// One queue, one reader: the decode buffer is touched from here alone, so it needs no lock.
     nonisolated private static func drain(
         _ terminal: PseudoTerminal, stopped: StopFlag,
         into continuation: AsyncStream<ShellCommandEvent>.Continuation
@@ -218,25 +197,14 @@ enum ShellCommandRunner {
         continuation.finish()
     }
 
-    /// Set from the main actor and read on the drain queue, so the flag carries its own lock.
-    private final class StopFlag: @unchecked Sendable {
-        private let lock = NSLock()
-        private var value = false
+    private final class StopFlag: Sendable {
+        private let value = Mutex(false)
 
-        var isSet: Bool {
-            lock.lock()
-            defer { lock.unlock() }
-            return value
-        }
+        var isSet: Bool { value.withLock { $0 } }
 
-        func mark() {
-            lock.lock()
-            value = true
-            lock.unlock()
-        }
+        func mark() { value.withLock { $0 = true } }
     }
 
-    /// Whole lines only: a newline is a scalar boundary, so no read decodes mid-character.
     private struct TerminalTextDecoder {
         private var pending: [UInt8] = []
 
@@ -244,7 +212,6 @@ enum ShellCommandRunner {
             pending.append(contentsOf: bytes[0..<count])
         }
 
-        /// `force` flushes at exit and for a prompt that never ends a line, still on a boundary.
         mutating func take(force: Bool) -> String? {
             guard !pending.isEmpty else { return nil }
             var end = pending.lastIndex(of: 0x0A).map { $0 + 1 }
@@ -253,13 +220,11 @@ enum ShellCommandRunner {
                 end = scalarBoundary(before: pending.count)
             }
             guard let end, end > 0 else { return nil }
-            // Latin-1 cannot fail, so other encodings still reach the reader.
             let bytes = Array(pending[0..<end])
             pending.removeFirst(end)
             return String(bytes: bytes, encoding: .utf8) ?? String(bytes: bytes, encoding: .isoLatin1)
         }
 
-        /// Walks back over at most three continuation bytes to the start of a whole character.
         private func scalarBoundary(before index: Int) -> Int {
             var boundary = index
             var stepped = 0
@@ -267,7 +232,6 @@ enum ShellCommandRunner {
                 boundary -= 1
                 stepped += 1
             }
-            // A lead byte only holds back when its own sequence is still incomplete.
             guard boundary > 0 else { return index }
             let lead = pending[boundary - 1]
             let width = lead >= 0xF0 ? 4 : lead >= 0xE0 ? 3 : lead >= 0xC0 ? 2 : 1
@@ -275,7 +239,6 @@ enum ShellCommandRunner {
         }
     }
 
-    /// Nil when the named directory is gone: running somewhere unexpected is worse than not.
     nonisolated private static func resolvedWorkingDirectory(_ path: String?) -> String? {
         guard let path, !path.isEmpty else {
             return FileManager.default.homeDirectoryForCurrentUser.path
@@ -288,7 +251,6 @@ enum ShellCommandRunner {
         return expanded
     }
 
-    /// What a run spawns; a `#!` command also owns the script file zsh execs.
     private struct Launch: Sendable {
         let arguments: [String]
         let directory: String
@@ -304,14 +266,13 @@ enum ShellCommandRunner {
         let reason: String
     }
 
-    /// Values follow as `$1`, `$2`, never spliced where zsh would re-parse them as syntax.
     nonisolated private static func prepare(
         _ command: String, arguments: [String], loadingShellEnvironment: Bool,
         workingDirectory: String?
     ) throws(LaunchFailure) -> Launch {
         guard let directory = resolvedWorkingDirectory(workingDirectory) else {
             throw LaunchFailure(
-                reason: String(localized: "The folder “\(workingDirectory ?? "")” no longer exists."))
+                reason: "The folder “\(workingDirectory ?? "")” no longer exists.")
         }
         // zsh reads `.zshrc` only for interactive shells, so `-l` alone sees no aliases.
         let flag = loadingShellEnvironment ? "-ilc" : "-lc"
@@ -327,14 +288,13 @@ enum ShellCommandRunner {
             FileManager.default.createFile(
                 atPath: script.path, contents: Data(command.utf8),
                 attributes: [.posixPermissions: 0o700])
-        else { throw LaunchFailure(reason: String(localized: "The script could not be written.")) }
+        else { throw LaunchFailure(reason: "The script could not be written.") }
         return Launch(
             arguments: [flag, #"exec "$0" "$@""#, script.path] + arguments, directory: directory,
             script: script)
     }
 
-    /// A temp file, not a `Pipe`: nothing drains a pipe until the command exits.
-    private final class StreamCapture: @unchecked Sendable {
+    private final class StreamCapture: Sendable {
         let url: URL
         let handle: FileHandle
 
@@ -349,7 +309,6 @@ enum ShellCommandRunner {
             let start = end > UInt64(limit) ? end - UInt64(limit) : 0
             try? handle.seek(toOffset: start)
             guard let data = try? handle.readToEnd(), !data.isEmpty else { return nil }
-            // A byte-offset tail can open mid-scalar; dropping the orphans avoids a leading U+FFFD.
             let body = start > 0 ? data.drop { $0 & 0xC0 == 0x80 } : data[...]
             return String(decoding: body, as: UTF8.self)
                 .trimmingCharacters(in: .whitespacesAndNewlines)

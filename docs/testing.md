@@ -7,16 +7,15 @@ is a set of standalone harnesses, and the manual half is the sweep at the bottom
 
 The mechanical bar, in one place so it cannot drift. All five pass before a change is finished.
 
-| Check | Command |
-| --- | --- |
-| The harnesses | `./Scripts/run-tests.sh` |
-| Lint, settings search, translations and migrations | `./Scripts/lint.sh` |
-| Pure-layer purity | `grep -rln 'import AppKit\|import SwiftUI\|import Cocoa' Nanocast/Features/*/Model/` |
-| A clean build | `xcodebuild … -configuration Debug CODE_SIGNING_ALLOWED=NO`, zero **new** warnings |
-| Docs still true | any doc your change made wrong, fixed in the same commit |
+| Check                    | Command                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------ |
+| The harnesses            | `./Scripts/run-tests.sh`                                                             |
+| Lint and settings search | `./Scripts/lint.sh`                                                                  |
+| Pure-layer purity        | `grep -rln 'import AppKit\|import SwiftUI\|import Cocoa' Nanocast/Features/*/Model/` |
+| A clean build            | `xcodebuild … -configuration Debug CODE_SIGNING_ALLOWED=NO`, zero **new** warnings   |
+| Docs still true          | any doc your change made wrong, fixed in the same commit                             |
 
-There is no CI: every item is on you, run locally. CodeRabbit reviews each PR, but it is a reviewer,
-not a gate. Each is expanded below; the manual sweep at the end of this file is the sixth, judged by
+There is no CI: every item is on you, run locally. Each is expanded below; the manual sweep at the end of this file is the sixth, judged by
 what you touched.
 
 ## The harnesses
@@ -26,30 +25,7 @@ what you touched.
 ./Scripts/run-tests.sh calc-test    # just one, while iterating
 ```
 
-`apple-intelligence-test` runs deterministic checks by default. Its real model generation is opt-in:
-
-```sh
-NANOCAST_TEST_APPLE_INTELLIGENCE=1 ./Scripts/run-tests.sh apple-intelligence-test
-```
-
-The opt-in check still skips with a reason if the Mac cannot run the on-device model.
-
-`onboarding-test` briefly opens native windows and checks focus; run it in an unlocked desktop session.
-The runner waits for all parallel harnesses to finish before running it alone, so other harnesses
-cannot steal its keyboard focus.
-
-Two runtime areas also have standalone checks:
-
-```sh
-node Scripts/raycast-runtime/modules-fixtures.mjs
-node Scripts/raycast-runtime/oauth-fixtures.mjs
-```
-
-`modules-fixtures` covers shipped CommonJS packages, exports maps, relative directories, nested
-dependencies, cycles, failed-load retries and the extension-root boundary. `oauth-fixtures` signs in
-through a stand-in for the hosted redirect page and confirms that a callback whose `state` is absent,
-repeated, stale or wrong is refused, for each redirect method and for custom `{ url }` requests. The
-runtime fixture suite runs both as well.
+`onboarding-test` briefly opens native windows and checks focus; run it in an unlocked desktop session. The runner waits for all parallel harnesses to finish before running it alone, so other harnesses cannot steal its keyboard focus.
 
 The suite runs four harnesses at a time by default to reduce CPU usage. `NANOCAST_TEST_JOBS` overrides
 that limit; `NANOCAST_TEST_JOBS=1` runs one at a time. Each result is numbered
@@ -75,7 +51,7 @@ The script is the **only** place the harness set is written down. Nothing runs i
 before you open a PR. Adding a harness means adding one `run` line.
 
 Each harness compiles the **shipped sources** it guards rather than a copy of them, which is what makes
-the pure-layer boundary real: a harness that stops *compiling* means AppKit or SwiftUI has leaked into a
+the pure-layer boundary real: a harness that stops _compiling_ means AppKit or SwiftUI has leaked into a
 `Model/` folder, or an effect has leaked into a decision. That is a more common failure than a broken
 assertion, and it is the more important one.
 
@@ -89,7 +65,7 @@ every run from #232 onward by calling the native `copy:`/`cut:`/`paste:` actions
 second case, and it is why `ClipboardManager.fileURLs(on:volatileRoots:)` and `Paster.write(_:store:to:)`
 each take the thing they act on as a parameter: a seam that exists so the harness never has to reach
 for the shared board. Its scratch tree lives under `temporaryDirectory`, which is itself a volatile
-root, so the cases about *reading* files inject an empty root list and the one case about durability
+root, so the cases about _reading_ files inject an empty root list and the one case about durability
 is the one that runs against the shipped roots. Both file URL and legacy filename boards also cover
 the capture cap, exact ordering, rejected prefixes, duplicates and symlinks using private fixtures.
 The reader cases add the limit boundaries, the predicate call counts and modern/legacy precedence.
@@ -115,14 +91,12 @@ If a change touches anything in the right column, the harness on the left is man
 | `action-menu-search-test` | Action-menu query normalization and shared fuzzy matching |
 | `app-installation-test` | Multiple app copies and app-wide preferences; file-favorite persistence, mixed ordering, hidden slots and restoration through the existing favorite key list |
 | `ranking-test` | `Launcher/Model/LauncherRankingStore.swift` |
+| `link-destination-test` | `Launcher/Model/LinkDestination.swift` — web, deeplink, network and path detection against an injected home |
 | `scopes-test` | `Launcher/Model/SearchScopes.swift` |
-| `app-name-test` | `Platform/AppDisplayName.swift` — every path that names a scanned bundle |
-| `language-test` | `AppLanguage` and both string catalogs — compile every language, load privacy prompts, and select plural forms and independent counts at runtime |
-| `localized-resource-test` | `Platform/LocalizedResource.swift` — `resolved()` matches `String(localized:)` in every language, for plain, contextual, interpolated, plural and missing keys |
+| `app-name-test` | `Platform/AppDisplayName.swift` and `Platform/BundleEnglishName.swift` — every path that names a scanned bundle |
 | `onboarding-test` | Onboarding's handoff to the palette keeps focus; ordinary windows retain their Dock ownership |
 | `relaunch-test` | The shipped app delegate and relaunch helper — asynchronous cleanup, repeated quit requests, and a responsive replacement process |
 | `calc-test` | all of `Calculator/Model/` |
-| `calendar-test` | all of `Calendar/Model/` plus `EventEditorSession` — links, join window, day buckets, draft and form focus |
 | `clipboard-search-test` | Ordinary and OCR result ordering, opt-in lifecycle, cancellation, pins and type filters |
 | `clipboard-text-test` | Apple Vision/PDF extraction, scheduling, retry backoff and recovery |
 | `paste-sequence-test` | `Clipboard/Model/PasteSequence.swift` — the walk's order, its end, and what starts it over |
@@ -130,28 +104,21 @@ If a change touches anything in the right column, the harness on the left is man
 | `clipboard-coordinator-test` | Edit Entry selection across query/type changes and pins, failed writes, deletion during editing and cancellation; isolated database and recorded clipboard effects |
 | `clipboard-thumbnail-test` | `Platform/Images/ImageThumbnail.swift` copies against the real store — a remove or clear mid-copy leaves none, same-named JPEG/PNG copies stay apart, a timeout or cancel frees the queue, and a failed or unreadable copy falls back to the original; a stand-in script plays the helper |
 | `pasteboard-test` | `Clipboard/Service/ClipboardManager.swift` capture and `Paster.write` — what a Finder copy reads as, and what a file or image entry writes back |
-| `emoji-test` | `Emoji/Model/EmojiCatalog.swift`, `EmojiGridGeometry.swift`, the generated data and keyword packs |
-| `emoji-search-test` | `Emoji/Service/EmojiIndex.swift`, `FrequentEmojiStore.swift`, `Scripts/gen-emoji.js`'s keyword format, multilingual search |
+| `emoji-test` | `Emoji/Model/EmojiCatalog.swift`, `EmojiGridGeometry.swift`, and the generated data |
+| `emoji-search-test` | `Emoji/Service/EmojiIndex.swift`, `FrequentEmojiStore.swift`, `Scripts/gen-emoji.js`'s keyword format |
 | `command-escape-tap-test` | `Palette/CommandEscapeTap.swift` — dedicated run-loop dispatch while main is blocked, timeout recovery, stale actions, installation cancellation and teardown; private ports and unposted events only |
 | `palette-navigation-test` | `Palette/PaletteState.swift`'s screen motions — `prepare`, `replace`, `push`, `pop` — and hover arming, pointer drift, scroll disarming and highlight tokens |
 | `compact-bar-test` | Compact shortcut order, selection boundaries, zero-to-four slots, identifiers, isolated preferences and invalid settings-file rejection |
 | `palette-selection-test` | `Features/PaletteRowIndex.swift` |
-| `interface-size-test` | `DesignSystem/InterfaceMetrics.swift`, `Features/Settings/InterfaceSize.swift`, `Extensions/Model/ExtensionFormMetrics.swift` |
+| `interface-size-test` | `DesignSystem/InterfaceMetrics.swift`, `Features/Settings/InterfaceSize.swift` |
 | `form-input-test` | Native field/textarea sizing, editing alignment, placeholders, Tab, Unicode selection, undo and code fonts |
 | `palette-placement-test` | `DesignSystem/Theme.swift`, `Palette/PalettePlacement.swift` |
 | `palette-menu-click-test` | `Palette/PalettePanel.swift` — complete click-away presses and subsequent control activation |
 | `hyper-key-engine-test` | Hyper chord transitions for every physical key, device-bit holds, own-bit and other-Shift residue, released modifiers, the Quick Press rule, repeats and interruption recovery |
 | `hotkey-test` | `HotKeys/Model/DoubleTapModifier.swift`, `DoubleTapDetector.swift`, `ModifierKey.swift`, `ModifierKeyDetector.swift`, `HotKeyBinding.swift`, `HotKeySpelling.swift`, `HyperKey.swift`, `HIDKeyMapping.swift`, `HotKeyAction.swift`, `Service/KeyShortcut.swift`, and the command→action mapping in `Launcher/Model/CommandID.swift` |
 | `hyper-key-test` | `HotKeys/Model/HIDKeyMapping.swift`, `HyperKeyConflictPolicy.swift`, `Service/KeyboardRemapper.swift`, `RemapInstanceLock.swift` — mapping ownership, refused writes, crash recovery, device reconnection, Caps Lock and 🎤 remaps sharing a keyboard, conflict severities, Modifier Keys and Karabiner parsing, another app taking over Caps Lock, one process per Hyper Key |
-| `hotkey-dispatch-test` | `HotKeys/Service/HotKeyManager.swift` — Secure Input side isolation, shared Control registrations, press/release routing, recording and cancellation; isolated preferences and simulated Carbon registration |
+| `hotkey-dispatch-test` | `HotKeys/Service/HotKeyManager.swift` — Secure Input side isolation, shared Control registrations, press routing and recording; isolated preferences and simulated Carbon registration |
 | `dictation-key-test` | `HotKeys/Service/DictationKeyManager.swift` — shared and separate preference domains, ownership handoff through the real health ticker, and retry cancellation on unbind or termination; isolated preferences, lock files and simulated keyboards |
-| `dictation-test` | `Dictation/Model/DictationModel.swift`, `DictationTextFormatter.swift` — model paths and text formatting |
-| `dictation-field-test` | Composer rebinding and teardown, field-scoped dictation cancellation, and queued insertion validity; synthetic capture and real AppKit editors |
-| `dictation-cue-test` | System dictation sound paths, stop-before-play ordering and missing resources, without playing audio |
-| `dictation-volume-test` | Volume recovery across fade steps, user changes, output switching, failed writes and cancellation; injected audio controls only |
-| `dictation-inference-test` | Dictation byte BPE, Fourier/mel features and non-overlapping audio chunks; no downloaded models |
-| `dictation-worker-test` | Dictation's framed channel, worker reuse/switching, removal, cancellation and broken pipes with a fixture helper |
-| `fallback-test` | `Launcher/Model/Fallback.swift`, plus the `CommandID` and `Quicklink` ids it is built from |
 | `dictionary-test` | `Dictionary/Model/DictionaryEntry.swift`, `DictionaryMarkup.swift` — a real XHTML record and the plain-text fallback, read into page blocks |
 | `callout-test` | `DesignSystem/Theme.swift`, `HotKeys/UI/CalloutPlacement.swift` |
 | `system-action-test` | `SystemActions/Model/SystemAction.swift` |
@@ -164,49 +131,18 @@ If a change touches anything in the right column, the harness on the left is man
 | `custom-command-list-test` | Browser result snapshots, observation, row actions and empty-library messages |
 | `uninstall-test` | all five pure files in `Uninstall/Model/` |
 | `uninstall-coordinator-test` | Confirmation and the post-confirmation quit gate; recorded quit and Trash effects only |
-| `quicklink-test` | all of `Quicklinks/Model/`, plus editor drafts and placeholder selection |
-| `quicklink-coordinator-test` | Opening and requested arguments, launcher editing, current enabled-state preservation, deletion during editing and feature gates; no platform effects or on-screen focus checks |
-| `apple-shortcut-test` | all of `AppleShortcuts/Model/` — the `shortcuts list` parser and entry ids |
-| `snippets-test` | all of `Snippets/Model/` and `Snippets/Service/`, plus editor drafts, placeholder selection and `Platform/HealthTicker.swift` |
 | `notes-test` | all of `Notes/Model/` and `Notes/Service/`, including the Markdown parser, edit plans and reveal policy, plus the real fuzzy matcher and signposts |
 | `notes-editor-test` | the Notes editor, rendered and literal, with real TextKit 2 and AppKit editing objects: styling, reveal, layout fragments, keys, chords, checkboxes and links |
 | `raycast-test` | `Backup/Service/RaycastDecoder.swift`, `Scrypt.swift`, `Platform/Compression/Zlib.swift`, `Clipboard/Model/RaycastClipboardImport.swift` and import-time clipboard retention |
-| `symbols-test` | `Extensions/Service/SymbolCatalog.swift`, against this machine's CoreGlyphs |
-| `ext-store-test` | `Extensions/Model/` — GitHub source parsing and URLs, the store and Git tree parsers |
-| `ext-refresh-test` | `Extensions/Model/ExtensionRefreshPolicy.swift` — interval parsing, due dates, backoff, subtitle fallback, indicator state, Refresh Now refusals |
-| `ext-version-test` | `Extensions/Service/ExtensionVersionStore.swift` — what an update check reports, adopts and forgets |
-| `ext-metadata-test` | `Extensions/Service/ExtensionCommandMetadataStore.swift` — round-trip, failure runs, uninstall |
-| `ext-test` | the extension runtime and native menu-bar lifecycle — boots shipped sources in JavaScriptCore; menu tests cover restoration, refresh serialization, actions and teardown; fetch tests cover HTTP connection cleanup, cancellation and request isolation |
-| `ext-icon-test` | `Extensions/Service/ExtensionIconCache.swift` — artwork sizing and its fallback |
 | `icon-cache-test` | `Platform/Images/IconCache.swift` — row sizing at 1×/2×, warm reuse, stamp and style invalidation, bitmap release, fitted geometry across all 256 alpha values, and that a row icon draws identically to the 96px one |
 | `entry-icon-test` | `EntryIcon` — that each case draws, caches and prints apart from the others, and that a moved `FileIconStamp` retires the bitmap decoded before it |
-| `text-diff-test` | `QuickActions/Model/TextDiffEngine.swift` — exact chunks, coalescing, Unicode, ties, token-cap boundaries and fast paths |
 | `settings-backup-test` | `Settings/AppSettingsKey.swift`, `Backup/Model/SettingsBackupCoverage.swift` |
 | `settings-file-test` | `Settings/Model/` and `Settings/Service/` — key paths, value tokens, the printer and parser, and the repository's import, replace, save, reload and symlink handling on a scratch folder |
-| `compact-favorites-migration-test` | `Migrations/CompactFavoritesMigration.swift` — strips the retired key and keeps every other value, and leaves a file with other problems to the import |
 | `window-file-test` | `WindowManagement/Model/WindowManagementFileFormat.swift` — command shortcuts, custom sizes, layouts and rooms as settings.json spells them, hand edits and bad records |
 | `launcher-settings-file-test` | Launcher settings application — invalid records, partial edits, deferred bundles, shortcut moves and records outside search scopes; isolated preferences and in-memory scan/Carbon effects |
 | `backup-archive-test` | all of `Backup/Model/`, plus `Backup/Service/BackupStaging.swift` |
 | `updates-test` | `Updates/Model/` — version precedence, channel filtering, install route, readiness |
 | `update-check-test` | `UpdateCheckStore` — stopping, in-flight cancellation, cached prompt suppression, restart and independent manual checking |
-| `support-test` | `Support/Model/` — when the support reminder comes due, and a clock moved backwards |
-| `ai-provider-test` | `AI/Model/` and `AISettingsStore` — instruction composition, provider requests and streams, route settings, protocol framing and CLI launch encodings |
-| `apple-intelligence-test` | On-device status, snapshot deltas, transcript assembly and error mapping; real generation is opt-in |
-| `syntax-highlight-test` | `AI/Model/SyntaxGrammar.swift`, `SyntaxHighlighter.swift`, `SyntaxStructuredLexers.swift` — every grammar's tokens, language aliases, the size limit and streaming prefixes |
-| `mcp-test` | `MCP/Model/` and `MCPSettingsStore` — JSON-RPC framing, handles, tool names, output flattening, trust, `@server` addressing, the shape a vendor CLI is handed, and which servers Nanocast leaves to that CLI |
-| `mcp-stdio-test` | `MCP/Service/` against a stub server — handshake, listing, calling, and every way one can go away |
-| `mcp-oauth-test` | OAuth parsing, RFC 7636 PKCE, discovery and resource binding, loopback callback validation/cancellation, dynamic registration, supplied client credentials and their token-endpoint authentication, Keychain token rotation, concurrent refresh, the wider margin for a token lent to a CLI, redirects and one-retry 401 handling |
-
-`mcp-stdio-test` copies `Tests/ai-fixtures/mcp-stub.js` into a scratch directory. The stub
-reads fd 0 synchronously and writes replies with `fs.writeSync`, so a reply reaches the pipe before
-an exit mode finishes.
-
-Completion checks use bounded state waits; exclusion windows and intentional timeout cases keep their
-observation delays.
-
-`mcp-oauth-test` starts `Tests/ai-fixtures/mcp-oauth-stub.js` on `127.0.0.1:4963` and tests the
-single-use callback on `127.0.0.1:4962`. Both ports must be free; the harness never chooses another
-port. Its Keychain scope is unique to each run and removed on completion.
 
 A harness that passed before a change passes after it. There is no "I'll fix it next commit" and no
 commenting out a case. If a change genuinely invalidates an assertion, the assertion is rewritten in the
@@ -229,7 +165,7 @@ when touching a pure file:
 - `HotKeys/Model/DoubleTap*` still take the clock as a parameter
 - `WindowManagement/Model/` still touches no `NSScreen` and makes no AX call, layouts included
 - `Features/PaletteRowIndex.swift` still imports Foundation alone, despite living under `Features/`
-- `Quicklinks/Model/` is still handed the home directory rather than reading it
+- `Launcher/Model/LinkDestination.swift` is still handed the home directory rather than reading it
 - `FileSearch/Model/` is still handed the home directory rather than reading it
 
 ## Build and size checks
@@ -257,18 +193,12 @@ find ~/Library/Developer/Xcode/DerivedData -name "Nanocast*.app" -maxdepth 6 -pr
 ./Scripts/lint.sh
 ```
 
-SwiftLint owns the rules that catch defects, including the two checkable comment rules — the
-100-character cap and the ban on stacked comment lines. Errors block; warnings do not. There is no
-formatter, deliberately — the configuration and the measurements behind that are in
-[development.md](development.md#formatting).
+`lint.sh` runs SwiftLint with `--strict`, so every violation blocks, and then `./Scripts/format.sh --check`. The rule decisions and the formatter configuration are in [development.md](development.md#linting). No tool checks the comment policy in [standards.md](standards.md#comments).
 
 The script then runs `Scripts/check-settings-search.js`, one check SwiftLint can't: every
 `SettingsAnchor` must be claimed by a section, and every row in `SettingsSearchCatalog` must be
 marked by a `SettingsRowTitle`. Either gap compiles and reads fine, and fails only at runtime as a
 search result that navigates and then sits there.
-
-Last, `Scripts/check-migrations.sh` fails once a stable release has shipped a migration, which is the
-cue to delete it. See [migrations.md](migrations.md).
 
 ## Performance measurement
 
@@ -307,10 +237,6 @@ swiftc -O -swift-version 6 Nanocast/Features/Calculator/Model/*.swift \
 /tmp/calc-performance --cold "10kg to lb"   # first query, including catalog decode
 ```
 
-`Tests/text-diff-performance.swift` is the same shape for `TextDiffEngine`: build it with `-O`
-against the engine, pass a token count, a workload (`dense`, `sparse`, `equal`, `empty`) and an
-iteration count for timings, or `--probe` to diff every chunk between two builds.
-
 `Tests/clipboard-file-performance.swift` measures file capture with private pasteboards and temporary
 fixtures. It reports wall and process CPU time as JSON for modern and legacy formats, including
 32/1,000/10,000 durable files, rejected-input controls and an uncapped-reader control that guards
@@ -347,8 +273,7 @@ $D/clipboard-thumbnail-performance /tmp/ctp --copies
 
 `Tests/emoji-search-performance.swift` times uncached queries, typing prefixes and memo hits against
 the loaded catalog, with process RSS and footprint as JSON; `--names` also lists every catalog name
-missing from its own top five results, and `--languages fr,ja` loads those keyword packs first (run it
-from the repo root):
+missing from its own top five results (run it from the repo root):
 
 ```sh
 swiftc -O -swift-version 6 Nanocast/Features/Emoji/Model/{EmojiCatalog,EmojiData.generated}.swift \
@@ -356,7 +281,6 @@ swiftc -O -swift-version 6 Nanocast/Features/Emoji/Model/{EmojiCatalog,EmojiData
     Nanocast/Features/Launcher/Model/SearchRelevance.swift Nanocast/Platform/{AppPaths,Memo}.swift \
     Tests/emoji-search-performance.swift -o /tmp/emoji-search-performance
 /tmp/emoji-search-performance --names
-/tmp/emoji-search-performance --languages fr,ja
 ```
 
 `Tests/notes-editor-performance.swift` installs a 100,000-character note in a real rendered editor and
@@ -372,7 +296,6 @@ keystroke. Inside `didChange`, near the top of the note, the read does that layo
 N=Nanocast/Features/Notes
 swiftc -O -swift-version 6 Nanocast/Platform/{Signposts,Appearance,NotificationToken}.swift \
     Nanocast/DesignSystem/{Theme,InterfaceMetrics}.swift \
-    Nanocast/Features/TextInjection/Service/InjectableTextView.swift \
     $N/Model/{NoteDocument,NoteMarkdown,NoteMarkdownParser,NoteInlineScanner}.swift \
     $N/Model/{NoteEditPlan,NoteEditAction,NoteFormatting,NoteMarkdownEditing,NoteRevealPolicy}.swift \
     $N/UI/{NoteMarkdownTypography,NoteBlockDecoration,NoteMarkdownStyler,NoteMarkdownRenderer}.swift \
@@ -386,11 +309,6 @@ swiftc -O -swift-version 6 Nanocast/Platform/{Signposts,Appearance,NotificationT
 leaks the interval when the work throws, because the `.end` emit is skipped on the throw path and the
 instrument then shows an interval that never closes.
 
-`./Scripts/benchmark-dictation.sh AUDIO` measures all four installed dictation models with fresh and
-reused helpers, reporting load time, transcription time, sampled helper footprint and recognized text.
-It uses only the supplied audio and already downloaded models, outside the app and deterministic suite.
-See [Dictation validation](features/dictation.md#validation) for comparison limits and optional arguments.
-
 Measure before optimising, and measure the same way twice. For cold launch: quit fully, relaunch, time
 it three times, take the median.
 
@@ -398,19 +316,18 @@ it three times, take the median.
 
 Measured at the end of the 2026 refactor, on `main`. Useful as orders of magnitude, not as contracts.
 
-| | Value |
-| --- | --- |
-| Release binary | 3,655,736 B (from 3,471,592 B at the start of the refactor) |
-| Resident memory | 40–80 MB in normal use; the hard ceiling is 100 MB |
-| `SettingsPaneScanner` warm scan | 0.014 ms (16.5 ms cold), 52 panes |
-| Largest view / owner | `RootPaletteView` 662 lines, `AppCore` 284 lines |
-| Comment density | 1,653 of 27,289 source lines (6.1%) |
-| The harness suite | ~15 s wall clock, 11-way parallel (~98 s serial, ~140 s before either) |
-| `palette-selection-test` | 111,684 assertions — a tripwire: a change in this count means the row-order model moved |
-| `SnippetKeywordPolicy` match | 7 µs/keystroke at 50 keywords, 59 µs at 1,000 — the `lowercased()` is 0.09 µs of it |
-| `ClipboardStore.pinnedItems` | 27–127 µs per uncached search, 1,000-row window — no cache earns its invalidation yet |
+|                                           | Value                                                                                                                                                                |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Release binary                            | 3,655,736 B (from 3,471,592 B at the start of the refactor)                                                                                                          |
+| Resident memory                           | 40–80 MB in normal use; the hard ceiling is 100 MB                                                                                                                   |
+| `SettingsPaneScanner` warm scan           | 0.014 ms (16.5 ms cold), 52 panes                                                                                                                                    |
+| Largest view / owner                      | `RootPaletteView` 662 lines, `AppCore` 284 lines                                                                                                                     |
+| Comment density                           | 1,653 of 27,289 source lines (6.1%)                                                                                                                                  |
+| The harness suite                         | ~15 s wall clock, 11-way parallel (~98 s serial, ~140 s before either)                                                                                               |
+| `palette-selection-test`                  | 111,684 assertions — a tripwire: a change in this count means the row-order model moved                                                                              |
+| `ClipboardStore.pinnedItems`              | 27–127 µs per uncached search, 1,000-row window — no cache earns its invalidation yet                                                                                |
 | Rendered Notes editor, 100,000 characters | 30 ms install and full restyle; 7.5, 5.9 and 3.3 ms per character typed at the end, middle and start (5.2, 3.1 and 0.6 ms with rendering off); 0.6 ms per caret move |
-| `count items of trash` | 5,000 ms against a cold Finder on an *empty* Trash, 110 ms warm — why AppleScript is detached |
+| `count items of trash`                    | 5,000 ms against a cold Finder on an _empty_ Trash, 110 ms warm — why AppleScript is detached                                                                        |
 
 Launch time, allocation counts and RSS have never been captured as numbers. The signposts are in place,
 so any of them can be taken from `main` whenever a change makes it worth knowing.
@@ -428,7 +345,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 
 - Palette hotkey opens the launcher; pressing it again closes it; Escape clears a non-empty query,
   then hides on a second press; clicking away closes it
-- Search a mode command (Clipboard History, Search Emoji, Search Quicklinks, Search Files, Quick AI)
+- Search a mode command (Clipboard History, Search Emoji, Search Files, Search Custom Commands)
   and run it: Escape returns to the launcher **with the query still typed and the row still
   selected**, and the next press clears it. The same screen from its own global hotkey hides the
   palette instead, and shows its own header icon rather than a back chevron
@@ -467,24 +384,22 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
   candidate is committed — check on a second summon too, where first responder never moved
 - Typing filters instantly; ↑/↓ move the highlight and scroll it into view without yanking the list
 - ⌃N/⌃P move the highlight as ↓/↑ do; ⌃F/⌃B step compact shortcuts or the emoji grid's selection, and the caret elsewhere
-- The highlight always sits on the row the footer pill describes
+- The highlight always sits on the row ↵ acts on
 - With a calculation typed, the calculator card is first and is selected first
 - ⌘↵ on a number, unit or money card puts the answer in the search bar with the caret after it, so
   ` * 2` typed straight away extends it — from ⌘K too; a date or time card offers neither
 - With macOS set to a decimal-comma region (Italian), `2,3 + 1,5` answers `3,8`, `max(2,5; 3)`
   answers `3`, and ↵ pastes `3,8`; General ▸ Calculator ▸ Number format `English` restores `2.3 + 1.5`
   and re-renders past Calculator History in the chosen format
-- Section headers appear in order: Favorites, Applications, System Settings, Quicklinks, Snippets,
-  System Actions, Window Management, Custom Commands, Commands
+- Section headers appear in order: Favorites, Applications, System Settings, System Actions,
+  Window Layouts, Rooms, Window Management, Custom Commands, Commands
 - With a non-ASCII input source active, ⌘K opens Actions; ↑/↓ move it, ↵ activates, Escape closes it
 - In either ⌘K Actions panel, typing filters immediately in the bottom search band without changing
   the palette query; sections survive filtering, **No Results** is centred, and no dissolve covers the
   last row. The native caret blinks; mouse drag and ⌘A select text; ←/→ move through it; ↑/↓ still
   move the menu highlight. Escape clears a non-empty query, then closes the menu on the next press
-- The bottom-left app menu also searches from its bottom band; every header menu — including Emoji
-  categories, File Search filters and extension dropdowns — searches from its top band
-- The app menu has no divider above Quit; Quit opens partially visible above the search band and
-  scrolls fully into view with the pointer or arrow keys. Filtering to fewer rows shrinks the menu
+- Every header menu — including Emoji categories and File Search filters — searches from its top
+  band. Filtering to fewer rows shrinks the menu
 - A long menu opens with unchanged row insets; while scrolling, rows can reach the panel edges
 - A click in the palette but outside its menu closes only the menu; a click outside the palette
   closes both, regardless of the menu query; the next summon accepts typing immediately
@@ -545,7 +460,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 
 ### Hotkeys
 
-- The palette, clipboard, emoji, File Search, and all three Notes shortcuts fire; a per-app shortcut
+- The palette, clipboard, emoji, File Search and all three Notes shortcuts fire; a per-app shortcut
   toggles that app
 - Recording captures a shortcut, and the old binding does not fire while recording
 - A conflicting binding is rejected and names its current owner
@@ -583,7 +498,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
   Diagnostics… reports a Karabiner conflict
 - Every binding survives quit and relaunch
 - `Enable Commands` off leaves every pane-owned command listed, searchable and firing — Notes,
-  Clipboard, Emoji, File Search, Snippets, Quicklinks, Calendar, AI and the two layout commands
+  Clipboard, Emoji, File Search, Navigation and the two layout commands
 
 ### Uninstall
 
@@ -598,34 +513,6 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - Escaping mid-scan cancels promptly with no spinner left behind
 - Hiding and immediately restoring the screen never strands an in-flight file icon as a placeholder
 
-### Quicklinks
-
-- A quicklink opens its destination; `{argument}` prompts in order and Backspace steps back
-- `{selection}` with nothing selected opens nothing and shows "Couldn’t get the selected text". With
-  a required `{argument}` too, the argument is asked for first
-- In an app Accessibility can't read (a terminal, an Electron app), a `{selection}` quicklink still
-  opens with the selected text, the clipboard holds what it held before, and Clipboard History gains
-  no entry for the selection. Repeat it ten times to be sure
-- With **Pass selected text as argument** on, select text and press a quicklink's shortcut: its first
-  free-text argument is filled and the link opens. Blank selection or an `options=` first argument still
-  prompts; Return on the row in the launcher never fills from the selection
-- Opening Search Quicklinks normally focuses search; a readable selection opens directly.
-  Custom-command argument prompts still focus their first missing field
-- In the launcher and Search Quicklinks, open Actions with ⌘K and close with ⌘K or Escape. Immediately
-  type a query, use the arrows and press Return; the palette must accept keyboard input again
-- Pin, duplicate, delete and Open with Default all behave; import and export round-trip
-- Display order is pinned first by pin time, then by name
-
-### Apple Shortcuts
-
-- Off out of the box: the pane lists nothing and no shortcut reaches the launcher
-- Switching on lists every shortcut with the Shortcuts app's icon; ↵ on a row runs it
-- A shortcut added in Shortcuts appears on the next launcher open
-- A row's hotkey runs it with the palette closed; switching the feature off silences it
-- Unchecking a row hides it from search, and its hotkey still fires
-- Deleting a shortcut in Shortcuts frees its alias and hotkey on the next launcher open
-- A shortcut that fails shows Nanocast's dialog with the tool's error
-
 ### File Search
 
 - With File Search **off**: Search Files is absent, its shortcut no-ops, and no index folder exists
@@ -635,7 +522,6 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
   Activity Monitor shows the helper's memory, and Nanocast's own footprint is back at its baseline after
 - Enabling in Settings exposes Search Files immediately; it persists across relaunch and backup import
 - Disabling during a query cancels it, returns the open screen to the launcher and deletes the index
-- File Search and Quicklinks remain independently visible in all four enabled/disabled combinations
 - An empty query lists recent files under home; a filename query returns only entries beneath the scopes
 - Files under home rank above system, hidden and bundle files with the same name
 - Creating, renaming and deleting a file in `~/Desktop` shows in results within a second
@@ -657,10 +543,8 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - Search Files is absent from Settings ▸ Commands, and `Enable Commands` off leaves its shortcut live
 - Export, clear both lists and the shortcut, re-import: all three return, defaults undo not duplicated
 - **Show in launcher** off (the default): a typed filename lists no Files section
-- **Show in launcher** on: three or more characters list up to five files between Results and the
-  fallbacks; two do not. ↵ opens, ⌘↵ reveals, the copy, paste and ⌃X chords act
-  on the row, and a row drags out as a copy
-- Choosing the Search Files fallback right after opens on the same results without a pause
+- **Show in launcher** on: three or more characters list up to five files below Results; two do not.
+  ↵ opens, ⌘↵ reveals, the copy, paste and ⌃X chords act on the row, and a row drags out as a copy
 - With Pop to Root Search delayed, close and reopen before the timeout: the launcher keeps its query
   and file results. Let the timeout expire, or use Immediately: reopening starts with an empty query
 
@@ -703,7 +587,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - Return continues and leaves lists and quotes, Tab and Shift-Tab nest, ordered lists renumber, `[] `
   becomes a task, and every formatting shortcut works and undoes in one step
 - Pasting a URL over selected text makes a link; pasting anything else is plain text
-- Copy from a rendered line pastes raw Markdown into another app; a snippet keyword expands inside a
+- Copy from a rendered line pastes raw Markdown into another app; dictated text lands inside a
   rendered note and is styled at once
 - The derived title of an Untitled note shows no Markdown markers
 - A narrow window wraps list items under their text, not under the marker
@@ -775,16 +659,6 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - Over a light desktop, the corner matches the palette's, the shadow follows it, and no dark edge shows
   around the glass controls
 
-### Snippets
-
-- With snippets **off**: no launcher entries, no keyword expansion, and no permission prompt at launch
-- Enabling shows the consent dialog **before** the Accessibility prompt
-- Declining leaves the feature off and prompts for nothing
-- After enabling, a keyword expands in a text field; an argument-bearing snippet prompts then delivers
-- A `{selection}` snippet inserted from Search Snippets or its shortcut wraps text selected in an app
-  Accessibility can't read, and the clipboard is restored afterwards
-- Editing a snippet file externally reloads it
-
 ### Calculator and currency
 
 - `2+2` shows a card; ↵ copies and records to history; unit and date conversions work
@@ -797,74 +671,13 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - `1000 usd in eur/12` converts and then divides; copying preserves the euro amount and code.
   `100km/h in m/s / 2` retains the compound target, and `1000 usd in eur / 0` stays silent
 
-### Calendar and meetings
-
-- With Calendar **off**: no launcher entries, no card, no permission prompt at launch
-- Enabling shows the consent dialog **before** the macOS prompt; declining prompts for nothing
-- After Calendar permission is reset, Settings ▸ Calendar offers `Allow Calendar Access…` and asks
-  again; after denial it offers System Settings instead
-- With a meeting four minutes out, an empty palette shows the card on top, provider glyph and all
-- The countdown steps on the minute boundary rather than on a keystroke
-- ↵ joins: a Zoom link opens the Zoom app, and the browser where no app claims the scheme
-- Typing a character swaps the card for the calculator's; ↑/↓ never lands on a phantom row
-- Unchecking a calendar drops its events from the launcher and My Schedule, and survives a relaunch
-- `Show in launcher` off drops the meeting entries from the launcher, yet typing `My Schedule`
-  still finds the command, and it still lists the meetings
-- Adding or deleting an event in Calendar.app updates an open palette without a reopen
-- A meeting with no link is listed and searchable, and answers Open in Calendar rather than Join
-- Two upcoming meetings with titles in reverse alphabetical order appear earliest first in the
-  launcher's Meetings section and the `Meetings` category listing, even after opening the later one
-- Import a backup taken with Calendar on: it comes back **off**, and no calendar toggle travels
-- Calendar in Menu Bar on Disabled: the calendar item is gone and Nanocast's own item is unaffected;
-  turning `Show in menu bar` off leaves an enabled calendar item in place, and both off leaves neither
-- On Meeting Title with Show Upcoming Events at 5 minutes, the title and countdown appear at T-5 and
-  step on the minute boundary, not on a keystroke
-- `Only show events with meetings` hides a linkless event and shows it again when unchecked
-- `Hide when there are no upcoming events` removes the item whenever it would show only the glyph or
-  `No upcoming events`: on Today after the last event, on 5 minutes between meetings too. It returns
-  with the next event and never moves the `Calendar in Menu Bar` picker off its choice
-- Hide Current Event on Automatically clears the entry at the start and hands the space to the next
-  event inside its lead time; on 5 minutes it lingers counting up, then clears
-- Clicking the calendar item opens `Join <title>`, `Open in Calendar...`, `My Schedule` and
-  `Calendar Settings...` and nothing else; the second opens that event in Calendar.app, while a bare
-  click never joins
-- Camera Preview on: ↵ on the join card opens the panel **already showing live video** — no black
-  frame, no blank mid-preview; ↵ joins, Esc drops the join; the camera light goes out with the
-  panel, and the first run prompts once, before any panel appears
-- With Open Camera or the join card up, changing a video effect in Control Center leaves the preview
-  live; the next click outside both the panel and system UI then closes it, and Esc does once the
-  panel is clicked
-- A meeting that ends leaves the launcher results and `My Schedule` on the same minute boundary it
-  leaves the menu bar, with the palette open or closed over the end
-- Auto Join on: the meeting opens itself at its start, **once** — dismiss it and it does not return.
-  With confirm on and camera preview off, the dialog asks first
-- Arming Auto Join during a meeting already under way joins nothing
-- `Only join known meeting services` on: an event whose only link is a booking page or document
-  neither asks nor opens at its start, while a Zoom or Meet event beside it still joins; the join
-  card still offers both
-- Sleeping over a meeting's start and waking past it reloads the events; one still inside the window
-  joins, one long past does not
-- Create Event opens the launcher form with only Title, Start and Duration, defaulting to Now and
-  30 min. Blank and whitespace-only titles disable the action, including ⌘↵. Tab/Shift-Tab cycle the
-  fields; Return/Space/Down open a focused choice, and Escape closes that menu before the form.
-- Back or Escape restores the search and selection that opened Create Event; a hotkey-opened form
-  closes instead. Disabling Calendar closes the editor, and revoked permission cannot write an event.
-- Create Event writes to the default calendar and shows up on the card, the schedule and the launcher
-  without a relaunch; start offsets are measured at save, not when the editor opens.
-- Arrow keys move the caret in the event title field, and still step the Set Volume slider.
-- Every command row of Settings ▸ Calendar has Add Alias, Record Hotkey and a checkbox, and none of
-  the five appears in Settings ▸ Commands
-- Export with auto join and camera preview on, import onto a clean profile: both come back **off**,
-  while the menu-bar settings carry over
-
 ### File favorites
 
 - In Search Files, use ⌘K → Add to Favorites on a folder and ⇧⌘F on a file. Open root search with an
   empty query: both appear with app favorites in insertion order, including after relaunch.
 - Move files and apps across each other with ⌥⌘↑/↓ and the matching menu actions; selection follows
   the moved row. Remove a favorite through either path; selection stays within Favorites.
-- Hold ⌘ and check that each displayed ⌘1–⌘0 opens that favorite, including with the meeting card
-  above Favorites and from the compact palette.
+- Hold ⌘ and check that each displayed ⌘1–⌘0 opens that favorite, including from the compact palette.
 - Search for a saved filename, including a short query and accented text: the favorite appears once.
   Turn Show in launcher off: saved files remain available; disable File Search: they disappear.
   Re-enable it: their order returns.
@@ -897,20 +710,6 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
   turning Window Management off each bring every window back.
   Repeat on two displays and with Reduce Motion on
 
-### Extensions
-
-- Open `raycast://extensions/linear/linear?source=webstore` from a browser: Settings → Extensions
-  offers the exact Store listing with Install (or Reinstall). Close it without installing, then open
-  a different Store link and verify its listing replaces the first. Repeat with extensions disabled:
-  Settings opens without looking up, installing or running anything; enabling still asks for consent.
-- Open a view-command deeplink with `fallbackText=beta`, with the palette hidden and already open:
-  the field shows `beta`; a locally filtered List/Grid shows matching rows, and a command using
-  `onSearchTextChange` receives the query when it mounts. Repeat without fallback text: the field
-  starts empty. A no-view command receives the prop without prefilling the search field.
-- Every command under Settings ▸ Extensions has Add Alias, and Record Hotkey when the mode is
-  supported; an alias set there finds the command from its start and shows the chip
-- Hiding the extension from the launcher, or turning off Show in launcher, dims its alias fields
-
 ### Settings and backup
 
 - General → Automatically check for updates defaults on; turn it off and relaunch: it stays off,
@@ -925,8 +724,8 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - An image clip round-trips and still renders; the archive can then be deleted without breaking it
 - A file whose `manifest.json` `format` was hand-edited is refused **with a message naming it**
 - Cancelling the save panel leaves nothing in `~/Library/Caches/com.nanocast.app.dev/backup-staging/`
-- **`snippetsEnabled` is not in the exported file**, and importing does not enable snippets
-- Nothing in the extracted tree names a Keychain item, an extension, or an AI conversation
+- **`clipboardTextSearchEnabled` is not in the exported file**, and importing does not enable clipboard
+  text recognition
 
 ### Clean install
 
@@ -942,11 +741,8 @@ tccutil reset Accessibility com.nanocast.app.dev 2>/dev/null || true
 ```
 
 - Launches with every store directory absent — no crash, no hang; onboarding runs
-- With no saved app language, onboarding uses the primary system language if supported, otherwise
-  English; a saved language stays unchanged on relaunch
-- Onboarding has no Dock entry; completing it leaves the palette open and ready for typing.
-  Settings still adds a Dock entry while open and removes it when the last ordinary window closes
-- Palette opens and lists apps; clipboard, quicklinks, snippets and calculator history are all empty
+- Onboarding has no Dock entry. Completing it leaves the palette open and ready for typing. Settings still adds a Dock entry while open and removes it when the last ordinary window closes.
+- Palette opens and lists apps; clipboard, custom commands and calculator history are all empty
   and all accept a first entry
 - Notes creates no directory until Show, Create, or Search is first used, then accepts its first edit
 - **Every setting shows its intended default.** Walk the panes: this is what catches a broken

@@ -20,7 +20,6 @@ struct NoteEditorView: NSViewRepresentable {
         scrollView.scrollerStyle = .overlay
         scrollView.autohidesScrollers = true
         scrollView.borderType = .noBorder
-        // `NotesView` lays out its own title-bar band, so AppKit must not inset this a second time.
         scrollView.automaticallyAdjustsContentInsets = false
 
         let textView = NoteTextView(usingTextLayoutManager: true)
@@ -48,7 +47,6 @@ struct NoteEditorView: NSViewRepresentable {
         }
         let editorUndoManager = UndoManager()
         let renderer: NoteMarkdownRenderer
-        /// Replaced by the harness, which records a link instead of opening a browser.
         var openURL: (URL) -> Void = { NSWorkspace.shared.open($0) }
 
         private var input: NoteEditorInput
@@ -181,12 +179,10 @@ struct NoteEditorView: NSViewRepresentable {
             renderer.selectionDidChange()
         }
 
-        /// `NSTextStorage.length` is maintained by TextKit, so the counter costs nothing per edit.
         private func reportCharacterCount() {
             parent.onCharacterCountChange(input, textView?.textStorage?.length ?? 0)
         }
 
-        /// With rendering off there is no parse to read, and the bar is hidden anyway.
         private func reportFormatting() {
             guard let textView else { return }
             let formatting =

@@ -36,31 +36,25 @@ struct SystemAction: Identifiable, Hashable, Sendable {
         case toggleBluetooth = "toggle-bluetooth"
     }
 
-    /// Whether it confirms first, and the copy; every such action is destructive.
     enum Confirmation: Hashable, Sendable {
         case none
         case required(title: String, message: String)
-        /// Asks only while Finder's own "Show warning before emptying the Trash" is on.
         case followsFinder(title: String, message: String)
-        /// Quit All alone counts its targets before asking, so its copy is built at call time.
         case computed
     }
 
     let id: ID
     let name: String
-    let englishName: String
     let sfSymbol: String
     let confirmation: Confirmation
 
-    /// Stable identity for the entry, and with it every persisted key it owns.
     var entryID: String { "system-action:" + id.rawValue }
 }
 
 enum SystemActionCatalog {
     static let all: [SystemAction] = SystemAction.ID.allCases.map { id in
-        let name = name(for: id)
-        return SystemAction(
-            id: id, name: name.resolved(), englishName: name.key, sfSymbol: symbol(for: id),
+        SystemAction(
+            id: id, name: name(for: id), sfSymbol: symbol(for: id),
             confirmation: confirmation(for: id))
     }
 
@@ -72,11 +66,10 @@ enum SystemActionCatalog {
     }
 
     static func action(id: SystemAction.ID) -> SystemAction {
-        // Every ID is in `all` by construction, so a miss is a programmer error.
         byID[id]!
     }
 
-    private static func name(for id: SystemAction.ID) -> LocalizedStringResource {
+    private static func name(for id: SystemAction.ID) -> String {
         switch id {
         case .lockScreen: return "Lock Screen"
         case .sleep: return "Sleep"
@@ -142,28 +135,27 @@ enum SystemActionCatalog {
         case .unhideAllApps: return "eye.circle"
         case .quitAllApps: return "xmark.circle"
         case .dismissNotifications: return "bell.slash"
-        // Not an SF Symbol: the logo is a trademark, so this is a bundled asset.
         case .toggleBluetooth: return "bluetooth"
         }
     }
 
     private static let sessionEndingMessage =
-        String(localized: "Applications with unsaved changes may ask you to save.")
+        "Applications with unsaved changes may ask you to save."
 
     private static func confirmation(for id: SystemAction.ID) -> SystemAction.Confirmation {
         switch id {
         case .restart:
             return .required(
-                title: String(localized: "Restart your Mac?"), message: sessionEndingMessage)
+                title: "Restart your Mac?", message: sessionEndingMessage)
         case .shutDown:
             return .required(
-                title: String(localized: "Shut down your Mac?"), message: sessionEndingMessage)
+                title: "Shut down your Mac?", message: sessionEndingMessage)
         case .logOut:
-            return .required(title: String(localized: "Log out now?"), message: sessionEndingMessage)
+            return .required(title: "Log out now?", message: sessionEndingMessage)
         case .emptyTrash:
             return .followsFinder(
-                title: String(localized: "Empty Trash?"),
-                message: String(localized: "The items in the Trash will be permanently deleted."))
+                title: "Empty Trash?",
+                message: "The items in the Trash will be permanently deleted.")
         case .quitAllApps:
             return .computed
         default:

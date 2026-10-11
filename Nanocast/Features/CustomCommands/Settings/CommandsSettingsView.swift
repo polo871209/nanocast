@@ -14,8 +14,7 @@ struct CommandsSettingsView: View {
             LauncherItemsSection(
                 kind: .command,
                 anchor: .commandsCommands,
-                searchPrompt: "Search commands…",
-                emptyMessage: LocalizedStringResource("commands-empty", defaultValue: "Nothing here yet."))
+                searchPrompt: "Search commands…")
 
             FeatureSwitchSection(
                 anchor: .commandsCustomCommands,
@@ -95,11 +94,9 @@ private struct CustomCommandSettingsRow: View {
                     .help("Hidden from root search")
             }
 
-            // An alias only reaches the ranker through the launcher slice, so it dims with it.
             AliasField(key: command.entryID, name: command.name)
                 .settingsEnabled(command.isEnabled && showsInLauncher && command.showsInRootSearch)
 
-            // A disabled command's shortcut fires into the funnel's refusal, so it dims too.
             ShortcutRecorder(action: .customCommand(id: command.id))
                 .settingsEnabled(command.isEnabled)
 

@@ -18,14 +18,13 @@ final class NotesStore {
     private(set) var searchQuery = ""
     private(set) var searchResults: [NoteSearchResult] = []
     private(set) var isSearching = false
-    /// Derived from the live draft, not the last listing, so an unnamed note titles itself as typed.
     var activeTitle: String {
-        guard let activeID else { return String(localized: "Notes") }
+        guard let activeID else { return "Notes" }
         let title =
             summaries.first(where: { $0.id == activeID })?.title
             ?? URL(fileURLWithPath: activeID.rawValue).deletingPathExtension().lastPathComponent
         guard NoteTitle.isUnnamed(title) else { return title }
-        return NoteTitle.firstLine(of: source) ?? NoteTitle.displayName(title)
+        return NoteTitle.firstLine(of: source) ?? title
     }
     var activeFileURL: URL? { activeID.map(repository.fileURL(for:)) }
     private(set) var notesDirectory: URL
@@ -39,7 +38,6 @@ final class NotesStore {
     @ObservationIgnored private var searchTask: Task<Void, Never>?
     @ObservationIgnored private var searchWorker: Task<[NoteSearchResult], Never>?
     private var saveFailed = false
-    /// A folder change that waits on a draft the old folder could not take yet.
     @ObservationIgnored private var pendingRelocation: NotesRepository?
     private var searchGeneration = 0
     @ObservationIgnored private var sourceRevision = 0
@@ -66,7 +64,6 @@ final class NotesStore {
         return await reload()
     }
 
-    /// Moves to another folder once the open draft is saved where it was, then the new one lists.
     func relocate(to repository: NotesRepository) async {
         pendingRelocation = nil
         guard repository.notesDirectory != notesDirectory else { return }
@@ -78,7 +75,6 @@ final class NotesStore {
         self.repository = repository
         notesDirectory = repository.notesDirectory
         guard isLoaded else { return }
-        // Cleared first, so a folder that fails to load leaves no old note to save into it.
         apply(nil, summaries: [])
         _ = await reload(preferredID: nil)
     }
@@ -102,12 +98,10 @@ final class NotesStore {
         return await flush()
     }
 
-    /// The one place a write starts, so a debounced save and a flush can never overlap on one file.
     @discardableResult
     func flush() async -> Bool {
         saveDebounce?.cancel()
         saveDebounce = nil
-        // Two rounds: one for a write already in flight, one for an edit that landed while it ran.
         for _ in 0..<2 {
             if let saveTask {
                 await saveTask.value
@@ -145,7 +139,6 @@ final class NotesStore {
         }
     }
 
-    /// Writes imported notes as new files and re-lists, leaving the open draft where it was.
     func importNotes(_ notes: [NotesRepository.Incoming]) async -> Int {
         guard !notes.isEmpty else { return 0 }
         let repository = repository
@@ -231,7 +224,6 @@ final class NotesStore {
         switch result {
         case .success(let payload):
             cancelSearch()
-            // An empty collection is a legal resting state; only creating brings a note back.
             if replacesActive {
                 apply(payload.0, summaries: payload.1)
             } else {
@@ -259,7 +251,6 @@ final class NotesStore {
             return
         }
         isSearching = true
-        // The previous query's rows must not linger under the new query text.
         searchResults = []
         let repository = repository
         let summaries = summaries
@@ -296,7 +287,6 @@ final class NotesStore {
         isSearching = false
     }
 
-    /// Never cancels an in-flight write; every caller flushes first.
     func stop() {
         saveDebounce?.cancel()
         saveDebounce = nil
@@ -331,7 +321,6 @@ final class NotesStore {
             return true
         case .failure(let failure):
             publish(.load(failure))
-            // Only a first load may keep the window shut; a loaded store can still show its draft.
             return isLoaded
         }
     }
@@ -383,7 +372,6 @@ final class NotesStore {
         onIssue?(issue)
     }
 
-    /// Every repository call is blocking IO, so it runs off-main and reports one typed failure.
     private func detached<Value: Sendable>(
         _ work: @escaping @Sendable () throws -> Value,
         recover fileURL: @escaping @Sendable () -> URL

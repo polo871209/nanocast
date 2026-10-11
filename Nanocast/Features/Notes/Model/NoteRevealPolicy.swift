@@ -1,8 +1,6 @@
 import Foundation
 
-/// Decides which lines show their raw Markdown rather than its rendered form.
 enum NoteRevealPolicy {
-    /// Lines that show raw syntax: those under the selection, widened to whole fenced blocks.
     static func revealedLines(
         selection: NSRange, markdown: NoteMarkdown, isFocused: Bool
     ) -> IndexSet {
@@ -16,7 +14,6 @@ enum NoteRevealPolicy {
         return revealed
     }
 
-    /// Carries a revealed set across an edit so stale lines can still be found and re-hidden.
     static func shifted(
         _ revealed: IndexSet, editedOldLines: Range<Int>, editedNewLines: Range<Int>
     ) -> IndexSet {

@@ -19,13 +19,6 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                Picker(selection: $settings.language) {
-                    ForEach(AppLanguage.allCases) { language in
-                        Text(verbatim: language.title).tag(language)
-                    }
-                } label: {
-                    SettingsRowTitle(.generalGeneral, "Language")
-                }
                 Toggle(isOn: $settings.launchAtLogin) {
                     SettingsRowTitle(.generalGeneral, "Launch at login")
                 }
@@ -53,7 +46,6 @@ struct GeneralSettingsView: View {
                     SettingsRowTitle(.generalGeneral, "Escape Key Behavior")
                     Text("When the search field is empty.")
                 }
-                // Empty only when TIS fails; one layout still lists, so the row stays put.
                 if !inputSources.isEmpty {
                     Picker(selection: $settings.autoSwitchInputSourceID) {
                         Text("None").tag(nil as String?)
@@ -178,12 +170,12 @@ private struct WindowModeRow: View {
     var body: some View {
         SettingsRow(
             title: "Window mode",
-            subtitle: String(localized: "Choose how the launcher opens."),
+            subtitle: "Choose how the launcher opens.",
             subtitleLineLimit: 2, alignment: .top, anchor: .generalAppearance
         ) {
             HStack(spacing: Theme.Spacing.md) {
-                option(String(localized: "Compact"), image: "WindowModeCompact", compact: true)
-                option(String(localized: "Expanded"), image: "WindowModeExpanded", compact: false)
+                option("Compact", image: "WindowModeCompact", compact: true)
+                option("Expanded", image: "WindowModeExpanded", compact: false)
             }
         }
     }
@@ -240,7 +232,6 @@ private struct WindowModeButtonStyle: ButtonStyle {
     }
 }
 
-/// Three glyph steps read as a legend; a true-to-scale "Aa" would look identical at 1.1.
 private struct InterfaceSizeRow: View {
     @Environment(AppSettings.self) private var settings
 
@@ -251,7 +242,7 @@ private struct InterfaceSizeRow: View {
     var body: some View {
         SettingsRow(
             title: "Interface size",
-            subtitle: String(localized: "Resizes the launcher and its panels, but not Settings."),
+            subtitle: "Resizes the launcher and its panels, but not Settings.",
             anchor: .generalAppearance
         ) {
             HStack(spacing: Theme.Spacing.xs) {

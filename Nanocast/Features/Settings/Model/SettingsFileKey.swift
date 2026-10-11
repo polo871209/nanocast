@@ -1,16 +1,12 @@
 import Foundation
 
-/// Every key settings.json holds, in the order the file lists them; the raw value is its path.
 enum SettingsFileKey: String, CaseIterable, Sendable {
-    // Spelled out, so renaming a case can never rename a key in someone's file.
     case launcherShortcut = "general.launcherShortcut"
     case showInMenuBar = "general.showInMenuBar"
     case automaticallyCheckForUpdates = "general.automaticallyCheckForUpdates"
     case popToRootTimeout = "general.popToRootSeconds"
     case escapeKeyBehavior = "general.escapeKeyBehavior"
     case autoSwitchInputSource = "general.autoSwitchInputSource"
-    case supportReminders = "general.supportReminders"
-    case language = "general.language"
     case appearance = "appearance.theme"
     case animationsEnabled = "appearance.animations"
     case interfaceSize = "appearance.interfaceSize"
@@ -36,35 +32,6 @@ enum SettingsFileKey: String, CaseIterable, Sendable {
     case builtInCommands = "commands.builtIn"
     case customCommandsEnabled = "commands.enabled"
     case customCommandsShowInLauncher = "commands.showInLauncher"
-    case quicklinksEnabled = "quicklinks.enabled"
-    case quicklinksShowInLauncher = "quicklinks.showInLauncher"
-    case quicklinkOpensNewWindow = "quicklinks.opensNewWindow"
-    case quicklinkPassesSelectedText = "quicklinks.passesSelectedText"
-    case quicklinkConfirmsBeforeDelete = "quicklinks.confirmsBeforeDelete"
-    case quicklinkCommands = "quicklinks.commands"
-    case appleShortcutsEnabled = "appleShortcuts.enabled"
-    case aiEnabled = "ai.enabled"
-    case aiWebSearch = "ai.webSearch"
-    case aiChoices = "ai.choices"
-    case aiSystemPrompt = "ai.systemPrompt"
-    case aiSystemPromptEnabled = "ai.systemPromptEnabled"
-    case aiRetention = "ai.retentionDays"
-    case aiOpensTo = "ai.opensTo"
-    case aiNewChatAfter = "ai.newChatAfterMinutes"
-    case aiToolRounds = "ai.toolRounds"
-    case aiCommands = "ai.commands"
-    case quickActionLanguage = "quickActions.targetLanguage"
-    case quickActionCommands = "quickActions.commands"
-    case dictationMode = "dictation.mode"
-    case dictationShortcut = "dictation.shortcut"
-    case dictationPlaysSounds = "dictation.playsSounds"
-    case dictationModel = "dictation.model"
-    case dictationMicrophone = "dictation.microphone"
-    case dictationDestination = "dictation.destination"
-    case dictationAdaptsCapitalization = "dictation.adaptsCapitalization"
-    case dictationLiveInsertion = "dictation.liveInsertion"
-    case dictationIdleRelease = "dictation.releaseAfterMinutes"
-    case dictationLanguage = "dictation.language"
     case fileSearchEnabled = "fileSearch.enabled"
     case fileSearchScopes = "fileSearch.scopes"
     case fileSearchIgnorePatterns = "fileSearch.ignorePatterns"
@@ -77,9 +44,6 @@ enum SettingsFileKey: String, CaseIterable, Sendable {
     case notesShowsInMenuBar = "notes.showsInMenuBar"
     case notesFolder = "notes.folder"
     case notesCommands = "notes.commands"
-    case snippetsShowInLauncher = "snippets.showInLauncher"
-    case snippetsFolder = "snippets.folder"
-    case snippetsCommands = "snippets.commands"
     case navigationEnabled = "navigation.enabled"
     case menuSearchShowsAppleMenu = "navigation.menuSearchShowsAppleMenu"
     case menuSearchDisabledApps = "navigation.menuSearchDisabledApps"
@@ -104,26 +68,11 @@ enum SettingsFileKey: String, CaseIterable, Sendable {
     case emojiSkinTone = "emoji.skinTone"
     case emojiGridColumns = "emoji.gridColumns"
     case emojiCommands = "emoji.commands"
-    case calendarShowInLauncher = "calendar.showInLauncher"
-    case calendarLauncherLimit = "calendar.launcherLimit"
-    case calendarSpan = "calendar.span"
-    case joinWindowMinutes = "calendar.joinWindowMinutes"
-    case autoJoinConfirms = "calendar.autoJoinConfirms"
-    case autoJoinNamedProvidersOnly = "calendar.autoJoinNamedProvidersOnly"
-    case meetingBrowser = "calendar.meetingBrowser"
-    case calendarMenuBarDisplay = "calendar.menuBar"
-    case menuBarEvents = "calendar.menuBarUpcomingEvents"
-    case menuBarLinkedEventsOnly = "calendar.menuBarLinkedEventsOnly"
-    case calendarMenuBarHidesWhenEmpty = "calendar.menuBarHidesWhenEmpty"
-    case hideCurrentEvent = "calendar.hideCurrentEventAfterMinutes"
-    case calendarCommands = "calendar.commands"
-    case extensionsShowInLauncher = "extensions.showInLauncher"
 
     var section: String { String(rawValue.prefix { $0 != "." }) }
 
     var name: String { String(rawValue.drop { $0 != "." }.dropFirst()) }
 
-    /// Every section, in file order.
     static let sections: [String] = allCases.reduce(into: []) { sections, key in
         if sections.last != key.section { sections.append(key.section) }
     }

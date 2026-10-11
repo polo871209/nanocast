@@ -8,7 +8,6 @@ enum HotKeyBinding: Hashable, Sendable, Codable {
     case globe
     case doubleGlobe
 
-    /// One string per keycap, so every display site renders all bindings through one path.
     @MainActor var keycaps: [String] {
         switch self {
         case .combo(let shortcut): shortcut.keycaps
@@ -43,14 +42,6 @@ enum HotKeyBinding: Hashable, Sendable, Codable {
         }
     }
 
-    var holdKey: ModifierKey? {
-        switch self {
-        case .modifier(let key): key
-        case .globe: .globe
-        default: nil
-        }
-    }
-
     private var modifierKeys: Set<ModifierKey> {
         switch self {
         case .modifier(let key), .doubleModifier(let key): [key]
@@ -60,10 +51,9 @@ enum HotKeyBinding: Hashable, Sendable, Codable {
         }
     }
 
-    func conflicts(with other: Self, holdsModifier: Bool = false) -> Bool {
+    func conflicts(with other: Self) -> Bool {
         if self == other { return true }
         guard !modifierKeys.isDisjoint(with: other.modifierKeys) else { return false }
-        if holdsModifier { return true }
         switch (self, other) {
         case (.doubleTap, .doubleModifier), (.doubleModifier, .doubleTap): return true
         case (.globe, .modifier), (.modifier, .globe): return true

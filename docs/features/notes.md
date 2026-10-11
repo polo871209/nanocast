@@ -41,11 +41,6 @@ commands and global shortcuts can show, search, or extend the collection.
   text view's frame never gets shorter than its clip view, and until the next draw the lines below an
   edit keep their old origins, so neither the frame nor the last fragment's position can be read on
   `didChange`.
-- **The editor is a surface snippets expand into.** `NoteTextView` adopts `InjectableTextView`,
-  so a typed keyword — and the Snippets browser's ↵ — is written straight into the text storage
-  rather than posted as events at whichever app happens to be frontmost. Quick Actions also read and
-  replace its selected text in process. Only AI Chat's composer adopts it too: see
-  [snippets.md](snippets.md#text-delivery-and-pasteboard-safety).
 
 ## Storage and identity
 
@@ -67,7 +62,7 @@ files, and symbolic links are ignored.
 
 Create uses `Untitled.md`, then `Untitled 2.md`, and so on, and rename claims a free name by the same
 rule. `importNotes` claims one the same way, so a note restored from a backup lands beside the note it
-shares a title with rather than over it. Collisions with *another* note are case- and diacritic-insensitive, so `plán` beside `Plan`
+shares a title with rather than over it. Collisions with _another_ note are case- and diacritic-insensitive, so `plán` beside `Plan`
 becomes `plán 2.md`. A note never collides with itself: only an exact filename match is a no-op, which
 is what lets a rename change nothing but the case or the accents. The active filename is local UI state
 in UserDefaults and does not ride settings backups.
@@ -80,7 +75,6 @@ skipped, block and inline Markdown markers are dropped whether or not rendering 
 capped to 120 characters so no row or title bar has to carry a paragraph. `NoteSummary.title` remains the filename; `displayTitle` is what every
 surface renders — switcher rows and their VoiceOver labels, the Trash confirmation, the window title,
 and the title band of `NoteSearch`, so a fuzzy query reaches a note nobody has named.
-An empty unnamed note displays a localized Untitled label, preserving its filename and numeric suffix.
 
 `list()` reads at most 4 KB of each unnamed note to derive it, and a named note costs nothing beyond
 the enumeration it already pays for. The **active** note derives from the live draft rather than the
@@ -173,8 +167,7 @@ indented code, footnotes, reference links and blocks nested inside quotes stay p
 (a pipe row, a delimiter row with as many cells, then the pipe rows after it) also stays plain text, but
 is recognised so it gets no inline styling: it shows in the code font, with wrapped rows hanging under
 their first line, and a delimiter row typed under existing rows restyles all of them.
-The whole note is reparsed on each edit. The AI chat's `MarkdownBlock` is a separate read-only parser
-and is not shared.
+The whole note is reparsed on each edit.
 
 ### Rendering
 
@@ -240,17 +233,17 @@ reaches autosave.
   last glyph, which places the caret. Only `http`, `https` and `mailto` open. A revealed line carries
   no link attribute, so its URL is edited as text.
 
-| Shortcut | Does |
-| --- | --- |
-| ⌘Z, ⇧⌘Z | undo, redo |
-| ⌘B, ⌘I, ⌘E | bold, italic, inline code |
-| ⇧⌘X | strikethrough |
-| ⌥⌘C | code block |
-| ⇧⌘B | quote |
-| ⌘K | link |
+| Shortcut      | Does                        |
+| ------------- | --------------------------- |
+| ⌘Z, ⇧⌘Z       | undo, redo                  |
+| ⌘B, ⌘I, ⌘E    | bold, italic, inline code   |
+| ⇧⌘X           | strikethrough               |
+| ⌥⌘C           | code block                  |
+| ⇧⌘B           | quote                       |
+| ⌘K            | link                        |
 | ⇧⌘7, ⇧⌘8, ⇧⌘9 | numbered, bullet, task list |
-| ⌥⌘1, ⌥⌘2, ⌥⌘3 | heading 1, 2, 3 |
-| ⌥⌘0 | plain paragraph |
+| ⌥⌘1, ⌥⌘2, ⌥⌘3 | heading 1, 2, 3             |
+| ⌥⌘0           | plain paragraph             |
 
 Digits match by key code. The text view sees these chords before `NotesPanel` claims its own, and none
 collide. In a note, ⌘E replaces AppKit's Use Selection for Find.
@@ -262,7 +255,7 @@ memory; editing after undo discards redo. The coordinator observes undo and redo
 main-actor notifications, so both reach autosave, rendering, formatting and the character count.
 Copy yields raw Markdown and VoiceOver reads the source. Changing the note
 identity or editor epoch reinstalls and restyles the string and clears the previous document's undo
-history. Snippets expand through `insertText` and are styled like typed text. The empty-note placeholder
+history. Dictated text arrives through `insertText` and is styled like typed text. The empty-note placeholder
 is drawn in the text view, so opening the find bar moves it with the editor content.
 
 ### The formatting bar
@@ -318,7 +311,7 @@ flush before loading another source. Termination awaits that flush before the ap
 vetoes the quit.
 
 **A save overwrites whatever is on disk.** There is no watcher, no revision comparison and no conflict
-state: editing the *active* note in another app while Nanocast has it open loses that edit the next time
+state: editing the _active_ note in another app while Nanocast has it open loses that edit the next time
 the debounce fires. Open Notes Folder (⌘O) invites exactly that, and this is the accepted trade for a
 feature whose whole job is one local editor. Showing the window re-lists the folder and reloads the
 active note if it is clean, waiting for an in-flight save first. An unsaved draft, including one whose

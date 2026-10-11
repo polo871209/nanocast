@@ -33,24 +33,24 @@ entries and a still-registered shortcut moves nothing.
 
 ## Layout
 
-| File                                             | Imports                      | Role                                                                |
-| ------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------- |
-| `Model/WindowCommand.swift`          | Foundation                   | Catalog: id, name, symbol, kind, group, `cyclesOnRepeat`, `resizes` |
-| `Model/WindowCycle.swift`            | Foundation                   | The three cycling modes a repeat press can run                      |
-| `Model/WindowPlacementEngine.swift`  | Foundation + CoreGraphics    | **Pure.** Every frame the commands produce                          |
-| `Model/WindowActionMemory.swift`     | Foundation + CoreGraphics    | **Pure.** Per-window cycle position and restore point               |
-| `Model/SpaceGesture.swift`           | Foundation                   | **Pure.** The Dock-swipe field tables and the IOHID payload bytes   |
-| `Service/AXWindowAccess.swift`       | AppKit + ApplicationServices | `@MainActor`. Every `AXUIElement` call, and the one write sequence  |
-| `Service/AXScreens.swift`            | AppKit + ColorSync           | `@MainActor`. `AXGeometry`, the one coordinate flip                 |
-| `Service/WindowMover.swift`          | AppKit + ApplicationServices | `@MainActor`. Command policy: cycle, restore, fullscreen            |
-| `Service/SpaceSwitcher.swift`        | CoreGraphics                 | `@MainActor`. Every `CGEvent` call and the payload splice           |
-| `Service/WindowTarget.swift`         | AppKit                       | `@MainActor`. Which window a command acts on                        |
-| `Model/CustomWindowSize.swift`       | Foundation + CoreGraphics    | **Pure.** A custom size, its units and the frame it resolves to     |
-| `Model/CustomWindowSizeStore.swift`  | Foundation                   | The custom-size library, as JSON in `UserDefaults`                  |
-| `UI/WindowCommandCoordinator.swift`  | AppKit                       | The one funnel from a palette row or a global hotkey                |
-| `UI/CustomWindowSizeCoordinator.swift` | Foundation                 | Custom sizes' launcher presence, edits and a deletion's cleanup     |
-| `Model/WindowShortcutPreset.swift`   | Foundation + Carbon          | **Pure.** Rectangle / Magnet and Spectacle tables, and the apply plan |
-| `UI/WindowShortcutPresetCoordinator.swift` | Foundation             | Applies a preset, confirming first when it replaces a user's key   |
+| File                                       | Imports                      | Role                                                                  |
+| ------------------------------------------ | ---------------------------- | --------------------------------------------------------------------- |
+| `Model/WindowCommand.swift`                | Foundation                   | Catalog: id, name, symbol, kind, group, `cyclesOnRepeat`, `resizes`   |
+| `Model/WindowCycle.swift`                  | Foundation                   | The three cycling modes a repeat press can run                        |
+| `Model/WindowPlacementEngine.swift`        | Foundation + CoreGraphics    | **Pure.** Every frame the commands produce                            |
+| `Model/WindowActionMemory.swift`           | Foundation + CoreGraphics    | **Pure.** Per-window cycle position and restore point                 |
+| `Model/SpaceGesture.swift`                 | Foundation                   | **Pure.** The Dock-swipe field tables and the IOHID payload bytes     |
+| `Service/AXWindowAccess.swift`             | AppKit + ApplicationServices | `@MainActor`. Every `AXUIElement` call, and the one write sequence    |
+| `Service/AXScreens.swift`                  | AppKit + ColorSync           | `@MainActor`. `AXGeometry`, the one coordinate flip                   |
+| `Service/WindowMover.swift`                | AppKit + ApplicationServices | `@MainActor`. Command policy: cycle, restore, fullscreen              |
+| `Service/SpaceSwitcher.swift`              | CoreGraphics                 | `@MainActor`. Every `CGEvent` call and the payload splice             |
+| `Service/WindowTarget.swift`               | AppKit                       | `@MainActor`. Which window a command acts on                          |
+| `Model/CustomWindowSize.swift`             | Foundation + CoreGraphics    | **Pure.** A custom size, its units and the frame it resolves to       |
+| `Model/CustomWindowSizeStore.swift`        | Foundation                   | The custom-size library, as JSON in `UserDefaults`                    |
+| `UI/WindowCommandCoordinator.swift`        | AppKit                       | The one funnel from a palette row or a global hotkey                  |
+| `UI/CustomWindowSizeCoordinator.swift`     | Foundation                   | Custom sizes' launcher presence, edits and a deletion's cleanup       |
+| `Model/WindowShortcutPreset.swift`         | Foundation + Carbon          | **Pure.** Rectangle / Magnet and Spectacle tables, and the apply plan |
+| `UI/WindowShortcutPresetCoordinator.swift` | Foundation                   | Applies a preset, confirming first when it replaces a user's key      |
 
 The feature also owns **[Window Layouts](window-layouts.md)** — saved multi-display arrangements
 applied in one pass — and **[Rooms](window-rooms.md)**, named sets of windows that tile on the
@@ -145,7 +145,7 @@ size suits every screen, so the size is the user's.
   bad import keeps the record.
 
 A custom size shares the window commands' `AppEntry.Kind`, their launcher section and their
-`windowManagementShowInLauncher` switch, the way custom Quick Actions share the shipped four's:
+`windowManagementShowInLauncher` switch:
 `WindowCommandCatalog` claims an entry first, and `CustomWindowSize.id(fromEntryID:)` the rest.
 
 ## Cycling and Restore
@@ -163,7 +163,7 @@ cycle state is never hidden inside the geometry. Its rules, in order:
 4. Otherwise → `(step + 1) % cycleLength`.
 
 `cycleLength` comes from `WindowPlacementEngine.cycleLength(for:screens:cycle:)`, so the memory holds
-no opinion about what a step means: 1 covers cycling switched off *and* a command that never cycles,
+no opinion about what a step means: 1 covers cycling switched off _and_ a command that never cycles,
 which is why `WindowActionMemory` no longer reads the catalog at all.
 
 Two details carry their weight:
@@ -207,7 +207,7 @@ when a read fails. Nothing is persisted.
 ## Choosing a target
 
 Our panels are `.nonactivatingPanel`, so opening one never makes Nanocast frontmost and
-`NSWorkspace.frontmostApplication` keeps naming the app *behind* it rather than the window the user
+`NSWorkspace.frontmostApplication` keeps naming the app _behind_ it rather than the window the user
 is looking at. `WindowTarget` is the answer to "what does this command act on": it prefers a key
 window of ours, falling back to the frontmost app only when there is none.
 
@@ -228,9 +228,6 @@ neither `.fullScreenAuxiliary` nor `.fullScreenNone`. AppKit fullscreens a resiz
 ever setting `.fullScreenPrimary` on it, so testing that flag would make Fullscreen a silent no-op on
 Settings. The Notes panel is `.fullScreenAuxiliary` and stays a no-op, as an unwilling external
 window already is.
-
-This mirrors `InjectionTarget` in [Text injection](text-injection.md), which solved the same problem
-for keystrokes: same shape, same `Service/` position, one idea applied twice.
 
 ## Applying a placement
 
@@ -276,7 +273,7 @@ that report no position or size are rejected before any work happens.
 
 `AXEnhancedUserInterface` is cleared for the duration of the writes and restored immediately, because
 some apps reinterpret frame writes while it is on — but never while VoiceOver is running, which would
-break the screen reader. **This mitigation is inherited convention and unverified on macOS 26**; if a
+break the screen reader. **This mitigation is inherited convention and unverified on macOS 27**; if a
 stock Electron app tiles correctly without it, delete the helper rather than keep it.
 
 ## Switching Space
@@ -293,23 +290,21 @@ framework linkage and no SIP change — only public `CGEvent` calls carrying und
 
 `SpaceSwitcher` posts three phases — began, changed, ended — to `.cgSessionEventTap`. A two-phase
 gesture is ignored. Fields 55 (`DockControl`), 110 (dock-swipe HID type), 132 (phase), 123 (horizontal
-motion) and 124 (progress) are common to both encodings; **positive is "next"**, except that macOS 27
-applies Natural Scrolling to the synthetic swipe, so `SpaceSwitcher` reverses the direction while
+motion) and 124 (progress) are the base fields. **Positive is "next"**, but macOS applies Natural
+Scrolling to the synthetic swipe, so `SpaceSwitcher` reverses the direction while
 `com.apple.swipescrolldirection` is on (its default when the key is absent). Progress is
 deliberately the smallest representable nudge: a real distance makes the WindowServer draw the slide.
 
-**macOS 27 changed the contract.** Through macOS 26 the public fields are enough, and velocity (129 and
-130) rides on every phase. From macOS 27 the Dock validates the gesture against a raw IOHID queue
-payload that no setter can reach, so `SpaceSwitcher` serialises the event with `CGEventCreateData`,
-appends the payload as a field-4205 record, and reparses it with `CGEventCreateFromData`. That path
-also adds fields 134, 138, 169 and 125, and carries velocity **only** on the ended phase — velocity
-earlier makes the Space slide back before it settles. `SpaceGesture` owns both tables so the two
-encodings can never drift apart, and the runtime OS selects between them: the SDK cannot, because a
-build made on 26 still has to work on 27.
+The public fields are not enough. The Dock validates the gesture against a raw IOHID queue payload
+that no setter can reach, so `SpaceSwitcher` serialises the event with `CGEventCreateData`, appends
+the payload as a field-4205 record, and reparses it with `CGEventCreateFromData`. The event also
+carries fields 134, 138, 169 and 125, and velocity (129) **only** on the ended phase — velocity
+earlier makes the Space slide back before it settles. `SpaceGesture` builds both the fields and the
+payload, so the two can never drift apart.
 
 Three details are load-bearing and each was expensive to learn:
 
-- **Phases are paced ~10 ms apart on macOS 27.** Posted back-to-back they coalesce and the Dock moves
+- **Phases are paced ~10 ms apart.** Posted back-to-back they coalesce and the Dock moves
   two Spaces. That pacing is why `perform` is asynchronous rather than a straight-line call.
 - **Velocity is momentum, not latency.** 2000 overshoots by two Spaces; 1000 lands exactly one, and
   lowering it does not make the switch slower.
@@ -337,7 +332,7 @@ It is a one-shot action rather than a mode, so nothing is persisted, there is no
 and every shortcut stays editable afterwards.
 
 - **Fill in, never replace wholesale.** A command the preset doesn't name keeps its binding, unless it
-  holds a key the preset gives to another command — then it is *displaced* and cleared.
+  holds a key the preset gives to another command — then it is _displaced_ and cleared.
 - **Confirm only over the user's own keys.** `WindowShortcutPresetPlan` lists every command whose
   existing binding would change or be displaced; when that list is empty the preset applies at once,
   otherwise `WindowShortcutPresetCoordinator` asks through `AppCore.confirm` first.
@@ -373,13 +368,13 @@ and every shortcut stays editable afterwards.
 - **`AppIndex.setCustomWindowSizes(_:)`** publishes the custom-size slice immediately after the
   window commands, inside the same section. Custom sizes and their bindings ride in settings backups.
 - **Settings** — `windowManagementEnabled` (off), `windowManagementShowInLauncher` (on), `windowGap`
-  (0) and `windowCycle` (`.off`). All four ride in settings backups: unlike `snippetsEnabled` they
-  grant no permission class of their own.
+  (0) and `windowCycle` (`.off`). All four ride in settings backups: unlike `clipboardTextSearchEnabled`
+  they grant no capability of their own.
 - **Per-command visibility** reuses `VisibilityStore` as-is; clearing a recorded shortcut is how a
   hotkey is disabled, so there is no separate per-command enabled flag. Each command and custom-size
   row carries an alias field, dimmed while its entry is hidden from the launcher. Window commands
   deliberately get **no** launcher-category pane of their own — they are managed inside Settings ›
-  Window Management, the same call already made for snippets.
+  Window Management.
 
 ## Testing
 

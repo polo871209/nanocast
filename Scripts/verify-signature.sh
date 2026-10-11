@@ -1,12 +1,11 @@
 #!/bin/bash
-# Assert a built app will notarize and can still prompt. Usage: verify-signature.sh <path-to-.app>
 set -uo pipefail
 
 APP="${1:?usage: verify-signature.sh <path-to-.app>}"
 NAME="$(basename "$APP" .app)"
 STATUS=0
 
-# The hardened-runtime entitlement each usage string needs before tccd will show its prompt.
+# tccd denies a usage request silently when its hardened-runtime entitlement is missing.
 RESOURCE_ENTITLEMENTS=(
     NSAppleEventsUsageDescription=com.apple.security.automation.apple-events
     NSCameraUsageDescription=com.apple.security.device.camera
@@ -28,20 +27,11 @@ ENTITLEMENTS="$(mktemp)"
 trap 'rm -f "$ENTITLEMENTS"' EXIT
 codesign -d --entitlements - --xml "$APP" > "$ENTITLEMENTS" 2>/dev/null
 
-# The helper is signed by its own embed phase, which is where the runtime flag goes missing.
-HELPER="$APP/Contents/Helpers/Nanocast Dictation.app"
-for BIN in "$APP/Contents/MacOS/$NAME" "$APP/Contents/Helpers/ClipboardTextHelper" "$HELPER/Contents/MacOS/Nanocast Dictation"; do
+for BIN in "$APP/Contents/MacOS/$NAME" "$APP/Contents/Helpers/ClipboardTextHelper" "$APP/Contents/Helpers/FileIndexHelper"; do
     INFO="$(codesign -dv --verbose=2 "$BIN" 2>&1)"
     [[ "$INFO" =~ flags=0x[0-9a-f]+\([^\)]*runtime ]] ||
         fail "${BIN##*/}: hardened runtime not enabled"
 done
-
-APP_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist")"
-HELPER_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$HELPER/Contents/Info.plist")"
-[ "$HELPER_ID" = "$APP_ID.dictation" ] || fail "Dictation helper has an incorrect bundle identifier"
-HELPER_SIGNATURE="$(codesign -dv "$HELPER" 2>&1)"
-grep -Fxq "Identifier=$HELPER_ID" <<< "$HELPER_SIGNATURE" ||
-    fail "Dictation helper's signature and bundle identifier disagree"
 
 codesign --verify --deep --strict "$APP" || fail "$NAME.app: the seal does not verify"
 
@@ -49,7 +39,6 @@ codesign --verify --deep --strict "$APP" || fail "$NAME.app: the seal does not v
 /usr/libexec/PlistBuddy -c "Print :com.apple.security.get-task-allow" "$ENTITLEMENTS" &>/dev/null &&
     fail "$NAME.app: get-task-allow is present"
 
-# A missing one is silent at runtime: the request resolves as denied in milliseconds, never asked.
 for PAIR in "${RESOURCE_ENTITLEMENTS[@]}"; do
     USAGE="${PAIR%%=*}" ENTITLEMENT="${PAIR#*=}"
     /usr/libexec/PlistBuddy -c "Print :$USAGE" "$APP/Contents/Info.plist" &>/dev/null || continue

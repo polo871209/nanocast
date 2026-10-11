@@ -64,7 +64,6 @@ struct CalcExpressionParser {
         }
     }
 
-    /// A target that ends its scope stays trailing, so `10kg + 500g to lb` converts the whole sum.
     private func peekConversion() -> (name: String, end: Int)? {
         guard position < tokens.count, CalcUnits.isConnector(tokens[position]),
             let target = CalcQuantity.conversionPrefix(tokens, at: position + 1),
@@ -174,13 +173,12 @@ struct CalcExpressionParser {
                 let rhsName = rhs.category.displayName
                 return fail(
                     op == .add
-                        ? String(localized: "Cannot add \(lhsName) and \(rhsName).")
-                        : String(localized: "Cannot subtract \(lhsName) and \(rhsName)."))
+                        ? "Cannot add \(lhsName) and \(rhsName)."
+                        : "Cannot subtract \(lhsName) and \(rhsName).")
             }
             if lhs.category == .temperature, lhs.symbol != rhs.symbol {
-                return fail(String(localized: "Cannot combine temperatures with different units."))
+                return fail("Cannot combine temperatures with different units.")
             }
-            // Composite ("5 feet 3 inches") answers in its leading unit; `+`/`-` in the last.
             if implicit {
                 guard let converted = convertedMeasurement(right.amount, from: rhs, to: lhs) else {
                     return nil
@@ -205,14 +203,13 @@ struct CalcExpressionParser {
         case (.unit(let lhs), .currency):
             return fail(
                 op == .add
-                    ? String(localized: "Cannot add \(lhs.category.displayName) and Currency.")
-                    : String(localized: "Cannot subtract \(lhs.category.displayName) and Currency."))
+                    ? "Cannot add \(lhs.category.displayName) and Currency."
+                    : "Cannot subtract \(lhs.category.displayName) and Currency.")
         case (.currency, .unit(let rhs)):
             return fail(
                 op == .add
-                    ? String(localized: "Cannot add Currency and \(rhs.category.displayName).")
-                    : String(localized: "Cannot subtract Currency and \(rhs.category.displayName)."))
-        // A bare number takes the unit beside it; adjacency stays silent, being a half-typed unit.
+                    ? "Cannot add Currency and \(rhs.category.displayName)."
+                    : "Cannot subtract Currency and \(rhs.category.displayName).")
         case (.unit, .scalar), (.currency, .scalar):
             guard !implicit else { return nil }
             return CalcValue(
@@ -239,7 +236,7 @@ struct CalcExpressionParser {
         case (.unit, .unit), (.unit, .currency), (.currency, .unit):
             return combine(left, right, dividing: false)
         default:
-            return fail(String(localized: "Multiplication of these unit values is not supported."))
+            return fail("Multiplication of these unit values is not supported.")
         }
     }
 
@@ -265,7 +262,7 @@ struct CalcExpressionParser {
                 return combine(left, right, dividing: true)
             }
             guard lhs.category != .temperature else {
-                return fail(String(localized: "Division of temperature values is not supported."))
+                return fail("Division of temperature values is not supported.")
             }
             let numerator = left.amount * lhs.factor
             let denominator = right.amount * rhs.factor
@@ -314,7 +311,7 @@ struct CalcExpressionParser {
         guard let combined = CalcUnitExpression.combine(lhs, rhs, dividing: dividing),
             let dimension = combined.dimension
         else {
-            return fail(String(localized: "Multiplication of these unit values is not supported."))
+            return fail("Multiplication of these unit values is not supported.")
         }
         if lhs.currency != nil || rhs.currency != nil { usedCurrencyRate = true }
         let base =
@@ -506,7 +503,7 @@ struct CalcExpressionParser {
     }
 
     private mutating func failComparison() -> Double? {
-        issue = String(localized: "Cannot compare values with different dimensions.")
+        issue = "Cannot compare values with different dimensions."
         return nil
     }
 
@@ -558,7 +555,6 @@ struct CalcExpressionParser {
         return converted(value, to: target.name)
     }
 
-    /// A lone unit or currency implies an amount of 1, the way `eur to usd` already does.
     private mutating func parseScopedValue(upTo end: Int) -> CalcValue? {
         if end - position == 1, case .ident(let name) = tokens[position],
             let kind = dimension(named: name)
@@ -622,9 +618,7 @@ struct CalcExpressionParser {
             if let to = CalcUnits.byName[targetName] ?? compoundTarget(targetName) {
                 guard from.isCompatible(with: to) else {
                     return fail(
-                        String(
-                            localized:
-                                "Cannot convert \(from.category.displayName) to \(to.category.displayName)."))
+                        "Cannot convert \(from.category.displayName) to \(to.category.displayName).")
                 }
                 guard let output = convertedMeasurement(value.effective, from: from, to: to), output.isFinite
                 else { return nil }
@@ -632,9 +626,7 @@ struct CalcExpressionParser {
             }
             if CalcCurrency.byName[targetName] != nil {
                 return fail(
-                    String(
-                        localized:
-                            "Cannot convert \(from.category.displayName) to \(CalcCurrency.categoryName)."))
+                    "Cannot convert \(from.category.displayName) to \(CalcCurrency.categoryName).")
             }
             return nil
         case .currency(let from):
@@ -645,9 +637,7 @@ struct CalcExpressionParser {
             }
             if let to = CalcUnits.byName[targetName] {
                 return fail(
-                    String(
-                        localized:
-                            "Cannot convert \(CalcCurrency.categoryName) to \(to.category.displayName)."))
+                    "Cannot convert \(CalcCurrency.categoryName) to \(to.category.displayName).")
             }
             return nil
         }
@@ -683,15 +673,15 @@ struct CalcExpressionParser {
         recordCurrency(from.code)
         recordCurrency(to.code)
         guard let rates else {
-            issue = String(localized: "Exchange rates unavailable — check your connection.")
+            issue = "Exchange rates unavailable — check your connection."
             return nil
         }
         guard rates.rate(for: from.code) != nil else {
-            issue = String(localized: "No exchange rate for \(from.code).")
+            issue = "No exchange rate for \(from.code)."
             return nil
         }
         guard rates.rate(for: to.code) != nil else {
-            issue = String(localized: "No exchange rate for \(to.code).")
+            issue = "No exchange rate for \(to.code)."
             return nil
         }
         return rates.convert(amount, from: from.code, to: to.code)

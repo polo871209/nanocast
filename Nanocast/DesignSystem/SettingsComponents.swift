@@ -1,8 +1,6 @@
 import AppKit
 import SwiftUI
 
-// The few pieces more than one Settings pane or editor needs; everything else stays feature-owned.
-
 struct SettingsTabIcon: View {
     let systemImage: String
     let tint: Color
@@ -29,8 +27,8 @@ struct SettingsTabIcon: View {
 
 struct SettingsFeatureToggleLabel: View {
     let anchor: SettingsAnchor
-    let title: LocalizedStringResource
-    let subtitle: LocalizedStringResource
+    let title: String
+    let subtitle: String
 
     var body: some View {
         HStack(spacing: Theme.Spacing.lg) {
@@ -55,7 +53,6 @@ struct SettingsRow<Icon: View, Trailing: View>: View {
     var subtitleLineLimit = 1
     var alignment: VerticalAlignment = .center
     var labelOpacity = 1.0
-    /// Set when a search result points at this row, so its title can carry the pulse.
     var anchor: SettingsAnchor?
     @ViewBuilder var icon: Icon
     @ViewBuilder var trailing: Trailing
@@ -66,7 +63,7 @@ struct SettingsRow<Icon: View, Trailing: View>: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.xxs) {
                 Group {
                     if let anchor {
-                        SettingsRowTitle(anchor, verbatim: title)
+                        SettingsRowTitle(anchor, title)
                     } else {
                         Text(title)
                     }
@@ -107,12 +104,12 @@ extension SettingsRow where Icon == EmptyView {
 
     /// A fixed row a search result lands on, so its title is always Nanocast's own text.
     init(
-        title: LocalizedStringResource, subtitle: String? = nil, subtitleLineLimit: Int = 1,
+        title: String, subtitle: String? = nil, subtitleLineLimit: Int = 1,
         alignment: VerticalAlignment = .center, anchor: SettingsAnchor,
         @ViewBuilder trailing: () -> Trailing
     ) {
         self.init(
-            title: title.resolved(), subtitle: subtitle,
+            title: title, subtitle: subtitle,
             subtitleLineLimit: subtitleLineLimit, alignment: alignment, anchor: anchor,
             icon: { EmptyView() }, trailing: trailing)
     }
@@ -182,7 +179,6 @@ extension View {
             }
     }
 
-    /// Dims as well as disables; `.disabled` alone leaves the title at full strength.
     func settingsEnabled(_ isEnabled: Bool) -> some View {
         disabled(!isEnabled).opacity(isEnabled ? 1 : 0.45)
     }
@@ -191,24 +187,18 @@ extension View {
         modifier(SettingsEditorTextField())
     }
 
-    func settingsEditorTextArea(height: CGFloat) -> some View {
-        modifier(SettingsEditorTextArea(height: height))
-    }
-
-    /// `controlsOnGlass: false` draws the glass behind, so a control keeps its accent colour.
     func settingsEditorPanelSurface(controlsOnGlass: Bool = true) -> some View {
         modifier(SettingsEditorPanelSurface(controlsOnGlass: controlsOnGlass))
     }
 
-    /// The one place that says hiding a row from the launcher never unbinds its shortcut.
     func launcherVisibilityHelp() -> some View {
         help("Show in launcher. Its shortcut works either way.")
     }
 }
 
 struct SettingsEditorHeader: View {
-    let title: LocalizedStringResource
-    var subtitle: LocalizedStringResource?
+    let title: String
+    var subtitle: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
@@ -224,52 +214,12 @@ struct SettingsEditorHeader: View {
     }
 }
 
-struct SettingsEditorField<Content: View>: View {
-    let title: LocalizedStringResource
-    var labelFont: Font?
-    @ViewBuilder var content: Content
-
-    init(
-        _ title: LocalizedStringResource, labelFont: Font? = nil,
-        @ViewBuilder content: () -> Content
-    ) {
-        self.title = title
-        self.labelFont = labelFont
-        self.content = content()
-    }
-
-    var body: some View {
-        LabeledContent {
-            content
-                .labelsHidden()
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-        } label: {
-            Text(title).font(labelFont)
-        }
-    }
-}
-
 private struct SettingsEditorTextField: ViewModifier {
     func body(content: Content) -> some View {
         content
             .textFieldStyle(.plain)
             .padding(.horizontal, Theme.Spacing.lg)
             .frame(height: Theme.Size.dialogButtonHeight)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous)
-                    .fill(Theme.Colors.controlSurface))
-    }
-}
-
-private struct SettingsEditorTextArea: ViewModifier {
-    let height: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .scrollContentBackground(.hidden)
-            .padding(Theme.Spacing.sm)
-            .frame(height: height)
             .background(
                 RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous)
                     .fill(Theme.Colors.controlSurface))
@@ -298,8 +248,8 @@ private struct SettingsEditorPanelSurface: ViewModifier {
 
 struct FeatureSwitchSection: View {
     let anchor: SettingsAnchor
-    let enableTitle: LocalizedStringResource
-    var enableSubtitle: LocalizedStringResource?
+    let enableTitle: String
+    var enableSubtitle: String?
     @Binding var isEnabled: Bool
     @Binding var showsInLauncher: Bool
     var showsIcon = false
@@ -325,7 +275,6 @@ struct FeatureSwitchSection: View {
                 }
             }
             Toggle("Show in launcher", isOn: $showsInLauncher)
-                // The switch above stays live so the feature can always be turned back on.
                 .settingsEnabled(isEnabled)
         } header: {
             if showsHeader { SettingsSectionHeader(anchor) }
@@ -333,9 +282,8 @@ struct FeatureSwitchSection: View {
     }
 }
 
-/// The filter row above a long list, shaped like a search field rather than a form text field.
 struct SettingsFilterField: View {
-    let prompt: LocalizedStringResource
+    let prompt: String
     @Binding var query: String
     /// The plain field has no bezel: without this only the glyphs are a target.
     @FocusState private var focused: Bool
@@ -461,9 +409,7 @@ private struct AliasTextField: NSViewRepresentable {
     }
 }
 
-/// Dressed like `ShortcutRecorder`; the persistent AppKit field preserves focus across updates.
 struct AliasField: View {
-    /// The owner's `preferenceKey`, taken raw so a row without an `AppEntry` can carry one too.
     let key: String
     let name: String
     @Environment(AliasStore.self) private var aliases
@@ -483,7 +429,6 @@ struct AliasField: View {
                 }
                 AliasTextField(text: $draft, focused: $focused, onCancel: revert)
                     .focusEffectDisabled()
-                    // The pane's `releasesFocusOnOutsideClick` resigns; this catches it landing.
                     .onChange(of: focused) { _, now in
                         if !now { commit() }
                     }
@@ -499,11 +444,9 @@ struct AliasField: View {
             }
         }
         .onAppear { draft = aliases.alias(for: key) ?? "" }
-        // A backup import replaces the table out from under an unfocused row.
         .onChange(of: aliases.revision) { _, _ in
             if !focused { draft = aliases.alias(for: key) ?? "" }
         }
-        // A reused table row hands the field another entry; unsaved text belongs to the old one.
         .onChange(of: key) { old, new in
             if focused {
                 aliases.setAlias(draft, for: old)
@@ -519,7 +462,6 @@ struct AliasField: View {
         .accessibilityLabel("Alias for \(name)")
     }
 
-    /// The one commit path — ↵ or focus landing elsewhere; a blank draft removes the alias.
     private func commit() {
         aliases.setAlias(draft, for: key)
         draft = aliases.alias(for: key) ?? ""

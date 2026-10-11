@@ -5,13 +5,11 @@ struct UpdateWindowView: View {
     @Environment(UpdateCoordinator.self) private var updates
 
     static let width: CGFloat = 460
-    /// Only until the first layout measures the real one, which is what the window then takes.
     static let initialSize = CGSize(width: width, height: 158)
 
     private static let iconSize: CGFloat = 52
     /// macOS bakes a transparent margin into an app icon; bleeding it out aligns the artwork.
     private static let iconBleed: CGFloat = 6
-    /// A fixed reading area: notes run from one line to fifty, and the window may not track that.
     private static let cardHeight: CGFloat = 196
 
     var body: some View {
@@ -20,10 +18,8 @@ struct UpdateWindowView: View {
             detail
             actions
         }
-        // Less on top: the title bar adds 32pt, and the lights must be cleared.
         .padding(.top, Theme.Spacing.sm)
         .padding([.horizontal, .bottom], Theme.Spacing.xxl)
-        // The ideal height, not the window's, so sizing to it converges instead of feeding back.
         .fixedSize(horizontal: false, vertical: true)
         .onGeometryChange(for: CGFloat.self) {
             $0.size.height
@@ -31,7 +27,6 @@ struct UpdateWindowView: View {
             updates.fit(height: $0)
         }
         .frame(maxWidth: .infinity, alignment: .top)
-        // Only the gradient reaches under the titlebar; the content stays in the safe area.
         .background(
             LinearGradient(
                 colors: [Theme.Colors.sheen, Color.clear], startPoint: .top, endPoint: .center
@@ -39,8 +34,6 @@ struct UpdateWindowView: View {
             .ignoresSafeArea()
         )
     }
-
-    // MARK: - Hero
 
     private var hero: some View {
         HStack(alignment: .center, spacing: Theme.Spacing.xl) {
@@ -66,32 +59,29 @@ struct UpdateWindowView: View {
 
     private var title: String {
         switch updates.stage {
-        case .checking: return String(localized: "Checking for updates…")
-        case .upToDate: return String(localized: "\(Bundle.main.appDisplayName) is up to date")
+        case .checking: return "Checking for updates…"
+        case .upToDate: return "\(Bundle.main.appDisplayName) is up to date"
         case .localBuild:
-            return String(localized: "\(Bundle.main.appDisplayName) doesn't update itself")
+            return "\(Bundle.main.appDisplayName) doesn't update itself"
         case .available(let release), .blocked(_, let release), .installing(let release, _):
-            return String(
-                localized: "\(Bundle.main.appDisplayName) \(release.version.description) is available")
-        case .readyToRelaunch: return String(localized: "Update installed")
-        case .failed: return String(localized: "Update failed")
+            return "\(Bundle.main.appDisplayName) \(release.version.description) is available"
+        case .readyToRelaunch: return "Update installed"
+        case .failed: return "Update failed"
         }
     }
 
     private var subtitle: String {
         switch updates.stage {
         case .checking, .upToDate, .failed:
-            return String(localized: "Version \(updates.runningVersion)")
+            return "Version \(updates.runningVersion)"
         case .localBuild:
-            return String(localized: "This is a local build — rebuild it to move it forward.")
+            return "This is a local build — rebuild it to move it forward."
         case .available, .blocked, .installing:
-            return String(localized: "You have \(updates.runningVersion).")
+            return "You have \(updates.runningVersion)."
         case .readyToRelaunch:
-            return String(localized: "Relaunch to start using it.")
+            return "Relaunch to start using it."
         }
     }
-
-    // MARK: - Detail
 
     @ViewBuilder
     private var detail: some View {
@@ -117,7 +107,7 @@ struct UpdateWindowView: View {
 
     private func report(_ failure: UpdateFailure) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
-            Text(failure.errorDescription ?? String(localized: "Something went wrong."))
+            Text(failure.errorDescription ?? "Something went wrong.")
                 .font(.callout)
             if let recovery = failure.recoverySuggestion {
                 Text(recovery)
@@ -152,8 +142,6 @@ struct UpdateWindowView: View {
         .background(Theme.Colors.cardFill)
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
     }
-
-    // MARK: - Actions
 
     @ViewBuilder
     private var actions: some View {

@@ -1,37 +1,30 @@
 # Updates
 
-By default, Nanocast checks GitHub Releases once a day and offers the newest release for its own
-channel in a native window with its release notes, installs it and relaunches. There is no Sparkle and
-no appcast: the release feed the website already reads is the feed the app reads.
+By default, Nanocast checks GitHub Releases once a day and offers the newest release in a native
+window with its release notes, installs it and relaunches. There is no Sparkle and
+no appcast: the app reads the GitHub Releases feed directly.
 
 ## Invariants
 
-- **Nanocast installs its own updates, and Homebrew stays out of the way.** Both casks declare
-  `auto_updates true`, which is Homebrew's own flag for an app that manages its own version. `brew
-  update && brew upgrade` therefore skips Nanocast entirely — it is never reported outdated, never
-  re-downloaded, and a self-updated copy is never trashed or rolled back. `brew install`, `brew
-  uninstall` and `brew list` keep working unchanged.
+- **Nanocast installs its own updates, and Homebrew stays out of the way.** The cask declares
+  `auto_updates true`, which is Homebrew's own flag for an app that manages its own version. `brew update && brew upgrade` therefore skips Nanocast entirely — it is never reported outdated, never
+  re-downloaded, and a self-updated copy is never trashed or rolled back. `brew install`, `brew uninstall` and `brew list` keep working unchanged.
 - **The archive is a zip, never the DMG.** A zip expands with `ditto`; a DMG would have to be mounted,
   which means a volume, a Spotlight handle and a detach that can fail. A release published without a
   zip is not installable and is not offered.
-- **The zip is chosen by architecture.** A stable release carries a thin arm64 zip and a
-  `-Universal-` one. Intel takes the universal zip and is offered *nothing* if it is missing, since a
-  thin build would install and then refuse to launch; Apple silicon prefers the thin zip and falls
-  back to universal.
 - **Nobody ever runs `xattr`.** An archive Nanocast fetched itself is not quarantined — macOS sets
   that flag for sandboxed downloaders and for apps that opt in with `LSFileQuarantineEnabled`, and
   Nanocast is neither. `Quarantine` checks anyway through `getxattr`/`removexattr` rather than the
   `xattr` tool, and an app that still carries the flag is refused rather than installed.
 - **The signature is the only integrity guarantee.** A downloaded bundle is trusted when its seal
-  validates, nested helper included, *and* it either satisfies the Developer ID requirement pinned in
+  validates, nested helper included, _and_ it either satisfies the Developer ID requirement pinned in
   `BundleSignature` or carries the byte-identical leaf certificate the running app does. The
   requirement names the team, so a certificate renewal strands nobody; the leaf match is the path a
   copy installed before the Developer ID switch has, and it goes away once none is left. `notarized`
   is deliberately not in the requirement — it resolves the ticket through `syspolicyd` or the
   network, so an offline Mac would refuse a bundle the chain already proves is ours.
-- **A build only ever updates within its own channel.** The channels are separate bundle ids installed
-  side by side; crossing would mean installing a different app. `com.nanocast.app.dev` never updates
-  at all, and does not advertise the command.
+- **Only the shipped app updates itself.** `com.nanocast.app` takes releases. Any other bundle id,
+  `com.nanocast.app.dev` included, never updates and does not advertise the command.
 - **Nothing is installed unless every check passes.** Bundle id, version and signature are all checked
   on the expanded copy before `replaceItemAt` runs, and the running app survives any failure untouched.
 - **Relaunching goes through `NSApp.terminate`, never `exit`.** That is what flushes a pending note
@@ -41,7 +34,7 @@ no appcast: the release feed the website already reads is the feed the app reads
   `terminateLater` and replies when cleanup finishes, preserving system logout and shutdown requests.
   A reopen is scheduled once, only when termination is committed, and waits for the old process to exit.
 - **An automatic prompt defers to whatever the user is doing, and is never spent unshown.**
-  `UpdateReadiness` withholds it while a snippet is expanding, an extension command is running, an
+  `UpdateReadiness` withholds it while an
   uninstall is trashing, a shortcut is being recorded, a prompt or dialog is up, or the palette is
   open. A withheld prompt is still owed: `presentIfAvailable` answers `false`, the version is left
   unannounced, and the pump re-offers it every two minutes for half an hour before falling back to
@@ -62,8 +55,7 @@ no appcast: the release feed the website already reads is the feed the app reads
   none, so it comes back whole.
 - **The notes are laid out by `ReleaseNotesView`, which is this feature's own.** `AttributedString`
   parses inline styling only; headings and bullets are placed by hand or they arrive as literal `##`
-  and `*`. `ExtensionMarkdownView` does the same job and is deliberately not reused — an extension's
-  views never leave `Features/Extensions/`.
+  and `*`.
 - **`@handle` and `#304` are linked by the app, never by the release body.** GitHub autolinks both on
   the web, and a bare mention is what notifies the contributor, so the published body keeps them
   plain and `ReleaseNotes` spells them as Markdown links on the way to the window. Both point at
@@ -73,20 +65,12 @@ no appcast: the release feed the website already reads is the feed the app reads
 
 `ReleaseChannel` is derived from the bundle id, and nothing else:
 
-| Bundle id | Channel | Takes |
-| --- | --- | --- |
-| `com.nanocast.app` | `.stable` | releases |
-| `com.nanocast.app.beta` | `.beta` | prereleases |
-| anything else | `.development` | nothing |
+| Bundle id          | Channel        | Takes    |
+| ------------------ | -------------- | -------- |
+| `com.nanocast.app` | `.stable`      | releases |
+| anything else      | `.development` | nothing  |
 
-`AppVersion` parses `MAJOR.MINOR.PATCH` and `MAJOR.MINOR.PATCH-beta.N` with semver precedence: a
-prerelease sorts below the release it leads to, and `beta.10` above `beta.9`. Everything else parses
-to nil, so an off-shape tag can never be offered as an update. A release whose tag disagrees with
-its `prerelease` flag is treated as mis-published and skipped.
-
-The Intel build is *not* a channel. It shares the stable tag, version, bundle id and signature, so it
-resolves to `.stable` like any other; `ReleaseArchitecture` picks its asset, and nothing about
-identity changes.
+`AppVersion` parses `MAJOR.MINOR.PATCH` with an optional `-REVISION`, with or without a leading `v`, and compares the four numbers in order. A missing revision is `0`. Everything else parses to nil, so an off-shape tag can never be offered as an update. A release flagged `prerelease` is skipped.
 
 ## Checking
 
@@ -116,8 +100,7 @@ One route, whatever the install came from:
 
 1. Stream the zip into `~/Library/Caches/<bundle-id>/Updates/`, with real byte progress and a Cancel
    that actually aborts the transfer.
-2. `ditto -x -k` it into a staging folder, and take whatever `.app` lands there — the bundle is named
-   for its channel, so it is `Nanocast Beta.app` on beta.
+2. `ditto -x -k` it into a staging folder, and take whatever `.app` lands there.
 3. Check quarantine natively; clear it if somehow present, and refuse the update if it survives.
 4. Verify the bundle id, the version, and that the code signature is valid and proves the bundle is
    ours — by the pinned Developer ID requirement, or by the running app's own leaf certificate.
@@ -133,15 +116,12 @@ later quit and reopen. A launch of any other version only clears it, so a brew o
 reports.
 
 Nothing here touches `~/Library/Preferences`, `~/Library/Caches` or `Application Support`, so no
-setting, clipboard entry, note or snippet is affected by an update, by `brew upgrade`, or by both.
+setting, clipboard entry or note is affected by an update, by `brew upgrade`, or by both.
 
 ## Releasing into it
 
 `.github/workflows/release.yml` publishes two assets from one build: the DMG people download by hand
-and the cask installs, and `Nanocast-<version>.zip` for the updater. A stable run adds a
-`Nanocast-Universal-<version>` pair from its `universal` job, uploaded second so the thin zip stays
-first in the asset list — builds predating architecture-aware selection take whichever comes first.
-The zip is made with
+and the cask installs, and `Nanocast-<version>.zip` for the updater. The zip is made with
 
 ```sh
 ditto -c -k --keepParent --sequesterRsrc "$APP" "dist/$ZIP_FILE"
@@ -154,6 +134,6 @@ The body it publishes is composed by `Scripts/release-notes.sh`: GitHub's genera
 then `<!-- nanocast:install -->`, then the install text. Anything a release wants the update window to
 show has to go above that marker — see [release.md](../release.md#release-notes).
 
-**The casks must declare `auto_updates true`** in `abue-ammar/homebrew-tinycast`. Without it Homebrew
+**`Casks/nanocast.rb` must declare `auto_updates true`.** Without it Homebrew
 compares its Caskroom receipt against the cask version, sees a self-updated app as outdated forever,
 and re-installs over it on the next `brew upgrade`.
