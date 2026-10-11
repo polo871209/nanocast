@@ -10,15 +10,32 @@ struct NavigationSettingsView: View {
                 Toggle(isOn: $settings.navigationEnabled) {
                     SettingsFeatureToggleLabel(
                         anchor: .navigationNavigation, title: "Enable navigation",
-                        subtitle: "Switch windows and search menu bar items.")
+                        subtitle: "Switch windows from a shortcut, and search menu bar items.")
                 }
             }
             .settingsAnchor(.navigationNavigation)
 
-            FeatureCommandsSection(
-                owner: .navigation, anchor: .navigationCommands,
-                excluding: [.searchMenuItems]
-            )
+            Section {
+                SettingsRow(
+                    title: "Shortcut",
+                    subtitle: "Hold its modifiers and press the key to step. Delete resets it to ⌘Tab.",
+                    anchor: .navigationWindowSwitcher
+                ) {
+                    ShortcutRecorder(action: .windowSwitcher)
+                }
+
+                SettingsRow(
+                    title: "Excluded Applications",
+                    subtitle: "Their windows never appear in the switcher.",
+                    anchor: .navigationWindowSwitcher
+                ) {
+                    EmptyView()
+                }
+
+                DisabledApplicationsList(bundleIDs: $settings.windowSwitcherExcludedApps)
+            } header: {
+                SettingsSectionHeader(.navigationWindowSwitcher)
+            }
             .settingsEnabled(settings.navigationEnabled)
 
             Section {

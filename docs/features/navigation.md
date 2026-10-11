@@ -1,175 +1,76 @@
 # Navigation
 
-Commands that move you somewhere rather than changing something, behind one switch:
-**Switch Windows** raises any open window of any running app, **Switch Windows Backwards** walks the
-same list the other way, and **Search Menu Bar Items** presses any item in the front app's menu bar. The second has its own page —
-[menu-search.md](menu-search.md) — because its internals are a menu walk; this page owns the
-switcher and the pane the two share.
+Two features sit behind one switch. The **window switcher** replaces the macOS app switcher with a panel of live window previews. **Search Menu Bar Items** presses any item in the front app's menu bar, and has its own page, [menu-search.md](menu-search.md), because its internals are a menu walk. This page owns the switcher and the pane the two share.
 
-Ships **off**. Settings › Navigation is the switch, and while it is off none of them is in the
-launcher and a still-recorded shortcut for any does nothing.
+Ships **off**. Settings › Navigation is the switch. While it is off, the event tap is not installed and ⌘Tab belongs to macOS. The trigger is ⌘Tab by default, and Settings › Navigation › Window Switcher › Shortcut records another one.
+
+The switcher follows [BetterCmdTab](https://github.com/rokartur/BetterCmdTab) with one configuration fixed in code: the previews layout, live previews, no animation, hidden from screen sharing, opened on the display of the focused window, and no search, letter hints, tab drill-down or per-app rules beyond an exclusion list. None of its other settings exist here.
 
 ## Invariants
 
-- **The sweep is synchronous, and that is deliberate.** `WindowSwitchSweep.snapshot` visits apps and
-  their windows — one level, two AX reads each — where the menu walk descends a tree. A
-  `Task.detached` here would buy a "Reading windows…" state nobody would ever see, and cost a
-  revision counter to keep superseded sweeps from publishing. `WindowInventory` made the same call.
-- **A live `AXUIElement` never leaves the main actor, and never outlives the show.** The pure entry
-  carries a `handle`; `WindowSwitchSession` holds the `handle → Element` table `@ObservationIgnored`
-  and drops it in `reset()`, which `hidePalette` and every mode change call. So every open sweeps
-  anew — `WindowSwitchCoordinator.load()`, through `PaletteCoordinator.onScreenOpening` — and a
-  screen restored inside the Pop to Root window lists today's windows, not an empty snapshot.
-- **Nothing in `Model/` knows what a window is.** `WindowSwitchEntry` takes `appRank` as a number
-  someone else measured, so `WindowSwitchOrder` and `WindowSwitchQuery` stay Foundation-only and the
-  harness compiles the shipped sources.
-- **The order is total.** `(isMinimized, appRank, appName, handle)` — so a sweep that enumerated apps
-  in a different order sorts identically, and minimized windows are always one run at the end rather
-  than interleaved.
-- **Accessibility is gated twice**, on open and again on activate: a grant revoked while the palette
-  is open must not reach `AXUIElementPerformAction`. The open gate sits in both `show()` and
-  `load()`, because a restore reaches `load()` alone.
-- **Activation hides with `restoreFocus: false`.** Restoring focus reactivates the displaced app,
-  which races the raise and can land on the wrong window — the same reason a Space command does it.
-- **`AXWindowAccess` stays the one AX window layer.** `minimize`, `unminimize` and `focus` live
-  there rather than in a second AX shim, and Window Layouts brings its frontmost window forward
-  through `focus`.
+- **The tap is the only input path.** The panel never becomes key, so every key the switcher reacts to reaches it through `WindowSwitchTap`, and `WindowSwitchChord` decides what each event means. While a switch is in progress, the tap swallows every key down and key up, so ⌘Q or ⌘W never reach the front app. Modifier changes always pass through.
+- **The trigger is a key combination.** `HotKeyAction.windowSwitcher` is a built-in hotkey action, so the recorder, the conflict check and `settings.json` treat it like any other shortcut. It has no Carbon registration, because the tap reads it, and `acceptsModifierOnly` is false, because the tap needs a key to step. Clearing it restores ⌘Tab through `HotKeyManager.defaultBindings`. While any shortcut records, `applyTrigger` lifts the trigger so the recorder can capture the chord.
+- **The tap sits at the head of the HID stream** (`.cghidEventTap`, `.headInsertEventTap`). Later in the stream, the Dock has already taken ⌘Tab. Nanocast does not call `CGSSetSymbolicHotKeyEnabled`, because that change outlives a crash. The cost is that while another app holds Secure Event Input (a focused password field), the tap sees no keys and the macOS switcher opens instead.
+- **Chord state lives behind a `Mutex` in `WindowSwitchTap.Relay`.** The C callback runs on the main run loop but outside actor isolation. Actions reach `WindowSwitchCoordinator` through main-actor tasks, in the order the tap produced them.
+- **A live `AXUIElement` never outlives one switch.** The pure entry carries a `handle`, and `WindowSwitchSession` keeps the `handle → Element` table `@ObservationIgnored`. Every commit and cancel calls `reset()`, and every ⌘Tab sweeps anew.
+- **Nothing in `Model/` knows what a window is.** `WindowSwitchEntry`, `WindowSwitchOrder`, `WindowSwitchChord` and `WindowSwitchGrid` are Foundation-only, so the harness compiles the shipped sources.
+- **A preview frame never lands in the wrong switch.** The capture loop is a task the coordinator cancels on close, and `setPreview` drops any window ID that is not in the current entries.
 
-## How it is put together
+## What it lists
 
-| Piece | Holds |
-| --- | --- |
-| `Model/WindowSwitchEntry.swift` | one row: handle, app, title, minimized, rank, search fields |
-| `Model/WindowSwitchOrder.swift` | the MRU sort, pure and total |
-| `Model/WindowSwitchQuery.swift` | ranking over `SearchRelevance`, capped at 200 rows |
-| `Service/WindowZOrder.swift` | the one `CGWindowList` call: per-pid front rank |
-| `Service/WindowSwitchSweep.swift` | the AX sweep, and the live element table it hands back |
-| `Service/WindowSwitchSession.swift` | the observable state — snapshot, filtered rows, elements, exits |
-| `UI/WindowSwitchCoordinator.swift` | show, activate, the ⌘K actions, the switch, the failure reports |
-| `UI/WindowSwitchScreen.swift` | the `PaletteScreen` conformance, the ⌘K menu, the two empty states |
-| `UI/WindowSwitchList.swift` | the list and its row: app icon, title, app name |
+The sweep takes every window with the `AXStandardWindow` subrole from every regular app, on every Space. It drops minimized windows, every window of a hidden app, and every app in `windowSwitcherExcludedApps`. An app with no window is not listed.
 
-## Recency without a private symbol
+The app list is `NSWorkspace.runningApplications` plus every regular app that owns a window but is missing from that list. Xcode's Device Hub respawns itself at launch, so the workspace lists it with pid -1 and never lists the process that owns its windows. `WindowInventory.owningProcess` maps that pid -1 entry to the real process for recency, the frontmost app and the active display.
 
-The MRU order comes from the window server's own front-to-back list: one
-`CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)`, keeping
-layer 0 — the normal window band, not the menu bar, Dock or overlay panels — and recording where each
-pid first appears. Only `kCGWindowName` is permission-gated, and titles come from AX instead, so the
-call needs no Screen Recording grant.
+Apps sort by recency, then each app's windows keep their own AX front-to-back order. `AppRecencyMonitor` seeds the order from the on-screen window list when the switch turns on, then moves an app to the front on every `didActivateApplication`. An app it has never seen sorts after the known ones, by name.
 
-The rank is therefore **per app, not per window**: mapping a `CGWindowID` onto an `AXUIElement` needs
-the private `_AXUIElementGetWindow`, and the app's own `kAXWindowsAttribute` order already gives the
-windows inside one app front-to-back. [Rooms](window-rooms.md#invariants) do resolve that symbol, in
-`AXWindowAccess.windowID(of:)`, because a parked window's way back must outlive its element; the
-switcher keeps its per-app rank, which needs nothing private. An app with nothing on screen — everything minimized, or every
-window on another Space — gets no rank at all and sorts after the ranked ones by name.
+⌘Tab selects the first window of another app, because the macOS switcher lands on the previous app rather than on a sibling window. ⌘⇧Tab selects the last window.
 
-The alternative was a long-lived `NSWorkspace.didActivateApplicationNotification` observer with its
-own LRU and its own lifetime. This needs neither, and it is right on the first summon after launch
-rather than after the user has switched apps once.
+## Keys
 
-## The sweep
+The keys below assume the default ⌘Tab. With another trigger, its key replaces Tab and its modifiers replace ⌘. If the trigger itself includes ⇧, only ← steps back.
 
-`WindowSwitchSweep` walks `WindowInventory.candidates()` — regular-policy, non-terminated, not us —
-and takes every window whose subrole is `AXStandardWindow`. That is looser than
-`WindowInventory.eligibleFrame` in two ways that both matter here: a **minimized** window is exactly
-what a switcher is for, and a window on another Space reports no frame until it is raised, so
-requiring one would hide it.
+While ⌘ is held:
 
-Each element gets a 0.2 s messaging timeout, the same as the layout inventory and the menu walk, so
-one hung app cannot stall the summon.
+- Tab and → step forward, ⇧Tab and ← step back, with wraparound.
+- Releasing ⌘ or pressing Return switches to the selection.
+- Escape closes the panel and switches nothing.
+- A click on a tile switches to it.
 
-The app icon rides on the entry as a `FileIconStamp` and its bundle URL, and the row draws it through
-`EntryIconView(source: .file(stamp:))` — so `IconCache` decodes once per app however many windows it
-contributes.
+## The panel
 
-## Stepping with the shortcut
+The panel appears 100 ms after ⌘Tab. If ⌘ is released before that, the switch happens without the panel, so a quick ⌘Tab flips to the previous app with nothing drawn.
 
-Pressed again while the switcher is open, its shortcut steps the selection down the list instead of
-closing the palette; the first step lands on the window behind the current one. Switch Windows
-Backwards opens the same list and steps up it, wrapping to the last window, so the two interleave
-like ⌘Tab and ⌘⇧Tab. A step made with the chord's modifiers still held arms one `flagsChanged`
-local monitor, and letting go switches to the selection, as ⌘Tab does. The first armed step's
-modifiers are the ones that count, so letting go of ⇧ alone mid-walk switches nothing. A single press never arms it, so pressing once and typing still
-searches; Escape hides the palette, and the next modifier change finds it gone and switches
-nothing.
+The panel opens on the display that holds the frontmost app's focused window, and falls back to the display under the cursor. Tiles wrap at 92% of the visible width. If the rows are taller than 85% of the visible height, every tile shrinks, down to half size. The panel sets `sharingType = .none`, so screen sharing and recordings do not show it.
+
+Each tile is the window preview with its app icon in the top-left corner. The tile draws no text, and `WindowSwitchEntry.label` is only the accessibility label.
+
+## Previews
+
+`WindowPreviewCapture` takes one-shot `SCScreenshotManager` captures of every listed window, then repeats them every 100 ms while the panel shows. It uses one-shot captures, not an `SCStream`, because a stream marks each captured window with the system recording indicator. It calls the completion-handler overload, because the async overload traps when ScreenCaptureKit returns no image, which it does for DRM video.
+
+Previews need Screen Recording. Turning navigation on asks once through `CGRequestScreenCaptureAccess`. Without the grant, each tile shows its app icon.
 
 ## Raising
 
-`activate` un-minimizes if it has to, raises the window inside its app, sets `AXFrontmost`, then calls
-`NSRunningApplication.activate()`. All four steps are needed and none is redundant: the raise alone
-orders the window inside an app that is not frontmost, and activating alone brings the app's *own*
-front window forward rather than the chosen one. Activating is also what pulls another Space forward,
-so the switcher needs no Space handling of its own.
-
-Every step is allowed to fail quietly. What is reported is only the case the user can act on: the
-window's app quit between the sweep and the ↵.
-
-## The ⌘K menu
-
-| Row | Does | Palette |
-| --- | --- | --- |
-| Switch to Window (↵) | `activate`, as above | hides |
-| Minimize Window (⌃⇧M) | sets `kAXMinimized`; absent on a minimized row | stays; the row joins the minimized run |
-| Hide Application (⌃⇧H) | `NSRunningApplication.hide()`, then `kAXHidden` if refused | hides |
-| Quit Application (⌃⇧Q) | `NSRunningApplication.terminate()` | stays; the app's rows leave on exit |
-
-- **Minimize marks the row instead of sweeping again.** `kAXMinimized` can still read false while
-  the Dock animation runs, so a fresh sweep could leave the row where it was. A full-screen window cannot
-  minimize and is skipped, so its row never claims to be minimized.
-- **Quit removes rows on the app's exit, not on the request.** While rows are shown the session
-  observes `DidTerminateApplicationMessage` and drops that pid's rows; `reset()` removes the
-  observer. A quit refused by a save sheet therefore keeps its rows, and an app quit from anywhere
-  else leaves the list too.
-- **The chords are ⌃⇧, not ⌘M and ⌘H.** The app menu's Minimize and Hide take those before the
-  palette sees them.
-- **Hide closes the palette without restoring focus.** Restoring focus activates the app that was in
-  front, and activating a hidden app unhides it.
+`commit` calls `AXWindowAccess.focus`: raise the window, set `AXFrontmost` on its app, then `NSRunningApplication.activate()`. A window on another Space pulls that Space forward with the macOS slide animation. There is no instant Space switch.
 
 ## Wiring
 
-- **`CommandID.switchWindows`** (`command:switch-windows`), `CommandID.switchWindowsBackwards`
-  (`command:switch-windows-backwards`) and `CommandID.searchMenuItems` are all named by
-  `SettingsTab.navigation.ownedCommands`, which is the whole of what moves them out of
-  Settings › Commands: `LauncherItemsSection` filters on `settingsOwner == nil`, and `VisibilityStore`
-  skips the `Enable Commands` category gate for a pane-owned command. None adds an
-  `AppEntry.Kind`, a `HotKeyAction` case or a `VisibilityStore` category — they are plain `.command`
-  entries.
-- **`navigationEnabled`** (off) is the switch. `AppCore.observeFeatureSwitches` tracks it once and
-  reprojects into both coordinators; each owns only its own commands and its own palette mode, so
-  neither knows about the other. `AppIndex.isCommandEnabled` feeds `hotKeys.allowsAction`, so every
-  shortcut goes dead with the switch, and each `show()` re-guards the flag anyway.
-- **`menuSearchDisabledApps`** (empty) is the exclusion list. It ships with no seeded entries, unlike
-  the clipboard's: a menu read only ever happens because the user asked for one.
-- **`menuSearchShowsAppleMenu`** (off) lists the Apple menu's own items. Off by default because that
-  menu is identical under every app, so it would pad every snapshot with the same ~50 rows;
-  [menu-search.md](menu-search.md) owns how it is applied.
-- **Both ride in the pane's own `Search Menu Bar Items` section, beside the command row itself.**
-  `FeatureCommandsSection` takes `excluding: [.searchMenuItems]` and the section draws that one
-  command through `FeatureCommandRow`, so a command added to `ownedCommands` later still appears
-  under `Commands` without a second edit. A list of excluded apps in a box of its own read as
-  belonging to the pane rather than to one command, which is what this section exists to fix;
-  `DisabledApplicationsList` is the shared half — the rows and the picker — that Settings ›
-  Clipboard still wraps in a `DisabledApplicationsSection` of its own.
-- Both settings ride in backups. Neither grants a permission class of its own — Accessibility is
-  already required for paste — which is the call `windowManagementEnabled` made.
-- **There is deliberately no "Show in launcher" switch.** The per-command checkboxes in
-  `FeatureCommandsSection` already are one, and a second would be a switch over rows the pane lists.
+- **`navigationEnabled`** (off) is the switch. `AppCore.observeFeatureSwitches` calls `WindowSwitchCoordinator.applyEnabled`, which installs the tap, starts `AppRecencyMonitor`, asks for Screen Recording and subscribes to `HealthTicker`. If the tap fails to install, it asks for Accessibility through `Permissions.ensureAccessibility`, so a missing or stale grant does not fail silently. The ticker installs the tap once Accessibility is granted and removes it when the grant is revoked.
+- **`hotkey.windowSwitcher`** (⌘Tab) is the trigger. It is in `settings.json` as `navigation.windowSwitcherShortcut`, and like Dictation's shortcut it does not ride in backups. `AppCore` tracks `HotKeyManager.revision` and `recordingAction` and calls `applyTrigger`.
+- **`windowSwitcherExcludedApps`** (empty) is the exclusion list, in Settings › Navigation › Window Switcher. It rides in backups and in `settings.json` as `navigation.windowSwitcherExcludedApps`.
+- **`menuSearchDisabledApps`** (empty) and **`menuSearchShowsAppleMenu`** (off) belong to menu search. [menu-search.md](menu-search.md) owns how they apply.
+- `CommandID.searchMenuItems` is the one command `SettingsTab.navigation.ownedCommands` names. The switcher is not a command and has no palette screen.
 
 ## Testing
 
-`Tests/window-switch-test.swift` covers the pure half: the handle-derived id, the untitled-window
-fallback, the name/owner split in the search fields, the MRU order and its totality under a shuffled
-sweep, the minimized run at the end, ranking, and the 200-row cap under both an empty and a
-matching query.
+`Tests/window-switch-test.swift` covers the pure half: the tile label, the recency order and its independence from sweep order, the first selection, the chord state machine with the default and a recorded trigger, and the grid fit.
 
-`WindowZOrder` and `WindowSwitchSweep` are not compiled into the harness and have no automated
-coverage — the AX and `CGWindowList` paths need manual verification, particularly:
+The tap, the sweep, the captures and the raise have no automated coverage. Verify these by hand after a change:
 
-1. A minimized window is listed last and ↵ un-minimizes it rather than doing nothing.
-2. A window on another Space is listed, and ↵ pulls that Space forward.
-3. An app with several windows lists them in its own front-to-back order, under one app rank.
-4. An app quit between the summon and the ↵ reports rather than failing silently.
-5. Minimize moves the row into the minimized run; on a full-screen window it does nothing.
-6. Hide hides the frontmost app as well as a background one, and Escape does not bring it back.
-7. ⌃⇧Q on an app with unsaved work keeps its rows until the save sheet lets it exit.
+1. A quick ⌘Tab flips to the previous app and draws no panel.
+2. A held ⌘Tab shows the panel on the display of the focused window, and the macOS switcher never appears.
+3. Escape closes the panel, and the ⌘ release after it switches nothing.
+4. A window on another Space is listed, and switching to it pulls that Space forward.
+5. Without Screen Recording, tiles show app icons.
