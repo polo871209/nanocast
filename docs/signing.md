@@ -26,8 +26,8 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
   -addext "keyUsage=critical,digitalSignature" \
   -addext "extendedKeyUsage=critical,codeSigning"
 
-# Bundle it as a .p12 (the non-empty password keeps `security import` happy).
-openssl pkcs12 -export -inkey /tmp/tc-key.pem -in /tmp/tc-cert.pem \
+# Bundle it as a .p12. `security import` reads only the legacy format, and `-legacy` needs OpenSSL 3+.
+openssl pkcs12 -export -legacy -inkey /tmp/tc-key.pem -in /tmp/tc-cert.pem \
   -name "Nanocast Self-Signed" -out /tmp/tc.p12 -passout pass:nanocast
 
 # Import into the login keychain so codesign can use it without prompting.
