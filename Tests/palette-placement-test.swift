@@ -227,12 +227,6 @@ struct PalettePlacementTests {
         let inset = metrics.spacing.md
         let headerExtent = metrics.size.headerPadding + metrics.size.headerHeight
 
-        let leading = MenuPanelCorner.bottomLeading.frame(
-            contentSize: content, parentFrame: parent, visibleFrame: visible, inset: inset,
-            headerExtent: headerExtent)
-        expect(leading.minX, parent.minX + inset, "the left menu follows the footer's leading edge")
-        expect(leading.minY, parent.minY + inset, "the left menu follows the footer's bottom edge")
-
         let trailing = MenuPanelCorner.bottomTrailing.frame(
             contentSize: content, parentFrame: parent, visibleFrame: visible, inset: inset,
             headerExtent: headerExtent)
@@ -285,7 +279,6 @@ struct PalettePlacementTests {
         expect(clamped.maxX, 1000 - inset, "a leading menu clears the display's right edge")
 
         let scale = Theme.MenuMotion.maximumScale
-        let leadingCanvas = MenuPanelCorner.bottomLeading.scaledFrame(leading, by: scale, parentFrame: parent)
         let trailingCanvas = MenuPanelCorner.bottomTrailing.scaledFrame(
             trailing, by: scale, parentFrame: parent)
         let headerCanvas = MenuPanelCorner.belowHeaderTrailing.scaledFrame(
@@ -293,8 +286,6 @@ struct PalettePlacementTests {
         let inputCanvas = controlCorner.scaledFrame(input, by: scale, parentFrame: parent)
         let inputLeadingCanvas = inputLeadingCorner.scaledFrame(inputLeading, by: scale, parentFrame: parent)
         let flippedCanvas = bottomControl.scaledFrame(flipped, by: scale, parentFrame: parent)
-        expect(leadingCanvas.minX, leading.minX, "left expansion keeps its leading edge fixed")
-        expect(leadingCanvas.minY, leading.minY, "left expansion keeps its bottom edge fixed")
         expect(trailingCanvas.maxX, trailing.maxX, "right expansion keeps its trailing edge fixed")
         expect(trailingCanvas.minY, trailing.minY, "right expansion keeps its bottom edge fixed")
         expect(headerCanvas.maxX, header.maxX, "header expansion keeps its trailing edge fixed")

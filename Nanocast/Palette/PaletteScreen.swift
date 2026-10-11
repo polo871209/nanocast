@@ -91,7 +91,6 @@ typealias MenuPanelClipPath =
 private extension MenuPanelCorner {
     var popoverAttachment: PopoverMenu.Attachment {
         switch self {
-        case .bottomLeading: .bottomLeading
         case .bottomTrailing: .bottomTrailing
         case .belowHeaderTrailing, .belowControl: .none
         }
@@ -102,13 +101,11 @@ private extension MenuPanelCorner {
     associatedtype Row: Identifiable
 
     var rows: [Row] { get }
-    var primaryActionTitle: String { get }
     var hidesSearchField: Bool { get }
     var actsWithoutRows: Bool { get }
     var landingSelection: Int { get }
 
     func hasPrimaryAction(at selection: Int) -> Bool
-    func isPrimaryActionEnabled(at selection: Int) -> Bool
     func hasActions(at selection: Int) -> Bool
     func ownsVerticalKeys(at selection: Int) -> Bool
     func tabTarget(from selection: Int, backwards: Bool) -> Int?
@@ -129,7 +126,6 @@ private extension MenuPanelCorner {
 
 extension PaletteScreen {
     func hasPrimaryAction(at selection: Int) -> Bool { true }
-    func isPrimaryActionEnabled(at selection: Int) -> Bool { true }
     func hasActions(at selection: Int) -> Bool { true }
     var hidesSearchField: Bool { false }
     var actsWithoutRows: Bool { false }

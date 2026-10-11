@@ -387,7 +387,7 @@ The textarea routes undo/redo to its own manager, as the Notes editor does in a 
 
 `RootPaletteView` holds a single `OpenMenu?` rather than a flag per menu, so "at most one is open" is
 structural instead of a pair of `onChange` handlers pushing each other closed. The ⌘K Actions menu
-hangs `.bottomTrailing`, the app menu `.bottomLeading`, and everything drawn as a header control —
+hangs `.bottomTrailing`, and everything drawn as a header control —
 the clipboard type filter and an `options=` argument field's choices — hangs `.belowHeaderTrailing`,
 under its own button. Native editor inputs supply their own choices and control frame through `openInputOptions`;
 `.belowControl` aligns the menu with either edge of that field and allows it beyond the palette's bounds.
@@ -404,7 +404,7 @@ filters — which open on the choice they already hold.
 
 **The palette window consumes a click-away press through its release.** While a menu is open,
 `PalettePanel` dismisses it on either mouse button's press and consumes the matching drag and release
-before SwiftUI sees them. A row or footer button beneath the menu cannot inherit a partial click,
+before SwiftUI sees them. A row beneath the menu cannot inherit a partial click,
 and the next click reaches its control normally. The menu controller installs the dismissal callback
 only while the menu is open and clears it before restoring the palette's key status.
 
@@ -416,8 +416,6 @@ row sits as far from it as from the search field's hairline. That height joins t
 sizing, but the separator takes no selection index, so navigation still walks only rows. A menu
 taller than its default cap ends its viewport mid-row, so the fold never lands on a separator or section
 title, and both hairlines are one device pixel.
-The app menu keeps its five actions in one group and caps the list at four and a half rows, leaving
-Quit partially visible above the search band until scrolling or keyboard navigation reveals it.
 Built-in action menus mark boundaries between opening or copying, managing the item, settings, and
 deletion. Menus offering one kind of action, such as calculator copies, color formats, or emoji
 transfers, keep their rows in one group.
@@ -587,6 +585,6 @@ over another app the keyboard returns to that app, and a paste or the next keyst
 open note. Summoned from a note, the note takes key back, so a paste lands there.
 
 The same show also mirrors that app into `PaletteState.pasteTarget` (a `PasteTarget`: localized
-name + bundle path), so Clipboard and Emoji can name it — the footer pill reads "Paste to Notes" and
-the ⌘K paste rows carry the app's icon. Resolved once per summon, never per render, and deliberately
+name + bundle path), so Clipboard and Emoji can name it — the ⌘K paste rows read "Paste to Notes" and
+carry the app's icon. Resolved once per summon, never per render, and deliberately
 not cleared by `prepare` (pop-to-root resets the screen, not the target).

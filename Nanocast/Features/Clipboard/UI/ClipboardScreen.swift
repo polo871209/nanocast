@@ -13,12 +13,6 @@ struct ClipboardScreen: PaletteScreen {
 
     var landingSelection: Int { store.landingIndex(in: vm.query, filter: vm.clipboardFilter) }
 
-    var primaryActionTitle: String {
-        let defaultAction = core.settings.clipboardDefaultAction
-        let action = item(at: vm.selection).flatMap { defaultAction.action(for: .return, on: $0) }
-        return (action ?? defaultAction).title(pastingInto: vm.pasteTarget)
-    }
-
     private func item(at selection: Int) -> ClipboardItem? {
         let rows = rows
         return rows.indices.contains(selection) ? rows[selection] : nil

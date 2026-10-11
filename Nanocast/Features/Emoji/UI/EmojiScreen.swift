@@ -34,8 +34,6 @@ struct EmojiScreen: PaletteScreen {
 
     var rows: [EmojiEntry] { sections.flatMap(\.entries) }
 
-    var primaryActionTitle: String { vm.pasteTarget?.pasteTitle ?? String(localized: "Paste") }
-
     private func entry(at selection: Int) -> EmojiEntry? {
         let rows = rows
         return rows.indices.contains(selection) ? rows[selection] : nil
