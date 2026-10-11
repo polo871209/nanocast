@@ -29,7 +29,7 @@ Independently of the folder tree, every mature subsystem has converged on the sa
 │ SettingsFile{JSON,Key,Value,Format,Binding,Issue,Identity} ·               │
 │ HotKeySpelling · WindowManagementFileFormat ·                              │
 │ MenuSearch{Item,Shortcut,Query,TreeNode,SnapshotPolicy,Target} ·           │
-│ WindowSwitch{Entry,Order,Query}                                            │
+│ WindowSwitch{Entry,Order,Chord,Grid,FallbackPolicy}                        │
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ consumed by
 ┌─ EFFECT ─────────────────────────▼─────────────────────────────────────────┐
@@ -43,7 +43,8 @@ Independently of the folder tree, every mature subsystem has converged on the sa
 │ HotKeyCenter · HyperKeyTap · KeyboardRemapper · ModifierTapMonitor ·       │
 │ SecureInputMonitor · RunningAppsMonitor ·                                  │
 │ CameraSession ·                                                            │
-│ AXMenuAccess · WindowZOrder · WindowSwitchSweep ·                          │
+│ AXMenuAccess · WindowSwitchSweep · WindowSwitchTap ·                       │
+│ WindowPreviewCapture · AppRecencyMonitor ·                                 │
 │ SettingsFileRepository · SettingsFileMonitor ·                             │
 │ WindowManagementSettingsFile                                               │
 └──────────────────────────────────┬─────────────────────────────────────────┘
