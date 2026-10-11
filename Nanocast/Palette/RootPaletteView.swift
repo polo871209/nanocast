@@ -14,7 +14,6 @@ struct RootPaletteView: View {
     @Environment(FileSearchSession.self) private var fileSearch
     @Environment(DictionarySession.self) private var dictionary
     @Environment(MenuSearchSession.self) private var menuSearch
-    @Environment(WindowSwitchSession.self) private var windowSwitch
     @Environment(UninstallSession.self) private var uninstall
     @Environment(AppSettings.self) private var settings
     @Environment(\.metrics) private var metrics
@@ -52,8 +51,6 @@ struct RootPaletteView: View {
                 session: fileSearch, core: core, vm: vm, openActions: openActions)
         case .menuSearch:
             return MenuSearchScreen(session: menuSearch, core: core)
-        case .switchWindows:
-            return WindowSwitchScreen(session: windowSwitch, core: core)
         case .rooms:
             return RoomsScreen(coordinator: core.roomCoordinator, session: core.roomSession, vm: vm)
         case .roomWindows:
@@ -242,7 +239,6 @@ struct RootPaletteView: View {
                 if vm.mode == .launcher { core.fileSearchCoordinator.searchFromLauncher(vm.query) }
                 if vm.mode == .dictionary { dictionary.lookUp(vm.query) }
                 if vm.mode == .menuSearch { menuSearch.filter(vm.query) }
-                if vm.mode == .switchWindows { windowSwitch.filter(vm.query) }
             }
             .onChange(of: vm.clipboardFilter) { land(restoringSelection: true) }
             .onChange(of: vm.fileSearchFilter) {
@@ -271,7 +267,6 @@ struct RootPaletteView: View {
                     dictionary.reset()
                 }
                 if vm.mode != .menuSearch { menuSearch.reset() }
-                if vm.mode != .switchWindows { windowSwitch.reset() }
                 if vm.mode != .rooms, vm.mode != .roomWindows { core.roomCoordinator.screensDidClose() }
             }
             .onChange(of: vm.resetToken) {

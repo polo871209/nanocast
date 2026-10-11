@@ -137,8 +137,8 @@ where it was. A chord another action still holds is reported, and the old bindin
 Each pane that lists items writes the ones with something set, as records keyed by ID:
 `applications.apps` and `systemSettings.panes` by bundle ID, `systemActions.actions` by action ID, and
 built-in commands under the pane that lists them — `clipboard.commands`, `emoji.commands`, and the rest
-in `commands.builtIn` — by their ID after `command:`. App Launcher and Dictation are
-`general.launcherShortcut` and `dictation.shortcut`.
+in `commands.builtIn` — by their ID after `command:`. App Launcher, Dictation and the window switcher are
+`general.launcherShortcut`, `dictation.shortcut` and `navigation.windowSwitcherShortcut`.
 
 ```json
 "clipboard-history": { "shortcut": "cmd+shift+v", "alias": "ch", "showInLauncher": true }
