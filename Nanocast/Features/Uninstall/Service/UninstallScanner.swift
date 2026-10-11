@@ -1,10 +1,8 @@
 import Darwin
 import Foundation
 
-/// Every filesystem, stat and permission read; the decisions it defers to are the pure half.
 enum UninstallScanner {
     struct SizeBudget: Sendable {
-        /// Generous: an editor's support folder runs to ~90k entries. ~1s at 250k, off-main.
         var maxEntries = 250_000
         static let `default` = SizeBudget()
     }
@@ -15,12 +13,11 @@ enum UninstallScanner {
         var errorDescription: String? {
             switch self {
             case .refused:
-                return String(localized: "Nanocast can’t uninstall this app.")
+                return "Nanocast can’t uninstall this app."
             }
         }
     }
 
-    /// Every candidate with directory sizes still nil; fast enough that the list can paint on it.
     nonisolated static func discover(
         target: UninstallTarget, otherAppNames: [String], otherBundleIDs: [String],
         isTargetRunning: Bool, roots: [UninstallSearchRoot] = UninstallSearchRoot.all
@@ -53,7 +50,6 @@ enum UninstallScanner {
                         )
                     }
                 }
-                // At its own index, so `UninstallSearchRoot.all` order outlives completion order.
                 for try await (index, found) in group { buckets[index] = found }
             }
 
@@ -61,11 +57,9 @@ enum UninstallScanner {
                 [bundle].compactMap { $0 } + buckets.flatMap { $0 }
                 + (try binRows(environment: environment, bundlePath: bundlePath))
 
-            // One pass, in gathered order: a `Set` shared across tasks is what would race.
             var seen = Set<String>()
             let candidates = gathered.filter { seen.insert($0.path).inserted }
 
-            // Bundle pinned first; the rest by path, which is the order the list shows.
             let leftovers = candidates.filter { $0.evidence != .bundle }.sorted { $0.path < $1.path }
             return UninstallPlan(
                 target: target, candidates: candidates.filter { $0.evidence == .bundle } + leftovers,
@@ -73,7 +67,6 @@ enum UninstallScanner {
         }
     }
 
-    /// Streams each walk as it lands, so a row never waits on its neighbours; nil means unmeasured.
     nonisolated static func measure(
         paths: [String], budget: SizeBudget = .default,
         onMeasured: @escaping @Sendable @MainActor (String, MeasuredSize) -> Void
@@ -88,7 +81,6 @@ enum UninstallScanner {
                         return (path, size)
                     }
                 }
-                // A cancelled or unreadable walk yields nothing, so its row stays pending.
                 for await measured in group {
                     guard let (path, size) = measured else { continue }
                     await onMeasured(path, size)
@@ -97,15 +89,12 @@ enum UninstallScanner {
         }
     }
 
-    // MARK: - Private
-
     private static func rows(
         in root: UninstallSearchRoot, identity: UninstallIdentity,
         environment: UninstallEnvironment, bundlePath: String
     ) -> [UninstallCandidate] {
         let rootPath = root.path(home: environment.home)
         guard let names = childNames(of: rootPath) else { return [] }
-        // One stat per root, not per row.
         let parent = parentFacts(of: rootPath)
         return UninstallRules.matches(childNames: names, in: root, identity: identity)
             .compactMap { match -> UninstallCandidate? in
@@ -120,7 +109,6 @@ enum UninstallScanner {
             }
     }
 
-    /// Serial: four directories of cheap symlink reads, and nothing here needs a walk.
     private static func binRows(
         environment: UninstallEnvironment, bundlePath: String
     ) throws
@@ -136,7 +124,6 @@ enum UninstallScanner {
                 let path = (rootPath + "/" + name as NSString).standardizingPath
                 guard let target = try? FileManager.default.destinationOfSymbolicLink(atPath: path)
                 else { continue }
-                // A relative link resolves against its own directory, not the cwd.
                 let resolved =
                     target.hasPrefix("/")
                     ? target : (rootPath as NSString).appendingPathComponent(target)
@@ -151,7 +138,6 @@ enum UninstallScanner {
     }
 
     private static func childNames(of directory: String) -> [String]? {
-        // Not `.skipsHiddenFiles`: dot-named leftovers are the ones a user would never find.
         try? FileManager.default.contentsOfDirectory(atPath: directory)
     }
 
@@ -162,7 +148,6 @@ enum UninstallScanner {
         guard let scanned = inspect(path, parent: parent) else { return nil }
         let protection = UninstallProtectionRules.classify(scanned.facts, environment: environment)
         guard protection != .missing else { return nil }
-        // A symlink is trashed as the link, so it never costs more than its own bytes.
         let walkable = scanned.facts.isDirectory && !scanned.facts.isSymbolicLink
         return UninstallCandidate(
             path: path,
@@ -175,7 +160,6 @@ enum UninstallScanner {
             protection: protection)
     }
 
-    /// `lstat`, never `stat`: a symlink is judged as the link, not as whatever it points at.
     private static func inspect(
         _ path: String, parent: ParentFacts?
     )
@@ -198,11 +182,9 @@ enum UninstallScanner {
             isOwnedByCurrentUser: info.st_uid == geteuid(),
             parentIsWritable: parent.isWritable,
             parentIsSticky: parent.isSticky)
-        // `st_size`, not `st_blocks`: a 593-byte plist occupies a block and must not read as 4 kB.
         return (facts, Int64(info.st_size))
     }
 
-    /// The permission that actually governs a trash, resolved once per root.
     private static func parentFacts(of directory: String) -> ParentFacts {
         var info = stat()
         let sticky = stat(directory, &info) == 0 && (info.st_mode & S_ISVTX) != 0
@@ -215,7 +197,6 @@ enum UninstallScanner {
         let isSticky: Bool
     }
 
-    /// Logical bytes, like Finder; an unreadable subtree is skipped, not abandoned.
     private static func directorySize(of path: String, budget: SizeBudget) throws -> MeasuredSize {
         let url = URL(fileURLWithPath: path)
         // Not the allocated keys: blocks badly undercount a decmpfs-compressed bundle.
@@ -226,12 +207,10 @@ enum UninstallScanner {
                 errorHandler: { _, _ in true })
         else { return .zero }
 
-        // Hoisted: the loop runs up to `maxEntries` times.
         let keySet = Set(keys)
         var size = MeasuredSize()
         var entries = 0
         for case let item as URL in enumerator {
-            // The long pole: cancellation has to land inside the walk, not just between walks.
             try Task.checkCancellation()
             entries += 1
             if entries > budget.maxEntries {

@@ -4,7 +4,6 @@ import SwiftUI
 
 struct RoomPreviewView: View {
     let model: RoomPreviewModel
-    /// This display's top-left in AX space. AX and SwiftUI both grow down, so no flip is needed.
     let origin: CGPoint
     let size: CGSize
 
@@ -40,7 +39,6 @@ struct RoomPreviewView: View {
 
 private struct RoomPreviewCardView: View {
     let card: RoomPreviewCard
-    /// The palette's frame in this card's coordinates, which the icon stays out from under.
     let avoiding: CGRect?
 
     private var shape: RoundedRectangle {
@@ -104,7 +102,6 @@ private struct RoomPreviewCardView: View {
             ? Theme.Size.roomCardIconLarge : Theme.Size.roomCardIcon
     }
 
-    /// The body's middle, or the middle of its larger part the palette leaves uncovered.
     private func iconCenter(in body: CGSize, side: CGFloat) -> CGFloat {
         let top = Theme.Size.roomCardTitleBar
         guard let avoiding,

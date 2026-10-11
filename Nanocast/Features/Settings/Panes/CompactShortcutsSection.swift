@@ -65,7 +65,7 @@ struct CompactShortcutsSection: View {
 
     /// A borderless button hits only its glyph's bounds, and a chevron's is a few points tall.
     private func rowButton(
-        _ title: LocalizedStringResource, systemImage: String, action: @escaping () -> Void
+        _ title: String, systemImage: String, action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             Label {
@@ -76,7 +76,7 @@ struct CompactShortcutsSection: View {
             .frame(width: Theme.Size.settingsRowButton, height: Theme.Size.settingsRowButton)
             .contentShape(Rectangle())
         }
-        .help(Text(title))
+        .help(title)
     }
 
     /// An off feature stays selectable, so its slot is ready the moment the feature turns on.

@@ -2,7 +2,6 @@ import AppKit
 import Combine
 import SwiftUI
 
-/// The first-launch wizard, built from the app's own controls; re-runnable from Settings.
 struct OnboardingView: View {
     @State private var step = 0
     @State private var model = OnboardingModel()
@@ -15,7 +14,6 @@ struct OnboardingView: View {
 
     private static let lastStep = 3
     static let width: CGFloat = 520
-    /// Only until the first layout measures the real one, which is what the window then takes.
     static let initialSize = CGSize(width: width, height: 352)
 
     var body: some View {
@@ -24,18 +22,15 @@ struct OnboardingView: View {
             stepContent
             footer
         }
-        // Less on top: the title bar adds 32pt, and the lights must be cleared.
         .padding(.top, Theme.Spacing.xs)
         .padding([.horizontal, .bottom], Theme.Spacing.xxl)
         .frame(maxWidth: .infinity)
-        // The ideal height, not the window's, so sizing to it converges instead of feeding back.
         .fixedSize(horizontal: false, vertical: true)
         .onGeometryChange(for: CGFloat.self) {
             $0.size.height
         } action: {
             core.onboardingCoordinator.fit(height: $0)
         }
-        // Only the gradient reaches under the titlebar; the content stays in the safe area.
         .background(
             LinearGradient(
                 colors: [Theme.Colors.sheen, Color.clear],
@@ -43,7 +38,6 @@ struct OnboardingView: View {
             )
             .ignoresSafeArea()
         )
-        // Onboarding's shortcut step has a recorder too, and it isn't inside a `SettingsPane`.
         .shortcutRecorderPopoverHost()
         .animation(.easeInOut(duration: 0.2), value: step)
         .onAppear { accessibilityTrusted = Permissions.isAccessibilityTrusted() }
@@ -52,8 +46,6 @@ struct OnboardingView: View {
             if trusted != accessibilityTrusted { accessibilityTrusted = trusted }
         }
     }
-
-    // MARK: - Hero (icon/glyph + title + subtitle)
 
     private var hero: some View {
         VStack(spacing: Theme.Spacing.md) {
@@ -87,10 +79,10 @@ struct OnboardingView: View {
 
     private var title: String {
         switch step {
-        case 0: String(localized: "Welcome to Nanocast")
-        case 1: String(localized: "Enable Pasting")
-        case 2: String(localized: "Import from Raycast")
-        default: String(localized: "You're all set")
+        case 0: "Welcome to Nanocast"
+        case 1: "Enable Pasting"
+        case 2: "Import from Raycast"
+        default: "You're all set"
         }
     }
 
@@ -126,8 +118,6 @@ struct OnboardingView: View {
         return Text("Nanocast is ready. Set a shortcut in Settings to summon it.")
     }
 
-    // MARK: - Step content
-
     @ViewBuilder
     private var stepContent: some View {
         switch step {
@@ -143,23 +133,23 @@ struct OnboardingView: View {
         return VStack(alignment: .leading, spacing: Theme.Spacing.md) {
             OnboardingCard {
                 OnboardingRow(
-                    title: String(localized: "onboarding-open-launcher", defaultValue: "App Launcher"),
-                    subtitle: String(localized: "Press this shortcut to open Nanocast."),
+                    title: "App Launcher",
+                    subtitle: "Press this shortcut to open Nanocast.",
                     systemImage: "magnifyingglass", tint: .blue
                 ) {
                     ShortcutRecorder(action: .togglePalette)
                 }
                 OnboardingDivider()
                 OnboardingRow(
-                    title: String(localized: "Launch at login"),
-                    subtitle: String(localized: "Start Nanocast automatically when you log in."),
+                    title: "Launch at login",
+                    subtitle: "Start Nanocast automatically when you log in.",
                     systemImage: "power", tint: .green
                 ) {
                     Toggle("", isOn: $settings.launchAtLogin)
                         .labelsHidden().toggleStyle(.switch).controlSize(.small)
                 }
             }
-            caption(String(localized: "You can change these anytime in Settings."))
+            caption("You can change these anytime in Settings.")
         }
     }
 
@@ -167,15 +157,14 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
             OnboardingCard {
                 OnboardingRow(
-                    title: String(localized: "Accessibility"),
-                    subtitle: String(
-                        localized: "Allows pasting clipboard items and expanded snippets into active apps."),
+                    title: "Accessibility",
+                    subtitle: "Allows pasting clipboard items and dictated text into active apps.",
                     systemImage: "accessibility", tint: .blue
                 ) {
                     statusBadge
                 }
             }
-            caption(String(localized: "Optional — you can enable this later in Settings › Permissions."))
+            caption("Optional — you can enable this later in Settings › Permissions.")
         }
     }
 
@@ -183,7 +172,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
             OnboardingCard {
                 OnboardingRow(
-                    title: String(localized: "Raycast Export"),
+                    title: "Raycast Export",
                     subtitle: model.fileSubtitle,
                     systemImage: "doc.badge.gearshape", tint: .orange
                 ) {
@@ -191,11 +180,11 @@ struct OnboardingView: View {
                 }
                 OnboardingDivider()
                 OnboardingRow(
-                    title: String(localized: "Passphrase"),
-                    subtitle: String(localized: "The password you set when exporting from Raycast."),
+                    title: "Passphrase",
+                    subtitle: "The password you set when exporting from Raycast.",
                     systemImage: "key", tint: .gray
                 ) {
-                    RevealableSecureField(title: String(localized: "Passphrase"), text: $model.passphrase)
+                    RevealableSecureField(title: "Passphrase", text: $model.passphrase)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 150)
                         .onSubmit { model.run(core: core) }
@@ -206,17 +195,15 @@ struct OnboardingView: View {
             if let status = model.status {
                 importStatus(status)
             } else {
-                caption(String(localized: "Optional — you can import later in Settings › Backup."))
+                caption("Optional — you can import later in Settings › Backup.")
             }
         }
     }
 
     private var doneStep: some View {
-        caption(String(localized: "Everything's ready. Hit Get Started to open the launcher."))
+        caption("Everything's ready. Hit Get Started to open the launcher.")
             .frame(maxWidth: .infinity, alignment: .center)
     }
-
-    // MARK: - Footer (step dots + navigation)
 
     private var footer: some View {
         VStack(spacing: Theme.Spacing.lg) {
@@ -271,17 +258,18 @@ struct OnboardingView: View {
 
     private var primaryTitle: String {
         switch step {
-        case 0: String(localized: "Continue")
-        case 1: accessibilityTrusted ? String(localized: "Continue") : String(localized: "Grant Access")
+        case 0: "Continue"
+        case 1:
+            if accessibilityTrusted { "Continue" } else { "Grant Access" }
         case 2:
             if model.didImport {
-                String(localized: "Continue")
+                "Continue"
             } else if model.importing {
-                String(localized: "Importing…")
+                "Importing…"
             } else {
-                String(localized: "Import")
+                "Import"
             }
-        default: String(localized: "Get Started")
+        default: "Get Started"
         }
     }
 
@@ -305,8 +293,6 @@ struct OnboardingView: View {
     private func advance() {
         step = min(step + 1, Self.lastStep)
     }
-
-    // MARK: - Shared bits
 
     private func caption(_ text: String) -> some View {
         Text(text)
@@ -361,7 +347,6 @@ struct OnboardingView: View {
     }()
 }
 
-/// The import step's state and async call, off the view so the body stays declarative.
 @MainActor
 @Observable
 final class OnboardingModel {
@@ -387,11 +372,11 @@ final class OnboardingModel {
 
     var fileSubtitle: String {
         guard let name = file?.lastPathComponent else {
-            return String(localized: "Choose a .rayconfig file exported from Raycast v2.0 or newer.")
+            return "Choose a .rayconfig file exported from Raycast v2.0 or newer."
         }
         return isRaycastExport
-            ? String(localized: "\(name) — Raycast export")
-            : String(localized: "\(name) — not a Raycast export")
+            ? "\(name) — Raycast export"
+            : "\(name) — not a Raycast export"
     }
 
     func chooseFile() {

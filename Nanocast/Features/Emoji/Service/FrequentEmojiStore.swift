@@ -1,13 +1,11 @@
 import Foundation
 
-/// One emoji's usage tally, keyed on the base (untoned) glyph.
 struct FrequentEmoji: Codable, Hashable, Sendable {
     let glyph: String
     var count: Int
     var lastUsed: Date
 }
 
-/// Capped emoji history and usage counts, persisted together for the grid and search.
 @MainActor
 @Observable
 final class FrequentEmojiStore {
@@ -17,7 +15,6 @@ final class FrequentEmojiStore {
 
     private(set) var records: [FrequentEmoji]
 
-    /// Search re-reads `top()` across queries, so this sorts once per tally.
     @ObservationIgnored private var sortedMemo = Memo<Int, [String]>()
     private(set) var revision = 0
 
@@ -55,7 +52,6 @@ final class FrequentEmojiStore {
         persist()
     }
 
-    /// Most-used glyphs (recency breaks ties), newest habits first.
     func top(_ n: Int = 16) -> [String] {
         let sorted = sortedMemo.value(for: revision) {
             records
@@ -65,7 +61,6 @@ final class FrequentEmojiStore {
         return Array(sorted.prefix(n))
     }
 
-    /// A backup can repeat a glyph; only its newest tally is kept, so each takes one grid cell.
     private static func history(_ tallies: [FrequentEmoji]) -> [FrequentEmoji] {
         var seen = Set<String>()
         return Array(

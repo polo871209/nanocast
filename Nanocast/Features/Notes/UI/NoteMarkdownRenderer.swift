@@ -1,17 +1,14 @@
 import AppKit
 
-/// Keeps a note's parse and reveal state in step with its text view, restyling only what changed.
 @MainActor
 final class NoteMarkdownRenderer: NSObject, @MainActor NSTextStorageDelegate {
     private(set) var markdown = NoteMarkdown.empty
     private(set) var revealed = IndexSet()
-    /// The Render Markdown setting; flipping it takes effect on the next `reset()`.
     var isEnabled: Bool
     weak var textView: NoteTextView? {
         didSet { textView?.textStorage?.delegate = self }
     }
 
-    /// The edit not yet parsed, as the range it covered in `markdown` and the one it covers now.
     private var pendingEdit: (old: NSRange, new: NSRange)?
     private var isStyling = false
 
@@ -20,7 +17,6 @@ final class NoteMarkdownRenderer: NSObject, @MainActor NSTextStorageDelegate {
         super.init()
     }
 
-    /// A full parse and restyle, after an install, a setting flip or an appearance change.
     func reset() {
         guard let textView, let storage = textView.textStorage else { return }
         NoteMarkdownStyler.invalidateColors()
@@ -56,13 +52,10 @@ final class NoteMarkdownRenderer: NSObject, @MainActor NSTextStorageDelegate {
         textView.typingAttributes = NoteMarkdownStyler.literal
     }
 
-    /// The parse of the source as it is right now, for edit plans that must not act on a stale one.
     func syncedMarkdown() -> NoteMarkdown {
         syncSource()
         return markdown
     }
-
-    // MARK: - Edits
 
     /// Undo and marked text change storage without `textDidChange`, so every callback checks here.
     private func syncSource() {
@@ -78,7 +71,6 @@ final class NoteMarkdownRenderer: NSObject, @MainActor NSTextStorageDelegate {
         apply(restyleScope(old: old, oldLines: oldLines, newLines: newLines))
     }
 
-    /// The edited lines and one on each side, widened over later lines whose kind or depth changed.
     private func restyleScope(old: NoteMarkdown, oldLines: Range<Int>, newLines: Range<Int>) -> IndexSet {
         let lines = markdown.lines
         guard !lines.isEmpty else { return [] }
@@ -138,8 +130,6 @@ final class NoteMarkdownRenderer: NSObject, @MainActor NSTextStorageDelegate {
             count = string.length
         }
     }
-
-    // MARK: - Styling
 
     private func nextRevealed() -> IndexSet {
         guard let textView else { return [] }

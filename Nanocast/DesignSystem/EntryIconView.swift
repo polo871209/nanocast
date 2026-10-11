@@ -1,9 +1,7 @@
 import SwiftUI
 
-/// Draws an `EntryIcon`, seeded from the cache so a warm glyph paints on the first frame.
 struct EntryIconView: View {
     let source: EntryIcon
-    /// Only `.file` needs it, and only the launcher has one to give.
     var fileURL: URL = URL(fileURLWithPath: "/")
     @State private var image: NSImage?
     @Environment(\.metrics) private var metrics
@@ -23,7 +21,6 @@ struct EntryIconView: View {
                     .fill(Theme.Colors.iconPlaceholder)
             }
         }
-        // Keyed on the glyph, not the entry: re-skinning leaves an id untouched.
         .task(id: IconRequest(source)) {
             if let warm = IconCache.cached(source, fileURL: fileURL) {
                 image = warm

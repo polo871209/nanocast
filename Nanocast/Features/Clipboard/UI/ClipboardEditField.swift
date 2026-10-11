@@ -20,7 +20,7 @@ struct ClipboardEditField: View {
             FormTextArea(
                 text: $state.text, selection: .constant(nil), focused: .constant(false),
                 minimumHeight: metrics.size.dialogTextHeight,
-                label: String(localized: "Clipboard entry"), isCode: true, moveFocus: { _ in }
+                label: "Clipboard entry", isCode: true, moveFocus: { _ in }
             )
         }
         .frame(height: metrics.size.dialogTextHeight)

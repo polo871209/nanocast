@@ -1,6 +1,5 @@
 import Foundation
 
-/// Percentage phrasings the arithmetic parser misses: `20% off 500`, `50 as % of 200`.
 enum CalcPercent {
     static func evaluate(_ tokens: [CalcToken], query: String) -> CalcResult? {
         let tokens = withoutComment(tokens)
@@ -55,7 +54,7 @@ enum CalcPercent {
             tokens[tokens.count - 2] == percent,
             let value = CalcExpressionParser.value(Array(tokens.dropLast())), !value.isPercent
         else { return nil }
-        return (value, String(localized: "Total"))
+        return (value, "Total")
     }
 
     // MARK: - Phrase patterns
@@ -79,60 +78,60 @@ enum CalcPercent {
     private static let adjustments: [Adjustment] =
         [
             Adjustment(
-                pattern: [nil, percent, word("tip"), word("on"), nil], badge: String(localized: "Tip"),
+                pattern: [nil, percent, word("tip"), word("on"), nil], badge: "Tip",
                 amountIndex: 1, factor: { $0 / 100 }),
             Adjustment(
-                pattern: [nil, percent, word("tip"), word("of"), nil], badge: String(localized: "Tip"),
+                pattern: [nil, percent, word("tip"), word("of"), nil], badge: "Tip",
                 amountIndex: 1, factor: { $0 / 100 }),
             Adjustment(
-                pattern: [nil, percent, word("off"), nil], badge: String(localized: "Discounted"),
+                pattern: [nil, percent, word("off"), nil], badge: "Discounted",
                 amountIndex: 1, factor: { 1 - $0 / 100 }),
             Adjustment(
-                pattern: [nil, percent, word("off"), word("of"), nil], badge: String(localized: "Discounted"),
+                pattern: [nil, percent, word("off"), word("of"), nil], badge: "Discounted",
                 amountIndex: 1, factor: { 1 - $0 / 100 }),
             Adjustment(
                 pattern: [word("take"), nil, percent, word("off"), nil],
-                badge: String(localized: "Discounted"),
+                badge: "Discounted",
                 amountIndex: 1, factor: { 1 - $0 / 100 }),
             Adjustment(
-                pattern: [nil, percent, word("of"), nil], badge: String(localized: "Result"),
+                pattern: [nil, percent, word("of"), nil], badge: "Result",
                 amountIndex: 1, factor: { $0 / 100 }),
             Adjustment(
-                pattern: [nil, percent, word("from"), nil], badge: String(localized: "Result"),
+                pattern: [nil, percent, word("from"), nil], badge: "Result",
                 amountIndex: 1, factor: { $0 / 100 }),
             Adjustment(
-                pattern: [nil, percent, word("on"), nil], badge: String(localized: "Increased"),
+                pattern: [nil, percent, word("on"), nil], badge: "Increased",
                 amountIndex: 1, factor: { 1 + $0 / 100 }),
             Adjustment(
                 pattern: [nil, word("is"), nil, percent, word("of"), word("what")],
-                badge: String(localized: "Total"),
+                badge: "Total",
                 amountIndex: 0, factor: { 100 / $0 }),
             Adjustment(
                 pattern: [nil, word("is"), nil, percent, word("off"), word("what")],
-                badge: String(localized: "Total"),
+                badge: "Total",
                 amountIndex: 0, factor: { 1 / (1 - $0 / 100) }),
             Adjustment(
                 pattern: [nil, word("is"), nil, percent, word("on"), word("what")],
-                badge: String(localized: "Total"),
+                badge: "Total",
                 amountIndex: 0, factor: { 1 / (1 + $0 / 100) }),
             Adjustment(
                 pattern: [nil, percent, word("of"), word("what"), word("is"), nil],
-                badge: String(localized: "Total"),
+                badge: "Total",
                 amountIndex: 1, factor: { 100 / $0 }),
             Adjustment(
                 pattern: [nil, percent, word("off"), word("what"), word("is"), nil],
-                badge: String(localized: "Total"),
+                badge: "Total",
                 amountIndex: 1, factor: { 1 / (1 - $0 / 100) }),
             Adjustment(
                 pattern: [nil, percent, word("on"), word("what"), word("is"), nil],
-                badge: String(localized: "Total"),
+                badge: "Total",
                 amountIndex: 1, factor: { 1 / (1 + $0 / 100) })
         ]
 
     /// The tax already inside a price: `20% vat in 120` is 20.
     private static let includedTax: [Adjustment] = taxWords.map { name in
         Adjustment(
-            pattern: [nil, percent, word(name), word("in"), nil], badge: String(localized: "Tax"),
+            pattern: [nil, percent, word(name), word("in"), nil], badge: "Tax",
             amountIndex: 1, factor: { $0 / (100 + $0) })
     }
 
@@ -158,92 +157,92 @@ enum CalcPercent {
 
     private static let ratios: [Ratio] = [
         Ratio(
-            pattern: [nil, word("as"), percent, word("of"), nil], badge: String(localized: "Percentage"),
+            pattern: [nil, word("as"), percent, word("of"), nil], badge: "Percentage",
             percentage: { share($0[0], of: $0[1]) }),
         Ratio(
             pattern: [nil, word("as"), word("a"), percent, word("of"), nil],
-            badge: String(localized: "Percentage"),
+            badge: "Percentage",
             percentage: { share($0[0], of: $0[1]) }),
         Ratio(
             pattern: [nil, word("is"), word("what"), percent, word("of"), nil],
-            badge: String(localized: "Percentage"), percentage: { share($0[0], of: $0[1]) }),
+            badge: "Percentage", percentage: { share($0[0], of: $0[1]) }),
         Ratio(
             pattern: [nil, word("is"), word("what"), percent, word("off"), nil],
-            badge: String(localized: "Percent Change"),
+            badge: "Percent Change",
             percentage: { share($0[0], of: $0[1]).map { 100 - $0 } }),
         Ratio(
             pattern: [nil, word("is"), word("what"), percent, word("on"), nil],
-            badge: String(localized: "Percent Change"),
+            badge: "Percent Change",
             percentage: { share($0[0], of: $0[1]).map { $0 - 100 } }),
         Ratio(
             pattern: [nil, word("to"), nil, word("is"), word("what"), percent],
-            badge: String(localized: "Percent Change"),
+            badge: "Percent Change",
             percentage: { share($0[1], of: $0[0]).map { $0 - 100 } }),
         Ratio(
-            pattern: [nil, word("to"), nil, word("as"), percent], badge: String(localized: "Percent Change"),
+            pattern: [nil, word("to"), nil, word("as"), percent], badge: "Percent Change",
             percentage: { share($0[1], of: $0[0]).map { $0 - 100 } }),
         Ratio(
             pattern: [word("what"), percent, word("is"), nil, word("of"), nil],
-            badge: String(localized: "Percentage"), percentage: { share($0[0], of: $0[1]) }),
+            badge: "Percentage", percentage: { share($0[0], of: $0[1]) }),
         Ratio(
-            pattern: [nil, word("is"), percent, word("of"), nil], badge: String(localized: "Percentage"),
+            pattern: [nil, word("is"), percent, word("of"), nil], badge: "Percentage",
             percentage: { share($0[0], of: $0[1]) }),
         Ratio(
-            pattern: [nil, word("is"), word("what"), percent, nil], badge: String(localized: "Percentage"),
+            pattern: [nil, word("is"), word("what"), percent, nil], badge: "Percentage",
             percentage: { share($0[0], of: $0[1]) }),
         Ratio(
-            pattern: [nil, word("as"), percent, nil], badge: String(localized: "Percentage"),
+            pattern: [nil, word("as"), percent, nil], badge: "Percentage",
             percentage: { share($0[0], of: $0[1]) }),
         Ratio(
             pattern: [nil, word("is"), word("what"), percent, word("with"), nil],
-            badge: String(localized: "Percentage"), percentage: { share($0[0], with: $0[1]) }),
+            badge: "Percentage", percentage: { share($0[0], with: $0[1]) }),
         Ratio(
-            pattern: [nil, word("as"), percent, word("with"), nil], badge: String(localized: "Percentage"),
+            pattern: [nil, word("as"), percent, word("with"), nil], badge: "Percentage",
             percentage: { share($0[0], with: $0[1]) }),
         Ratio(
-            pattern: [nil, word("out"), word("of"), nil], badge: String(localized: "Percentage"),
+            pattern: [nil, word("out"), word("of"), nil], badge: "Percentage",
             percentage: { share($0[0], of: $0[1]) }),
         Ratio(
             pattern: [nil, word("as"), word("discount"), word("off"), nil],
-            badge: String(localized: "Percent Change"),
+            badge: "Percent Change",
             percentage: { share($0[0], of: $0[1]).map { 100 - $0 } }),
         Ratio(
             pattern: [nil, word("is"), word("what"), word("discount"), word("off"), nil],
-            badge: String(localized: "Percent Change"),
+            badge: "Percent Change",
             percentage: { share($0[0], of: $0[1]).map { 100 - $0 } }),
         Ratio(
             pattern: [percent, word("change"), word("from"), nil, word("to"), nil],
-            badge: String(localized: "Percent Change"),
+            badge: "Percent Change",
             percentage: { share($0[1], of: $0[0]).map { $0 - 100 } }),
         Ratio(
             pattern: [percent, word("increase"), word("from"), nil, word("to"), nil],
-            badge: String(localized: "Percent Change"),
+            badge: "Percent Change",
             percentage: { share($0[1], of: $0[0]).map { $0 - 100 } }),
         Ratio(
             pattern: [percent, word("decrease"), word("from"), nil, word("to"), nil],
-            badge: String(localized: "Percent Change"),
+            badge: "Percent Change",
             percentage: { share($0[1], of: $0[0]).map { $0 - 100 } }),
         Ratio(
             pattern: [word("what"), percent, word("change"), word("is"), nil, word("to"), nil],
-            badge: String(localized: "Percent Change"),
+            badge: "Percent Change",
             percentage: { share($0[1], of: $0[0]).map { $0 - 100 } }),
         Ratio(
             pattern: [nil, word("as"), percent, word("after"), word("adding"), nil],
-            badge: String(localized: "Percent Change"), percentage: { growth($0[0], after: $0[1]) }),
+            badge: "Percent Change", percentage: { growth($0[0], after: $0[1]) }),
         Ratio(
             pattern: [nil, word("as"), percent, word("after"), nil],
-            badge: String(localized: "Percent Change"), percentage: { growth($0[0], after: $0[1]) }),
+            badge: "Percent Change", percentage: { growth($0[0], after: $0[1]) }),
         Ratio(
             pattern: [nil, word("is"), word("what"), percent, word("after"), word("adding"), nil],
-            badge: String(localized: "Percent Change"), percentage: { growth($0[0], after: $0[1]) }),
+            badge: "Percent Change", percentage: { growth($0[0], after: $0[1]) }),
         Ratio(
             pattern: [nil, word("is"), word("what"), percent, word("after"), nil],
-            badge: String(localized: "Percent Change"), percentage: { growth($0[0], after: $0[1]) }),
+            badge: "Percent Change", percentage: { growth($0[0], after: $0[1]) }),
         Ratio(
-            pattern: [nil, word("as"), percent], badge: String(localized: "Percentage"),
+            pattern: [nil, word("as"), percent], badge: "Percentage",
             percentage: { CalcExpressionParser.scalar($0[0]).map { $0 * 100 } }),
         Ratio(
-            pattern: [nil, word("is"), word("what"), percent], badge: String(localized: "Percentage"),
+            pattern: [nil, word("is"), word("what"), percent], badge: "Percentage",
             percentage: { CalcExpressionParser.scalar($0[0]).map { $0 * 100 } })
     ]
 
@@ -278,7 +277,7 @@ enum CalcPercent {
             let asked = CalcExpressionParser.scalar(askedPercent)
         else { return nil }
         value.amount *= asked / given
-        return value.amount.isFinite ? (value, String(localized: "Proportion")) : nil
+        return value.amount.isFinite ? (value, "Proportion") : nil
     }
 
     private static func ruleOfThreePercentage(_ tokens: [CalcToken]) -> (value: Double, badge: String)? {
@@ -287,7 +286,7 @@ enum CalcPercent {
             let ratio = share(asked, of: known), let given = CalcExpressionParser.scalar(knownPercent)
         else { return nil }
         let value = ratio / 100 * given
-        return value.isFinite ? (value, String(localized: "Percentage")) : nil
+        return value.isFinite ? (value, "Percentage") : nil
     }
 
     private static func ruleOfThreeWords(_ tokens: [CalcToken]) -> [CalcToken] {
@@ -318,7 +317,6 @@ enum CalcPercent {
 
     // MARK: - Ratios
 
-    /// Integers only, so the reduced pair stays exact.
     private static func parseRatio(_ tokens: [CalcToken], query: String) -> CalcResult? {
         guard tokens.count >= 5, tokens[0] == .ident("ratio"), tokens[1] == .ident("of"),
             let toIdx = tokens.firstIndex(of: .ident("to")),
@@ -330,7 +328,7 @@ enum CalcPercent {
         guard divisor > 0 else { return nil }
         let text = "\(CalcFormatter.display(a / divisor)) : \(CalcFormatter.display(b / divisor))"
         return .phrase(
-            query, .value(display: text, copyText: text), target: String(localized: "Ratio"),
+            query, .value(display: text, copyText: text), target: "Ratio",
             canChain: false)
     }
 

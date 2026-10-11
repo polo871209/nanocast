@@ -1,14 +1,11 @@
 // Adapted from Rooms (MIT): https://github.com/saragordic/rooms/blob/main/LICENSE
 import CoreGraphics
 
-/// Every frame a room layout produces, in AX space. See docs/features/window-rooms.md#layouts.
 enum RoomLayoutEngine {
     static let comfortable = CGSize(width: 480, height: 360)
-    /// The least a tidy layout gives a window, so an unknown minimum is never squeezed to nothing.
     static let usable = CGSize(width: 320, height: 240)
     static let peek: CGFloat = 32
 
-    /// The box windows tile inside, and the one gap every layout uses, both sanitized once.
     struct Area {
         let canvas: CGRect
         let gap: CGFloat
@@ -19,7 +16,6 @@ enum RoomLayoutEngine {
         }
     }
 
-    /// `minimums` holds one size per window, or none; no app is asked to go below its own.
     static func frames(
         count: Int, kind: RoomLayoutKind, in visible: CGRect, gap: CGFloat,
         minimums: [CGSize] = []
@@ -28,7 +24,6 @@ enum RoomLayoutEngine {
         let area = Area(visible: visible, gap: gap)
         let minimums = padded(minimums, to: count)
         switch kind {
-        // The room's own record resolves `.custom` and `.saved`; here they mean Auto.
         case .auto, .custom, .saved:
             let tidy = autoKind(count: count, in: visible, gap: gap, minimums: minimums)
             return frames(count: count, kind: tidy, in: visible, gap: gap, minimums: minimums)
@@ -38,7 +33,6 @@ enum RoomLayoutEngine {
             }
         case .focus, .columns, .grid:
             let candidates = arrangements(count, kind: kind, in: area, minimums: minimums)
-            // Overlap beats off-screen: the least spilling candidate is pulled back on screen.
             let best =
                 candidates.first { works($0, in: area.canvas) }
                 ?? candidates.min { overflow($0, in: area.canvas) < overflow($1, in: area.canvas) }
@@ -47,7 +41,6 @@ enum RoomLayoutEngine {
         }
     }
 
-    /// Whether `kind` places every window without overlap. Stack overlaps on purpose, so it fits.
     static func fits(
         count: Int, kind: RoomLayoutKind, in visible: CGRect, gap: CGFloat,
         minimums: [CGSize] = []
@@ -64,7 +57,6 @@ enum RoomLayoutEngine {
         }
     }
 
-    /// What Auto means here: the first tidy layout where every side window is comfortable.
     static func autoKind(
         count: Int, in visible: CGRect, gap: CGFloat, minimums: [CGSize] = []
     ) -> RoomLayoutKind {
@@ -73,7 +65,6 @@ enum RoomLayoutEngine {
         let minimums = padded(minimums, to: count)
         let order: [RoomLayoutKind] = count <= 4 ? [.focus, .columns, .grid] : [.grid, .columns, .focus]
         for kind in order {
-            // Judged before any clamp, and Columns means one row: wrapping is what Grid is for.
             let options = arrangements(count, kind: kind, in: area, minimums: minimums).filter {
                 kind != .columns || Set($0.map(\.minY)).count == 1
             }
@@ -86,7 +77,6 @@ enum RoomLayoutEngine {
         return .stack
     }
 
-    /// Inside the box and overlapping nothing: a layout that can be used as it is.
     static func isClean(_ rects: [CGRect], in box: CGRect) -> Bool {
         guard overflow(rects, in: box) < 1 else { return false }
         for i in rects.indices {
@@ -98,7 +88,6 @@ enum RoomLayoutEngine {
         return true
     }
 
-    /// Splits `total` by `weights` in whole points, never below `minimums`, which may overflow.
     static func distribute(
         _ total: CGFloat, gap: CGFloat, minimums: [CGFloat], weights: [CGFloat]
     ) -> [CGFloat] {
@@ -122,7 +111,6 @@ enum RoomLayoutEngine {
             }
             if !changed { break }
         }
-        // Rounding each piece alone can make a row a point too wide, overlapping its last window.
         var rounded = sizes.map { $0.rounded(.down) }
         var spare = Int((available - rounded.reduce(0, +)).rounded(.down))
         let byRemainder = sizes.indices.sorted {
@@ -135,7 +123,6 @@ enum RoomLayoutEngine {
         return rounded
     }
 
-    /// Rows of `columns` inside `rect`; a short last row stretches to the full width.
     static func grid(
         _ count: Int, columns: Int, in rect: CGRect, gap: CGFloat, minimums: [CGSize]
     ) -> [CGRect] {
@@ -164,8 +151,6 @@ enum RoomLayoutEngine {
         return frames
     }
 
-    // MARK: - Arrangements
-
     private static let heroShares: [CGFloat] = [0.6, 0.5]
     private static let stackShares: [CGFloat] = [0.6, 0.4]
 
@@ -177,7 +162,6 @@ enum RoomLayoutEngine {
         var rank: Int
     }
 
-    /// Candidates in order of preference, each judged by `works` before anything is clamped.
     private static func arrangements(
         _ count: Int, kind: RoomLayoutKind, in area: Area, minimums given: [CGSize]
     ) -> [[CGRect]] {
@@ -200,7 +184,6 @@ enum RoomLayoutEngine {
         }
     }
 
-    /// The main window left, the rest in the right column; the widest may move to the last row.
     private static func focusArrangements(
         _ count: Int, in area: Area, minimums: [CGSize]
     ) -> [[CGRect]] {
@@ -243,7 +226,6 @@ enum RoomLayoutEngine {
                 }
             }
         }
-        // The usual layout first; after it, whatever keeps the main window largest.
         return options.sorted { lhs, rhs in
             if lhs.isPreferred != rhs.isPreferred { return lhs.isPreferred }
             if abs(lhs.heroWidth - rhs.heroWidth) > 1 { return lhs.heroWidth > rhs.heroWidth }
@@ -252,7 +234,6 @@ enum RoomLayoutEngine {
         }.map(\.rects)
     }
 
-    /// Focus with the side windows overlapping: the second is frontmost, every title bar in view.
     private static func stack(_ count: Int, in area: Area, minimums: [CGSize]) -> [CGRect] {
         let canvas = area.canvas
         guard count > 1 else { return [canvas] }

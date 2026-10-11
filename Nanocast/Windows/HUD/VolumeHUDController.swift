@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// The volume readout; a box, not the pill, because a level needs a bar and a number.
 @MainActor
 final class VolumeHUDController {
     private let settings: AppSettings
@@ -15,7 +14,6 @@ final class VolumeHUDController {
     }
 
     func show(level: Float32, muted: Bool) {
-        // The view observes `state`, so a repeat animates the bar rather than replaying.
         let showing = presenter.isShowing
         state.level = VolumeLevel.clamped(Double(level))
         state.muted = muted
@@ -29,6 +27,5 @@ final class VolumeHUDController {
         }
     }
 
-    /// Higher than the pill, the box being taller, so their edge distance reads equal.
     private static let bottomFraction: CGFloat = 0.12
 }

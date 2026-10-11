@@ -27,7 +27,6 @@ final class NotesWindowController: NSObject, NSWindowDelegate {
         panel.orderFrontRegardless()
         scheduleFit()
         seatTrafficLights(in: panel)
-        // The corner is clipped in SwiftUI, so the shadow has to be recut from what was drawn.
         panel.invalidateShadow()
         if focusEditor { self.focusEditor(in: panel) }
     }
@@ -68,7 +67,6 @@ final class NotesWindowController: NSObject, NSWindowDelegate {
         }
     }
 
-    /// The bar's buttons never take focus, but the editor is re-seated in case anything else did.
     func format(_ action: NoteEditAction) {
         guard let panel, panel.isVisible, let editor else { return }
         if panel.firstResponder !== editor { panel.makeFirstResponder(editor) }
@@ -80,15 +78,11 @@ final class NotesWindowController: NSObject, NSWindowDelegate {
         menu.show(above: panel)
     }
 
-    /// Only this controller knows the host window, so handing it over stays its job.
     func presentSwitcher(_ switcher: NoteSwitcherWindowController) {
         guard let panel, panel.isVisible else { return }
         switcher.show(under: panel)
     }
 
-    // MARK: - NSWindowDelegate
-
-    /// The red button and ⌘W both arrive here, so closing is one path and never destroys state.
     func windowWillClose(_ notification: Notification) {
         coordinator.hide()
     }
@@ -114,9 +108,6 @@ final class NotesWindowController: NSObject, NSWindowDelegate {
         seatTrafficLights(in: panel)
     }
 
-    // MARK: - Private
-
-    /// Typing fits before the frame draws, or the caret scrolls first and the text bounces back.
     private func observeLayout(of textView: NoteTextView) {
         guard let storage = textView.textStorage, let clipView = textView.enclosingScrollView?.contentView
         else { return }
@@ -142,7 +133,6 @@ final class NotesWindowController: NSObject, NSWindowDelegate {
             center: center)
     }
 
-    /// Undo, note switches and the bars change layout mid-edit, so they fit once the edit is done.
     private func scheduleFit() {
         guard fitTask == nil else { return }
         fitTask = Task { [weak self] in
@@ -205,7 +195,6 @@ final class NotesWindowController: NSObject, NSWindowDelegate {
         ]
         panel.setFrameAutosaveName(Self.frameAutosaveName)
         if !panel.setFrameUsingName(Self.frameAutosaveName) { panel.center() }
-        // An autosaved frame can sit below the floor, so it is clamped on the way back in.
         panel.setContentSize(
             CGSize(
                 width: max(panel.frame.width, Theme.Size.noteWindow.width),
@@ -221,7 +210,6 @@ final class NotesWindowController: NSObject, NSWindowDelegate {
         return panel
     }
 
-    /// Idempotent, because AppKit re-seats the lights on a resize and on every title assignment.
     private func seatTrafficLights(in window: NSWindow) {
         window.standardWindowButton(.miniaturizeButton)?.isEnabled = false
         window.standardWindowButton(.zoomButton)?.isEnabled = false
@@ -230,7 +218,6 @@ final class NotesWindowController: NSObject, NSWindowDelegate {
         guard let leading = buttons.first, let band = leading.superview?.bounds.height else {
             return
         }
-        // Centred in the drawn band, not AppKit's shorter one, and clamped so none is clipped.
         let size = leading.frame.height
         let y = max(0, band - size - (Theme.Size.noteTitlebar - size) / 2)
         let shift = Theme.Size.noteTrafficLightInset - leading.frame.minX
@@ -249,7 +236,6 @@ final class NotesWindowController: NSObject, NSWindowDelegate {
         }
     }
 
-    /// Re-armed after every read, so a rename reaches the title without waiting for the next show.
     private func observeTitle() {
         withObservationTracking {
             panel?.title = coordinator.activeTitle

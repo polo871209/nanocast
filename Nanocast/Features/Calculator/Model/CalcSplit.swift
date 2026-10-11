@@ -64,8 +64,8 @@ enum CalcSplit {
         if var share = CalcPercent.amount(tokens) {
             share.amount /= count
             return CalcResult(
-                expression: expression, sourceBadge: String(localized: "Expression"),
-                targetBadge: String(localized: "Per Person"), payload: .quantity(share),
+                expression: expression, sourceBadge: "Expression",
+                targetBadge: "Per Person", payload: .quantity(share),
                 isCurrency: share.isCurrency)
         }
         let end = CalcQuantity.conversionTarget(tokens, from: 0, to: tokens.count)?.start ?? tokens.count
@@ -78,6 +78,6 @@ enum CalcSplit {
         else { return nil }
         return CalcResult(
             expression: expression, sourceBadge: each.sourceBadge,
-            targetBadge: String(localized: "Per Person"), payload: each.payload, isCurrency: each.isCurrency)
+            targetBadge: "Per Person", payload: each.payload, isCurrency: each.isCurrency)
     }
 }

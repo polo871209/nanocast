@@ -68,7 +68,7 @@ Two further guards on that rule:
   product, so `allowsBundleIDPrefixMatch` requires three components. `com.adobe` still matches itself.
 - **An installed sibling owns its own artifacts.** If any _other_ installed app's bundle ID is a
   longer match for the same component, that app owns it. Without this, uninstalling `com.nanocast.app`
-  would also trash `com.nanocast.app.beta` and `…​.dev` — separate products that merely share a
+  would also trash `com.nanocast.app.dev` — a separate product that merely shares a
   namespace, which is exactly the channel-isolation invariant in reverse.
 
 **`groupContainer`** — strips a leading `group.` and/or a 10-character Team ID (uppercase

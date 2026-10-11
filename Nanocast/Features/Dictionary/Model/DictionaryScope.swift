@@ -7,8 +7,8 @@ enum DictionaryScope: CaseIterable, Sendable {
 
     var title: String {
         switch self {
-        case .dictionary: String(localized: "Dictionary")
-        case .thesaurus: String(localized: "Thesaurus")
+        case .dictionary: "Dictionary"
+        case .thesaurus: "Thesaurus"
         }
     }
 
