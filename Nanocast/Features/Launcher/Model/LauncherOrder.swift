@@ -1,14 +1,9 @@
 import Foundation
 
-/// The launcher's two orderings, kept pure so a harness ranks the shipped code.
 enum LauncherOrder {
-    /// Folded once per pass, in both forms the fields compare against.
     struct Query: Sendable {
-        /// Titles, subtitles, keywords and search terms compare against the Latin reading.
         let latin: SearchText
-        /// Alternate titles and aliases compare against the text as typed.
         let typed: SearchText
-        let term: String
 
         var isEmpty: Bool { typed.isEmpty }
 
@@ -16,7 +11,6 @@ enum LauncherOrder {
             let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
             latin = SearchText(trimmed, transliterated: true)
             typed = SearchText(trimmed, transliterated: false)
-            term = typed.string
         }
     }
 
@@ -45,11 +39,8 @@ enum LauncherOrder {
     struct Signals: Sendable {
         var alias: SearchText?
         var usage: LauncherUsage
-        /// Which kind wins a full tie; higher first.
         var priority: Int
         var title: String
-        /// Queries this entry wins until the user opens a rival more.
-        var boostedTerms: Set<String> = []
     }
 
     static func ranked<Item>(
@@ -73,7 +64,6 @@ enum LauncherOrder {
             .map(\.0)
     }
 
-    /// The empty list: most frecent first, then aliased entries, then by kind and name.
     static func byUsage<Item>(_ items: [Item], signals: (Item) -> Signals) -> [Item] {
         items.enumerated()
             .map { ($0.element, Candidate(facts: nil, signals: signals($0.element), position: $0.offset)) }
@@ -83,8 +73,6 @@ enum LauncherOrder {
             }
             .map(\.0)
     }
-
-    // MARK: - One entry's match
 
     private struct Candidate {
         let facts: Facts?
@@ -98,7 +86,6 @@ enum LauncherOrder {
         case exact
     }
 
-    /// How a past search term relates to the query; `length` is the stored term's.
     private enum TermHit: Equatable {
         case none
         case exact(length: Int)
@@ -117,18 +104,14 @@ enum LauncherOrder {
         var isExact: Bool { if case .exact = self { true } else { false } }
         var isPrefix: Bool { if case .prefix = self { true } else { false } }
 
-        /// A stored term this long or longer is specific enough to reorder a longer query.
         var isLongOverbounds: Bool {
             if case .overbounds(let length) = self { length >= LauncherOrder.overboundsFloor } else { false }
         }
     }
 
-    /// Nil when the entry does not match at all.
     private struct Facts {
         let alias: AliasHit
-        let isBoosted: Bool
         let titleExact: Bool
-        /// The best of the title and alternate titles; an exact hit is `Int.max`.
         let title: Int
         let titlePrefix: Bool
         let subtitleExact: Bool
@@ -139,7 +122,6 @@ enum LauncherOrder {
             let latinLength = query.latin.units.count
             let typedLength = query.typed.units.count
             alias = signals.alias.map { Self.aliasHit($0, query.typed) } ?? .none
-            isBoosted = signals.boostedTerms.contains(query.term)
             let titleMatch = LauncherMatch.match(query.latin, in: profile.title)
             var alternateTitles = profile.alternateTitles
             if alias == .none, let text = signals.alias { alternateTitles.append(text) }
@@ -167,12 +149,10 @@ enum LauncherOrder {
             term = Self.termHit(signals.usage.searchTerms, query.latin.units)
         }
 
-        /// A miss sorts below every alignment.
         private static func value(_ outcome: LauncherMatch.Outcome?) -> Int {
             outcome?.value ?? .min
         }
 
-        /// A prefix hit must leave some of the alias still untyped.
         private static func aliasHit(_ alias: SearchText, _ query: SearchText) -> AliasHit {
             let a = alias.units
             let q = query.units
@@ -180,7 +160,6 @@ enum LauncherOrder {
             return a == q ? .exact : .none
         }
 
-        /// Newest term first: an exact one wins outright, then the newest prefix.
         private static func termHit(_ terms: [String], _ query: [UInt16]) -> TermHit {
             var best = TermHit.none
             for term in terms.reversed() {
@@ -206,27 +185,18 @@ enum LauncherOrder {
         }
     }
 
-    /// How many characters a query may run past a stored term and still be read as it.
     private static let overboundsReach = 3
     private static let overboundsFloor = 3
-
-    // MARK: - The comparator
 
     private static func orders(_ a: Candidate, before b: Candidate, length: Int) -> Bool {
         let order = compare(a, b, length: length)
         return order != 0 ? order < 0 : a.position < b.position
     }
 
-    /// Negative puts `a` first; the first rule that separates the two decides.
     private static func compare(_ a: Candidate, _ b: Candidate, length: Int) -> Int {
         guard let x = a.facts, let y = b.facts else { return tiebreak(a, b) }
         if x.alias != y.alias, x.alias == .exact || y.alias == .exact {
             return x.alias == .exact ? -1 : 1
-        }
-        if x.isBoosted != y.isBoosted {
-            let (boosted, other) = x.isBoosted ? (a, b) : (b, a)
-            let used = other.signals.usage.frecency
-            if !(used > 1 && used > boosted.signals.usage.frecency) { return x.isBoosted ? -1 : 1 }
         }
         if length > 3, x.titleExact || y.titleExact {
             guard x.titleExact, y.titleExact else { return x.titleExact ? -1 : 1 }
@@ -260,7 +230,6 @@ enum LauncherOrder {
         return order ?? collate(a, b)
     }
 
-    /// What decides two entries the query cannot tell apart.
     private static func tiebreak(_ a: Candidate, _ b: Candidate) -> Int {
         let aliased = descending(a.signals.alias != nil, b.signals.alias != nil)
         return first(frecency(a, b), aliased, descending(a.signals.priority, b.signals.priority))
@@ -277,7 +246,6 @@ enum LauncherOrder {
         descending(a.signals.usage.frecency, b.signals.usage.frecency)
     }
 
-    /// Numeric and case-blind: `Item 2` before `Item 10`.
     private static func collate(_ a: Candidate, _ b: Candidate) -> Int {
         switch a.signals.title.localizedStandardCompare(b.signals.title) {
         case .orderedAscending: -1

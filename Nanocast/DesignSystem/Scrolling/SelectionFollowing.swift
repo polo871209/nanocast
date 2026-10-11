@@ -1,7 +1,6 @@
 import SwiftUI
 
 extension View {
-    /// Publishes the selected row's frame for `scrollFollowsSelection`; only that row measures.
     func selectionFrame(_ selected: Bool) -> some View {
         overlay {
             if selected {
@@ -14,7 +13,6 @@ extension View {
         }
     }
 
-    /// Keeps the keyboard selection in the band between the bars; needs `selectionFrame` on rows.
     func scrollFollowsSelection(
         _ scroll: ScrollIntent, row: String?, atOrigin: Bool, proxy: ScrollViewProxy
     ) -> some View {
@@ -38,7 +36,6 @@ private struct SelectionFollowing: ViewModifier {
 
     @State private var band = Band(insetTop: 0, height: 0)
     @State private var selection: CGRect?
-    /// Where the selection is still owed a place; nil once it has one, and the pointer owns it.
     @State private var target: Target?
 
     private struct Band: Equatable {
@@ -47,9 +44,7 @@ private struct SelectionFollowing: ViewModifier {
     }
 
     private enum Target {
-        /// Anywhere inside the band, by the least movement.
         case band
-        /// The band's middle, which needs the row's measured frame to land exactly.
         case middle
     }
 
@@ -59,7 +54,6 @@ private struct SelectionFollowing: ViewModifier {
                 Band(insetTop: $0.contentInsets.top, height: $0.containerSize.height)
             } action: { old, new in
                 band = new
-                // The inset settles after mount and moves the resting offset: restate a landing.
                 if old.insetTop != new.insetTop, scroll.kind != .follow {
                     return begin(scroll.kind)
                 }
@@ -88,7 +82,6 @@ private struct SelectionFollowing: ViewModifier {
 
     private func align() {
         guard let target, let row else { return }
-        // Origin, not the row's top, so the first row's section header stays on screen.
         if atOrigin {
             self.target = nil
             return proxy.scrollToOrigin()
@@ -97,7 +90,6 @@ private struct SelectionFollowing: ViewModifier {
         guard let selection else {
             return proxy.scrollTo(row, anchor: target == .middle ? .center : nil)
         }
-        // A measured row centres exactly, so there is nothing left to watch for.
         if target == .middle {
             self.target = nil
             return proxy.scrollTo(row, anchor: .center)

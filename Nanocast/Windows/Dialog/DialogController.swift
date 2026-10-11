@@ -7,7 +7,6 @@ final class DialogController: NSObject, NSWindowDelegate {
     private let settings: AppSettings
     private let onPresentationChanged: (Bool) -> Void
     private var panel: DialogPanel?
-    private var accessory: DialogAccessory?
     private var continuation: CheckedContinuation<Int, Never>?
 
     init(settings: AppSettings, onPresentationChanged: @escaping (Bool) -> Void) {
@@ -17,7 +16,7 @@ final class DialogController: NSObject, NSWindowDelegate {
 
     func confirm(
         title: String, message: String?, symbol: String?, tone: DialogTone, confirmTitle: String,
-        confirmRole: DialogAction.Role, dismissTitle: String = String(localized: "Cancel")
+        confirmRole: DialogAction.Role, dismissTitle: String = "Cancel"
     ) async -> Bool {
         let request = DialogRequest(
             title: title, message: message, symbol: symbol, tone: tone,
@@ -29,7 +28,6 @@ final class DialogController: NSObject, NSWindowDelegate {
         return await present(request) == 0
     }
 
-    /// More than two ways forward; `options` is in dispatch order and the last one is the cancel.
     func choose(
         title: String, message: String?, symbol: String?, tone: DialogTone,
         options: [DialogAction], defaultIndex: Int
@@ -43,20 +41,18 @@ final class DialogController: NSObject, NSWindowDelegate {
     func notice(title: String, message: String, symbol: String, tone: DialogTone) async {
         let request = DialogRequest(
             title: title, message: message, symbol: symbol, tone: tone,
-            actions: [DialogAction(title: String(localized: "OK"), role: .cancel)], defaultIndex: 0,
+            actions: [DialogAction(title: "OK", role: .cancel)], defaultIndex: 0,
             cancelIndex: 0)
         _ = await present(request)
     }
 
-    /// Something already went wrong, unlike `confirm`; true if recovery was taken.
     func reportFailure(
         title: String, message: String, symbol: String, recovery: String?
     ) async
         -> Bool
     {
-        var actions = [DialogAction(title: String(localized: "OK"), role: .cancel)]
+        var actions = [DialogAction(title: "OK", role: .cancel)]
         if let recovery { actions.append(DialogAction(title: recovery)) }
-        // ↵ lands on the recovery action when there is one to take, not on the OK dismissal.
         let recoveryIndex = recovery == nil ? nil : actions.count - 1
         let request = DialogRequest(
             title: title, message: message, symbol: symbol, tone: .danger,
@@ -67,40 +63,25 @@ final class DialogController: NSObject, NSWindowDelegate {
     func pickVolume(current: Float32) async -> Float32? {
         let volume = VolumeState(level: Double(current))
         let request = DialogRequest(
-            title: String(localized: "Set Volume"),
-            message: String(localized: "Choose the output volume."), symbol: "speaker.wave.2",
+            title: "Set Volume",
+            message: "Choose the output volume.", symbol: "speaker.wave.2",
             tone: .neutral,
             actions: [
-                DialogAction(title: String(localized: "Set Volume")),
-                DialogAction(title: String(localized: "Cancel"), role: .cancel)
+                DialogAction(title: "Set Volume"),
+                DialogAction(title: "Cancel", role: .cancel)
             ],
             defaultIndex: 0, cancelIndex: 1, accessory: .volume(volume))
         guard await present(request) == 0 else { return nil }
         return Float32(volume.level)
     }
 
-    func fillSnippetArguments(
-        snippetName: String, arguments: [SnippetTemplateEngine.MissingArgument]
-    ) async -> [String: String]? {
-        let state = SnippetArgumentsState(arguments: arguments)
-        let request = DialogRequest(
-            title: snippetName, message: nil, symbol: "curlybraces", tone: .neutral,
-            actions: [
-                DialogAction(title: String(localized: "Expand")),
-                DialogAction(title: String(localized: "Cancel"), role: .cancel)
-            ],
-            defaultIndex: 0, cancelIndex: 1, accessory: .snippetArguments(state))
-        guard await present(request) == 0 else { return nil }
-        return state.values
-    }
-
     func editClipboardText(_ text: String) async -> String? {
         let state = ClipboardEditState(text: text)
         let request = DialogRequest(
-            title: String(localized: "Edit Entry"), message: String(localized: "⌘↵ saves."), symbol: nil,
+            title: "Edit Entry", message: "⌘↵ saves.", symbol: nil,
             actions: [
-                DialogAction(title: String(localized: "Save")),
-                DialogAction(title: String(localized: "Cancel"), role: .cancel)
+                DialogAction(title: "Save"),
+                DialogAction(title: "Cancel", role: .cancel)
             ],
             defaultIndex: 0, cancelIndex: 1, accessory: .clipboardText(state))
         guard await present(request) == 0 else { return nil }
@@ -115,9 +96,7 @@ final class DialogController: NSObject, NSWindowDelegate {
             let width =
                 switch request.accessory {
                 case nil, .volume: metrics.size.dialogCompactWidth
-                case .snippetArguments(let arguments) where arguments.asksOnlyForChoices:
-                    metrics.size.dialogCompactWidth
-                case .snippetArguments, .clipboardText: metrics.size.dialogWidth
+                case .clipboardText: metrics.size.dialogWidth
                 }
             let content = hostingView(
                 DialogView(
@@ -129,7 +108,6 @@ final class DialogController: NSObject, NSWindowDelegate {
             let panel = DialogPanel(content: content, cornerRadius: metrics.radius.panel)
             panel.handlesArrowKeys = request.accessory?.claimsArrowKeys ?? false
             panel.acceptsLineBreaks = request.accessory?.acceptsLineBreaks ?? false
-            panel.handlesTabKey = request.accessory?.claimsTabKey ?? false
             panel.delegate = self
             panel.onKey = { [weak self] key in
                 guard let self else { return }
@@ -139,18 +117,12 @@ final class DialogController: NSObject, NSWindowDelegate {
                 case .confirm:
                     finish(request.defaultIndex)
                 case .increment, .decrement:
-                    // Keying the slider lands on the same values Volume Up/Down produce.
                     guard case .volume(let volume) = request.accessory else { return }
                     volume.level = VolumeLevel.stepped(volume.level, up: key == .increment)
-                case .tab, .backtab:
-                    guard case .snippetArguments(let arguments) = request.accessory else { return }
-                    arguments.moveFocus(backwards: key == .backtab)
                 }
             }
             self.panel = panel
-            accessory = request.accessory
             place(panel)
-            // Non-activating like the palette: key focus without pulling the user out.
             panel.makeKeyAndOrderFront(nil)
             panel.orderFrontRegardless()
         }
@@ -162,7 +134,6 @@ final class DialogController: NSObject, NSWindowDelegate {
         onPresentationChanged(false)
         let closing = panel
         panel = nil
-        accessory = nil
         closing?.delegate = nil
         closing?.onKey = nil
         continuation.resume(returning: index)
@@ -174,7 +145,6 @@ final class DialogController: NSObject, NSWindowDelegate {
     private func hostingView(_ view: some View, width: CGFloat, minHeight: CGFloat) -> NSView {
         let hosting = NSHostingView(
             rootView: AnyView(view.environment(\.metrics, metrics).motionScope()))
-        // Measure at the fixed width first: the message wraps, so height follows width.
         hosting.setFrameSize(NSSize(width: width, height: minHeight))
         let fitted = hosting.fittingSize
         hosting.setFrameSize(NSSize(width: width, height: max(fitted.height, minHeight)))
@@ -190,24 +160,13 @@ final class DialogController: NSObject, NSWindowDelegate {
                 y: visible.midY - size.height / 2 + visible.height * Self.centerLift))
     }
 
-    /// Optical centering: an exactly centred dialog reads low, as the palette would.
     private static let centerLift: CGFloat = 0.08
-    // MARK: - NSWindowDelegate
 
-    /// After AppKit's own first-responder pick, which a view's focus request can't outlast.
     func windowDidBecomeKey(_ notification: Notification) {
         guard let panel, notification.object as? NSWindow === panel else { return }
-        // A text field must be made first responder by AppKit; SwiftUI's request for one is lost.
-        if case .snippetArguments(let arguments) = accessory,
-            arguments.arguments.first?.options.isEmpty == false
-        {
-            arguments.focusFirstArgument()
-        } else {
-            panel.focusFirstTextField()
-        }
+        panel.focusFirstTextField()
     }
 
-    /// Click-away resolves as a dismissal rather than leaving an orphaned dialog behind.
     func windowDidResignKey(_ notification: Notification) {
         guard let panel, notification.object as? NSWindow === panel else { return }
         panel.onKey?(.cancel)

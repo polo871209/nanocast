@@ -1,7 +1,6 @@
 import Foundation
 
 extension ColorValue {
-    /// Oklab is defined on light, not on the gamma-encoded numbers a hex triplet carries.
     private static func linear(_ channel: Double) -> Double {
         channel <= 0.04045 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
     }
@@ -10,7 +9,6 @@ extension ColorValue {
         (Self.linear(red), Self.linear(green), Self.linear(blue))
     }
 
-    /// Oklab: the same idea as Lab, fitted so equal steps look equal. `l` is 0…1.
     private var oklab: (l: Double, a: Double, b: Double) {
         let (r, g, b) = linearComponents
         let long = Self.cubeRoot(0.4122215 * r + 0.5363325 * g + 0.0514460 * b)
@@ -36,14 +34,12 @@ extension ColorValue {
         value < 0 ? -pow(-value, 1.0 / 3) : pow(value, 1.0 / 3)
     }
 
-    /// Zero for a neutral: `atan2` over two rounding errors would still name a direction.
     private static func hueDegrees(_ a: Double, _ b: Double) -> Double {
         guard abs(a) > 1e-6 || abs(b) > 1e-6 else { return 0 }
         let degrees = atan2(b, a) * 180 / .pi
         return degrees < 0 ? degrees + 360 : degrees
     }
 
-    /// The inverse of `oklch`: a colour picker states its swatch in the space, not in hex.
     init(lightness: Double, chroma: Double, hue: Double, alpha: Double = 1) {
         let radians = hue * .pi / 180
         let a = chroma * cos(radians)

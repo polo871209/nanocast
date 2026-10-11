@@ -19,13 +19,13 @@ enum CalcText {
         switch answer {
         case .count(let count, let badge):
             return CalcResult(
-                expression: query, sourceBadge: String(localized: "Text"), targetBadge: badge,
+                expression: query, sourceBadge: "Text", targetBadge: badge,
                 payload: .number(Double(count)))
         case .text(let output):
             guard !output.isEmpty else { return nil }
             return CalcResult(
-                expression: query, sourceBadge: String(localized: "Text"),
-                targetBadge: String(localized: "Result"), payload: .value(display: output, copyText: output),
+                expression: query, sourceBadge: "Text",
+                targetBadge: "Result", payload: .value(display: output, copyText: output),
                 canChain: false)
         }
     }
@@ -46,9 +46,9 @@ enum CalcText {
         switch words.joined(separator: " ") {
         case "length", "len", "count", "character count", "characters", "chars", "letters",
             "count characters":
-            return .count(text.count, badge: String(localized: "Characters"))
+            return .count(text.count, badge: "Characters")
         case "word count", "words", "count words":
-            return .count(text.split(whereSeparator: \.isBlank).count, badge: String(localized: "Words"))
+            return .count(text.split(whereSeparator: \.isBlank).count, badge: "Words")
         case "uppercase", "upper case", "upper", "caps": return .text(text.uppercased())
         case "lowercase", "lower case", "lower": return .text(text.lowercased())
         case "capitalize", "capitalized", "title case": return .text(text.capitalized)

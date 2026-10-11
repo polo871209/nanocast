@@ -77,7 +77,7 @@ enum CalcScience {
                 guard let number = Double(value) else { return .some(nil) }
                 let text = CalcFormatter.grouped(CalcFormatter.copyText(number)) + unit
                 return CalcResult(
-                    expression: query, sourceBadge: name, targetBadge: String(localized: "Value"),
+                    expression: query, sourceBadge: name, targetBadge: "Value",
                     payload: .value(display: text, copyText: CalcFormatter.copyText(number) + unit))
             }
             guard let solved = solve(query.replacingCharacters(in: range, with: literal)),
@@ -113,7 +113,7 @@ enum CalcScience {
             return .some(nil)
         }
         return CalcResult(
-            expression: query, sourceBadge: trimmed, targetBadge: String(localized: "Molar Mass"),
+            expression: query, sourceBadge: trimmed, targetBadge: "Molar Mass",
             payload: .number((grams * 1000).rounded() / 1000, suffix: " g/mol"), canChain: false)
     }
 

@@ -16,7 +16,6 @@ struct IconCacheGeneration {
     }
 }
 
-/// SwiftUI tracks any `@Observable` read in `body`, so carrying this in an id is the subscription.
 @MainActor
 @Observable
 final class IconStyleSignal {
@@ -25,7 +24,6 @@ final class IconStyleSignal {
     fileprivate func bump() { generation &+= 1 }
 }
 
-/// A view's own icon key plus the generation. Building one in `body` is what subscribes the view.
 struct IconRequest<Key: Hashable>: Hashable {
     let key: Key
     let generation: Int
@@ -49,15 +47,11 @@ enum SystemSymbolName {
     }
 }
 
-/// A feature sets one rather than branching `AppEntry`; `artwork` carries its extent.
 enum EntryIcon: Hashable, Sendable {
-    /// The stamp is `FileIconStamp`'s: it moves when the file's icon does, retiring the old bitmap.
     case file(stamp: Int)
     case symbol(String)
     /// Drawn as a vector `IconTile`; the bitmap paths below fall back to the plain symbol tile.
     case tile(symbol: String, tint: IconTint)
-    case artwork(path: String, extent: CGFloat)
-    /// A declared type's icon, for a bundle whose own file icon is a placeholder.
     case contentType(String)
 }
 
@@ -68,12 +62,9 @@ struct IconSize: Hashable, Sendable {
     var pixels: Int { Int((points * scale).rounded(.up)) }
 }
 
-/// App icons by path, downsampled and byte-bounded, so rows don't re-hit `NSWorkspace`.
 enum IconCache {
-    /// `NSCache` is thread-safe but not `Sendable`, so assert the guarantee once here.
     private final class Cache: NSCache<NSString, NSImage>, @unchecked Sendable {}
 
-    /// Carries the size so a lookup can reject a bitmap the interface has since resized past.
     private final class RowImage {
         let size: IconSize
         let image: NSImage
@@ -86,7 +77,6 @@ enum IconCache {
 
     private final class RowCache: NSCache<NSString, RowImage>, @unchecked Sendable {}
 
-    // One entry per file, not per file and size: resizing must replace rows, never accumulate them.
     private static let rowCache: RowCache = {
         let cache = RowCache()
         cache.totalCostLimit = 8 * 1024 * 1024
@@ -101,7 +91,6 @@ enum IconCache {
         return cache
     }()
 
-    // One 200-row result set fits; unlike launcher icons, these are discarded with the list.
     private static let fittedCache: Cache = {
         let cache = Cache()
         cache.totalCostLimit = 8 * 1024 * 1024
@@ -109,7 +98,6 @@ enum IconCache {
     }()
     private static let fittedGeneration = Mutex(IconCacheGeneration())
 
-    /// Cache-only lookups (never decode) so a row can paint an already-warm icon on the same frame.
     static func cached(forFile path: String, stamp: Int = 0, size: IconSize? = nil) -> NSImage? {
         let key = fileKey(path, stamp)
         guard let size else { return cache.object(forKey: key) }
@@ -120,10 +108,8 @@ enum IconCache {
         cache.object(forKey: symbolKey(name))
     }
 
-    /// Tiles rasterize off-main, where a dynamic `NSColor` resolves wrong, so carry the surface.
     private static let darkSurface = Mutex(true)
 
-    /// Only a real change invalidates: most `effectiveAppearance` notifications do not move it.
     @MainActor static func setDarkSurface(_ isDark: Bool) {
         let changed = darkSurface.withLock { surface -> Bool in
             defer { surface = isDark }
@@ -132,16 +118,12 @@ enum IconCache {
         if changed { invalidateStyled() }
     }
 
-    /// Global rather than injected: a missed injection in a menu or list would be silent staleness.
     @MainActor static let style = IconStyleSignal()
 
-    /// The same count, readable off-main because every cache key carries it.
     private static let styleGeneration = Mutex(0)
 
-    /// For icons resolved synchronously in `body`: the read *is* the subscription, so not a no-op.
     @MainActor static func observeStyle() { _ = style.generation }
 
-    /// A surface or icon-style move stales every bitmap; the generation in each key fixes it.
     @MainActor static func invalidateStyled() {
         styleGeneration.withLock { $0 &+= 1 }
         cache.removeAllObjects()
@@ -171,7 +153,6 @@ enum IconCache {
 
     private static let styleProbePath = "/System/Library/CoreServices/Finder.app"
 
-    /// In every key, so an in-flight decode writes somewhere unreachable instead of repopulating.
     private static func key(_ body: String) -> NSString {
         "\(styleGeneration.withLock { $0 }):\(body)" as NSString
     }
@@ -181,7 +162,6 @@ enum IconCache {
         return key("symbol:\(surface):\(name)")
     }
 
-    /// A freshly-decoded, thereafter-immutable `NSImage` is safe to move across the actor boundary.
     private struct Decoded: @unchecked Sendable {
         let image: NSImage?
         let cost: Int
@@ -192,7 +172,6 @@ enum IconCache {
         }
     }
 
-    /// Returns the decode directly, so a purge mid-decode can't strand a placeholder.
     static func loadAsync(forFile path: String, stamp: Int = 0, size: IconSize? = nil) async -> NSImage? {
         if let cached = cached(forFile: path, stamp: stamp, size: size) { return cached }
         return await Task.detached(priority: .userInitiated) { () -> Decoded in
@@ -226,7 +205,6 @@ enum IconCache {
         return image
     }
 
-    /// Redraws the 96px result rather than the file's icon: AppKit picks its rep and shadow there.
     private static func resized(_ source: NSImage, to size: IconSize) -> (NSImage, Int)? {
         guard size.pixels < Int(displayPixel * 2) else { return nil }
         guard
@@ -288,7 +266,6 @@ enum IconCache {
             return symbol
         }
         guard let asset = NSImage(named: name) else { return nil }
-        // A 24pt box lands the asset's ink at the symbols' ~22pt optical height.
         let assetSize = NSSize(width: 24, height: 24)
         return NSImage(size: assetSize, flipped: false) { rect in
             asset.draw(in: rect)
@@ -298,7 +275,6 @@ enum IconCache {
         }
     }
 
-    /// What an app icon paints: the reference for every other artwork.
     static let appIconExtent: CGFloat = 0.83
     /// An app icon's body on its canvas, 824 of 1024, so a tile in a row of apps is their size.
     static let appIconBody: CGFloat = 824.0 / 1024
@@ -310,35 +286,11 @@ enum IconCache {
         return NSBezierPath(cgPath: shape.path(in: rect).cgPath)
     }
 
-    /// The caller chooses the extent; this only measures and rasterizes.
     static func fitted(_ source: NSImage, to extent: CGFloat) -> (NSImage, Int) {
         let painted = paintedExtent(source) ?? appIconExtent
         let side = displayPixel * extent / painted
         let inset = (displayPixel - side) / 2
         return rasterized(source, into: NSRect(x: inset, y: inset, width: side, height: side))
-    }
-
-    /// Keyed by path and extent, so two features wanting different sizes never serve each other's.
-    static func artwork(atPath path: String, extent: CGFloat) -> NSImage {
-        let key = artworkKey(path, extent)
-        if let cached = cache.object(forKey: key) { return cached }
-        guard let source = NSImage(contentsOfFile: path) else {
-            return symbolIcon(named: "questionmark.square.dashed")
-        }
-        let (icon, cost) = fitted(source, to: extent)
-        cache.setObject(icon, forKey: key, cost: cost)
-        return icon
-    }
-
-    static func cachedArtwork(atPath path: String, extent: CGFloat) -> NSImage? {
-        cache.object(forKey: artworkKey(path, extent))
-    }
-
-    static func loadArtworkAsync(atPath path: String, extent: CGFloat) async -> NSImage? {
-        if let cached = cachedArtwork(atPath: path, extent: extent) { return cached }
-        return await Task.detached(priority: .userInitiated) {
-            Decoded(image: artwork(atPath: path, extent: extent))
-        }.value.image
     }
 
     static func contentTypeIcon(_ identifier: String) -> NSImage {
@@ -364,18 +316,10 @@ enum IconCache {
         key("type:\(identifier)")
     }
 
-    private static func artworkKey(_ path: String, _ extent: CGFloat) -> NSString {
-        key("artwork:\(extent):\(path)")
-    }
-
-    // MARK: - Drawing an `EntryIcon`
-
-    /// One switch, so a row never has to know which of these paths its entry wants.
     static func icon(for source: EntryIcon, fileURL: URL) -> NSImage {
         switch source {
         case .file(let stamp): return icon(forFile: fileURL.path, stamp: stamp)
         case .symbol(let name), .tile(let name, _): return symbolIcon(named: name)
-        case .artwork(let path, let extent): return artwork(atPath: path, extent: extent)
         case .contentType(let identifier): return contentTypeIcon(identifier)
         }
     }
@@ -384,7 +328,6 @@ enum IconCache {
         switch source {
         case .file(let stamp): return cached(forFile: fileURL.path, stamp: stamp, size: size)
         case .symbol(let name), .tile(let name, _): return cachedSymbol(named: name)
-        case .artwork(let path, let extent): return cachedArtwork(atPath: path, extent: extent)
         case .contentType(let identifier): return cachedContentTypeIcon(identifier)
         }
     }
@@ -393,8 +336,6 @@ enum IconCache {
         switch source {
         case .file(let stamp): return await loadAsync(forFile: fileURL.path, stamp: stamp, size: size)
         case .symbol(let name), .tile(let name, _): return await loadSymbolAsync(named: name)
-        case .artwork(let path, let extent):
-            return await loadArtworkAsync(atPath: path, extent: extent)
         case .contentType(let identifier): return await loadContentTypeIconAsync(identifier)
         }
     }
@@ -403,7 +344,6 @@ enum IconCache {
         fittedCache.object(forKey: fittedKey(path))
     }
 
-    /// Like `loadAsync`, normalized so every file type paints to the same visual size.
     static func loadFittedAsync(forFile path: String) async -> NSImage? {
         if let cached = cachedFitted(forFile: path) { return cached }
         let generation = fittedGeneration.withLock { $0.value }
@@ -445,7 +385,6 @@ enum IconCache {
         fitted(source, to: appIconExtent)
     }
 
-    /// The artwork's larger dimension, measured at 2×: a 1× grid over-reads the extent.
     private static func paintedExtent(_ source: NSImage) -> CGFloat? {
         let pixels = Int(displayPixel * 2)
         guard
@@ -466,7 +405,6 @@ enum IconCache {
         for y in 0..<pixels {
             let row = data.advanced(by: y * rep.bytesPerRow)
             for x in 0..<pixels {
-                // Alpha above 0.06 starts at byte 16; fainter shadows do not count as artwork.
                 guard row[x * 4 + 3] >= 16 else {
                     continue
                 }
@@ -487,7 +425,6 @@ enum IconCache {
     }
 
     private static func rasterized(_ source: NSImage, into frame: NSRect) -> (NSImage, Int) {
-        // Fixed 2×, `NSScreen.main` being main-thread-only, so a detached decode works.
         let pixels = Int(displayPixel * 2)
         let fallbackCost = Int(displayPixel * displayPixel * 4)
         guard

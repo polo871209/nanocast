@@ -1,17 +1,4 @@
 #!/usr/bin/env node
-// Generate Nanocast/Features/Calculator/Model/CountryZoneData.generated.swift.
-//
-// Usage: node Scripts/gen-countries.js [zone.tab cldr-territories.json]
-// Downloads the sources when paths aren't given. Run occasionally, commit the output.
-//
-// Two sources, joined on the ISO 3166 code:
-//   - IANA's zone.tab decides *which* clock a country answers with. It lists every zone per country,
-//     most populous first where geography allows, so its first row is the country's main clock.
-//     Foundation carries the zones themselves but no notion of which country they belong to.
-//   - CLDR's `en` territory names decide what humans *call* the country, including the short forms
-//     ("UK", "US"). Read from cldr-json rather than the host's `Intl`, whose output shifts with ICU.
-//
-// A spelling two countries share is left out rather than guessed.
 "use strict";
 
 const fs = require("fs");
@@ -21,8 +8,7 @@ const ZONE_TAB = "https://data.iana.org/time-zones/tzdb/zone.tab";
 const CLDR_TERRITORIES =
   "https://raw.githubusercontent.com/unicode-org/cldr-json/main/cldr-json/cldr-localenames-full/main/en/territories.json";
 
-// zone.tab orders by geography before population, which puts these countries' remote edges first.
-// Each answers with its capital's clock instead; the script fails if one stops being listed.
+// zone.tab lists remote edges first, so these countries answer with their capital's clock.
 const CAPITAL_ZONES = {
   AU: "Australia/Sydney",
   BR: "America/Sao_Paulo",
@@ -32,10 +18,8 @@ const CAPITAL_ZONES = {
   UA: "Europe/Kyiv",
   UZ: "Asia/Tashkent",
 };
-// Territories with no capital and clocks a hemisphere apart name no single time at all.
 const NO_SINGLE_CLOCK = new Set(["AQ", "UM"]);
 
-// zone.tab lists ~250 codes; well below that is a bad response.
 const MIN_EXPECTED = 230;
 
 async function loadText(url, argPath) {
@@ -45,8 +29,6 @@ async function loadText(url, argPath) {
   return response.text();
 }
 
-/// Every lookup form of a name: folded and lowercased as the query is, plus the spellings a keyboard
-/// produces for CLDR's typographic `&` and `’`.
 function spellings(name) {
   const base = name
     .normalize("NFD")

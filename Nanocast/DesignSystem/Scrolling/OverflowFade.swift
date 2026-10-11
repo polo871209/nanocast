@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct OverflowFadeMask: ViewModifier {
-    /// Short enough to read as an edge treatment rather than as a dimmed final row.
     var band: CGFloat = 24
     var includesTop = false
 
@@ -34,7 +33,6 @@ struct OverflowFadeMask: ViewModifier {
 
     private func stops(height: CGFloat) -> [Gradient.Stop] {
         guard includesTop else { return bottomStops(height: height) }
-        // Popup edges use several stops so neither end cuts abruptly through a row.
         let topStrength = min(overflow.top / band, 1)
         let bottomStrength = min(overflow.bottom / band, 1)
         guard max(topStrength, bottomStrength) > 0, height > 0 else {
@@ -61,7 +59,6 @@ struct OverflowFadeMask: ViewModifier {
         ]
     }
 
-    /// The original Settings and Notes curve stays unchanged when no popup opts into its top edge.
     private func bottomStops(height: CGFloat) -> [Gradient.Stop] {
         let strength = min(overflow.bottom / band, 1)
         guard strength > 0, height > band else { return [.init(color: .black, location: 0)] }
@@ -74,7 +71,6 @@ struct OverflowFadeMask: ViewModifier {
 }
 
 extension View {
-    /// Attach before `thinScrollbar`. Not `edgeDissolve`, which is tuned to the palette's bars.
     func overflowFade(band: CGFloat = 24, includingTop: Bool = false) -> some View {
         modifier(OverflowFadeMask(band: band, includesTop: includingTop))
     }

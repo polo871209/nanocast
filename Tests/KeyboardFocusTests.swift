@@ -1,6 +1,5 @@
 import AppKit
 
-/// The palette's keyboard belongs to the search field, and a preview's transport may never take it.
 @main
 @MainActor
 struct KeyboardFocusTests {
@@ -16,7 +15,6 @@ struct KeyboardFocusTests {
         }
     }
 
-    /// Stands in for the player surface: what the mark means is "nothing under here takes focus".
     final class MarkedView: NSView, KeyboardFocusRefusing {}
 
     static func main() {

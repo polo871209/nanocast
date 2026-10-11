@@ -22,7 +22,6 @@ struct EmojiSearchTests {
         let index = EmojiIndex()
         await index.load()
 
-        // Pins are authored order, not usage order: reloads retain it and imports sanitize it.
         let pinnedURL = directory.appendingPathComponent("pinned.json")
         try JSONEncoder().encode(["A", "", "A", "B"]).write(to: pinnedURL)
         let pinned = PinnedEmojiStore(fileURL: pinnedURL)
@@ -62,39 +61,6 @@ struct EmojiSearchTests {
             expect(
                 results.prefix(maxRank).contains { $0.glyph == glyph },
                 "\(query) finds \(glyph) in the first \(maxRank) results")
-        }
-
-        // Packs for the Mac's languages join English, which keeps its ranking for every user.
-        let resources = Bundle(path: "Nanocast/Resources")!
-        let multilingual = EmojiIndex()
-        await multilingual.load(languages: ["fr-FR", "ja-JP", "en-US"], bundle: resources)
-        for (query, glyph) in [
-            ("poulet", "🐔"), ("gateau", "🎂"), ("gâteau d'anniversaire", "🎂"),
-            ("allemagne", "🇩🇪"), ("ねこ", "🐱"), ("ネコ", "🐱"), ("寿司", "🍣")
-        ] {
-            expect(
-                multilingual.search(query, frequent: frequent).prefix(3).contains { $0.glyph == glyph },
-                "\(query) finds \(glyph) in the first 3 results")
-        }
-        expect(
-            multilingual.search("poulet", frequent: frequent).contains { $0.glyph == "🍗" },
-            "a localized keyword reaches every glyph CLDR files it under")
-        for query in ["chicken", "birthday", "party", "pray", "red heart", "hand waving", "cat"] {
-            expect(
-                multilingual.search(query, frequent: frequent).prefix(5).map(\.glyph)
-                    == index.search(query, frequent: frequent).prefix(5).map(\.glyph),
-                "\(query) ranks as it does in English alone")
-        }
-        let english = EmojiIndex()
-        await english.load(languages: ["en-US"], bundle: resources)
-        expect(english.entries.map(\.keywords) == index.entries.map(\.keywords), "English reads no pack")
-
-        let chinese = EmojiIndex()
-        await chinese.load(languages: ["zh-Hans-CN", "en-US"], bundle: resources)
-        for (query, glyph) in [("猫", "🐱"), ("汉堡", "🍔"), ("cat", "🐱")] {
-            expect(
-                chinese.search(query, frequent: frequent).prefix(3).contains { $0.glyph == glyph },
-                "\(query) finds \(glyph) with Simplified Chinese keywords")
         }
 
         let waving = index.search("hand waving", frequent: frequent)

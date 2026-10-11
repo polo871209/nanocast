@@ -3,17 +3,15 @@ import SwiftUI
 @MainActor
 final class OnboardingCoordinator {
     private let window: AppWindowController
-    /// Environment injection only — never for state this type owns.
     private unowned let core: AppCore
 
     init(core: AppCore) {
         self.core = core
         window = AppWindowController(
-            title: String(localized: "Welcome to Nanocast"), contentSize: OnboardingView.initialSize,
+            title: "Welcome to Nanocast", contentSize: OnboardingView.initialSize,
             activation: nil)
     }
 
-    /// The window takes the height the current step measured, so no step is clipped or padded out.
     func fit(height: CGFloat) {
         window.fitContent(width: OnboardingView.width, height: height)
     }

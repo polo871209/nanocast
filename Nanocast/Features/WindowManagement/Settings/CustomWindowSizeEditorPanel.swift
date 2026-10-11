@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// Identifies the editor to present; nil is "new", and the UUID keeps two opens distinct.
 struct CustomWindowSizeEditRequest: Identifiable {
     let id = UUID()
     var size: CustomWindowSize?
@@ -9,7 +8,6 @@ struct CustomWindowSizeEditRequest: Identifiable {
 
 struct CustomWindowSizeEditorPanel: View {
     private let isNew: Bool
-    /// What a unit switch converts against; a run measures the window's own display.
     private let reference: CGSize
 
     @Environment(\.settingsEditorDismiss) private var dismiss
@@ -37,11 +35,11 @@ struct CustomWindowSizeEditorPanel: View {
             field("Size") {
                 HStack(spacing: Theme.Spacing.lg) {
                     dimensionField(
-                        label: String(localized: "W"), name: String(localized: "Width"),
+                        label: "W", name: "Width",
                         dimension: $size.width,
                         available: reference.width)
                     dimensionField(
-                        label: String(localized: "H"), name: String(localized: "Height"),
+                        label: "H", name: "Height",
                         dimension: $size.height,
                         available: reference.height)
                 }
@@ -49,8 +47,8 @@ struct CustomWindowSizeEditorPanel: View {
 
             field("Offset") {
                 HStack(spacing: Theme.Spacing.lg) {
-                    offsetField(label: "X", name: String(localized: "Horizontal offset"), value: \.x)
-                    offsetField(label: "Y", name: String(localized: "Vertical offset"), value: \.y)
+                    offsetField(label: "X", name: "Horizontal offset", value: \.x)
+                    offsetField(label: "Y", name: "Vertical offset", value: \.y)
                 }
             }
 
@@ -80,7 +78,7 @@ struct CustomWindowSizeEditorPanel: View {
     }
 
     private func field(
-        _ title: LocalizedStringResource, @ViewBuilder content: () -> some View
+        _ title: String, @ViewBuilder content: () -> some View
     ) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
             Text(title)

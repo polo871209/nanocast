@@ -3,7 +3,6 @@ import SwiftUI
 struct RoomPickerList: View {
     @Environment(\.metrics) private var metrics
     let rows: [RoomPickerRow]
-    /// Room order; a member's place is its index plus one.
     let picked: [RoomSession.Pick]
     let selectedID: String?
     let scroll: ScrollIntent
@@ -40,7 +39,6 @@ struct RoomPickerList: View {
 private struct RoomPickerRowView: View {
     @Environment(\.metrics) private var metrics
     let row: RoomPickerRow
-    /// Its place in the room, 1 being the main window; nil when it is not in the room.
     let place: Int?
     let selected: Bool
     @State private var hovered = false
@@ -64,11 +62,11 @@ private struct RoomPickerRowView: View {
     private var trailing: String {
         switch row {
         case .window(let window):
-            if window.isAppHidden { return String(localized: "\(window.appName) · Hidden") }
-            if window.isMinimized { return String(localized: "\(window.appName) · Minimized") }
+            if window.isAppHidden { return "\(window.appName) · Hidden" }
+            if window.isMinimized { return "\(window.appName) · Minimized" }
             return window.appName
         case .app:
-            return String(localized: "App · Opens with the room")
+            return "App · Opens with the room"
         }
     }
 
@@ -109,7 +107,7 @@ private struct RoomPickerRowView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)
         .accessibilityValue(
-            place.map { String(localized: "\(trailing), number \($0) in the room") } ?? trailing
+            place.map { "\(trailing), number \($0) in the room" } ?? trailing
         )
         .accessibilityAddTraits(selected ? .isSelected : [])
     }

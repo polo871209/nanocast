@@ -19,7 +19,6 @@ struct WindowCommand {
 enum WindowCommandCatalog {
     static func command(id: WindowCommand.ID) -> WindowCommand? { WindowCommand(name: id.rawValue) }
 }
-enum StoredSnippet { typealias ID = String }
 @MainActor
 enum AppLauncher {
     static func toggle(bundleID: String) {}
@@ -29,11 +28,8 @@ enum AppLauncher {
 final class ModifierTapMonitor {
     var isPaused = false
     var onTrigger: ((HotKeyBinding) -> Void)?
-    var onHoldPressed: (() -> Void)?
-    var onHoldReleased: (() -> Void)?
-    var onHoldCancelled: (() -> Void)?
     func start() {}
-    func update(bound: Set<HotKeyBinding>, holdKey: ModifierKey?) {}
+    func update(bound: Set<HotKeyBinding>) {}
 }
 @MainActor
 final class ShortcutCaptureSession {

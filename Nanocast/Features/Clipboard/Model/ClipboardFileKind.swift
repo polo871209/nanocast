@@ -1,7 +1,6 @@
 import Foundation
 import UniformTypeIdentifiers
 
-/// What a referenced file is, for the Type row and the tile a thumbnail has not filled yet.
 enum ClipboardFileKind: Sendable {
     case image
     case movie
@@ -10,7 +9,6 @@ enum ClipboardFileKind: Sendable {
     case folder
     case other
 
-    /// Resolved from the extension, never from disk, so a vanished file still classifies.
     static func of(path: String, isDirectory: Bool = false) -> ClipboardFileKind {
         guard !isDirectory else { return .folder }
         let url = URL(filePath: path, directoryHint: .inferFromPath)
@@ -27,12 +25,12 @@ enum ClipboardFileKind: Sendable {
 
     var title: String {
         switch self {
-        case .image: return String(localized: "Image")
-        case .movie: return String(localized: "Movie")
-        case .audio: return String(localized: "Audio")
+        case .image: return "Image"
+        case .movie: return "Movie"
+        case .audio: return "Audio"
         case .pdf: return "PDF"
-        case .folder: return String(localized: "Folder")
-        case .other: return String(localized: "File")
+        case .folder: return "Folder"
+        case .other: return "File"
         }
     }
 

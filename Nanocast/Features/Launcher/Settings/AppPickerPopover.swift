@@ -1,8 +1,8 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct AppPickerPopover: View {
-    /// Bundle IDs to leave out — the ones already chosen.
     var excluded: Set<String> = []
     let onSelect: (String) -> Void
 
@@ -52,7 +52,6 @@ struct AppPickerPopover: View {
     }
 }
 
-/// Bundle ID → something showable: the index, then LaunchServices, then a placeholder.
 @MainActor
 enum AppPresentation {
     static func resolve(bundleID: String, in appIndex: AppIndex) -> (name: String, icon: NSImage) {

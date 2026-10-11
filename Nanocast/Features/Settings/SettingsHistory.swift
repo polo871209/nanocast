@@ -1,4 +1,3 @@
-/// Browser semantics: choosing a pane truncates what was ahead, and re-choosing it is not a move.
 struct SettingsHistory {
     private(set) var current: SettingsTab
     private var back: [SettingsTab] = []

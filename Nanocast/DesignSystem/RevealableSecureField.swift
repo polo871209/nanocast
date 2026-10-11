@@ -44,7 +44,6 @@ struct RevealableSecureField: View {
         }
     }
 
-    /// Where keystrokes go, and this control's only while it is editing `text`.
     private var fieldEditor: NSTextView? {
         guard let editor = NSApp.keyWindow?.firstResponder as? NSTextView, editor.isFieldEditor,
             editor.string == text

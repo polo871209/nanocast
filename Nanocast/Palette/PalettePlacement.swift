@@ -1,10 +1,8 @@
 import CoreGraphics
 
-/// Pure, with every screen fact injected, so this stays testable off a display.
 enum PalettePlacement {
     static let maxSnapEntrySpeedPointsPerSecond: CGFloat = 600
 
-    /// The visible surface stays anchored while native glass draws outside its bounds.
     static func frame(at anchor: CGPoint, size: CGSize, outset: CGFloat) -> CGRect {
         CGRect(x: anchor.x, y: anchor.y - size.height, width: size.width, height: size.height)
             .insetBy(dx: -outset, dy: -outset)
@@ -14,7 +12,6 @@ enum PalettePlacement {
         CGPoint(x: frame.minX + outset, y: frame.maxY - outset)
     }
 
-    /// The untouched placement: centred, top edge a fraction of the way down, growing downward.
     static func defaultAnchor(
         in visibleFrame: CGRect, width: CGFloat, topMarginFraction: CGFloat
     )
@@ -25,7 +22,6 @@ enum PalettePlacement {
             y: visibleFrame.maxY - visibleFrame.height * topMarginFraction)
     }
 
-    /// Kept against its display: right of its left edge, down from its top.
     static func offset(of anchor: CGPoint, on visibleFrame: CGRect) -> CGPoint {
         CGPoint(x: anchor.x - visibleFrame.minX, y: visibleFrame.maxY - anchor.y)
     }
@@ -38,7 +34,6 @@ enum PalettePlacement {
         visibleFrame.midY + expandedHeight / 2
     }
 
-    /// Nil once the display shows too little of the compact bar to grab it back.
     static func restored(
         _ stored: CGPoint, graspable: CGSize, visibleFrame: CGRect, minimumVisible: CGFloat
     ) -> CGPoint? {
@@ -61,7 +56,6 @@ enum PalettePlacement {
         let height: HeightSnap?
     }
 
-    /// Height detents exist only on the invisible vertical centre line.
     static func snapped(
         _ anchor: CGPoint, home: CGPoint, visibleFrame: CGRect,
         expandedHeight: CGFloat, within distance: CGFloat, previous: Snap?, speed: CGFloat
@@ -96,7 +90,6 @@ enum PalettePlacement {
 }
 
 enum MenuPanelCorner: Equatable {
-    case bottomLeading
     case bottomTrailing
     case belowHeaderTrailing
     case belowControl(CGRect, trailing: Bool = true)
@@ -107,8 +100,6 @@ enum MenuPanelCorner: Equatable {
     ) -> CGRect {
         let origin: CGPoint =
             switch self {
-            case .bottomLeading:
-                CGPoint(x: parentFrame.minX + inset, y: parentFrame.minY + inset)
             case .bottomTrailing:
                 CGPoint(
                     x: parentFrame.maxX - inset - contentSize.width,

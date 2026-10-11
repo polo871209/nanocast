@@ -24,7 +24,6 @@ struct HyperKeyDiagnostics: Equatable, Sendable {
 
     let isActive: Bool
     let activeKeyTitle: String?
-    /// Nil while there is no tap to ask.
     let eventTapEnabled: Bool?
     let runLoopSourceValid: Bool?
     let remappedKeyboards: [String]
@@ -35,6 +34,5 @@ struct HyperKeyDiagnostics: Equatable, Sendable {
     let takeover: Takeover?
     let keyboardTaps: [KeyboardTap]
     let secureInputCompatibilityActive: Bool
-    /// Nil while Secure Input is off.
     let secureInput: SecureInput?
 }

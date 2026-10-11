@@ -1,13 +1,10 @@
 import AppKit
 @preconcurrency import ApplicationServices
 
-/// Reads what is on screen over AX, once, through a single `AXGeometry` snapshot.
 @MainActor
 enum WindowInventory {
-    /// A snapshot walks every app, so one hung process must not cost the full mover timeout.
     private static let sweepTimeout: Float = 0.2
 
-    /// Live AX handles for one window. Never `Sendable`: these do not leave the main actor.
     struct Element {
         let bundleID: String
         let app: NSRunningApplication
@@ -17,12 +14,10 @@ enum WindowInventory {
 
     struct Snapshot {
         var screens: [WindowLayoutScreen]
-        /// The pure description the plan works from; `handle` indexes `elements`.
         var windows: [WindowLayoutWindow]
         var elements: [Int: Element]
     }
 
-    /// `positionableOnly` is the capture path: a window we could never move is not an entry.
     static func snapshot(positionableOnly: Bool = false) -> Snapshot {
         let geometry = AXGeometry(screens: NSScreen.screens)
         var windows: [WindowLayoutWindow] = []
@@ -50,7 +45,6 @@ enum WindowInventory {
             elements: elements)
     }
 
-    /// The windows of one app that this run has not already written to.
     static func unclaimedWindows(
         of application: AXUIElement, excluding claimed: some Collection<AXUIElement>
     ) -> [AXUIElement] {
@@ -61,7 +55,6 @@ enum WindowInventory {
         }
     }
 
-    /// Every app with a user-facing window, bar us. By pid, since About flips us to `.regular`.
     static func candidates() -> [NSRunningApplication] {
         let ownPID = NSRunningApplication.current.processIdentifier
         return NSWorkspace.shared.runningApplications.filter {
@@ -78,11 +71,9 @@ enum WindowInventory {
         return (AXWindowAccess.application(for: app.processIdentifier), app)
     }
 
-    /// A window a layout may name: real, standard, on screen, and reporting geometry.
     private static func eligibleFrame(
         _ window: AXUIElement, positionableOnly: Bool
     ) -> CGRect? {
-        // Stricter than the mover's rule: a Save sheet must never be captured as an entry.
         guard
             AXWindowAccess.string(window, kAXSubroleAttribute)
                 == (kAXStandardWindowSubrole as String)

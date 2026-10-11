@@ -199,6 +199,6 @@ extension CalcTimeZone {
 
     private static func momentString(_ date: Date, zone: TimeZone, now: Date, calendar: Calendar) -> String {
         let day = dayString(date, zone: zone, now: now, calendar: calendar)
-        return String(localized: "\(day) at \(clockString(date, zone: zone, calendar: calendar))")
+        return "\(day) at \(clockString(date, zone: zone, calendar: calendar))"
     }
 }

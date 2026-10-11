@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// An overlay claiming only right-mouse events, so the popover anchors to a fixed point.
 struct RightClickCatcher: NSViewRepresentable {
     let action: () -> Void
 
@@ -48,7 +47,6 @@ struct RightClickLocationCatcher: NSViewRepresentable {
         @available(*, unavailable)
         required init?(coder: NSCoder) { fatalError() }
 
-        // Flipped so the reported point matches SwiftUI's top-left local coordinate space.
         override var isFlipped: Bool { true }
 
         override func rightMouseDown(with event: NSEvent) {

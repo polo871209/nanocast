@@ -44,7 +44,7 @@ enum CalcSpokenMath {
             let divisor = CalcExpressionParser.scalar(parts[1]), divisor != 0
         else { return nil }
         let result = dividend.truncatingRemainder(dividingBy: divisor)
-        return result.isFinite ? .phrase(query, .number(result), target: String(localized: "Remainder")) : nil
+        return result.isFinite ? .phrase(query, .number(result), target: "Remainder") : nil
     }
 
     // MARK: - Primality
@@ -63,7 +63,7 @@ enum CalcSpokenMath {
         else { return nil }
         let text = isPrime(UInt64(value)) ? "true" : "false"
         return .phrase(
-            query, .value(display: text, copyText: text), target: String(localized: "Prime Number"),
+            query, .value(display: text, copyText: text), target: "Prime Number",
             canChain: false)
     }
 
@@ -131,7 +131,7 @@ enum CalcSpokenMath {
                     + [.comma] + parts[2] + [.op(.close), .op(.close)])
         else { return nil }
         return .phrase(
-            query, .quantity(clamped), target: String(localized: "Clamped"), isCurrency: clamped.isCurrency)
+            query, .quantity(clamped), target: "Clamped", isCurrency: clamped.isCurrency)
     }
 
     // MARK: - Roots
@@ -143,7 +143,7 @@ enum CalcSpokenMath {
             let value = CalcExpressionParser.scalar(parts[1]),
             let result = CalcMath.evaluate("root", [value, degree])
         else { return nil }
-        return .phrase(query, .number(result), target: String(localized: "Root"))
+        return .phrase(query, .number(result), target: "Root")
     }
 
     // MARK: - Proportions
@@ -170,7 +170,7 @@ enum CalcSpokenMath {
         }
         guard let value = CalcExpressionParser.value(product), value.amount.isFinite else { return nil }
         return .phrase(
-            query, .quantity(value), target: String(localized: "Proportion"), isCurrency: value.isCurrency)
+            query, .quantity(value), target: "Proportion", isCurrency: value.isCurrency)
     }
 
     // MARK: - Combinations and permutations
@@ -194,7 +194,7 @@ enum CalcSpokenMath {
                 let count = arrangements(n, k, combination: shape.combination)
             else { return nil }
             let badge =
-                shape.combination ? String(localized: "Combinations") : String(localized: "Permutations")
+                shape.combination ? "Combinations" : "Permutations"
             return .phrase(query, .number(count), target: badge)
         }
         return nil
@@ -245,7 +245,7 @@ enum CalcSpokenMath {
                 return CalcMath.evaluate("log", [value, base])
             }).first
         else { return nil }
-        return .phrase(query, .number(result), target: String(localized: "Logarithm"))
+        return .phrase(query, .number(result), target: "Logarithm")
     }
 
     // MARK: - Multipliers
@@ -277,6 +277,6 @@ enum CalcSpokenMath {
     static func multiplierCard(_ value: Double, query: String) -> CalcResult? {
         guard value.isFinite else { return nil }
         return .phrase(
-            query, .number(value, suffix: "x"), target: String(localized: "Multiplier"), canChain: false)
+            query, .number(value, suffix: "x"), target: "Multiplier", canChain: false)
     }
 }

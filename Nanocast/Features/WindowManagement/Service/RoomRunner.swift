@@ -2,31 +2,23 @@
 import AppKit
 @preconcurrency import ApplicationServices
 
-/// Walks into a room: its windows land on one display, everything else steps back.
 @MainActor
 enum RoomRunner {
-    /// Long enough for a cold app to draw, short enough a stuck one cannot hold the room.
     private static let launchDeadline = Duration.seconds(10)
     /// A just-unhidden app ignores moves, and reports no windows, until it is really back.
     private static let unhideDeadline = Duration.milliseconds(600)
-    /// Unhiding is a cheap flag to poll; a launch wait sweeps every app, so it polls slowly.
     private static let unhidePoll = Duration.milliseconds(20)
     private static let launchPoll = Duration.milliseconds(200)
     /// Apps that animate a resize are still mid-way this soon after the write.
     private static let settleDelay = Duration.milliseconds(150)
-    /// Long enough for a late or bounced frame to show before the one correction.
     private static let verifyDelay = Duration.milliseconds(250)
-    /// Raises across apps land in order only when each app has a moment to come forward.
     private static let raisePacing = Duration.milliseconds(40)
-    /// A new minimum can reveal another in a narrower slot; minimums only grow, so this ends.
     private static let relayoutPasses = 2
-    /// Slack for an app's own rounding, such as a terminal sizing in whole cells.
     private static let slack: CGFloat = 4
     private static let resizeSlack: CGFloat = 16
 
     struct Context {
         let gap: CGFloat
-        /// Where the room lands; its first connected display when that one is gone.
         let displayUUID: String?
         let claimed: Set<UInt32>
         let minimums: RoomMinimumSizeStore
@@ -36,13 +28,10 @@ enum RoomRunner {
     struct Outcome: Sendable {
         var placed = 0
         var parked = 0
-        /// The apps this pass hid, so only they come back later, never one hidden by hand.
         var hiddenApps = Set<pid_t>()
         var missing: [String] = []
         var isBlockedOnPermission = false
     }
-
-    // MARK: - Entering
 
     static func enter(_ room: Room, context: Context) async -> Outcome {
         guard Permissions.ensureAccessibility() else { return Outcome(isBlockedOnPermission: true) }
@@ -64,7 +53,6 @@ enum RoomRunner {
             }
         }
         let missing = plan.missing.map { room.windows[$0].appName }
-        // With nothing to show, stepping everything back would leave an empty desk.
         guard !Task.isCancelled, !plan.placements.isEmpty else { return Outcome(missing: missing) }
 
         place(plan.placements, in: snapshot)
@@ -89,7 +77,6 @@ enum RoomRunner {
         return outcome
     }
 
-    /// The apps rooms hid, then every parked window: a just-unhidden app ignores moves until back.
     static func restoreEverything(hiddenApps: Set<pid_t>, ledger: RoomParkingLedger) async {
         let hidden = WindowInventory.candidates().filter {
             $0.isHidden && hiddenApps.contains($0.processIdentifier)
@@ -99,7 +86,6 @@ enum RoomRunner {
         returnParkedWindows(ledger: ledger)
     }
 
-    /// Every parked window home, how many came back. Synchronous, so quitting runs it through.
     @discardableResult
     static func returnParkedWindows(ledger: RoomParkingLedger) -> Int {
         guard Permissions.isAccessibilityTrusted(), !ledger.isEmpty else { return 0 }
@@ -110,13 +96,10 @@ enum RoomRunner {
             return unpark(window, element: element, screens: screens, ledger: ledger)
         }
         ledger.forget(returned)
-        // A quit app's windows went with it; one that is running but slow keeps its way back.
         ledger.keepOnly(
             bundleIDs: Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier)))
         return returned.count
     }
-
-    // MARK: - Planning
 
     private static func makePlan(
         _ room: Room, in snapshot: RoomWindowSweep.Snapshot, context: Context
@@ -153,7 +136,6 @@ enum RoomRunner {
         return hidden
     }
 
-    /// Polls inside the gesture's own task; `ContinuousClock`, so a clock step cannot shorten it.
     private static func wait(
         for duration: Duration, every interval: Duration, until isDone: () -> Bool
     ) async {
@@ -163,9 +145,6 @@ enum RoomRunner {
         }
     }
 
-    // MARK: - Placing
-
-    /// No `await` between windows, so the room lands in one visible step.
     private static func place(
         _ placements: [RoomPlan.Placement], in snapshot: RoomWindowSweep.Snapshot
     ) {
@@ -185,7 +164,6 @@ enum RoomRunner {
         if AXWindowAccess.bool(window, kAXMinimizedAttribute) == true {
             _ = AXWindowAccess.unminimize(window)
         }
-        // Checked before any write, so an unpositionable window is left untouched.
         guard AXWindowAccess.isSettable(kAXPositionAttribute, on: window),
             let current = AXWindowAccess.frame(of: window)
         else { return }
@@ -228,7 +206,6 @@ enum RoomRunner {
         actual.width > wanted.width + slack || actual.height > wanted.height + slack
     }
 
-    /// Back to front, one app at a time, so the main window ends on top and focused.
     private static func raise(_ plan: RoomPlan, in snapshot: RoomWindowSweep.Snapshot) async {
         let elements = plan.placements.compactMap { snapshot.elements[$0.handle] }
         guard let main = elements.first else { return }
@@ -239,7 +216,6 @@ enum RoomRunner {
         AXWindowAccess.focus(main.window, in: main.application, of: main.app)
     }
 
-    /// One correction for a frame applied late or bounced back; no loop, which would jitter.
     private static func verify(
         _ plan: RoomPlan, in snapshot: RoomWindowSweep.Snapshot, minimums: RoomMinimumSizeStore
     ) {
@@ -252,7 +228,6 @@ enum RoomRunner {
         place(off, in: snapshot)
     }
 
-    /// Close enough: within an app's rounding, or larger only by a minimum it is known to keep.
     private static func lands(_ actual: CGRect, on wanted: CGRect, minimum: CGSize) -> Bool {
         let width =
             abs(actual.width - wanted.width) <= resizeSlack
@@ -264,9 +239,6 @@ enum RoomRunner {
             && abs(actual.minY - wanted.minY) <= slack
     }
 
-    // MARK: - Stepping back
-
-    /// A window without an ID, or whose way back failed to write, stays put rather than risk loss.
     private static func park(
         _ plan: RoomPlan, in snapshot: RoomWindowSweep.Snapshot, ledger: RoomParkingLedger
     ) -> Int {
@@ -290,7 +262,6 @@ enum RoomRunner {
         return parked
     }
 
-    /// An app about to hide takes its windows with it, so none of them may stay parked.
     private static func returnWindowsOfHiddenApps(
         _ plan: RoomPlan, in snapshot: RoomWindowSweep.Snapshot, ledger: RoomParkingLedger
     ) {
@@ -304,7 +275,6 @@ enum RoomRunner {
         ledger.forget(returned)
     }
 
-    /// The window's ID once it is back home; nil leaves its way back on disk for the next try.
     private static func unpark(
         _ window: RoomLiveWindow, element: WindowInventory.Element, screens: [CGRect],
         ledger: RoomParkingLedger
@@ -336,7 +306,6 @@ enum RoomRunner {
         return hidden
     }
 
-    /// A window parked earlier is forgotten only once it is confirmed mostly inside its place.
     private static func forgetPlacedWindows(
         _ plan: RoomPlan, in snapshot: RoomWindowSweep.Snapshot, ledger: RoomParkingLedger
     ) {

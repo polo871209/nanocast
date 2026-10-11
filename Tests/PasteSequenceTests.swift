@@ -1,4 +1,3 @@
-// Standalone test for Paste Sequentially's walk, compiling the real source rather than a copy.
 import Foundation
 
 @main
@@ -139,7 +138,6 @@ struct PasteSequenceTests {
         PasteSequence(history: history, changeCount: 1, now: start)
     }
 
-    /// Every entry the walk pastes from `live` until it runs out.
     static func pasted(_ sequence: inout PasteSequence, from live: [ClipboardItem]) -> [UUID] {
         var pasted: [UUID] = []
         while let item = sequence.next(in: live) { pasted.append(item.id) }

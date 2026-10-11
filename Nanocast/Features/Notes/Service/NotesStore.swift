@@ -18,14 +18,13 @@ final class NotesStore {
     private(set) var searchQuery = ""
     private(set) var searchResults: [NoteSearchResult] = []
     private(set) var isSearching = false
-    /// Derived from the live draft, not the last listing, so an unnamed note titles itself as typed.
     var activeTitle: String {
-        guard let activeID else { return String(localized: "Notes") }
+        guard let activeID else { return "Notes" }
         let title =
             summaries.first(where: { $0.id == activeID })?.title
             ?? URL(fileURLWithPath: activeID.rawValue).deletingPathExtension().lastPathComponent
         guard NoteTitle.isUnnamed(title) else { return title }
-        return NoteTitle.firstLine(of: source) ?? NoteTitle.displayName(title)
+        return NoteTitle.firstLine(of: source) ?? title
     }
     var activeFileURL: URL? { activeID.map(repository.fileURL(for:)) }
     private(set) var notesDirectory: URL
@@ -39,7 +38,6 @@ final class NotesStore {
     @ObservationIgnored private var searchTask: Task<Void, Never>?
     @ObservationIgnored private var searchWorker: Task<[NoteSearchResult], Never>?
     private var saveFailed = false
-    /// A folder change that waits on a draft the old folder could not take yet.
     @ObservationIgnored private var pendingRelocation: NotesRepository?
     private var searchGeneration = 0
     @ObservationIgnored private var sourceRevision = 0
@@ -66,7 +64,6 @@ final class NotesStore {
         return await reload()
     }
 
-    /// Moves to another folder once the open draft is saved where it was, then the new one lists.
     func relocate(to repository: NotesRepository) async {
         pendingRelocation = nil
         guard repository.notesDirectory != notesDirectory else { return }
@@ -78,7 +75,6 @@ final class NotesStore {
         self.repository = repository
         notesDirectory = repository.notesDirectory
         guard isLoaded else { return }
-        // Cleared first, so a folder that fails to load leaves no old note to save into it.
         apply(nil, summaries: [])
         _ = await reload(preferredID: nil)
     }
@@ -102,12 +98,10 @@ final class NotesStore {
         return await flush()
     }
 
-    /// The one place a write starts, so a debounced save and a flush can never overlap on one file.
     @discardableResult
     func flush() async -> Bool {
         saveDebounce?.cancel()
         saveDebounce = nil
-        // Two rounds: one for a write already in flight, one for an edit that landed while it ran.
         for _ in 0..<2 {
             if let saveTask {
                 await saveTask.value
@@ -125,12 +119,12 @@ final class NotesStore {
     }
 
     @discardableResult
-    func create(source: String = "") async -> Bool {
+    func create() async -> Bool {
         guard await flush() else { return false }
         cancelSearch()
         let repository = repository
         let result = await detached {
-            let document = try repository.create(source: source)
+            let document = try repository.create()
             return (document, try repository.list())
         } recover: {
             repository.notesDirectory
@@ -145,7 +139,6 @@ final class NotesStore {
         }
     }
 
-    /// Writes imported notes as new files and re-lists, leaving the open draft where it was.
     func importNotes(_ notes: [NotesRepository.Incoming]) async -> Int {
         guard !notes.isEmpty else { return 0 }
         let repository = repository
@@ -231,7 +224,6 @@ final class NotesStore {
         switch result {
         case .success(let payload):
             cancelSearch()
-            // An empty collection is a legal resting state; only creating brings a note back.
             if replacesActive {
                 apply(payload.0, summaries: payload.1)
             } else {
@@ -242,65 +234,6 @@ final class NotesStore {
             publish(.operation(failure))
             return false
         }
-    }
-
-    // MARK: - Sync
-
-    /// Every note's source by file name, as saved on disk; nil while the folder is missing.
-    func syncedSources() async -> [NoteID: String]? {
-        let repository = repository
-        guard FileManager.default.fileExists(atPath: repository.notesDirectory.path) else { return nil }
-        let result = await detached {
-            try repository.list().reduce(into: [NoteID: String]()) { sources, summary in
-                sources[summary.id] = try repository.load(summary.id).source
-            }
-        } recover: {
-            repository.notesDirectory
-        }
-        return try? result.get()
-    }
-
-    func syncedSource(of id: NoteID) async -> String? {
-        let repository = repository
-        return try? await detached {
-            try repository.load(id).source
-        } recover: {
-            repository.fileURL(for: id)
-        }.get()
-    }
-
-    /// Writes what another Mac changed; the open note with unsaved edits keeps them, and wins.
-    func applySynced(_ sources: [NoteID: String], trashing trashed: Set<NoteID>) async -> Bool {
-        let held = isDirty || saveTask != nil ? activeID : nil
-        let writes = sources.filter { $0.key != held }
-        let trashing = trashed.filter { $0 != held }
-        let repository = repository
-        let preferredID = activeID
-        let result = await detached {
-            for (id, source) in writes { try repository.save(id: id, source: source) }
-            for id in trashing where FileManager.default.fileExists(atPath: repository.fileURL(for: id).path)
-            {
-                try repository.trash(id: id)
-            }
-            return try repository.load(preferredID: preferredID)
-        } recover: {
-            repository.notesDirectory
-        }
-        guard case .success(let (summaries, document)) = result else { return false }
-        guard isLoaded, repository.notesDirectory == notesDirectory else { return true }
-        let touchesActive = preferredID.map { writes[$0] != nil || trashing.contains($0) } ?? false
-        if touchesActive, !isDirty, saveTask == nil, preferredID == activeID {
-            apply(document, summaries: summaries)
-        } else {
-            self.summaries = summaries
-        }
-        return true
-    }
-
-    /// Renames a note out of the way, so one from another Mac can take its file name.
-    func setAside(_ id: NoteID) async -> Bool {
-        let title = URL(fileURLWithPath: id.rawValue).deletingPathExtension().lastPathComponent
-        return await rename(id, to: String(localized: "\(title) (This Mac)")) != nil
     }
 
     func updateSearchQuery(_ updated: String) {
@@ -318,7 +251,6 @@ final class NotesStore {
             return
         }
         isSearching = true
-        // The previous query's rows must not linger under the new query text.
         searchResults = []
         let repository = repository
         let summaries = summaries
@@ -355,7 +287,6 @@ final class NotesStore {
         isSearching = false
     }
 
-    /// Never cancels an in-flight write; every caller flushes first.
     func stop() {
         saveDebounce?.cancel()
         saveDebounce = nil
@@ -390,7 +321,6 @@ final class NotesStore {
             return true
         case .failure(let failure):
             publish(.load(failure))
-            // Only a first load may keep the window shut; a loaded store can still show its draft.
             return isLoaded
         }
     }
@@ -442,7 +372,6 @@ final class NotesStore {
         onIssue?(issue)
     }
 
-    /// Every repository call is blocking IO, so it runs off-main and reports one typed failure.
     private func detached<Value: Sendable>(
         _ work: @escaping @Sendable () throws -> Value,
         recover fileURL: @escaping @Sendable () -> URL

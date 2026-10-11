@@ -1,4 +1,3 @@
-/// Flat-index navigation over sectioned rows; vertical moves keep the column across sections.
 struct EmojiGridGeometry {
     let counts: [Int]
     let columns: Int
@@ -28,7 +27,6 @@ struct EmojiGridGeometry {
         let local = sel - starts[s]
         let candidate = local + columns
         if candidate < counts[s] { return starts[s] + candidate }
-        // A lower partial row in this section clamps to its last cell before spilling over.
         if local / columns < (counts[s] - 1) / columns { return starts[s] + counts[s] - 1 }
         guard s + 1 < counts.count else { return sel }
         return starts[s + 1] + min(local % columns, counts[s + 1] - 1)
@@ -44,12 +42,10 @@ struct EmojiGridGeometry {
         return starts[s - 1] + min(lastRowStart + local % columns, previousCount - 1)
     }
 
-    /// Keep the same visual slot after a pin disappears, falling back to the preceding last slot.
     static func selectionAfterRemovingPin(at index: Int, remainingCount: Int) -> Int {
         min(max(index, 0), max(remainingCount - 1, 0))
     }
 
-    /// Follow the selected glyph through a rewritten section, clamping when it drops out.
     static func selection(
         _ sel: Int, afterSectionAt start: Int, changesFrom old: [String], to new: [String]
     ) -> Int {

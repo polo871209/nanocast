@@ -1,7 +1,6 @@
 // Adapted from Rooms (MIT): https://github.com/saragordic/rooms/blob/main/LICENSE
 import CoreGraphics
 
-/// A room's own arrangement as proportions of a 12 × 12 grid, drawn with the layouts' even gaps.
 enum RoomGrid {
     static let units = 12
 
@@ -12,7 +11,6 @@ enum RoomGrid {
         var rows: Int
     }
 
-    /// Nil when windows overlap or one is too small to place: a cascade is not a grid.
     static func cells(for frames: [CGRect], in visible: CGRect, gap: CGFloat) -> [Cell]? {
         guard !visible.isNull, !visible.isInfinite else { return nil }
         let box = RoomLayoutEngine.Area(visible: visible, gap: gap).canvas
@@ -40,7 +38,6 @@ enum RoomGrid {
         return fillingHoles(cells)
     }
 
-    /// Grows each window into empty grid space beside it, so no hole survives loose dragging.
     static func fillingHoles(_ cells: [Cell]) -> [Cell] {
         guard isValid(cells) else { return cells }
         var cells = cells
@@ -67,7 +64,6 @@ enum RoomGrid {
                     cells[index].columns += 1
                     grew = true
                 }
-                // The columns just grown count too, or a corner could be taken twice.
                 let columns = cells[index].column..<(cells[index].column + cells[index].columns)
                 if columns.allSatisfy({ isFree($0, cell.row - 1, except: index) }) {
                     cells[index].row -= 1
@@ -83,7 +79,6 @@ enum RoomGrid {
         return cells
     }
 
-    /// Nil for cells that are not a grid. A window that will not shrink widens its columns.
     static func frames(
         _ cells: [Cell], in visible: CGRect, gap: CGFloat, minimums: [CGSize] = []
     ) -> [CGRect]? {
@@ -124,7 +119,6 @@ enum RoomGrid {
         }
     }
 
-    /// Inside the grid and non-empty, checked without overflow for any stored value.
     static func isValid(_ cells: [Cell]) -> Bool {
         cells.allSatisfy { cell in
             (0..<units).contains(cell.column) && (0..<units).contains(cell.row)

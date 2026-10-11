@@ -14,20 +14,19 @@ enum HyperKeyPhysicalKey: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .none: return String(localized: "None")
-        case .capsLock: return String(localized: "Caps Lock (⇪)")
-        case .leftControl: return String(localized: "Left Control (⌃)")
-        case .leftShift: return String(localized: "Left Shift (⇧)")
-        case .leftOption: return String(localized: "Left Option (⌥)")
-        case .leftCommand: return String(localized: "Left Command (⌘)")
-        case .rightControl: return String(localized: "Right Control (⌃)")
-        case .rightShift: return String(localized: "Right Shift (⇧)")
-        case .rightOption: return String(localized: "Right Option (⌥)")
-        case .rightCommand: return String(localized: "Right Command (⌘)")
+        case .none: return "None"
+        case .capsLock: return "Caps Lock (⇪)"
+        case .leftControl: return "Left Control (⌃)"
+        case .leftShift: return "Left Shift (⇧)"
+        case .leftOption: return "Left Option (⌥)"
+        case .leftCommand: return "Left Command (⌘)"
+        case .rightControl: return "Right Control (⌃)"
+        case .rightShift: return "Right Shift (⇧)"
+        case .rightOption: return "Right Option (⌥)"
+        case .rightCommand: return "Right Command (⌘)"
         }
     }
 
-    /// Virtual key code of the physical key, `nil` only for `.none`.
     var keyCode: Int? {
         switch self {
         case .none: return nil
@@ -43,12 +42,10 @@ enum HyperKeyPhysicalKey: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Keys that do something on their own when not remapped — these get the Quick Press row.
     var hasOriginalFunction: Bool { self == .capsLock }
 
     var supportsSecureInputCompatibility: Bool { self == .capsLock }
 
-    /// The generic flag this key contributes, so the tap can strip it when outside the set.
     var ownFlag: CGEventFlags? {
         switch self {
         case .none: return nil
@@ -61,7 +58,7 @@ enum HyperKeyPhysicalKey: String, CaseIterable, Identifiable, Sendable {
     }
 
     var quickPressOriginalTitle: String? {
-        self == .capsLock ? String(localized: "Trigger Caps Lock (⇪)") : nil
+        self == .capsLock ? "Trigger Caps Lock (⇪)" : nil
     }
 
     func route(secureInputCompatible: Bool) -> HyperKeyRoute? {
@@ -101,7 +98,6 @@ struct HyperKeyRoute: Equatable, Sendable {
     let remap: HIDKeyMapping?
 }
 
-/// What a quick lone press of the Hyper key does (only offered for keys with an original function).
 enum HyperKeyQuickPress: String, CaseIterable, Sendable {
     case none
     case originalKey

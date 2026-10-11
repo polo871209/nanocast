@@ -1,12 +1,10 @@
 import Foundation
 
-/// What a flat selection index resolves to. Section headers aren't selectable and take no index.
 enum PaletteRow: Equatable {
     case calculator
     case element(section: Int, offset: Int)
 }
 
-/// A screen's visible row order: the calculator card at index 0 when present, then each section.
 struct PaletteRowIndex: Equatable {
     let hasCalculator: Bool
     let sectionCounts: [Int]
@@ -33,7 +31,6 @@ struct PaletteRowIndex: Equatable {
         return nil
     }
 
-    /// The inverse of `row(at:)` — where a screen puts the highlight after its own list moves.
     func index(section: Int, offset: Int) -> Int? {
         guard sectionCounts.indices.contains(section), offset >= 0,
             offset < sectionCounts[section]

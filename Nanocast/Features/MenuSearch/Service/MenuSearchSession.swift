@@ -14,9 +14,7 @@ final class MenuSearchSession {
     private(set) var state: State = .idle
     private(set) var target: MenuSearchTarget = .noApplication
     private(set) var snapshot: [MenuSearchItem] = []
-    /// The rows the list reads: filtered once per query change, so one keystroke ranks once.
     private(set) var filtered: [MenuSearchItem] = []
-    /// Whether a query narrows the rows, so the list groups by menu only while browsing.
     private(set) var isSearching = false
 
     private var query = ""

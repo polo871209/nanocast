@@ -34,6 +34,9 @@ struct ClipboardTextTests {
         expect(pdfText.contains("EMBEDDED INVOICE 4826"), "PDF embedded text is extracted")
         expect(pdfText.contains("7391"), "PDF scanned page is recognized")
         expect(pdfText.utf8.count <= ClipboardTextExtractor.maximumTextBytes, "text is bounded")
+        expect(
+            ClipboardTextWorker.maximumOutputBytes == ClipboardTextExtractor.maximumTextBytes,
+            "the worker accepts exactly what the helper may write")
 
         let tallURL = directory.appendingPathComponent("tall.png")
         let tall = CGContext(
@@ -86,9 +89,7 @@ struct ClipboardTextTests {
         try FileManager.default.createDirectory(at: locked, withIntermediateDirectories: true)
         try Data().write(to: locked.appendingPathComponent("scan.png"))
         try FileManager.default.setAttributes([.posixPermissions: 0], ofItemAtPath: locked.path)
-        defer {
-            try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: locked.path)
-        }
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: locked.path) }
         do {
             _ = try await ClipboardTextExtractor.extract(
                 at: locked.appendingPathComponent("scan.png"), isPDF: false)
@@ -226,7 +227,6 @@ struct ClipboardTextTests {
         expect(calls == 2, "completed item is processed once")
         store.addFiles(["/tmp/second.pdf"], sourceBundleID: nil)
         try await waitUntil { calls == 3 }
-        // `applyClipboardTextSearch` never waits between the two, so a cancelled run must requeue.
         store.addFiles(["/tmp/third.pdf"], sourceBundleID: nil)
         let restarted = calls
         indexer.stop()

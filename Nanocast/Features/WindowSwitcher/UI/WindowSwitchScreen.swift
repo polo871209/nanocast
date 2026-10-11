@@ -6,7 +6,7 @@ struct WindowSwitchScreen: PaletteScreen {
 
     var rows: [WindowSwitchEntry] { session.filtered }
 
-    var primaryActionTitle: String { String(localized: "Switch to Window") }
+    var primaryActionTitle: String { "Switch to Window" }
 
     private func entry(at selection: Int) -> WindowSwitchEntry? {
         rows.indices.contains(selection) ? rows[selection] : nil
@@ -19,7 +19,7 @@ struct WindowSwitchScreen: PaletteScreen {
         let coordinator = core.windowSwitchCoordinator
         var items = [
             PopoverMenuItem(
-                title: String(localized: "Switch to Window"), systemImage: "macwindow", shortcut: "↵"
+                title: "Switch to Window", systemImage: "macwindow", shortcut: "↵"
             ) {
                 coordinator.activate(entry)
             }
@@ -27,7 +27,7 @@ struct WindowSwitchScreen: PaletteScreen {
         if !entry.isMinimized {
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Minimize Window"), systemImage: "minus.rectangle",
+                    title: "Minimize Window", systemImage: "minus.rectangle",
                     shortcut: "⌃⇧M"
                 ) {
                     coordinator.minimize(entry)
@@ -35,14 +35,14 @@ struct WindowSwitchScreen: PaletteScreen {
         }
         items.append(
             PopoverMenuItem(
-                title: String(localized: "Hide Application"), systemImage: "eye.slash", startsSection: true,
+                title: "Hide Application", systemImage: "eye.slash", startsSection: true,
                 shortcut: "⌃⇧H"
             ) {
                 coordinator.hideApplication(entry)
             })
         items.append(
             PopoverMenuItem(
-                title: String(localized: "Quit Application"), systemImage: "power", shortcut: "⌃⇧Q"
+                title: "Quit Application", systemImage: "power", shortcut: "⌃⇧Q"
             ) {
                 coordinator.quitApplication(entry)
             })
@@ -77,7 +77,7 @@ struct WindowSwitchScreen: PaletteScreen {
         if rows.isEmpty {
             EmptyResults(
                 text: session.snapshot.isEmpty
-                    ? String(localized: "No open windows") : String(localized: "No windows found"))
+                    ? "No open windows" : "No windows found")
         } else {
             WindowSwitchList(
                 entries: rows,

@@ -5,7 +5,6 @@ struct MenuSearchList: View {
     @Environment(\.metrics) private var metrics
     let items: [MenuSearchItem]
     let targetName: String
-    /// Ranked rows arrive in score order, so they read as one Results run instead of menus.
     let isSearching: Bool
     let iconURL: URL?
     let iconStamp: Int
@@ -13,7 +12,6 @@ struct MenuSearchList: View {
     let scroll: ScrollIntent
     let onActivate: (MenuSearchItem) -> Void
 
-    /// One bitmap for the whole list; every row paints the same frozen app icon.
     @State private var icon: NSImage?
 
     private struct Section: Identifiable {
@@ -21,13 +19,12 @@ struct MenuSearchList: View {
         let title: String
         let items: ArraySlice<MenuSearchItem>
 
-        var label: String { String(localized: "\(title) (\(items.count) items)") }
+        var label: String { items.count == 1 ? "\(title) (1 item)" : "\(title) (\(items.count) items)" }
     }
 
-    /// The walk emits a menu's leaves contiguously, so runs group without reordering the rows.
     private var sections: [Section] {
         guard !isSearching else {
-            return [Section(id: 0, title: String(localized: "Results"), items: items[...])]
+            return [Section(id: 0, title: "Results", items: items[...])]
         }
         var sections: [Section] = []
         var start = items.startIndex
@@ -78,7 +75,6 @@ struct MenuSearchList: View {
             .scrollFollowsSelection(
                 scroll, row: selectedID, atOrigin: firstRowSelected, proxy: proxy)
         }
-        // Keyed on the icon, so a restyle re-decodes instead of freezing the outgoing bitmap.
         .task(id: IconRequest(iconKey)) {
             guard let iconURL else { return }
             if let warm = IconCache.cached(.file(stamp: iconStamp), fileURL: iconURL) {

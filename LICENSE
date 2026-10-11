@@ -1,5 +1,9 @@
 Nanocast
-Copyright (C) 2026 Abue Ammar
+Copyright (C) 2026 PoLo
+
+Nanocast is a modified version of Tinycast <https://github.com/abue-ammar/tinycast>.
+Tinycast is Copyright (C) 2026 Abue Ammar, and is licensed under the
+GNU Affero General Public License v3 or later.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by

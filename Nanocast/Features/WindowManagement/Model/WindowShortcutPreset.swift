@@ -1,7 +1,6 @@
 import Carbon.HIToolbox
 import Foundation
 
-/// Another window manager's stock shortcuts. See docs/features/window-management.md.
 enum WindowShortcutPreset: String, CaseIterable, Identifiable, Sendable {
     case rectangle
     case spectacle
@@ -15,7 +14,6 @@ enum WindowShortcutPreset: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Physical key codes, as each app registers them, so a non-QWERTY layout matches too.
     var bindings: [WindowCommand.ID: HotKeyBinding] {
         switch self {
         case .rectangle:
@@ -64,7 +62,6 @@ enum WindowShortcutPreset: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Commands outside a preset don't count, since applying one never touches them.
     static func matching(_ current: [WindowCommand.ID: HotKeyBinding]) -> WindowShortcutPreset? {
         allCases.first { preset in preset.bindings.allSatisfy { current[$0.key] == $0.value } }
     }
@@ -74,13 +71,9 @@ enum WindowShortcutPreset: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-/// What applying a preset changes, worked out before anything is written.
 struct WindowShortcutPresetPlan: Equatable, Sendable {
-    /// Preset entries that differ from what the command holds now.
     let assignments: [WindowCommand.ID: HotKeyBinding]
-    /// Commands the preset doesn't assign that hold a key it gives to another command.
     let displaced: [WindowCommand.ID]
-    /// Every command that loses a shortcut the user set, in catalog order.
     let overwritten: [WindowCommand.ID]
 
     init(preset: WindowShortcutPreset, current: [WindowCommand.ID: HotKeyBinding]) {

@@ -7,7 +7,6 @@ struct UninstallList: View {
     let results: [UninstallCandidate]
     let selectedID: UninstallCandidate.ID?
     let summary: String
-    /// Changes only on keyboard nav / reset, so mouse selection never yanks the scroll position.
     let scroll: ScrollIntent
     let onSelect: (UninstallCandidate) -> Void
     let onToggle: (UninstallCandidate) -> Void
@@ -33,7 +32,6 @@ struct UninstallList: View {
                         .id(candidate.id)
                         .selectionFrame(candidate.id == selectedID)
                         .contentShape(Rectangle())
-                        // Simultaneous, so single-click select never waits on the double-click.
                         .onTapGesture { onSelect(candidate) }
                         .simultaneousGesture(
                             TapGesture(count: 2).onEnded {
@@ -52,7 +50,6 @@ struct UninstallList: View {
             }
             .edgeDissolve()
             .thinScrollbar()
-            // On the first row, snap to the origin so the summary header shows too.
             .scrollFollowsSelection(
                 scroll, row: selectedID, atOrigin: firstRowSelected, proxy: proxy)
         }
@@ -82,12 +79,10 @@ private struct UninstallRow: View {
 
     var body: some View {
         HStack(spacing: metrics.spacing.lg) {
-            // Smaller glyph, same result-row slot, so titles line up at one x across modes.
             SymbolImage(name: glyph, size: metrics.size.checkbox)
                 .foregroundStyle(candidate.isLocked ? Theme.Colors.textTertiary : .primary)
                 .frame(width: metrics.size.resultRowIcon, height: metrics.size.resultRowIcon)
                 .contentShape(Rectangle())
-                // Only the checkbox toggles; the rest of the row selects.
                 .onTapGesture(perform: onToggle)
                 .tooltip(candidate.lockReason)
             Text(candidate.name)

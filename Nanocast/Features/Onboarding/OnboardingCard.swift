@@ -1,7 +1,5 @@
 import SwiftUI
 
-// Onboarding's own card look: the Settings panes are stock `Form` sections, this window is not.
-
 struct OnboardingCard<Content: View>: View {
     @ViewBuilder var content: Content
 
@@ -18,7 +16,6 @@ struct OnboardingCard<Content: View>: View {
     }
 }
 
-/// Inset divider inside an `OnboardingCard`, aligned under the row's title.
 struct OnboardingDivider: View {
     var body: some View {
         Rectangle()
@@ -28,7 +25,6 @@ struct OnboardingDivider: View {
     }
 }
 
-/// One onboarding line; a fixed rhythm keeps every card aligned whatever the control.
 struct OnboardingRow<Trailing: View>: View {
     let title: String
     var subtitle: String?

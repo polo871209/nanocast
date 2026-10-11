@@ -1,19 +1,15 @@
 import AppKit
 import SwiftUI
 
-/// Turns a parsed line into attributes; bullets keep their dot even when the caret reveals syntax.
 @MainActor
 enum NoteMarkdownStyler {
     typealias Attributes = [NSAttributedString.Key: Any]
 
     struct LineStyle {
-        /// Set over the whole line, replacing whatever it carried.
         let base: Attributes
-        /// Added on top of `base`, in order, so inner spans override outer ones.
         let runs: [(range: NSRange, attributes: Attributes)]
     }
 
-    /// The literal editor's attributes, and the base every rendered line starts from.
     static let literal: Attributes = [
         .font: NoteMarkdownTypography.body,
         .foregroundColor: NSColor(Theme.Colors.noteText)
@@ -32,12 +28,9 @@ enum NoteMarkdownStyler {
         bodyPointSize: NoteMarkdownTypography.body.pointSize)
     private static let quoteStep = Theme.Size.markdownQuoteBar + Theme.Spacing.lg
     private static let codeInset = Theme.Spacing.lg
-    /// Space after each list item, kept when revealed so moving the caret never shifts the rows.
     private static let listItemSpacing = Theme.Spacing.md
-    /// Only these get a `.link` attribute, and only these are opened when one is clicked.
     static let openableSchemes: Set<String> = ["http", "https", "mailto"]
 
-    /// Colours the fragment draws with are resolved now, under the caller's drawing appearance.
     static func style(
         at index: Int, in markdown: NoteMarkdown, text: NSString, isRevealed: Bool
     ) -> LineStyle {
@@ -115,8 +108,6 @@ enum NoteMarkdownStyler {
         return LineStyle(base: base, runs: runs)
     }
 
-    // MARK: - Inlines
-
     private static func inlineRuns(
         _ inlines: [NoteMarkdown.Inline], lineFont: NSFont, text: NSString, isRevealed: Bool
     ) -> [(range: NSRange, attributes: Attributes)] {
@@ -145,7 +136,6 @@ enum NoteMarkdownStyler {
         return runs
     }
 
-    /// The span's font: the line font plus the traits of every emphasis span enclosing it.
     private static func spanFont(_ spans: ArraySlice<NoteMarkdown.Inline>, lineFont: NSFont) -> NSFont {
         guard let span = spans.last else { return lineFont }
         var traits: NSFontDescriptor.SymbolicTraits = []
@@ -160,7 +150,6 @@ enum NoteMarkdownStyler {
         return traits.isEmpty ? lineFont : NoteMarkdownTypography.adding(traits, to: lineFont)
     }
 
-    /// A revealed link is plain coloured text, so a click places the caret to edit its URL.
     private static func linkLook(_ url: URL?, isRevealed: Bool) -> Attributes {
         guard !isRevealed else { return [.foregroundColor: NSColor.linkColor] }
         guard let url, let scheme = url.scheme?.lowercased(), openableSchemes.contains(scheme) else {
@@ -168,8 +157,6 @@ enum NoteMarkdownStyler {
         }
         return [.link: url]
     }
-
-    // MARK: - Blocks
 
     private static var revealedMarker: Attributes {
         [.foregroundColor: color(Theme.Colors.textTertiary)]
@@ -182,7 +169,6 @@ enum NoteMarkdownStyler {
         ]
     }
 
-    /// A wrapped table row hangs under its first line, so each row still reads as one.
     private static let tableRow: NSParagraphStyle = paragraph { $0.headIndent = Theme.Spacing.lg }
 
     private static let codeParagraph: NSParagraphStyle = paragraph {
@@ -199,7 +185,6 @@ enum NoteMarkdownStyler {
         }
     }
 
-    /// A revealed marker hangs left of the content, so text stays where the rendered line had it.
     private static func hanging(
         _ marker: NSRange?, in text: NSString, contentIndent: CGFloat, spacingAfter: CGFloat = 0
     ) -> NSParagraphStyle {
@@ -272,7 +257,6 @@ enum NoteMarkdownStyler {
         return pinned
     }
 
-    /// Pinned colours belong to one appearance, so a change to it has to drop them.
     static func invalidateColors() {
         resolved.removeAll(keepingCapacity: true)
     }

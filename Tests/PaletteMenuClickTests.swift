@@ -16,8 +16,8 @@ final class PaletteState {
 }
 
 enum PaletteMode {
-    case launcher, quicklinkEditor
-    var isNativeEditor: Bool { self == .quicklinkEditor }
+    case launcher, customCommandEditor
+    var isNativeEditor: Bool { self == .customCommandEditor }
 }
 
 @MainActor
@@ -141,7 +141,7 @@ struct PaletteMenuClickTests {
             openMenu()
             panel.sendEvent(event)
             check(state.menuOpen, "scrolling other screens preserves their menu policy")
-            state.mode = .quicklinkEditor
+            state.mode = .customCommandEditor
             panel.sendEvent(event)
             check(
                 !state.menuOpen && dismissals == 4,
@@ -154,7 +154,7 @@ struct PaletteMenuClickTests {
         view.addSubview(field)
         let textArea = NSTextView(frame: NSRect(x: 80, y: 160, width: 250, height: 78))
         view.addSubview(textArea)
-        for mode: PaletteMode in [.launcher, .quicklinkEditor] {
+        for mode: PaletteMode in [.launcher, .customCommandEditor] {
             state.mode = mode
             check(
                 panel.cursor(at: NSPoint(x: 100, y: 116)) === NSCursor.iBeam,

@@ -16,7 +16,6 @@ struct NotesEditorTests {
         testUndoAndRedoShortcuts(rendersMarkdown: true)
         testUndoIsolation(afterUndo: false)
         testUndoIsolation(afterUndo: true)
-        testQuickActionReplacement()
         testCharacterCountReports()
         testRenderingKeepsSourceAndUndo()
         testHiddenMarkersAndReveal()
@@ -68,7 +67,6 @@ struct NotesEditorTests {
             editor.textView.textHeight(upTo: .infinity) == emptyHeight)
     }
 
-    /// The fit reads before any draw, so each height here is read right after its edit returns.
     private static func testHeightBeforeDraw() {
         let mixed = [
             "# Title", "Intro", "", "## Section", "- item", "- [ ] task", "1. one", "> quote", "---", "```",
@@ -133,7 +131,6 @@ struct NotesEditorTests {
         withExtendedLifetime(editor) {}
     }
 
-    /// Where the last line sits once the whole note is laid out, as a draw would leave it.
     private static func laidOutHeight(of textView: NSTextView) -> CGFloat {
         guard let manager = textView.textLayoutManager else { return -1 }
         manager.ensureLayout(for: manager.documentRange)
@@ -198,35 +195,6 @@ struct NotesEditorTests {
         editor.textView.unmarkText()
         check("marked text commits through native AppKit editing", editor.textView.string.hasSuffix("語"))
         check("every published value equals the displayed source", changes.last == editor.textView.string)
-    }
-
-    private static func testQuickActionReplacement() {
-        let source = "The cat are here."
-        let input = NoteEditorInput(id: NoteID(rawValue: "Action.md"), source: source, epoch: 1)
-        var changes: [String] = []
-        let editor = makeEditor(input: input, onSourceChange: { changes.append($0) })
-        let range = (source as NSString).range(of: "cat are")
-        editor.textView.setSelectedRange(range)
-        check("Quick Actions read the note selection", editor.textView.injectableSelection == "cat are")
-        check(
-            "Quick Actions replace an unchanged note selection",
-            editor.textView.replaceUnchangedSelection(
-                with: "cats are", source: source, range: range))
-        check(
-            "replacement updates the note through the editor",
-            editor.textView.string == "The cats are here." && changes.last == editor.textView.string)
-        editor.coordinator.editorUndoManager.undo()
-        check("the replacement is undoable", editor.textView.string == source)
-
-        editor.textView.setSelectedRange(NSRange(location: 0, length: 3))
-        check(
-            "a moved selection is not replaced",
-            !editor.textView.replaceUnchangedSelection(with: "wrong", source: source, range: range))
-        editor.textView.insertText("!", replacementRange: NSRange(location: 0, length: 0))
-        editor.textView.setSelectedRange(range)
-        check(
-            "a changed note is not replaced",
-            !editor.textView.replaceUnchangedSelection(with: "wrong", source: source, range: range))
     }
 
     private static func testUndoAndRedoShortcuts(rendersMarkdown: Bool) {
@@ -952,7 +920,6 @@ struct NotesEditorTests {
             ?? NSEvent()
     }
 
-    /// A first word too wide for the line strands the hidden marker on a hairline above it.
     private static func testMarkersFollowAWrappedFirstWord() {
         let word = String(repeating: "wrap", count: 40)
         let source = "- \(word)\n- [ ] \(word)\n1. \(word)"
@@ -999,7 +966,6 @@ struct NotesEditorTests {
         return CGPoint(x: box.midX, y: fragment.layoutFragmentFrame.minY + firstLine.minY + box.midY)
     }
 
-    /// Every laid-out fragment, keyed by the source location its paragraph starts at.
     private static func layoutFragments(in textView: NSTextView) -> [Int: NSTextLayoutFragment] {
         guard let layout = textView.textLayoutManager, let content = textView.textContentStorage else {
             return [:]
@@ -1032,7 +998,6 @@ struct NotesEditorTests {
             as? NoteBlockDecoration
     }
 
-    /// The primitives `copy:`/`cut:`/`paste:` delegate to; the actions clobber the real clipboard.
     private static func copySelection(of textView: NSTextView, to pasteboard: NSPasteboard) {
         let types = textView.writablePasteboardTypes
         pasteboard.declareTypes(types, owner: nil)

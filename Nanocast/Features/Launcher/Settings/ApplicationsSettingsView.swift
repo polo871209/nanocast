@@ -12,9 +12,7 @@ struct ApplicationsSettingsView: View {
             LauncherItemsSection(
                 kind: .application,
                 anchor: .applicationsApplications,
-                searchPrompt: "Search applications…",
-                emptyMessage: LocalizedStringResource("applications-empty", defaultValue: "Nothing here yet.")
-            )
+                searchPrompt: "Search applications…")
         }
         .formStyle(.grouped)
         .settingsScrollTarget(.applications)

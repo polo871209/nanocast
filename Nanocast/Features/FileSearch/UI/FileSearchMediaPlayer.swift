@@ -7,7 +7,6 @@ struct FileSearchMediaPlayer: View {
     let url: URL
     @State private var player: AVPlayer?
 
-    /// One key for both teardown triggers, so no `onChange` races the task.
     private struct PlaybackKey: Equatable {
         let url: URL
         let isVisible: Bool
@@ -23,7 +22,6 @@ struct FileSearchMediaPlayer: View {
             .onDisappear(perform: stop)
     }
 
-    /// Dropping the item too: a paused player still holds its asset reader and decoder open.
     private func stop() {
         player?.pause()
         player?.replaceCurrentItem(with: nil)
@@ -54,5 +52,4 @@ private struct PlayerSurface: NSViewRepresentable {
     }
 }
 
-/// Clicking play must not move the keyboard off the search field, and a transport button would.
 private final class PreviewPlayerView: AVPlayerView, KeyboardFocusRefusing {}

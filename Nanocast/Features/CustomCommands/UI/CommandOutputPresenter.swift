@@ -1,8 +1,8 @@
 import Foundation
+import SwiftUI
 
 struct CommandOutcome: Sendable {
     let summary: String
-    /// The nudge for a failure the reader can fix, when the exit status names one.
     let hint: String?
     let succeeded: Bool
     let finishedAt: Date
@@ -10,31 +10,23 @@ struct CommandOutcome: Sendable {
 
 struct CommandRun: Identifiable, Sendable {
     let id = UUID()
-    /// Which custom command this was, so the window can run it again.
     let commandID: UUID
     let name: String
-    /// The shell text, shown under the name — "brew" alone says nothing about what ran.
     let commandText: String
     let symbol: String
     let startedAt: Date
-    /// Everything printed so far, for copying and for a redraw from scratch.
     var log = ""
-    /// One step on means the view appends this rather than walking the whole log.
     var delta = ""
     var revision = 0
-    /// Bumped when the head of `log` is dropped, which is the text view's cue to redraw whole.
     var generation = 0
-    /// Nil while the command is still running.
     var outcome: CommandOutcome?
 
     var isRunning: Bool { outcome == nil }
 }
 
-/// One window, reused: a second run replaces what it shows and never cancels the first.
 @MainActor
 @Observable
 final class CommandOutputPresenter {
-    /// Past this the head is dropped: the tail is where a command says how it went.
     private static let logLimit = 256 * 1024
 
     private(set) var run: CommandRun?
@@ -44,7 +36,7 @@ final class CommandOutputPresenter {
     @ObservationIgnored private let stop: (UUID) -> Void
     @ObservationIgnored private let openSettings: () -> Void
     @ObservationIgnored private lazy var window = AppWindowController(
-        title: String(localized: "Command Output"), contentSize: CommandOutputView.initialSize,
+        title: "Command Output", contentSize: CommandOutputView.initialSize,
         resizable: true, autosaveName: "CommandOutputWindow", activation: activation,
         closesOnEscape: true)
 
@@ -58,7 +50,6 @@ final class CommandOutputPresenter {
         self.openSettings = openSettings
     }
 
-    /// Opens the window on an empty, running command and returns the id the run reports against.
     @discardableResult
     func begin(commandID: UUID, name: String, commandText: String, symbol: String) -> UUID {
         let run = CommandRun(
@@ -76,7 +67,6 @@ final class CommandOutputPresenter {
         run.revision += 1
         if run.log.utf8.count > Self.logLimit {
             run.log = String(run.log.suffix(Self.logLimit / 2))
-            // The delta no longer describes the change, so the view is told to redraw instead.
             run.generation += 1
         }
         self.run = run
@@ -87,8 +77,6 @@ final class CommandOutputPresenter {
         run.outcome = outcome
         self.run = run
     }
-
-    // MARK: - Actions the window offers
 
     func runAgain() {
         guard let run else { return }
@@ -104,7 +92,6 @@ final class CommandOutputPresenter {
         openSettings()
     }
 
-    /// Re-raise an open output window; false when none is up, so a reopen falls through.
     func focusExisting() -> Bool {
         window.focus()
     }

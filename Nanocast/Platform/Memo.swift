@@ -1,4 +1,3 @@
-/// One-slot memo. The key must name every dependency, since nothing else invalidates the slot.
 struct Memo<Key: Equatable, Value> {
     private var slot: (key: Key, value: Value)?
 

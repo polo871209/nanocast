@@ -15,7 +15,7 @@ final class NotesMenuBarController: NSObject {
         guard let button = status.button else { return }
         button.image = NSImage(
             systemSymbolName: CommandID.showNotes.sfSymbol,
-            accessibilityDescription: String(localized: "Notes"))
+            accessibilityDescription: "Notes")
         button.target = self
         button.action = #selector(click)
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])

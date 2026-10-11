@@ -1,6 +1,5 @@
 import Foundation
 
-/// A value settings.json holds; `nil` from the initializer rejects a value rather than guessing.
 protocol SettingsFileValue: Equatable {
     init?(settingsJSON: SettingsFileJSON)
     var settingsJSON: SettingsFileJSON { get }
@@ -18,9 +17,7 @@ extension SettingsFileRawValue {
     var settingsJSON: SettingsFileJSON { rawValue.settingsJSON }
 }
 
-/// An enum the file spells through its own table, so a sentinel reads as a word.
 protocol SettingsFileToken: SettingsFileValue, CaseIterable {
-    /// Exhaustive by construction: a new case fails to build until it names its spelling.
     var settingsToken: SettingsFileJSON { get }
 }
 
@@ -62,7 +59,6 @@ extension String: SettingsFileValue {
     var settingsJSON: SettingsFileJSON { .string(self) }
 }
 
-/// All or nothing: one bad element rejects the list, so a typo never silently shortens it.
 extension Array: SettingsFileValue where Element: SettingsFileValue {
     init?(settingsJSON: SettingsFileJSON) {
         guard let items = settingsJSON.items else { return nil }

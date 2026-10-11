@@ -2,7 +2,6 @@ import SwiftUI
 
 struct SymbolPicker: View {
     @Binding var selection: String?
-    /// Drawn on the Automatic row, and what the row falls back to when nothing is picked.
     let fallback: String
     let symbols: [String]
     let onPick: () -> Void

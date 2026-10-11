@@ -1,16 +1,14 @@
 #!/bin/bash
-# Format the project with swift-format (`--check` only reports). It restructures, not just lays out.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 
-# The toolchain's swift-format, not brew's, so this and the editor's ⌘S can never disagree.
 FORMAT=$(xcrun --find swift-format 2>/dev/null)
 [ -x "${FORMAT:-}" ] || {
     echo "✗ swift-format not found in the Xcode toolchain. Check 'xcode-select -p'." >&2
     exit 2
 }
 
-# A read loop rather than `mapfile`, which is bash 4 — macOS ships bash 3.2.
+# Built with a read loop rather than `mapfile`, which is bash 4 — macOS ships bash 3.2.
 files=()
 while IFS= read -r f; do files+=("$f"); done < <(
     find Nanocast Tests -name '*.swift' ! -name '*.generated.swift' \
@@ -38,7 +36,6 @@ for f in "${files[@]}"; do
     "$FORMAT" --configuration .swift-format --in-place "$f" || failed+=("$f")
 done
 
-# swift-format refuses a file that does not parse, so a failure here is a syntax error, not a bug.
 if [ ${#failed[@]} -gt 0 ]; then
     printf '\n%d file(s) could not be formatted (they do not parse):\n' "${#failed[@]}" >&2
     printf '  %s\n' "${failed[@]}" >&2

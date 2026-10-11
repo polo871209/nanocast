@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Bounds of the open recorder, so an ancestor outside the `ScrollView` can draw it.
 struct ShortcutRecorderAnchorKey: PreferenceKey {
     static let defaultValue: Anchor<CGRect>? = nil
 
@@ -60,7 +59,7 @@ struct ShortcutRecorderPopover: View {
             width: Theme.Size.shortcutPopover.width, height: Theme.Size.shortcutPopover.height
         )
         .overlay(alignment: .topLeading) {
-            KeyCapChip(text: String(localized: "esc"), scale: .compact)
+            KeyCapChip(text: "esc", scale: .compact)
                 .opacity(0.7)
                 .padding(.leading, Theme.Spacing.md)
                 .padding(
@@ -81,27 +80,24 @@ struct ShortcutRecorderPopover: View {
             return .binding(
                 secondPress ? key.doubleBinding : key.singleBinding,
                 label: secondPress
-                    ? String(localized: "Release to record")
-                    : String(localized: "Press again for a double press"))
+                    ? "Release to record"
+                    : "Press again for a double press")
         }
         if let key = capture.heldModifier {
-            return .binding(key.singleBinding, label: String(localized: "Release or complete the shortcut"))
+            return .binding(key.singleBinding, label: "Release or complete the shortcut")
         }
         let flags =
             capture.heldGlobe
             ? capture.heldModifiers.union(.function) : capture.heldModifiers
         let held = KeyShortcut.collapsedModifierSymbols(
             from: flags, hyperChord: KeyShortcut.displayedHyperChord())
-        guard held.isEmpty else { return State(caps: held, label: String(localized: "Press another key")) }
+        guard held.isEmpty else { return State(caps: held, label: "Press another key") }
         return State(
-            caps: [DoubleTapModifier.option.glyph, "A"], label: String(localized: "Type a shortcut"),
+            caps: [DoubleTapModifier.option.glyph, "A"], label: "Type a shortcut",
             isExample: true)
     }
 }
 
-// MARK: - Host
-
-/// Draws the open recorder's callout over the pane, where the pane's `ScrollView` can't clip it.
 private struct ShortcutRecorderPopoverHost: ViewModifier {
     @Environment(HotKeyManager.self) private var hotKeys
 
@@ -112,7 +108,6 @@ private struct ShortcutRecorderPopoverHost: ViewModifier {
                     placement: anchor.map { placement(field: proxy[$0], in: proxy.size) },
                     recordingAction: hotKeys.recordingAction)
             }
-            // Informational: clicks fall through to the session's mouse monitor, which closes.
             .allowsHitTesting(false)
         }
     }
@@ -125,7 +120,6 @@ private struct ShortcutRecorderPopoverHost: ViewModifier {
     }
 }
 
-/// Retains the last anchor while the callout animates away from it.
 private struct ShortcutRecorderPopoverLayer: View {
     let placement: CalloutPlacement?
     let recordingAction: HotKeyAction?

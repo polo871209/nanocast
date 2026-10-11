@@ -2,7 +2,6 @@
 import CoreGraphics
 import Foundation
 
-/// The smallest size each app has refused to go below, learned by trying and kept across launches.
 @MainActor
 final class RoomMinimumSizeStore {
     private static let defaultsKey = "roomMinimumWindowSizes"
@@ -21,7 +20,6 @@ final class RoomMinimumSizeStore {
         sizes[bundleID] ?? .zero
     }
 
-    /// True when `size` raised what was known: only then is laying the room out again worth it.
     @discardableResult
     func learn(_ size: CGSize, for bundleID: String) -> Bool {
         guard size.width.isFinite, size.height.isFinite else { return false }

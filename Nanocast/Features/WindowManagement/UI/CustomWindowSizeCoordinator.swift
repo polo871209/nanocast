@@ -1,6 +1,5 @@
 import Foundation
 
-/// Owns custom sizes' presence, edits and cleanup; observable only for `@Environment`.
 @MainActor
 @Observable
 final class CustomWindowSizeCoordinator {
@@ -12,7 +11,6 @@ final class CustomWindowSizeCoordinator {
     private let visibility: VisibilityStore
     private let ranking: LauncherRankingStore
     private let aliases: AliasStore
-    /// Dialog presentation only. Never state this type owns.
     private unowned let core: AppCore
 
     init(
@@ -31,13 +29,11 @@ final class CustomWindowSizeCoordinator {
         self.core = core
     }
 
-    /// Custom sizes are window commands, so they follow the commands' own launcher switch.
     func applyCustomWindowSizesPresence() {
         let visible = settings.windowManagementEnabled && settings.windowManagementShowInLauncher
         appIndex.setCustomWindowSizes(visible ? store.sizes : [])
     }
 
-    /// Adds or updates; a size deleted while its editor was open comes back rather than vanishing.
     func saveCustomWindowSize(_ draft: CustomWindowSize) throws(CustomWindowSizeValidationError) {
         if store.size(id: draft.id) == nil {
             try store.add(draft)
@@ -49,12 +45,11 @@ final class CustomWindowSizeCoordinator {
     func deleteCustomWindowSize(id: UUID) async {
         guard let size = store.size(id: id),
             await core.confirm(
-                title: String(localized: "Delete “\(size.name)”?"),
-                message: String(localized: "Its shortcut and launcher references go with it."),
-                symbol: CustomWindowSize.sfSymbol, confirmTitle: String(localized: "Delete")),
+                title: "Delete “\(size.name)”?",
+                message: "Its shortcut and launcher references go with it.",
+                symbol: CustomWindowSize.sfSymbol, confirmTitle: "Delete"),
             store.remove(id: id) != nil
         else { return }
-        // Unwound only once the row is gone, so a kept record never loses its shortcut.
         removeReferences(ids: [size.id], entryIDs: [size.entryID])
     }
 

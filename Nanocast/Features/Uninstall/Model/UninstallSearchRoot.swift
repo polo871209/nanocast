@@ -1,6 +1,5 @@
 import Foundation
 
-/// Where to look and which match styles are legal there, as a table rather than per-root code.
 struct UninstallSearchRoot: Hashable, Sendable {
     enum Base: Hashable, Sendable {
         case userLibrary
@@ -14,7 +13,6 @@ struct UninstallSearchRoot: Hashable, Sendable {
     }
 
     let base: Base
-    /// Relative to `base`, never empty.
     let relativePath: String
     let styles: Set<MatchStyle>
 
@@ -25,7 +23,6 @@ struct UninstallSearchRoot: Hashable, Sendable {
         }
     }
 
-    /// Immediate children only; the home directory is absent. See docs/features/uninstall.md.
     static let all: [UninstallSearchRoot] = [
         UninstallSearchRoot(
             base: .userLibrary, relativePath: "Application Support",
@@ -56,7 +53,6 @@ struct UninstallSearchRoot: Hashable, Sendable {
             relativePath: "Application Support/com.apple.sharedfilelist/"
                 + "com.apple.LSSharedFileList.ApplicationRecentDocuments",
             styles: [.bundleID]),
-        // Plug-in wells: a child is a wrapper named after its product, suffix stripped.
         UninstallSearchRoot(
             base: .userLibrary, relativePath: "Internet Plug-Ins", styles: [.bundleID, .displayName]),
         UninstallSearchRoot(
@@ -106,7 +102,6 @@ struct UninstallSearchRoot: Hashable, Sendable {
             styles: [.bundleID, .displayName])
     ]
 
-    /// Where a CLI launcher lands, scanned by link target and never by name.
     static let binDirectories: [String] = [
         "/usr/local/bin", "/opt/homebrew/bin", "~/.local/bin", "~/bin"
     ]

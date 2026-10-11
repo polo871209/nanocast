@@ -3,8 +3,8 @@
 Export and import of Nanocast's own data as a single `.nanocast` file, plus the entry point for
 importing a Raycast export. The feature lives in `Features/Backup/`.
 
-A backup carries five independently selectable categories, ticked on export and again on import:
-**Settings & Shortcuts**, **Clipboard History**, **Snippets**, **Notes** and **Launcher Learning**.
+A backup carries four independently selectable categories, ticked on export and again on import:
+**Settings & Shortcuts**, **Clipboard History**, **Notes** and **Launcher Learning**.
 
 ## Invariants
 
@@ -13,25 +13,22 @@ A backup carries five independently selectable categories, ticked on export and 
   which are sourced from somewhere other than `UserDefaults`, and which are excluded **with a reason**.
   `SettingsBackupTests` fails when a key is none of those. Adding a setting means editing
   `SettingsBackupCoverage` in the same commit.
-- **`snippetsEnabled` is excluded, and that is a security control.** It doubles as consent to keystroke
-  listening, so an imported file must not be able to grant it. A `Mirror` or a macro is the wrong
-  answer: neither can be read to check what is covered.
+- **`clipboardTextSearchEnabled` is excluded, and that is a security control.** It doubles as consent to
+  background text recognition, so an imported file must not be able to grant it. A `Mirror` or a macro is
+  the wrong answer: neither can be read to check what is covered.
 - **A flag that grants a capability is never carried by a backup**, whether it is excluded from
-  `SettingsBackupCoverage` like `snippetsEnabled` or kept out of `AppSettings` entirely. Importing a
-  config must not be able to grant something the user never granted. `FallbackStore` is the second
-  case: its order and checkboxes live on their own `UserDefaults` keys precisely so an import cannot
-  arm **Run Shell Command** in someone's launcher. This change adds _content_, never a capability.
+  `SettingsBackupCoverage` like `clipboardTextSearchEnabled` or kept out of `AppSettings` entirely. Importing a
+  config must not be able to grant something the user never granted. A backup adds _content_, never a
+  capability.
 - **No absolute path may enter a `.nanocast`.** A clip's `imagePath` names a file on the Mac that wrote
   it, so `BackupClipboardItem` carries a bundle-relative `imageName` instead. `BackupArchiveTests`
   asserts the produced file contains neither `/Users` nor `/Library`, the analogue of
-  `SettingsBackupTests`'s `snippetsEnabled` check, and for the same reason: this file gets sent to
+  `SettingsBackupTests`'s capability-grant check, and for the same reason: this file gets sent to
   people.
 - **The file carries a format version and a reader accepts only its own.** That is a guard, not a
   migration: the comparison is `==`, so an older and a newer file fail identically and by the same
-  statement. Writing it any other way is the first line of a backup-format migration, and there is none.
-- **Extensions, AI chat history, Keychain material and anything in `Caches` never travel.** An
-  extension is third-party code and third-party data; chat history and API keys stay on the Mac that
-  had them; a cache regenerates on its own.
+  statement. Writing it any other way is the first line of a migration, and the project has none.
+- **Nothing in `Caches` travels.** A cache regenerates on its own.
 - **`BackupCategory` names every category, and its `descriptor` switch is exhaustive.** A new case
   fails to build until it names a label, a symbol, a bundle subpath and a count noun, the same
   bargain `AppEntry.Kind` makes, and why the bundle layout is never spelled out twice.
@@ -66,7 +63,6 @@ manifest.json              format, app version, createdAt, per-category counts
 settings.json              SettingsBackup, exactly as it encoded before
 clipboard/items.jsonl      one clip per line
 clipboard/images/<uuid>.png
-snippets/<name>.md         copied verbatim
 notes/<name>.md            copied verbatim
 learning/{ranking,emoji,calculator}.json
 ```
@@ -109,8 +105,8 @@ anything a day old on the next run, since a run killed mid-flight leaves its tre
 
 `SettingsBackupTests` asserts that every `AppSettingsKey` appears in exactly one table, that no field
 claims a key twice, that every exclusion names a real key and carries a non-empty reason, and that each
-capability-granting key (`snippetsEnabled`, `extensionsEnabled`, `calendarEnabled`,
-`autoJoinMeetings`, `cameraPreview`, `quickActionsEnabled`) is named individually as excluded. The
+capability-granting key — `clipboardTextSearchEnabled`, `settingsFileEnabled` —
+is named individually as excluded. The
 duplication between `AppSettings` and this file is the point: it forces a decision about every new
 setting rather than defaulting it into a backup.
 
@@ -129,14 +125,12 @@ Per category:
   UI. A row is deduped on its text, or on the path its image takes; the blob keeps the name the bundle
   gave it, so importing one file twice lands on the same path and adds nothing. Only a file inside
   `imagesDir` is one retention can ever reclaim, which is why the blob moves there before the row lands.
-- **Snippets** merge through `importSnippets`, deduped on name and body so importing the same file
-  twice doesn't leave a second copy of everything. Importing snippets does not enable snippets.
 - **Notes** land as new files through `NotesRepository.importNotes`, which suffixes a title that is
   already taken rather than overwriting it.
 - **Learning** replaces. Merging two Macs' frecency tables produces a table describing neither.
 
 An `id` never travels with a clip: `items.id` is `UNIQUE`, so a re-import minting fresh identities is
-what keeps a second pass from silently failing its inserts. Same reasoning as `QuicklinkArchive.merge`.
+what keeps a second pass from silently failing its inserts.
 
 The old flat `Nanocast-Settings-*.json` export is gone rather than deprecated, and nothing reads it.
 

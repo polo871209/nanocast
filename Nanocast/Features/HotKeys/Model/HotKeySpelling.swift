@@ -2,16 +2,13 @@ import Carbon.HIToolbox
 import Foundation
 
 struct HotKeySpelling: Sendable {
-    /// The Hyper chord in Carbon bits while a Hyper key is set, so it spells as `hyper` again.
     let hyperModifiers: Int?
     private let characterByCode: [Int: String]
     private let codeByCharacter: [String: Int]
 
-    /// `characters` is each key's base character on this Mac, the one its keycap shows.
     init(characters: [Int: String], hyperModifiers: Int?) {
         var characterByCode: [Int: String] = [:]
         var codeByCharacter: [String: Int] = [:]
-        // Ascending, so a character two keys type is spelled by the lower one both ways.
         for (code, character) in characters.sorted(by: { $0.key < $1.key }) {
             let name = character.lowercased()
             guard Self.namedKeys[code] == nil, Self.isSpellable(name), codeByCharacter[name] == nil
@@ -35,7 +32,6 @@ struct HotKeySpelling: Sendable {
         }
     }
 
-    /// Nil for anything the recorder would refuse, so the file can't bind what the app can't.
     func binding(from text: String) -> HotKeyBinding? {
         let spelled = text.trimmingCharacters(in: .whitespaces).lowercased()
         if spelled == "globe" { return .globe }
@@ -48,8 +44,6 @@ struct HotKeySpelling: Sendable {
         }
         return shortcut(from: spelled).map(HotKeyBinding.combo)
     }
-
-    // MARK: - Combos
 
     private func text(for shortcut: KeyShortcut) -> String {
         var modifiers = shortcut.carbonModifiers
@@ -68,7 +62,6 @@ struct HotKeySpelling: Sendable {
     private func shortcut(from spelled: String) -> KeyShortcut? {
         var tokens = spelled.split(separator: "+", omittingEmptySubsequences: false)
             .map { $0.trimmingCharacters(in: .whitespaces) }
-        // "cmd++" names the plus key itself, which the split leaves as two empty tokens.
         if tokens.count > 2, tokens.suffix(2).allSatisfy(\.isEmpty) {
             tokens.removeLast(2)
             tokens.append("+")
@@ -103,14 +96,11 @@ struct HotKeySpelling: Sendable {
         return code
     }
 
-    // MARK: - Vocabulary
-
     private static let hyperName = "hyper"
     private static let doubleTapPrefix = "double-tap "
     private static let rawKeyPrefix = "key-"
     private static let keyCodes = 0..<128
 
-    /// The app's 🌐⌃⌥⇧⌘ order, so a spelled chord reads like its keycaps.
     private static let writtenModifiers: [(mask: Int, name: String)] = [
         (kEventKeyModifierFnMask, "fn"), (controlKey, "ctrl"), (optionKey, "option"),
         (shiftKey, "shift"), (cmdKey, "cmd")
@@ -124,7 +114,6 @@ struct HotKeySpelling: Sendable {
         "cmd": cmdKey, "command": cmdKey
     ]
 
-    /// Keys whose character is invisible, or shared with a key the file must tell apart.
     private static let namedKeys: [Int: String] = [
         kVK_Space: "space", kVK_Return: "return", kVK_ANSI_KeypadEnter: "enter", kVK_Tab: "tab",
         kVK_Delete: "delete", kVK_ForwardDelete: "forward-delete", kVK_Escape: "escape",

@@ -43,7 +43,6 @@ private struct RoomRowView: View {
     let row: RoomRow
     let selected: Bool
     let isCurrent: Bool
-    /// Nil for the rows that make or edit a room rather than enter one.
     let layout: RoomLayoutKind?
     @State private var hovered = false
 
@@ -56,8 +55,8 @@ private struct RoomRowView: View {
     private var title: String {
         switch row {
         case .room(let room): room.name
-        case .edit(let room): String(localized: "Choose Windows for “\(room.name)”")
-        case .create(let name): String(localized: "Create Room “\(name)”")
+        case .edit(let room): "Choose Windows for “\(room.name)”"
+        case .create(let name): "Create Room “\(name)”"
         }
     }
 
@@ -67,11 +66,11 @@ private struct RoomRowView: View {
             let apps = room.windows.map(\.appName).reduce(into: [String]()) { names, name in
                 if !names.contains(name) { names.append(name) }
             }
-            let current = isCurrent ? String(localized: "Current") : nil
+            let current = isCurrent ? "Current" : nil
             return ([current, room.summary] + [apps.joined(separator: ", ")])
                 .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
         case .edit, .create:
-            return String(localized: "Pick the open windows that belong in it")
+            return "Pick the open windows that belong in it"
         }
     }
 
@@ -102,7 +101,6 @@ private struct RoomRowView: View {
                     Text(layout.title)
                         .font(metrics.typography.rowTrailing)
                         .foregroundStyle(.secondary)
-                    // Tab changes the selected room's layout, so only that row advertises it.
                     if selected { KeyCapChip(text: "⇥", style: .outline) }
                 }
             }
@@ -116,7 +114,7 @@ private struct RoomRowView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)
         .accessibilityValue(
-            layout.map { String(localized: "\(subtitle), \($0.title) layout") } ?? subtitle
+            layout.map { "\(subtitle), \($0.title) layout" } ?? subtitle
         )
         .accessibilityAddTraits(selected ? .isSelected : [])
     }

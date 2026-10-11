@@ -3,7 +3,6 @@ import Foundation
 import System
 
 enum BackupArchive {
-    static let fileExtension = "nanocast"
 
     enum ArchiveError: LocalizedError, Equatable {
         case cannotWrite
@@ -11,19 +10,17 @@ enum BackupArchive {
 
         var errorDescription: String? {
             switch self {
-            case .cannotWrite: return String(localized: "Couldn't write the backup file.")
+            case .cannotWrite: return "Couldn't write the backup file."
             case .cannotRead:
-                return String(localized: "This file isn't a Nanocast backup, or it's damaged.")
+                return "This file isn't a Nanocast backup, or it's damaged."
             }
         }
     }
 
-    /// No `UID`/`GID` to restore a foreign owner, no `IDX` to dangle; `MTM` feeds the note sort.
     private static var keySet: ArchiveHeader.FieldKeySet? {
         ArchiveHeader.FieldKeySet("TYP,PAT,DAT,MOD,MTM")
     }
 
-    /// LZFSE, not LZMA: the payload is dominated by PNGs that are already compressed.
     static func seal(directory: URL, into file: URL) throws {
         guard let keySet,
             let destination = ArchiveByteStream.fileStream(
@@ -76,7 +73,6 @@ enum BackupArchive {
         guard !containsSymbolicLink(directory) else { throw ArchiveError.cannotRead }
     }
 
-    /// A link entry passes the path filter, and reading through one would leave the extract.
     private static func containsSymbolicLink(_ directory: URL) -> Bool {
         let keys: Set<URLResourceKey> = [.isSymbolicLinkKey]
         guard
@@ -90,7 +86,6 @@ enum BackupArchive {
         return false
     }
 
-    /// Skips any entry naming an absolute path or `..`, so a hostile archive cannot escape.
     private static func containedEntry(
         _ message: ArchiveHeader.EntryMessage, _ path: FilePath,
         _ data: ArchiveHeader.EntryFilterData?

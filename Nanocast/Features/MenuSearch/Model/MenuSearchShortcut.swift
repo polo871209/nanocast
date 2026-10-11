@@ -27,7 +27,6 @@ struct MenuSearchShortcut: Hashable, Sendable {
         return "F\(scalar.value - Self.functionKeys.lowerBound + 1)"
     }
 
-    // Glyphs in the order macOS menus use, so a row reads like the menu it came from.
     var keycaps: [String] {
         guard !character.isEmpty else { return [] }
         var caps: [String] = []

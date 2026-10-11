@@ -1,6 +1,5 @@
 import AppKit
 
-/// Owns emoji delivery: frequency tallies the base glyph, the configured tone applies at copy time.
 @MainActor
 final class EmojiCoordinator {
     private let frequentEmoji: FrequentEmojiStore

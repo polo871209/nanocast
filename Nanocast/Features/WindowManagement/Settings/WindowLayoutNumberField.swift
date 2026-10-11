@@ -1,10 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// A suffixed numeric field. Commits every valid keystroke, clamps on ↵ or focus loss.
 struct WindowLayoutNumberField: View {
     let label: String
-    /// The accessibility label's subject, since "W" reads as a letter.
     let name: String
     let suffix: String
     let range: ClosedRange<Int>
@@ -54,13 +52,11 @@ struct WindowLayoutNumberField: View {
         .accessibilityValue(Text(verbatim: "\(value) \(suffix)"))
     }
 
-    /// Live, so the preview tracks typing and ⌘↵ cannot save behind a value still in the field.
     private func commitIfValid(_ typed: String) {
         guard let typed = number(typed), range.contains(typed) else { return }
         onCommit(typed)
     }
 
-    /// A number outside the range clamps and shows the clamped value; nonsense reverts.
     private func commit() {
         guard let typed = number(text) else { return revert() }
         let clamped = min(max(typed, range.lowerBound), range.upperBound)
@@ -78,7 +74,6 @@ struct WindowLayoutNumberField: View {
 }
 
 extension View {
-    /// The inspector's one control surface, so a field, a dropdown and the add button match.
     func layoutFieldChrome(isFocused: Bool = false) -> some View {
         let shape = RoundedRectangle(cornerRadius: Theme.Radius.barControl, style: .continuous)
         return padding(.horizontal, Theme.Spacing.md)

@@ -36,7 +36,6 @@ struct MenuSearchItem: Identifiable, Hashable, Sendable {
         return !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    // The path rides as owner, not translation: a shared hierarchy string must stay literal-only.
     func searchFields() -> SearchFields {
         [SearchAlias.name(title), SearchAlias(displayPath, .owner)]
     }

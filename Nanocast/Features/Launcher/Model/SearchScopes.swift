@@ -1,7 +1,6 @@
 import Foundation
 
 enum SearchScopes {
-    /// Seeded on a fresh install; order matters, the scan deduping by bundle ID.
     static let defaults: [String] = [
         "/Applications",
         "/Applications/Utilities",
@@ -15,7 +14,6 @@ enum SearchScopes {
         "~/Applications"
     ]
 
-    /// Tilde-abbreviated and unslashed, so a settings backup stays portable across machines.
     static func abbreviate(_ path: String) -> String {
         let trimmed = trimTrailingSlash(path)
         return (trimmed as NSString).abbreviatingWithTildeInPath
@@ -25,18 +23,15 @@ enum SearchScopes {
         (trimTrailingSlash(path) as NSString).expandingTildeInPath
     }
 
-    /// Abbreviates every path and drops duplicates, preserving order.
     static func normalize(_ paths: [String]) -> [String] {
         var seen = Set<String>()
         return paths.map(abbreviate).filter { !$0.isEmpty && seen.insert($0).inserted }
     }
 
-    /// Where a bundle ships its own apps: Xcode keeps Instruments and Simulator there.
     private static let embeddedAppFolders = [
         "Contents/Applications", "Contents/Developer/Applications"
     ]
 
-    /// Every `.app` the scopes point at. One subfolder deep; deeper nesting needs its own scope.
     static func appBundles(in scopes: [String]) -> [URL] {
         let fm = FileManager.default
         var result: [URL] = []
@@ -52,13 +47,11 @@ enum SearchScopes {
         return result.filter { seen.insert($0.standardizedFileURL.path).inserted }
     }
 
-    /// An `.app` is never descended into beyond its embedded-app folders.
     private static func appBundles(
         under url: URL, subfolderDepth: Int, ancestors: Set<String> = []
     ) -> [URL] {
         let fm = FileManager.default
         var isDirectory: ObjCBool = false
-        // Skip non-directories early without rejecting directory symlinks.
         guard fm.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue
         else { return [] }
         let resolved = url.resolvingSymlinksInPath()
@@ -69,7 +62,6 @@ enum SearchScopes {
             )
         else { return [] }
         let ancestors = ancestors.union([resolved.path])
-        // Keep logical app paths stable when a directory link points to a new target.
         let scopedItems =
             items.first?.deletingLastPathComponent().path == url.path
             ? items
@@ -90,27 +82,23 @@ enum SearchScopes {
         return result
     }
 
-    /// The scan keeps a bundle ID's first copy, so a folder lists its newest version first.
     private static func newestFirst(_ items: [URL]) -> [URL] {
         items
             .map { (url: $0, version: shortVersion(of: $0)) }
             .sorted { lhs, rhs in
                 let byVersion = lhs.version.compare(rhs.version, options: .numeric)
                 if byVersion != .orderedSame { return byVersion == .orderedDescending }
-                // A tie falls back to Finder's order, so the filesystem never picks the winner.
                 return displayName(of: lhs.url).localizedStandardCompare(displayName(of: rhs.url))
                     == .orderedAscending
             }
             .map(\.url)
     }
 
-    /// Empty when unreadable, which `.numeric` ranks below every real version.
     private static func shortVersion(of url: URL) -> String {
         guard url.pathExtension == "app" else { return "" }
         return Bundle(url: url)?.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
     }
 
-    /// Without `.app`, so `Xcode` sorts before `Xcode-beta` rather than after it.
     private static func displayName(of url: URL) -> String {
         url.deletingPathExtension().lastPathComponent
     }

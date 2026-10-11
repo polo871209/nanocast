@@ -27,7 +27,7 @@ enum CalcPitch {
         let index = Int(midi)
         let text = names[index % 12] + String(index / 12 - 1)
         return .phrase(
-            query, .value(display: text, copyText: text), target: String(localized: "Pitch"), canChain: false)
+            query, .value(display: text, copyText: text), target: "Pitch", canChain: false)
     }
 
     /// `a4`, `c-1`, `bb3`: a natural or flat note and its octave, as the MIDI number it names.

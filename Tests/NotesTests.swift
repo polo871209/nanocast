@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import Synchronization
 
 @main
 @MainActor
@@ -15,7 +16,6 @@ struct NotesTests {
         testMarkdownFormatting()
         testRevealPolicy()
         try testUnnamedNotesTitleThemselves()
-        try testCreatedNoteHoldsItsSource()
         testSwitcherInteraction()
         testWindowPlacement()
         try await testStoreCollectionAndAutosave()
@@ -33,10 +33,10 @@ struct NotesTests {
     private static func testRepositoryAndSearch() throws {
         let root = temporaryRoot("repository")
         defer { try? FileManager.default.removeItem(at: root) }
-        let support = root.appendingPathComponent("com.abueammar.nanocast")
+        let support = root.appendingPathComponent("com.nanocast.app")
         let stable = try repository(in: root, support: support)
         let development = try repository(
-            in: root, support: root.appendingPathComponent("com.abueammar.tinycast.dev"))
+            in: root, support: root.appendingPathComponent("com.nanocast.app.dev"))
 
         try FileManager.default.createDirectory(
             at: stable.notesDirectory, withIntermediateDirectories: true)
@@ -133,7 +133,7 @@ struct NotesTests {
             !(try stable.list()).contains { $0.id == symlinkID })
 
         let empty = try repository(
-            in: root, support: root.appendingPathComponent("com.abueammar.nanocast.empty"))
+            in: root, support: root.appendingPathComponent("com.nanocast.app.empty"))
         let emptyLoad = try empty.load(preferredID: nil)
         check("an empty collection loads no document", emptyLoad.0.isEmpty && emptyLoad.1 == nil)
         check(
@@ -156,13 +156,6 @@ struct NotesTests {
     }
 
     private static func testDerivedTitles() {
-        check(
-            "an unnamed display title keeps its numeric suffix",
-            NoteTitle.displayName("Untitled 12") == String(localized: "Untitled") + " 12")
-        check(
-            "display localization leaves user titles untouched",
-            NoteTitle.displayName("Untitled notes") == "Untitled notes"
-                && NoteTitle.displayName("Plan") == "Plan")
         check(
             "the names Create claims are unnamed",
             NoteTitle.isUnnamed("Untitled") && NoteTitle.isUnnamed("Untitled 12"))
@@ -202,17 +195,6 @@ struct NotesTests {
         check(
             "rules and fences carry no title",
             NoteTitle.firstLine(of: "---\n```swift\nlet x = 1\n```") == "let x = 1")
-    }
-
-    private static func testCreatedNoteHoldsItsSource() throws {
-        let root = temporaryRoot("created-source")
-        defer { try? FileManager.default.removeItem(at: root) }
-        let repository = try repository(in: root)
-
-        let created = try repository.create(source: "Call Sam ☎️\n")
-        check(
-            "a note created with text starts out holding it",
-            try repository.load(created.id).source == "Call Sam ☎️\n")
     }
 
     private static func testUnnamedNotesTitleThemselves() throws {
@@ -1172,7 +1154,6 @@ struct NotesTests {
                 == IndexSet([1, 2, 3]))
     }
 
-    /// Applies an action to a source whose selection is marked `|` or `«…»`; marks the result.
     private static func edit(_ action: NoteEditAction, _ marked: String) -> String? {
         let (source, selection) = unmark(marked)
         guard case let (result, after)? = apply(action, source, selection: selection) else { return nil }
@@ -1210,7 +1191,6 @@ struct NotesTests {
             source: source, selection: selection, markdown: NoteMarkdownParser.parse(source))
     }
 
-    /// The toggles a formatting's lit flags promise to undo.
     private static func litActions(_ formatting: NoteFormatting) -> [NoteEditAction] {
         var actions = NoteEditAction.InlineStyle.allCases
             .filter(formatting.inlineStyles.contains)
@@ -1271,7 +1251,6 @@ struct NotesTests {
         range.map { (source as NSString).substring(with: $0) }
     }
 
-    /// Deleting trashes for real, so every harness repository redirects that inside the root.
     private static func repository(in root: URL, support: URL? = nil) throws -> NotesRepository {
         let trash = trashDirectory(in: root)
         try FileManager.default.createDirectory(at: trash, withIntermediateDirectories: true)
@@ -1323,8 +1302,13 @@ struct NotesTests {
     }
 }
 
-private final class SelectionBox: @unchecked Sendable {
-    var id: NoteID?
+private final class SelectionBox: Sendable {
+    private let stored = Mutex<NoteID?>(nil)
+
+    var id: NoteID? {
+        get { stored.withLock { $0 } }
+        set { stored.withLock { $0 = newValue } }
+    }
 }
 
 private enum TestFailure: Error {

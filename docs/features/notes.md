@@ -25,10 +25,7 @@ commands and global shortcuts can show, search, or extend the collection.
   collection navigation cannot abandon an in-memory draft.
 - **Nanocast is the only writer while editing.** There is no watcher or disk revision check: a save
   replaces the file with what is in the editor. Every show re-lists the folder and reloads the clean
-  active note; an unsaved draft is retained, including after a failed save. [iCloud
-  Sync](icloud-sync.md) writes a note another Mac changed only while the editor holds no unsaved
-  edit to it; one that does keeps its edit, which then uploads as the newer copy. A note deleted on
-  another Mac goes to the Trash.
+  active note; an unsaved draft is retained, including after a failed save.
 - **Search is on demand and unindexed.** An empty switcher query reads metadata plus the head of every
   unnamed note; a nonempty query reads bodies sequentially off-main and retains no collection-sized
   source cache.
@@ -44,11 +41,6 @@ commands and global shortcuts can show, search, or extend the collection.
   text view's frame never gets shorter than its clip view, and until the next draw the lines below an
   edit keep their old origins, so neither the frame nor the last fragment's position can be read on
   `didChange`.
-- **The editor is a surface snippets expand into.** `NoteTextView` adopts `InjectableTextView`,
-  so a typed keyword (and the Snippets browser's ↵) is written straight into the text storage
-  rather than posted as events at whichever app happens to be frontmost. Quick Actions also read and
-  replace its selected text in process. Only AI Chat's composer adopts it too: see
-  [snippets.md](snippets.md#text-delivery-and-pasteboard-safety).
 
 ## Storage and identity
 
@@ -83,7 +75,6 @@ skipped, block and inline Markdown markers are dropped whether or not rendering 
 capped to 120 characters so no row or title bar has to carry a paragraph. `NoteSummary.title` remains the filename; `displayTitle` is what every
 surface renders: switcher rows and their VoiceOver labels, the Trash confirmation, the window title,
 and the title band of `NoteSearch`, so a fuzzy query reaches a note nobody has named.
-An empty unnamed note displays a localized Untitled label, preserving its filename and numeric suffix.
 
 `list()` reads at most 4 KB of each unnamed note to derive it, and a named note costs nothing beyond
 the enumeration it already pays for. The **active** note derives from the live draft rather than the
@@ -176,8 +167,7 @@ indented code, footnotes, reference links and blocks nested inside quotes stay p
 (a pipe row, a delimiter row with as many cells, then the pipe rows after it) also stays plain text, but
 is recognised so it gets no inline styling: it shows in the code font, with wrapped rows hanging under
 their first line, and a delimiter row typed under existing rows restyles all of them.
-The whole note is reparsed on each edit. The AI chat's `MarkdownBlock` is a separate read-only parser
-and is not shared.
+The whole note is reparsed on each edit.
 
 ### Rendering
 
@@ -265,7 +255,7 @@ memory; editing after undo discards redo. The coordinator observes undo and redo
 main-actor notifications, so both reach autosave, rendering, formatting and the counts.
 Copy yields raw Markdown and VoiceOver reads the source. Changing the note
 identity or editor epoch reinstalls and restyles the string and clears the previous document's undo
-history. Snippets expand through `insertText` and are styled like typed text. The empty-note placeholder
+history. Dictated text arrives through `insertText` and is styled like typed text. The empty-note placeholder
 is drawn in the text view, so opening the find bar moves it with the editor content.
 
 ### The formatting bar

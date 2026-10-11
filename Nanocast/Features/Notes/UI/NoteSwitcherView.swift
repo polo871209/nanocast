@@ -95,7 +95,6 @@ struct NoteSwitcherView: View {
                                 },
                                 onCommitRename: notes.commitSwitcherRename,
                                 onCancelRename: notes.cancelSwitcherRename,
-                                onCopyLink: { notes.copyDeepLink(to: summary.id) },
                                 onTrash: { notes.trash(summary.id) }
                             )
                             .id(summary.id)
@@ -104,7 +103,6 @@ struct NoteSwitcherView: View {
                     .padding(Theme.Spacing.md)
                     .measuredHeight(onContentHeight)
                 }
-                // The search row is a sibling, not a floating bar, so only the bottom edge fades.
                 .overflowFade()
                 .onChange(of: notes.switcherSelection) { _, selected in
                     if let selected { proxy.scrollTo(selected, anchor: .center) }
@@ -140,7 +138,6 @@ private struct NoteSwitcherRow: View {
     let onBeginRename: () -> Void
     let onCommitRename: () -> Void
     let onCancelRename: () -> Void
-    let onCopyLink: () -> Void
     let onTrash: () -> Void
     @State private var hovered = false
     @FocusState private var titleFocused: Bool
@@ -170,11 +167,10 @@ private struct NoteSwitcherRow: View {
             Spacer(minLength: Theme.Spacing.md)
             if !editing, selected || hovered {
                 rowButton(
-                    title: String(localized: "Rename \(summary.displayTitle)"), symbol: "pencil",
+                    title: "Rename \(summary.displayTitle)", symbol: "pencil",
                     action: onBeginRename)
-                rowButton(title: String(localized: "Copy Deeplink"), symbol: "link", action: onCopyLink)
                 rowButton(
-                    title: String(localized: "Move \(summary.displayTitle) to Trash"), symbol: "trash",
+                    title: "Move \(summary.displayTitle) to Trash", symbol: "trash",
                     action: onTrash
                 )
                 .foregroundStyle(Theme.Colors.destructive)
@@ -203,7 +199,6 @@ private struct NoteSwitcherRow: View {
             guard !editing else { return }
             onBeginRename()
         }
-        .accessibilityAction(named: "Copy Deeplink", onCopyLink)
         .accessibilityAction(named: "Move \(summary.displayTitle) to Trash") {
             guard !editing else { return }
             onTrash()
@@ -229,7 +224,6 @@ private struct NoteSwitcherRow: View {
         }
         .buttonStyle(.plain)
         .help(title)
-        // The row publishes both as accessibility actions, so the buttons stay out of the tree.
         .accessibilityHidden(true)
     }
 }

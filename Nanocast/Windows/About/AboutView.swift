@@ -7,7 +7,7 @@ struct AboutView: View {
     private static var version: String {
         let short = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
-        return String(localized: "Version \(short) (\(build))")
+        return "Version \(short) (\(build))"
     }
 
     // Cached, and read from the bundle: the app icon is generic until LaunchServices registers.
@@ -35,12 +35,10 @@ struct AboutView: View {
                 .settingsAnchor(.aboutAbout)
                 updates
                 links
-                support
             }
             .formStyle(.grouped)
             .settingsScrollTarget(.about)
 
-            // Outside the form, so the copyright stays pinned to the bottom edge.
             footer
                 .padding(.bottom, Theme.Spacing.xxl)
         }
@@ -130,28 +128,7 @@ struct AboutView: View {
         }
     }
 
-    private var support: some View {
-        Section {
-            HStack(spacing: Theme.Spacing.xl) {
-                tile("heart.fill", tint: Theme.Colors.brand)
-                VStack(alignment: .leading, spacing: Theme.Spacing.xxs) {
-                    SettingsRowTitle(.aboutLinks, "Support")
-                        .font(.body.weight(.medium))
-                    Text("Free and open source. Your support sustains its development.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: Theme.Spacing.lg)
-                Button("Support…") { core.supportCoordinator.showSupport() }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Theme.Colors.brand)
-            }
-            .padding(.vertical, Theme.Spacing.xs)
-        }
-    }
-
-    /// Both tints are fixed hues, so an alpha on them holds up in both appearances.
+    /// A fixed hue, so an alpha on it holds up in both appearances.
     private func tile(_ symbol: String, tint: Color) -> some View {
         RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
             .fill(tint.opacity(0.16))
@@ -164,7 +141,7 @@ struct AboutView: View {
     }
 
     private var footer: some View {
-        Text("© 2026 Abue Ammar · Released under AGPL-3.0")
+        Text("© 2026 PoLo · Based on Tinycast © 2026 Abue Ammar · AGPL-3.0")
             .font(.caption2)
             .foregroundStyle(.tertiary)
     }
@@ -185,23 +162,9 @@ private struct AboutLink: Identifiable {
 
     static let all: [AboutLink] = [
         AboutLink(
-            id: "website", glyph: .symbol("globe"), title: String(localized: "Website"),
-            detail: "tinycast.dev",
-            url: URL(string: "https://tinycast.dev/")!),
-        AboutLink(
             id: "github", glyph: .brand("BrandGitHub"), title: "GitHub",
-            detail: "github.com/abue-ammar/tinycast",
-            url: URL(string: "https://github.com/abue-ammar/tinycast")!),
-        AboutLink(
-            id: "discord", glyph: .brand("BrandDiscord"), title: "Discord",
-            detail: String(localized: "Join the Nanocast community"),
-            url: URL(string: "https://discord.gg/v2Eeb4QQy3")!),
-        AboutLink(
-            id: "x", glyph: .brand("BrandX"), title: "X", detail: "@abue_ammar",
-            url: URL(string: "https://x.com/abue_ammar")!),
-        AboutLink(
-            id: "email", glyph: .symbol("envelope"), title: String(localized: "Email"),
-            detail: "hello@tinycast.dev", url: URL(string: "mailto:hello@tinycast.dev")!)
+            detail: "github.com/polo871209/nanocast",
+            url: URL(string: "https://github.com/polo871209/nanocast")!)
     ]
 }
 
@@ -243,7 +206,6 @@ private struct AboutLinkRow: View {
             Image(systemName: name)
                 .font(.system(size: 13, weight: .medium))
         case .brand(let name):
-            // Brand marks paint edge to edge, so they sit under the symbol box to match.
             Image(name)
                 .renderingMode(.template)
                 .resizable()

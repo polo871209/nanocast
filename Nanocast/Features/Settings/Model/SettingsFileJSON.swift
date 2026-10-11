@@ -1,6 +1,5 @@
 import Foundation
 
-/// settings.json as a tree whose objects keep their key order, so the file reads top to bottom.
 enum SettingsFileJSON: Equatable, Sendable {
     case null
     case bool(Bool)
@@ -14,12 +13,10 @@ enum SettingsFileJSON: Equatable, Sendable {
         let value: SettingsFileJSON
     }
 
-    /// Members in the order written, which is the order the file lists them.
     static func object(_ members: KeyValuePairs<String, SettingsFileJSON>) -> SettingsFileJSON {
         .object(members.map { Member(key: $0.key, value: $0.value) })
     }
 
-    /// From `JSONSerialization`; a dictionary has no order, so its keys are sorted to stay stable.
     init(jsonObject: Any) {
         switch jsonObject {
         case let number as NSNumber:
@@ -71,7 +68,6 @@ enum SettingsFileJSON: Equatable, Sendable {
         return value
     }
 
-    /// A whole number only: `1.5` is not an `Int` the file meant.
     var int: Int? {
         number.flatMap { Int(exactly: $0) }
     }

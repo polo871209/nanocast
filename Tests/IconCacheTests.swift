@@ -44,7 +44,6 @@ struct IconCacheTests {
         return stride(from: 3, to: side * side * 4, by: 4).reduce(0) { $0 + Int(bytes[$1]) }
     }
 
-    /// A restyle has to both drop what is cached and move the generation views key their fetch on.
     static func restyling() {
         let before = IconCache.style.generation
         let warm = IconCache.symbolIcon(named: "star")
@@ -56,7 +55,6 @@ struct IconCacheTests {
         expect(IconRequest("star").generation == IconCache.style.generation, "a request carries it")
         expect(IconRequest("star") != IconRequest("moon"), "the view's own key still separates them")
 
-        // `.initial` and every repeat notification must not invalidate; only a real move may.
         let settled = IconCache.style.generation
         IconCache.setDarkSurface(true)
         expect(IconCache.style.generation == settled, "re-asserting the same surface is free")
@@ -64,7 +62,6 @@ struct IconCacheTests {
         expect(IconCache.style.generation == settled + 1, "a changed surface invalidates once")
     }
 
-    /// A probe that rendered nothing would strand every restyle until the settle deadline expired.
     static func styleFingerprint() {
         let first = IconCache.styleFingerprint()
         expect(first != nil, "the style probe renders")

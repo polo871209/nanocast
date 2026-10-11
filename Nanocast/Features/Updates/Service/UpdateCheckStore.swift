@@ -1,16 +1,12 @@
 import Foundation
 
-/// The twice-daily release check. See docs/features/updates.md.
 @MainActor
 @Observable
 final class UpdateCheckStore {
     private nonisolated static let endpoint = URL(
         string: "https://api.github.com/repos/\(ReleaseFeed.repository)/releases?per_page=20")!
-    /// Measured from `lastCheckedAt`, so relaunching never re-asks GitHub.
     private static let refreshInterval: TimeInterval = 12 * 3600
-    /// Shorter retry, so a machine offline at launch sees a release soon after it reconnects.
     private static let retryInterval: TimeInterval = 2 * 3600
-    /// Keeps the first check clear of the login rush.
     private static let startupDelay = Duration.seconds(30)
     /// Lets macOS coalesce the wake with other timers.
     private static let wakeTolerance = Duration.seconds(15)
@@ -18,7 +14,6 @@ final class UpdateCheckStore {
     let channel: ReleaseChannel
     let runningVersion: AppVersion?
 
-    /// The newest release on this channel, whether or not it is newer than what is running.
     private(set) var latest: AvailableRelease?
     private(set) var lastCheckedAt: Date?
     var isChecking: Bool { checksInFlight > 0 }
@@ -29,7 +24,6 @@ final class UpdateCheckStore {
     @ObservationIgnored private let fetch: @Sendable () async -> Data?
     private var installedVersion: AppVersion?
     private var checksInFlight = 0
-    /// At most one uninvited appearance per version per launch.
     @ObservationIgnored private var announcedVersion: AppVersion?
     @ObservationIgnored private var pump: Task<Void, Never>?
 
@@ -54,7 +48,6 @@ final class UpdateCheckStore {
 
     deinit { pump?.cancel() }
 
-    /// Newer than what is running.
     var update: AvailableRelease? {
         guard let runningVersion else { return nil }
         return ReleaseFeed.offer(latest, running: runningVersion)
@@ -62,12 +55,10 @@ final class UpdateCheckStore {
 
     func start(after delay: Duration = UpdateCheckStore.startupDelay) {
         guard channel.updatesItself, runningVersion != nil else { return }
-        // Replace rather than bail: an exited loop leaves a non-nil task that would block restart.
         stop()
         pump = Task { [weak self] in
             try? await Task.sleep(for: delay)
             while !Task.isCancelled {
-                // Optional-chained: the sleep must not retain the store, or nothing can release it.
                 guard let wait = await self?.advance() else { return }
                 try? await Task.sleep(for: .seconds(wait), tolerance: Self.wakeTolerance)
             }
@@ -79,14 +70,13 @@ final class UpdateCheckStore {
         pump = nil
     }
 
-    /// The manual path: ignores freshness, and reports whether GitHub actually answered.
     @discardableResult
     func check() async -> Bool {
         guard channel.updatesItself else { return false }
         checksInFlight += 1
         defer { checksInFlight -= 1 }
         guard let data = await fetch(), !Task.isCancelled else { return false }
-        latest = ReleaseFeed.newest(from: data, channel: channel, architecture: .current)
+        latest = ReleaseFeed.newest(from: data, channel: channel)
         lastCheckedAt = Date()
         persist()
         return true
@@ -113,7 +103,6 @@ final class UpdateCheckStore {
     }
 
     private func advance() async -> TimeInterval {
-        // Clamped, so a future-stamped check can't park the loop past one interval.
         let age = max(0, lastCheckedAt.map { Date().timeIntervalSince($0) } ?? .infinity)
         var wait = Self.refreshInterval - age
         if wait <= 0 {
@@ -143,7 +132,6 @@ final class UpdateCheckStore {
         var installedVersion: AppVersion?
     }
 
-    /// Cacheless, never `URLSession.shared`, so the snapshot on disk stays the only copy.
     private nonisolated static let session: URLSession = {
         let config = URLSessionConfiguration.ephemeral
         config.urlCache = nil

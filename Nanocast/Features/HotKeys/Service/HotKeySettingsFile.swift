@@ -1,6 +1,5 @@
 import Foundation
 
-/// Shortcuts as settings.json spells them, applied through `HotKeyManager` and its conflict rules.
 @MainActor
 final class HotKeySettingsFile {
     struct Wanted {
@@ -25,7 +24,6 @@ final class HotKeySettingsFile {
         self.hotKeys = hotKeys
     }
 
-    /// Built per read, because the keyboard layout and the Hyper chord both change at run time.
     var spelling: HotKeySpelling {
         HotKeySpelling(
             characters: ASCIIKeyboardLayout.baseCharacters(for: 0..<128),
@@ -46,7 +44,6 @@ final class HotKeySettingsFile {
             })
     }
 
-    /// Clears changed bindings now and sets them in `commit`, so a moved chord never collides.
     func apply(_ wanted: [Wanted], key: SettingsFileKey) -> [SettingsFileIssue] {
         let spelling = self.spelling
         var issues: [SettingsFileIssue] = []
@@ -60,7 +57,7 @@ final class HotKeySettingsFile {
                 issues.append(
                     .invalidEntry(
                         key,
-                        String(localized: "\(item.label): “\(text)” isn't a shortcut Nanocast can bind")))
+                        "\(item.label): “\(text)” isn't a shortcut Nanocast can bind"))
                 continue
             }
             guard binding != current else { continue }
@@ -73,7 +70,6 @@ final class HotKeySettingsFile {
         return issues
     }
 
-    /// Sets what `apply` queued; a chord another action holds is reported, and the old one returns.
     func commit() -> [SettingsFileIssue] {
         let changes = pending
         pending.removeAll()
@@ -86,7 +82,7 @@ final class HotKeySettingsFile {
             issues.append(
                 .invalidEntry(
                     change.key,
-                    String(localized: "\(change.label): “\(change.text)” already runs \(owner)")))
+                    "\(change.label): “\(change.text)” already runs \(owner)"))
             if let previous = change.previous,
                 hotKeys.conflictOwner(of: previous, excluding: change.action) == nil
             {

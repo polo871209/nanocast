@@ -13,58 +13,58 @@ struct NoteFormattingBar: View {
 
     private static let styles = [
         Control(
-            symbol: "bold", title: String(localized: "Bold"), shortcut: "⌘B",
+            symbol: "bold", title: "Bold", shortcut: "⌘B",
             action: .toggleInline(.bold)
         ) {
             $0.inlineStyles.contains(.bold)
         },
         Control(
-            symbol: "italic", title: String(localized: "Italic"), shortcut: "⌘I",
+            symbol: "italic", title: "Italic", shortcut: "⌘I",
             action: .toggleInline(.italic)
         ) {
             $0.inlineStyles.contains(.italic)
         },
         Control(
-            symbol: "strikethrough", title: String(localized: "Strikethrough"), shortcut: "⇧⌘X",
+            symbol: "strikethrough", title: "Strikethrough", shortcut: "⇧⌘X",
             action: .toggleInline(.strikethrough)
         ) { $0.inlineStyles.contains(.strikethrough) },
         Control(
-            symbol: "chevron.left.forwardslash.chevron.right", title: String(localized: "Inline Code"),
+            symbol: "chevron.left.forwardslash.chevron.right", title: "Inline Code",
             shortcut: "⌘E", action: .toggleInline(.code)
         ) { $0.inlineStyles.contains(.code) },
-        Control(symbol: "link", title: String(localized: "Link"), shortcut: "⌘K", action: .toggleLink) {
+        Control(symbol: "link", title: "Link", shortcut: "⌘K", action: .toggleLink) {
             $0.isLink
         }
     ]
 
     private static let blocks = [
         Control(
-            symbol: "curlybraces", title: String(localized: "Code Block"), shortcut: "⌥⌘C",
+            symbol: "curlybraces", title: "Code Block", shortcut: "⌥⌘C",
             action: .toggleCodeBlock
         ) {
             $0.isCodeBlock
         },
         Control(
-            symbol: "text.quote", title: String(localized: "Quote"), shortcut: "⇧⌘B",
+            symbol: "text.quote", title: "Quote", shortcut: "⇧⌘B",
             action: .toggleQuote
         ) { $0.isQuote }
     ]
 
     private static let lists = [
         Control(
-            symbol: "list.number", title: String(localized: "Numbered List"), shortcut: "⇧⌘7",
+            symbol: "list.number", title: "Numbered List", shortcut: "⇧⌘7",
             action: .toggleList(.ordered)
         ) {
             $0.list == .ordered
         },
         Control(
-            symbol: "list.bullet", title: String(localized: "Bullet List"), shortcut: "⇧⌘8",
+            symbol: "list.bullet", title: "Bullet List", shortcut: "⇧⌘8",
             action: .toggleList(.bullet)
         ) {
             $0.list == .bullet
         },
         Control(
-            symbol: "checklist", title: String(localized: "Task List"), shortcut: "⇧⌘9",
+            symbol: "checklist", title: "Task List", shortcut: "⇧⌘9",
             action: .toggleList(.task)
         ) {
             $0.list == .task
@@ -85,11 +85,9 @@ struct NoteFormattingBar: View {
                     group(Self.blocks, formatting)
                     group(Self.lists, formatting)
                 }
-                // Grows out of the round button; nothing leaves the capsule, so no clip is needed.
                 .transition(.scale(scale: 0.6, anchor: .trailing).combined(with: .opacity))
             }
             NoteFormattingToggle(isExpanded: isExpanded, action: notes.toggleFormattingBar)
-                // Drawn above the buttons, so they grow out from behind it.
                 .zIndex(1)
         }
         .padding(Theme.Spacing.xs)
@@ -126,12 +124,10 @@ private struct NoteFormattingToggle: View {
         .focusable(false)
         .accessibilityLabel("Formatting")
         .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
-        // Against the window's trailing edge, so a centred label would run off it.
-        .tooltip(String(localized: "Formatting  ⌥⌘T"), alignment: .trailing)
+        .tooltip("Formatting  ⌥⌘T", alignment: .trailing)
     }
 }
 
-/// Symbols differ in width, so a fixed frame keeps every button the same square.
 private struct NoteBarGlyph: View {
     let name: String
 
@@ -154,14 +150,12 @@ private struct NoteHeadingButton: View {
         BarButton(isSelected: isHeading || isOpen, isCompact: true, action: action) {
             HStack(spacing: Theme.Spacing.xs) {
                 NoteBarGlyph(name: "textformat.size")
-                // Rotates rather than swaps, so opening the menu cannot shift the bar.
                 Image(systemName: "chevron.down")
                     .font(Theme.Typography.disclosure)
                     .rotationEffect(.degrees(isOpen ? 180 : 0))
                     .animation(reduceMotion ? nil : Theme.MenuMotion.chevronAnimation, value: isOpen)
             }
         }
-        // Its menu hangs off this frame, which only the laid-out view knows.
         .onGeometryChange(for: CGRect.self) {
             $0.frame(in: .global)
         } action: {
@@ -171,15 +165,14 @@ private struct NoteHeadingButton: View {
         .accessibilityLabel("Heading")
         .accessibilityValue(accessibilityValue)
         .accessibilityAddTraits(isHeading ? .isSelected : [])
-        // The leading end of an expanded capsule, which a narrow note pushes against the edge.
-        .tooltip(isOpen ? nil : String(localized: "Heading"), alignment: .leading)
+        .tooltip(isOpen ? nil : "Heading", alignment: .leading)
     }
 
     private var accessibilityValue: String {
         switch level {
         case nil: ""
-        case 0: String(localized: "Text")
-        case let level?: String(localized: "Heading \(level)")
+        case 0: "Text"
+        case let level?: "Heading \(level)"
         }
     }
 }

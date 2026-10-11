@@ -6,12 +6,10 @@ struct CustomCommandEditorScreen: PaletteScreen {
     let openInputMenu: (PopoverMenuContent, MenuPanelCorner, Int) -> Void
 
     var rows: [CustomCommand] { [] }
-    let primaryActionTitle = String(localized: "Save Command")
     let hidesSearchField = true
     let actsWithoutRows = true
 
     func hasPrimaryAction(at selection: Int) -> Bool { coordinator.editor != nil }
-    func isPrimaryActionEnabled(at selection: Int) -> Bool { coordinator.editor?.canSave == true }
     func hasActions(at selection: Int) -> Bool { false }
     func ownsVerticalKeys(at selection: Int) -> Bool { true }
 
