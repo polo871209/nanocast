@@ -21,12 +21,22 @@ enum AXScreens {
     static func converted(
         _ screens: [NSScreen], geometry: AXGeometry
     ) -> [WindowPlacementEngine.Screen] {
-        screens.enumerated().map { index, screen in
-            return WindowPlacementEngine.Screen(
+        let hiddenDock = autoHiddenDockEdge()
+        return screens.enumerated().map { index, screen in
+            let converted = WindowPlacementEngine.Screen(
                 id: displayID(screen).map(Int.init) ?? -(index + 1),
                 frame: geometry.flip(screen.frame),
                 visibleFrame: geometry.flip(screen.visibleFrame))
+            return hiddenDock.map(converted.reclaiming) ?? converted
         }
+    }
+
+    // An auto-hidden Dock still shrinks `visibleFrame` while it is revealed or sliding away.
+    private static func autoHiddenDockEdge() -> WindowPlacementEngine.DockEdge? {
+        guard let dock = UserDefaults(suiteName: "com.apple.dock"), dock.bool(forKey: "autohide")
+        else { return nil }
+        return dock.string(forKey: "orientation").flatMap(WindowPlacementEngine.DockEdge.init)
+            ?? .bottom
     }
 
     static func layoutScreens(geometry: AXGeometry) -> [WindowLayoutScreen] {

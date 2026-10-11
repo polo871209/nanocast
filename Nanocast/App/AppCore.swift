@@ -46,7 +46,6 @@ final class AppCore {
     @ObservationIgnored private(set) lazy var fileSearch = FileSearchSession(index: fileIndexer.index)
     let dictionary = DictionarySession()
     let menuSearch = MenuSearchSession()
-    let windowSwitch = WindowSwitchSession()
     let activationPolicy = ActivationPolicy()
     let uninstall = UninstallSession()
     let notesStore: NotesStore
@@ -55,7 +54,7 @@ final class AppCore {
 
     @ObservationIgnored private(set) lazy var paletteCoordinator = PaletteCoordinator(
         palette: palette, settings: settings, appIndex: appIndex,
-        fileSearch: fileSearch, menuSearch: menuSearch, windowSwitch: windowSwitch,
+        fileSearch: fileSearch, menuSearch: menuSearch,
         windowController: windowController)
     @ObservationIgnored private(set) lazy var settingsCoordinator = SettingsCoordinator(core: self)
     @ObservationIgnored private(set) lazy var onboardingCoordinator = OnboardingCoordinator(
@@ -112,7 +111,6 @@ final class AppCore {
         windowLayoutCoordinator: windowLayoutCoordinator,
         fileSearchCoordinator: fileSearchCoordinator,
         menuSearchCoordinator: menuSearchCoordinator,
-        windowSwitchCoordinator: windowSwitchCoordinator,
         notesCoordinator: notesCoordinator,
         core: self)
     @ObservationIgnored private(set) lazy var clipboardCoordinator = ClipboardCoordinator(
@@ -131,9 +129,8 @@ final class AppCore {
     @ObservationIgnored private(set) lazy var menuSearchCoordinator = MenuSearchCoordinator(
         settings: settings, appIndex: appIndex, session: menuSearch, palette: palette,
         paletteCoordinator: paletteCoordinator, core: self)
-    @ObservationIgnored private(set) lazy var windowSwitchCoordinator = WindowSwitchCoordinator(
-        settings: settings, appIndex: appIndex, session: windowSwitch, palette: palette,
-        paletteCoordinator: paletteCoordinator, core: self)
+    @ObservationIgnored private lazy var windowSwitchCoordinator = WindowSwitchCoordinator(
+        settings: settings, hotKeys: hotKeys, healthTicker: healthTicker)
     @ObservationIgnored private(set) lazy var cameraCoordinator = CameraCoordinator(core: self)
     @ObservationIgnored private(set) lazy var dictionaryCoordinator = DictionaryCoordinator(
         paletteCoordinator: paletteCoordinator)
@@ -206,7 +203,6 @@ final class AppCore {
             paletteCoordinator.onScreenOpening = { [weak self] mode in
                 switch mode {
                 case .menuSearch: self?.menuSearchCoordinator.load()
-                case .switchWindows: self?.windowSwitchCoordinator.load()
                 case .rooms, .roomWindows: self?.roomCoordinator.load()
                 default: break
                 }
@@ -311,7 +307,7 @@ final class AppCore {
             return rooms.room(id: id)?.name
         case .customWindowSize(let id):
             return customWindowSizes.size(id: id)?.name
-        case .togglePalette, .command, .systemAction, .windowCommand:
+        case .togglePalette, .windowSwitcher, .command, .systemAction, .windowCommand:
             return nil
         }
     }
@@ -414,6 +410,12 @@ final class AppCore {
                 $0.windowSwitchCoordinator.applyEnabled()
                 $0.menuSearchCoordinator.applyEnabled()
             })
+        track(
+            hotKeys,
+            {
+                _ = $0.revision
+                _ = $0.recordingAction
+            }, reproject: { $0.windowSwitchCoordinator.applyTrigger() })
         track({ _ = $0.notesEnabled }, reproject: { $0.notesCoordinator.applyEnabled() })
         track(
             { _ = $0.notesShowsInMenuBar }, reproject: { $0.notesCoordinator.applyMenuBarItem() })

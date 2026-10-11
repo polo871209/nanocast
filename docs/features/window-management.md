@@ -88,6 +88,8 @@ Nothing here touches `backingScaleFactor`. `NSScreen.frame`, `NSScreen.visibleFr
 coordinates are all in points, so mixed-DPI correctness is automatic; a scale factor appearing anywhere
 in this feature is a bug. `visibleFrame` already excludes the menu bar, the Dock and the notch.
 
+An auto-hidden Dock is the exception. macOS still shrinks `visibleFrame` by the Dock's strip while the Dock is revealed or sliding away, so a command run in that moment left a gap. When `com.apple.dock` has `autohide` on, `AXScreens.converted` stretches every screen's `visibleFrame` to its `frame` on the `orientation` edge through `Screen.reclaiming(_:)`. A revealed Dock then covers the window, as it does for any other window.
+
 ## Geometry
 
 **Tiles** come from fractional bounds of `visibleFrame`. Gaps use one rule that composes across every

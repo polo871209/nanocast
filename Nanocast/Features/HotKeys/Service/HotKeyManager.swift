@@ -1,3 +1,4 @@
+import Carbon.HIToolbox
 import Foundation
 
 @MainActor
@@ -107,7 +108,13 @@ final class HotKeyManager {
         }
     }
 
-    func binding(for action: HotKeyAction) -> HotKeyBinding? { bindings[action] }
+    func binding(for action: HotKeyAction) -> HotKeyBinding? {
+        bindings[action] ?? Self.defaultBindings[action]
+    }
+
+    private static let defaultBindings: [HotKeyAction: HotKeyBinding] = [
+        .windowSwitcher: .combo(KeyShortcut(carbonKeyCode: kVK_Tab, carbonModifiers: cmdKey))
+    ]
 
     private func storedBinding(for action: HotKeyAction) -> HotKeyBinding? {
         guard
@@ -147,7 +154,7 @@ final class HotKeyManager {
             index(id, bound: binding != nil, key: boundWindowRoomKey)
         case .customWindowSize(let id):
             index(id, bound: binding != nil, key: boundCustomWindowSizeKey)
-        case .togglePalette, .command, .systemAction, .windowCommand:
+        case .togglePalette, .windowSwitcher, .command, .systemAction, .windowCommand:
             break
         }
         candidateActionsCache = nil
@@ -255,6 +262,8 @@ final class HotKeyManager {
         switch action {
         case .togglePalette:
             return "App Launcher"
+        case .windowSwitcher:
+            return "Window Switcher"
         case .command(let id):
             return id.name
         case .app(let bundleID), .settingsPane(let bundleID):
@@ -275,7 +284,9 @@ final class HotKeyManager {
     }
 
     private func register(_ action: HotKeyAction) {
-        guard let shortcut = binding(for: action)?.shortcut else { return }
+        guard action != .windowSwitcher, let shortcut = binding(for: action)?.shortcut else {
+            return
+        }
         center.register(
             id: action.defaultsKey, shortcut: shortcut,
             onKeyDown: { [weak self] _ in self?.perform(action) })
@@ -294,6 +305,7 @@ final class HotKeyManager {
         guard allowsAction?(action) ?? true else { return }
         switch action {
         case .togglePalette: onTogglePalette?()
+        case .windowSwitcher: break
         case .command(let id): onRunCommand?(id)
         case .app(let bundleID): AppLauncher.toggle(bundleID: bundleID)
         case .settingsPane(let bundleID): AppLauncher.openSettingsPane(bundleID: bundleID)
