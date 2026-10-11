@@ -1,10 +1,8 @@
 import Foundation
 
-/// Every name a bundle carries on disk, re-read only when its modification date moves.
 struct BundleNameCache: Sendable {
     private struct Entry: Sendable {
         let modified: Date?
-        /// Preferred-language names first; `scan` takes the first as the display name.
         let names: [String]
     }
 
@@ -17,7 +15,6 @@ struct BundleNameCache: Sendable {
         previous = [:]
     }
 
-    /// Only what this pass asks about carries forward; a new system language drops it all.
     init(reusing cache: BundleNameCache, languages: [String]) {
         self.languages = languages
         previous = cache.languages == languages ? cache.current : [:]

@@ -1,6 +1,5 @@
 import Foundation
 
-/// Window management's shortcuts, aliases and lists in settings.json, each kept with its record.
 @MainActor
 struct WindowManagementSettingsFile {
     let sizes: CustomWindowSizeStore
@@ -168,8 +167,6 @@ struct WindowManagementSettingsFile {
             })
     }
 
-    // MARK: - Records
-
     private struct Record {
         let id: UUID
         let name: String
@@ -188,7 +185,6 @@ struct WindowManagementSettingsFile {
         return issues
     }
 
-    /// A record the file dropped takes its shortcut and alias with it; the rest take what it set.
     private func follow<Value>(
         _ decoded: WindowManagementFileFormat.Decoded<Value>, records: [Record],
         previous: Set<String>, bound: [UUID], label: (String) -> String,

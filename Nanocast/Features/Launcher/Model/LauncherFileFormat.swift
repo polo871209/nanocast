@@ -1,6 +1,5 @@
 import Foundation
 
-/// A launcher item's row as settings.json spells it: shortcut, alias and launcher visibility.
 enum LauncherFileFormat {
     struct Record: Equatable, Sendable {
         var shortcut: String?

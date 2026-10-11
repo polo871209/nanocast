@@ -23,14 +23,11 @@ Independently of the folder tree, every mature subsystem has converged on the sa
 │ CustomWindowSize{,Store} · Room/* ·                                        │
 │ PaletteRowIndex ·                                                          │
 │ Uninstall{Target,SearchRoot,Rules,Protection,Plan} ·                       │
-│ Quicklink{,Destination,Store,Archive} · AppleShortcut · Notes/Model/* ·    │
-│ Snippets/Model/* ·                                                         │
+│ LinkDestination · Notes/Model/* ·                                          │
 │ ShellCommandRunner · DoubleTap{Modifier,Detector} · ClipboardStore ·       │
 │ RaycastDecoder · Scrypt · AppSettingsKey · SettingsBackupCoverage          │
 │ SettingsFile{JSON,Key,Value,Format,Binding,Issue,Identity} ·               │
 │ HotKeySpelling · WindowManagementFileFormat ·                              │
-│ MeetingLink · MeetingEvent · UpcomingWindow · MeetingDay · MenuBarSummary  │
-│ AutoJoinPolicy · EventDraft · SupportReminderSchedule ·                    │
 │ MenuSearch{Item,Shortcut,Query,TreeNode,SnapshotPolicy,Target} ·           │
 │ WindowSwitch{Entry,Order,Query}                                            │
 └──────────────────────────────────┬─────────────────────────────────────────┘
@@ -41,18 +38,18 @@ Independently of the folder tree, every mature subsystem has converged on the sa
 │ AXWindowAccess · AXScreens · WindowInventory · WindowLayoutRunner ·        │
 │ RoomWindowSweep · RoomRunner ·                                             │
 │ IconCache · WindowMover · UninstallScanner · UninstallRunner ·             │
-│ SystemActionRunner · QuicklinkLauncher · TextInjector ·             │
-│ SnippetKeywordListener · NotesRepository · CurrencyRateStore · Paster ·    │
+│ SystemActionRunner · TextInjector · NotesRepository · CurrencyRateStore ·  │
+│ Paster ·                                                                   │
 │ HotKeyCenter · HyperKeyTap · KeyboardRemapper · ModifierTapMonitor ·       │
 │ SecureInputMonitor · RunningAppsMonitor ·                                  │
-│ CalendarStore · MeetingLauncher · MeetingClock · CameraSession ·           │
-│ SupportReminderStore · AXMenuAccess · WindowZOrder · WindowSwitchSweep ·   │
-│ AppleShortcutRunner · SettingsFileRepository · SettingsFileMonitor ·       │
+│ CameraSession ·                                                            │
+│ AXMenuAccess · WindowZOrder · WindowSwitchSweep ·                          │
+│ SettingsFileRepository · SettingsFileMonitor ·                             │
 │ WindowManagementSettingsFile                                               │
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ published through
 ┌─ OBSERVABLE STATE ───────────────▼─────────────────────────────────────────┐
-│ 39 @MainActor @Observable stores, sessions, indices and State types        │
+│ 50 @MainActor @Observable stores, sessions, indices and State types        │
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ rendered by
 ┌─ VIEW ───────────────────────────▼─────────────────────────────────────────┐
@@ -66,8 +63,8 @@ in whichever of the two owns it.
 - **`Model/` — pure.** Foundation only, plus SQLite3 or CoreGraphics where the data demands it.
   Everything from the environment is **injected**: `CalcEngine` takes `now` / `calendar` / `rates`,
   `LauncherRankingStore` takes `now` and its file URL, `WindowActionMemory` takes `now` as a parameter,
-  `UninstallRules` is handed directory *names* rather than URLs, and `QuicklinkStore` is handed the home
-  directory. This is the layer that **decides** things.
+  `UninstallRules` is handed directory _names_ rather than URLs, and `LinkDestination` is handed the
+  home directory. This is the layer that **decides** things.
 - **`Service/` — effects.** Stores, monitors, runners, scanners and AppKit glue. Every `AXUIElement`
   call, `CGEventTap`, `NSWorkspace.open`, `URLSession` request, `FileManager` walk and CoreAudio read
   lives here. This is the layer that **does** things.
@@ -89,15 +86,12 @@ the shared primitives and system shims every feature draws on. Neither may depen
 ## Single-owner core
 
 `AppCore.shared` (`App/AppCore.swift`) is a `@MainActor` singleton owning every long-lived thing in the
-app: the stores (`AppIndex`, `ClipboardStore`, `SnippetsStore`, `QuicklinkStore`, `CustomCommandStore`,
-`FavoritesStore`, `VisibilityStore`, `AliasStore`, `LauncherRankingStore`, `CalculatorHistoryStore`,
-`CurrencyRateStore`, `FrequentEmojiStore`, `CalendarStore`), the managers, monitors and clocks
-(`ClipboardManager`, the opt-in `ClipboardTextIndexer`, the opt-in `SettingsFileRepository`,
-`HotKeyManager`, `HyperKeyManager`, `DictationKeyManager`, `RunningAppsMonitor`,
-`SnippetKeywordListener`), the shared state
-(`AppSettings`, `PaletteState`, `FileSearchSession`, `MenuSearchSession`, `UninstallSession`,
-`MeetingClock`), `NotesStore`, the twenty-one feature coordinators, and the
-window controllers.
+app: the stores (`AppIndex`, `ClipboardStore`, `CustomCommandStore`, `FavoritesStore`,
+`VisibilityStore`, `AliasStore`, `LauncherRankingStore`, `CalculatorHistoryStore`, `CurrencyRateStore`,
+`FrequentEmojiStore`), the managers and monitors (`ClipboardManager`, the opt-in `ClipboardTextIndexer`,
+the opt-in `SettingsFileRepository`, `HotKeyManager`, `HyperKeyManager`, `DictationKeyManager`,
+`RunningAppsMonitor`), the shared state (`AppSettings`, `PaletteState`, `FileSearchSession`,
+`MenuSearchSession`, `UninstallSession`), `NotesStore`, the feature coordinators, and the window controllers.
 
 `AppDelegate.applicationDidFinishLaunching` calls `AppCore.shared.start(launchedByUser:)` and nothing
 else; the delegate only reads the launch Apple Event to tell a plain open from a login-item or URL
@@ -105,8 +99,8 @@ launch. That is the one wiring point, and `start` reads as the app's whole boot 
 
 **Feature actions live on that feature's coordinator, and a view must never reach past a coordinator
 into a store to mutate it.** That is the rule; `AppCore` holds only the closure wiring that connects a
-hotkey to a coordinator. Views inject `AppCore` through `@Environment` and use it as the *locator* for
-those coordinators — `core.quicklinkCoordinator.deleteQuicklink(…)` is the shape, and the alternative
+hotkey to a coordinator. Views inject `AppCore` through `@Environment` and use it as the _locator_ for
+those coordinators — `core.customCommandCoordinator.deleteCustomCommand(…)` is the shape, and the alternative
 is injecting fifteen coordinators separately for no gain. Reading a store off `AppCore` to render it is
 fine too; deciding something with one is what the rule forbids. `showNotice`, `confirm`,
 `reportFailure`, `showMessage` and `pickVolume` are forwarders on `AppCore` itself, so
@@ -129,10 +123,8 @@ store starts the helper on demand and reaps it after the selected idle delay or 
 ## Entry points and windows
 
 `NanocastLaunch` (`@main`) pins the interface language, then runs `NanocastApp`, which declares
-only two `MenuBarExtra` scenes — Nanocast's own item and the
-calendar's, each inserted by one preference and independent of the other; everything else visible is
-driven imperatively from AppKit. Extension menu extras are dynamic `NSStatusItem`s owned entirely by
-`Features/Extensions/`, through `ExtensionManager`, with no scene or lifecycle wiring in the core.
+only Nanocast's own `MenuBarExtra`, inserted by one preference; everything else visible is driven
+imperatively from AppKit.
 
 - **Command palette** — a borderless floating `NSPanel` (`Palette/PalettePanel.swift`) hosting SwiftUI
   via `NSHostingView`, managed by `PaletteWindowController`. It toggles between a compact bar and the
@@ -152,26 +144,16 @@ driven imperatively from AppKit. Extension menu extras are dynamic `NSStatusItem
   Markdown over the literal source, switches among local Markdown files and stays visible on focus
   loss. The displayed string is the canonical file source; there is no source/display mapping.
   See [features/notes.md](features/notes.md).
-- **AI Chat** — a titled `AppWindowController` window owned by `AIChatCoordinator`: an
-  `NSSplitViewController` with a collapsible sidebar of saved chats beside the open conversation, as
-  Settings is built. The conversation lives on `AppCore.aiChats`, not the window, so closing it cancels
-  nothing. Quick AI is the same feature's palette screen. See [features/ai.md](features/ai.md).
-- **The main menu** — shaped by `NanocastApp`'s `.commands`, which rebinds ⌘Q to Close Window: the AI
-  Chat window when it is key, otherwise Settings. It is only ever on screen while a titled window is
+- **The main menu** — shaped by `NanocastApp`'s `.commands`, which rebinds ⌘Q to close Settings.
+  It is only ever on screen while a titled window is
   open, so it is those windows' menu bar. It must stay declarative.
 - **Dialogs** — borderless `DialogPanel`s driven by `DialogController`, the app's only presenter for
   confirmations, failure reports and value prompts. Presentation is `async`, so nothing blocks the main
   actor, and the presenter refuses a second dialog while one is up — that, not a flag, is what stops a
   held hotkey stacking dialogs.
-- **Support** — a titled `AppWindowController` window owned by `SupportCoordinator`, sized to the
-  height its content measured. Every route into it — the palette's menu circle, Settings → About, the
-  menu bar, the launcher, and the 30-day reminder — lands on `showSupport()`, which is what moves the
-  reminder's anchor. See [features/support.md](features/support.md).
-- **The camera surfaces** — a borderless, non-activating `CameraPanel` at `.floating`, in two
-  shapes over one `CameraSession`: `CameraPreviewController`, owned by `CalendarCoordinator`, gates a
-  join and doubles as auto join's confirmation; `CameraCoordinator`, owned by `AppCore`, is the
-  standalone `Open Camera` command. See [features/camera.md](features/camera.md) and
-  [features/calendar.md](features/calendar.md).
+- **The camera** — a borderless, non-activating `CameraPanel` at `.floating` over one
+  `CameraSession`, driven by `CameraCoordinator` on `AppCore` for the `Open Camera` command. See
+  [features/camera.md](features/camera.md).
 - **HUDs** are separate, because a dialog asks and a HUD reports: `MessageHUDController` (the pill) and
   `VolumeHUDController` (the level box), both over a shared `HUDPresenter` that owns the
   one-at-a-time, auto-dismiss and fade policy. See [ui.md](ui.md#dialogs--hud).
@@ -184,7 +166,7 @@ every live `AnimatedPanel` (see [ui.md](ui.md#non-negotiable-invariants)).
 
 ## Observation
 
-39 types are `@MainActor @Observable`. Nothing uses `ObservableObject` or `@Published`, and views read
+50 types are `@MainActor @Observable`. Nothing uses `ObservableObject` or `@Published`, and views read
 state through `@Environment` rather than `@EnvironmentObject`.
 
 Three things about this model are easy to get wrong:
@@ -234,17 +216,16 @@ Nanocast/
                     AppDisplayName,
                     NotificationToken, AppPaths, Signposts, HealthTicker, Memo, ActivationPolicy,
                     Images/, Compression/
-  Resources/        RaycastRuntime.generated.js, the embedded extension runtime
+  Resources/        EmojiKeywords/, the generated emoji search keywords
   Palette/          the palette shell: PalettePanel, PaletteWindowController, RootPaletteView,
                     the PaletteScreen protocol, PaletteCoordinator, PaletteState, PaletteMode
   Windows/          the non-palette AppKit surfaces: AppWindowController, Dialog/, HUD/, About/
   Assets.xcassets/  the app icon and the bundled image sets some catalog symbols resolve to
   Features/
     PaletteRowIndex.swift   the flat selection index — palette-owned, so it sits at the top
-    Launcher/ Clipboard/ Calculator/ Calendar/ Emoji/ FileSearch/ MenuSearch/ Notes/
-    Quicklinks/ Snippets/ Uninstall/ SystemActions/ CustomCommands/ HotKeys/ Backup/
-    WindowManagement/ Onboarding/ Updates/ Support/ AI/ Settings/
-    Extensions/
+    Launcher/ Clipboard/ Calculator/ Camera/ Dictation/ Dictionary/ Emoji/ FileSearch/ MenuSearch/
+    Notes/ TextInjection/ Uninstall/ SystemActions/ CustomCommands/ HotKeys/ Backup/
+    WindowManagement/ WindowSwitcher/ Onboarding/ Updates/ Settings/
         Model/      pure — the harness inputs
         Service/    effects — stores, monitors, runners, AppKit glue
         UI/         screens, views, and the feature's coordinator
@@ -264,7 +245,7 @@ Every `SettingsTab` maps to one `…SettingsView`, and each is a stock `Form` wi
 `.formStyle(.grouped)` — see [ui.md](ui.md#settings). A pane lives with its feature; only a pane no
 feature owns (General, Permissions) lives in `Settings/Panes/`. The four launcher-category panes —
 Applications, System Settings, System Actions, Commands — are thin wrappers over the shared
-`LauncherItemsSection`; Apple Shortcuts pairs its feature switch with the same `LauncherItemsList`.
+`LauncherItemsSection`.
 
 `SettingsTab` and `SettingsSection` both identify by the case itself, never by an index. A selectable
 `List` flattens section and row IDs into one namespace, so overlapping `Int` IDs make SwiftUI drop

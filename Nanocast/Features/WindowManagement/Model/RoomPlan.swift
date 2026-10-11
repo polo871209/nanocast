@@ -2,7 +2,6 @@
 import CoreGraphics
 import Foundation
 
-/// One window the sweep found. A handle, not an `AXUIElement`: this layer stays pure.
 struct RoomLiveWindow: Equatable, Sendable {
     var handle: Int
     var bundleID: String
@@ -12,12 +11,10 @@ struct RoomLiveWindow: Equatable, Sendable {
     var frame: CGRect
     var isMinimized = false
     var isAppHidden = false
-    /// The window server's front-to-back order; `.max` when it is not on screen.
     var frontRank = Int.max
     var appURL: URL?
 }
 
-/// Everything entering a room does on one display, decided before a single AX write. Pure.
 struct RoomPlan: Equatable, Sendable {
     struct Placement: Equatable, Sendable {
         var index: Int
@@ -25,17 +22,14 @@ struct RoomPlan: Equatable, Sendable {
         var frame: CGRect
     }
 
-    /// Room order, main window first: raised in reverse, it ends frontmost.
     var placements: [Placement]
     var missing: [Int]
-    /// Other windows of the room's apps: they park, since hiding them would hide the room too.
     var parks: [Int]
     var keeps: Set<String>
 
     /// The desktop's own app comes back whenever another hides, so its windows park instead.
     static let parksInsteadOfHiding: Set<String> = ["com.apple.finder"]
 
-    /// Deliberately blind to the feature switch: that guard lives in the coordinator.
     static func make(
         _ room: Room, windows: [RoomLiveWindow], on screen: WindowLayoutScreen, gap: CGFloat,
         minimums: [String: CGSize], claimed: Set<UInt32> = []
@@ -61,7 +55,6 @@ struct RoomPlan: Equatable, Sendable {
             keeps: Set(room.windows.map(\.bundleID)).union(parksInsteadOfHiding))
     }
 
-    /// Where the windows at `indices` go; a layout that no longer fits falls back to Auto.
     static func frames(
         for room: Room, indices: [Int], kind: RoomLayoutKind, in visible: CGRect, gap: CGFloat,
         minimums: [CGSize]
@@ -100,7 +93,6 @@ struct RoomPlan: Equatable, Sendable {
         }
     }
 
-    /// What Tab steps through here: every layout that fits and looks unlike the others.
     static func layoutChoices(
         for room: Room, windows: [RoomLiveWindow], on screen: WindowLayoutScreen, gap: CGFloat,
         minimums: [String: CGSize], claimed: Set<UInt32> = []
@@ -130,7 +122,6 @@ struct RoomPlan: Equatable, Sendable {
                     choices.append(kind)
                 }
             case .saved:
-                // Only Remember Arrangement makes one, so Tab never invents it.
                 if current == .saved { choices.append(kind) }
             case .auto, .focus, .stack, .columns, .grid:
                 guard
@@ -144,14 +135,12 @@ struct RoomPlan: Equatable, Sendable {
                 choices.append(kind)
             }
         }
-        // Stack's overlapping cards only when nothing tidier fits.
         if current != .stack, choices.contains(where: { [.focus, .columns, .grid].contains($0) }) {
             choices.removeAll { $0 == .stack }
         }
         return choices
     }
 
-    /// The choice after `current`, wrapping; nil when only one layout fits, so Tab can say so.
     static func nextLayout(
         after current: RoomLayoutKind, in choices: [RoomLayoutKind], backwards: Bool
     ) -> RoomLayoutKind? {

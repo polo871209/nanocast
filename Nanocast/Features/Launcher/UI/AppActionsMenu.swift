@@ -2,7 +2,6 @@ import SwiftUI
 
 @MainActor
 enum AppActionsMenu {
-    /// Resolved by the screen that owns the visible order; every row runs its chord's call.
     @MainActor
     struct FavoriteActions {
         let isFavorite: Bool
@@ -18,7 +17,6 @@ enum AppActionsMenu {
         onHideFromSearch: @escaping () -> Void
     ) -> PopoverMenuContent {
         var items = leadingItems(app: app, searchQuery: searchQuery, core: core)
-        // A query-driven row lives only for its query, so no preference could outlive it.
         let isPersistent = !CommandCatalog.isQueryDriven(app)
         if isPersistent {
             items.append(
@@ -55,8 +53,7 @@ enum AppActionsMenu {
                     onResetRanking()
                 })
         }
-        // These carry their own Show in root search switch rather than a pane checkbox.
-        let hidesFromRoot = app.kind == .quicklink || app.kind == .customCommand
+        let hidesFromRoot = app.kind == .customCommand
         if isPersistent, app.canHideFromSearch || hidesFromRoot {
             let title =
                 hidesFromRoot
@@ -96,66 +93,12 @@ enum AppActionsMenu {
                     core.uninstallCoordinator.beginUninstall(app)
                 })
         }
-        if app.kind == .quicklink, let quicklink = core.quicklinks.quicklink(entryID: app.id) {
-            items.append(
-                PopoverMenuItem(
-                    title: String(localized: "Copy Link"), systemImage: "doc.on.clipboard",
-                    startsSection: true, shortcut: "⌃⌘C"
-                ) {
-                    core.quicklinkCoordinator.copyQuicklink(id: quicklink.id)
-                })
-            items.append(
-                PopoverMenuItem(
-                    title: String(localized: "Edit Quicklink"), systemImage: "pencil", shortcut: "⌘E"
-                ) {
-                    core.quicklinkCoordinator.editQuicklink(quicklink)
-                })
-        }
-        if app.kind == .extensionCommand {
-            if core.extensions.isBackgroundSchedulable(for: app) {
-                let enabled = core.extensions.isBackgroundEnabled(for: app)
-                items.append(
-                    PopoverMenuItem(
-                        title: enabled
-                            ? String(localized: "Disable Background Refresh")
-                            : String(localized: "Enable Background Refresh"),
-                        systemImage: enabled ? "pause.circle" : "play.circle", startsSection: true
-                    ) {
-                        core.extensions.toggleBackgroundRefresh(for: app)
-                    })
-                if enabled {
-                    items.append(
-                        PopoverMenuItem(
-                            title: String(localized: "Refresh Now"), systemImage: "arrow.clockwise"
-                        ) {
-                            core.extensions.refreshNow(app)
-                        })
-                }
-            }
-            items.append(
-                PopoverMenuItem(
-                    title: String(localized: "Configure Extension"), systemImage: "slider.horizontal.3",
-                    startsSection: true
-                ) {
-                    core.extensionCoordinator.showExtensionSettings(for: app)
-                })
-            items.append(
-                PopoverMenuItem(
-                    title: String(localized: "Uninstall Extension"), systemImage: "trash",
-                    isDestructive: true
-                ) {
-                    core.extensionCoordinator.confirmUninstall(app)
-                })
-        }
         return PopoverMenuContent(header: app.name, items: items)
     }
 
     private static func leadingItems(
         app: AppEntry, searchQuery: String, core: AppCore
     ) -> [PopoverMenuItem] {
-        if app.kind == .meeting, let meeting = core.calendarCoordinator.meeting(entryID: app.id) {
-            return MeetingActionsMenu.content(meeting: meeting, core: core).items
-        }
         if app.kind == .customCommand, let command = core.customCommands.command(entryID: app.id) {
             return CustomCommandActionsMenu.leadingItems(
                 command: command, coordinator: core.customCommandCoordinator
@@ -165,7 +108,7 @@ enum AppActionsMenu {
         }
         let primarySymbol =
             switch app.kind {
-            case .application, .command, .extensionCommand: "list.dash.header.rectangle"
+            case .application, .command: "list.dash.header.rectangle"
             default: "list.bullet.rectangle"
             }
         var items = [
@@ -174,16 +117,6 @@ enum AppActionsMenu {
                 shortcut: "↵"
             ) { core.launcherCoordinator.launch(app, searchQuery: searchQuery) }
         ]
-        if app.kind == .snippet, let id = StoredSnippet.id(fromEntryID: app.id),
-            let record = core.snippetsStore.record(id: id)
-        {
-            items.append(
-                PopoverMenuItem(
-                    title: String(localized: "Edit Snippet"), systemImage: "pencil", shortcut: "⌘E"
-                ) {
-                    core.snippetCoordinator.editSnippet(record)
-                })
-        }
         if app.canRevealInFinder {
             items.append(
                 PopoverMenuItem(

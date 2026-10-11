@@ -38,7 +38,6 @@ enum DictationModelDownloader {
             if errno == EWOULDBLOCK { throw DictationWire.Failure.busy }
             throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
         }
-        // Keep the lock file's inode stable so every instance locks the same resource.
         for directory in try fileManager.contentsOfDirectory(
             at: root,
             includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey])
@@ -177,8 +176,7 @@ enum DictationModelDownloader {
             }
         }
 
-        func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: (any Error)?)
-        {
+        func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: (any Error)?) {
             if let error { responses.finish(throwing: error) }
         }
     }

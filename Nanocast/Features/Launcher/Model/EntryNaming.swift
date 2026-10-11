@@ -1,14 +1,10 @@
 import Foundation
 
-/// The one place an entry's searchable names are decided, for every kind alike.
 enum EntryNaming {
     struct Sources: Sendable, Hashable {
         var name: String
-        /// Ranked like the title: a translation, a renamed file, a snippet keyword.
         var alternateTitles: [String] = []
-        /// What the entry comes from, shown beside it: an extension's title.
         var subtitle: String?
-        /// Found by, never ranked by: a declared name, an extension's keywords.
         var keywords: [String] = []
 
         init(name: String) { self.name = name }
@@ -16,7 +12,6 @@ enum EntryNaming {
 
     static func profile(for sources: Sources) -> SearchProfile {
         let title = SearchText(sources.name, transliterated: true)
-        // Folded, never transliterated: these compare against the query as typed.
         let alternates = usable(sources.alternateTitles, rejecting: [sources.name])
             .map { SearchText($0, transliterated: false) }
         let subtitle = sources.subtitle
@@ -51,15 +46,12 @@ enum EntryNaming {
     }
 }
 
-/// Built by `EntryNaming.profile` alone.
 struct SearchProfile: Sendable, Hashable {
     var title: SearchText
     var alternateTitles: [SearchText]
     var subtitle: SearchText?
-    /// Match to appear, never to rank.
     var keywords: [SearchText]
 
-    /// What an entry holds before its first index pass: nothing a query can reach.
     static let unnamed = SearchProfile(
         title: SearchText(units: []), alternateTitles: [], subtitle: nil, keywords: [])
 }

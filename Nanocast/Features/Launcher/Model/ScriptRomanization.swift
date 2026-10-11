@@ -1,8 +1,6 @@
 import Foundation
 
-/// What a name in another script gets typed as, routed per script because ICU serves none of them.
 enum ScriptRomanization {
-    /// The scripts worth their own rule; everything else ICU's generic transform handles well.
     enum Script: Sendable {
         case han
         case japanese
@@ -11,7 +9,6 @@ enum ScriptRomanization {
         case other
     }
 
-    /// Words one space apart, folded; nil when the name is Latin already.
     static func latin(_ name: String) -> String? {
         guard let script = script(of: name) else { return nil }
         let reading: String? =
@@ -28,7 +25,6 @@ enum ScriptRomanization {
         return folded.isEmpty || folded == FuzzyMatch.normalized(name) ? nil : folded
     }
 
-    /// The first script with a rule of its own, kana before Han so a Japanese title routes right.
     static func script(of name: String) -> Script? {
         var hasHan = false
         var hasHangul = false

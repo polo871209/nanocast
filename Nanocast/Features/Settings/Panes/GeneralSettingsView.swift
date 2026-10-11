@@ -53,7 +53,6 @@ struct GeneralSettingsView: View {
                     SettingsRowTitle(.generalGeneral, "Escape Key Behavior")
                     Text("When the search field is empty.")
                 }
-                // Empty only when TIS fails; one layout still lists, so the row stays put.
                 if !inputSources.isEmpty {
                     Picker(selection: $settings.autoSwitchInputSourceID) {
                         Text("None").tag(nil as String?)
@@ -238,7 +237,6 @@ private struct WindowModeButtonStyle: ButtonStyle {
     }
 }
 
-/// Three glyph steps read as a legend; a true-to-scale "Aa" would look identical at 1.1.
 private struct InterfaceSizeRow: View {
     @Environment(AppSettings.self) private var settings
 

@@ -8,14 +8,10 @@ struct DictionaryEntry: Equatable, Identifiable, Sendable {
 
     enum Block: Equatable, Sendable {
         case headword(String, homograph: String?, pronunciation: String?)
-        /// The part of speech and its inflections: `noun (plural mangoes)`.
         case partOfSpeech([Run])
         case sense(number: String?, [Run])
-        /// A `•` refinement of the sense above it.
         case subsense([Run])
-        /// A scientific or usage aside, drawn apart from the definition it follows.
         case note([Run])
-        /// A titled part after the senses: `ORIGIN`, `PHRASES`, `DERIVATIVES`.
         case section(String)
         case phrase([Run])
         case paragraph([Run])
@@ -29,22 +25,17 @@ struct DictionaryEntry: Equatable, Identifiable, Sendable {
     enum Style: Equatable, Sendable {
         case plain
         case example
-        /// Grammar, register and region labels: `[with object]`, `informal`.
         case label
-        /// A form the entry names: an inflection, a variant, a phrase.
         case strong
-        /// A taxonomic or foreign word.
         case italic
     }
 
-    /// What a copy carries: one line per block, so the pasted text keeps the page's shape.
     var text: String {
         blocks.map(\.text).joined(separator: "\n")
     }
 }
 
 extension DictionaryEntry {
-    /// The public API's plain text: `headword | pronunciation | body`, with `•` between senses.
     init(term: String, plainText: String) {
         let pipes = plainText.ranges(of: "|").prefix(2)
         var pronunciation: String?

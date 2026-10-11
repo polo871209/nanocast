@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// The emoji and symbol picker: a sectioned grid whose ↑/↓ move by visual row, not by index.
 struct EmojiScreen: PaletteScreen {
     let index: EmojiIndex
     let frequent: FrequentEmojiStore
@@ -15,7 +14,6 @@ struct EmojiScreen: PaletteScreen {
         vm.emojiGridColumnsOverride ?? defaultColumns
     }
 
-    /// The pins the grid shows; a stored glyph the catalog lacks must not shift any position.
     private var visiblePins: [String] {
         pinned.glyphs.filter { index.entry(for: $0) != nil }
     }
@@ -24,7 +22,6 @@ struct EmojiScreen: PaletteScreen {
         vm.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// Pinned is the first section here, so a pin's position is also its flat selection index.
     private var pinsLeadGrid: Bool {
         isBrowsing && (vm.emojiCategoryFilter == .all || vm.emojiCategoryFilter == .pinned)
     }
@@ -35,7 +32,6 @@ struct EmojiScreen: PaletteScreen {
             filter: vm.emojiCategoryFilter, columns: columns)
     }
 
-    /// Flat grid order across sections — what the selection indexes.
     var rows: [EmojiEntry] { sections.flatMap(\.entries) }
 
     var primaryActionTitle: String { vm.pasteTarget?.pasteTitle ?? String(localized: "Paste") }
@@ -68,7 +64,6 @@ struct EmojiScreen: PaletteScreen {
         return true
     }
 
-    /// ⌥↵ — the palette stays up, so a run of emoji goes over without re-summoning it.
     func pasteKeepingWindowOpen(at selection: Int) -> Bool {
         guard let entry = entry(at: selection) else { return false }
         core.emojiCoordinator.pasteEmojiKeepingWindowOpen(entry)
@@ -81,7 +76,6 @@ struct EmojiScreen: PaletteScreen {
         return true
     }
 
-    /// ⌥⌘↑/↓ on the selected cell, when it is pinned.
     func movePin(_ delta: Int, at selection: Int) {
         guard let entry = entry(at: selection) else { return }
         movePin(entry, by: delta)
@@ -92,7 +86,6 @@ struct EmojiScreen: PaletteScreen {
         vm.emojiGridColumnsOverride = next == defaultColumns ? nil : next
     }
 
-    /// Blind to the filter and query, so only a use or a density change rewrites it.
     var frequentlyUsed: [String] {
         EmojiGrid.frequentlyUsed(frequent, in: index, columns: columns).map(\.glyph)
     }
@@ -109,7 +102,6 @@ struct EmojiScreen: PaletteScreen {
             vm.selection, afterSectionAt: start, changesFrom: old, to: new)
     }
 
-    /// One visual row vertically, spilling into the neighbour by column; one cell horizontally.
     func move(_ delta: Int, axis: PaletteAxis, from selection: Int) -> Int? {
         let sections = sections
         let count = sections.reduce(0) { $0 + $1.entries.count }
@@ -156,7 +148,6 @@ struct EmojiScreen: PaletteScreen {
         let position = visiblePins.firstIndex(of: entry.glyph)
         pinned.toggle(entry.glyph)
         if let position, pinsLeadGrid, vm.selection == position {
-            // The neighbour sliding into the slot takes the selection, not the catalog copy.
             vm.selection = EmojiGridGeometry.selectionAfterRemovingPin(
                 at: position, remainingCount: visiblePins.count)
         } else if isBrowsing, vm.emojiCategoryFilter == .all {

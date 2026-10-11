@@ -1,17 +1,13 @@
 import CoreGraphics
 import Foundation
 
-/// Pure geometry, entirely in AX space. See docs/features/window-management.md#coordinate-space.
 enum WindowPlacementEngine {
-    /// A display, already converted to AX space by the caller.
     struct Screen: Equatable, Sendable {
-        /// `CGDirectDisplayID` in the app; any stable value in tests.
         let id: Int
         let frame: CGRect
         let visibleFrame: CGRect
     }
 
-    /// Where a window that refused to shrink sits in its slot; a left half stays left-aligned.
     struct Anchor: Equatable, Sendable {
         /// `min` is left / top, since +Y points down here.
         enum Axis: Equatable, Sendable { case min, center, max }
@@ -22,7 +18,6 @@ enum WindowPlacementEngine {
         static let topLeading = Anchor(horizontal: .min, vertical: .min)
         static let centered = Anchor(horizontal: .center, vertical: .center)
 
-        /// Places `size` inside `slot` per the anchor, when an app clamped itself larger.
         func place(_ size: CGSize, in slot: CGRect) -> CGRect {
             func origin(
                 _ axis: Axis, slotMin: CGFloat, slotLength: CGFloat, length: CGFloat
@@ -48,14 +43,10 @@ enum WindowPlacementEngine {
         var windowFrame: CGRect
         var screens: [Screen]
         var gap: CGFloat
-        /// Cycle position, supplied by `WindowActionMemory` so the geometry itself stays stateless.
         var step: Int
         var cycle: WindowCycle
-        /// The display the chain started on; `nil`, or one since unplugged, means the host.
         var originScreenID: Int?
-        /// Read only by `.restore`.
         var restoreFrame: CGRect?
-        /// The tile that last placed this window, so a display move re-derives rather than scales.
         var lastTileCommand: WindowCommand.ID?
 
         init(
@@ -82,18 +73,11 @@ enum WindowPlacementEngine {
         var resizes: Bool
     }
 
-    // MARK: - Tuning
-
-    /// Make Larger / Make Smaller and the four nudges all step by this fraction of the screen.
     private static let stepFraction: CGFloat = 0.05
     private static let almostMaximizeFraction: CGFloat = 0.9
     private static let reasonableSizeFraction: CGFloat = 0.6
-    /// Hard ceiling, in points: 60% of a 5K display is not a reasonable size for a window.
     private static let reasonableSizeMax = CGSize(width: 1025, height: 900)
 
-    // MARK: - Entry point
-
-    /// The target placement, or `nil` when the mover should write nothing at all.
     static func placement(for input: Input) -> Placement? {
         guard let command = WindowCommandCatalog.command(id: input.command),
             command.kind == .geometry || command.kind == .restore,
@@ -115,7 +99,6 @@ enum WindowPlacementEngine {
             break
         }
 
-        // `cycleLength` is 1 for a non-cycling command, so a stale step can never leak in.
         let step = wrapped(
             input.step,
             into: cycleLength(for: input.command, screens: input.screens, cycle: input.cycle))
@@ -147,7 +130,6 @@ enum WindowPlacementEngine {
                 frame: rounded(Anchor.centered.place(size, in: canvas)), screenID: host.id,
                 anchor: .centered, resizes: true)
 
-        // The cap makes this display-independent; 0.6 < 1 stays inside the canvas unclamped.
         case .reasonableSize:
             let size = CGSize(
                 width: min(canvas.width * reasonableSizeFraction, reasonableSizeMax.width),
@@ -156,7 +138,6 @@ enum WindowPlacementEngine {
                 frame: rounded(Anchor.centered.place(size, in: canvas)), screenID: host.id,
                 anchor: .centered, resizes: true)
 
-        // Both keep the untouched axis, but clamp it, so an off-display window comes back.
         case .maximizeHeight:
             let frame = CGRect(
                 x: current.minX, y: canvas.minY, width: current.width, height: canvas.height)
@@ -193,9 +174,6 @@ enum WindowPlacementEngine {
         }
     }
 
-    // MARK: - Screens
-
-    /// The display a window lives on: most overlapping area wins, else the one holding its centre.
     static func screen(containing frame: CGRect, in screens: [Screen]) -> Screen? {
         guard !screens.isEmpty else { return nil }
         var best: (screen: Screen, area: CGFloat)?
@@ -209,7 +187,6 @@ enum WindowPlacementEngine {
         return screens.first { $0.frame.contains(centre) } ?? screens.first
     }
 
-    /// Left-to-right, then top-to-bottom: stable however `NSScreen.screens` is sorted.
     static func ordered(_ screens: [Screen]) -> [Screen] {
         screens.sorted {
             $0.frame.minX != $1.frame.minX
@@ -223,7 +200,6 @@ enum WindowPlacementEngine {
         -> Placement?
     {
         let ordered = ordered(input.screens)
-        // A single display makes both commands a quiet no-op rather than a pointless re-place.
         guard ordered.count > 1, let index = ordered.firstIndex(where: { $0.id == host.id })
         else { return nil }
         let offset = input.command == .nextDisplay ? 1 : -1
@@ -238,7 +214,6 @@ enum WindowPlacementEngine {
     private static func moved(
         _ frame: CGRect, from: Screen, to: Screen, gap: CGFloat, lastTile: WindowCommand.ID?
     ) -> CGRect {
-        // Exactness beats proportion: an untouched tile re-derives instead of being scaled.
         if let lastTile, let fractions = tileFractions(lastTile) {
             return tile(
                 to.visibleFrame, x0: fractions.x0, x1: fractions.x1, y0: fractions.y0,
@@ -247,7 +222,6 @@ enum WindowPlacementEngine {
         let source = from.visibleFrame
         let target = to.visibleFrame
         guard source.width > 0, source.height > 0 else { return frame }
-        // Relative to `visibleFrame`, so a window tucked against the Dock lands tucked again.
         let relativeX = (frame.minX - source.minX) / source.width
         let relativeY = (frame.minY - source.minY) / source.height
         let scaled = CGRect(
@@ -258,14 +232,11 @@ enum WindowPlacementEngine {
         return rounded(clamped(scaled, into: target))
     }
 
-    // MARK: - Restore
-
     private static func restorePlacement(_ input: Input) -> Placement? {
         guard let restoreFrame = input.restoreFrame,
             let host = screen(containing: restoreFrame, in: input.screens)
         else { return nil }
         let overlap = host.visibleFrame.intersection(restoreFrame)
-        // A restore point stranded off every display comes back centred, not unreachable.
         let stranded = overlap.isNull || overlap.width < 40 || overlap.height < 40
         let frame =
             stranded
@@ -276,8 +247,6 @@ enum WindowPlacementEngine {
             : restoreFrame
         return Placement(frame: frame, screenID: host.id, anchor: .centered, resizes: true)
     }
-
-    // MARK: - Tiles
 
     private struct Fractions {
         var x0: CGFloat
@@ -307,7 +276,6 @@ enum WindowPlacementEngine {
             }
         }
 
-        /// Bounds covering `fraction` of the screen along the axis, pinned to the edge.
         func fractions(_ fraction: CGFloat) -> Fractions {
             let leads = edge == .leading
             let span: (CGFloat, CGFloat) = leads ? (0, fraction) : (1 - fraction, 1)
@@ -327,7 +295,6 @@ enum WindowPlacementEngine {
 
     private static let sizeCycle: [CGFloat] = [0.5, oneThird, twoThirds]
 
-    /// Presses before the chain wraps; 1 means this command doesn't cycle at all.
     static func cycleLength(
         for command: WindowCommand.ID, screens: [Screen], cycle: WindowCycle
     ) -> Int {
@@ -335,12 +302,10 @@ enum WindowPlacementEngine {
         switch cycle {
         case .off: return 1
         case .sizes: return sizeCycle.count
-        // Only an edge half has a strip slot; one display is a no-op, not an in-place flip.
         case .displays: return screens.count > 1 && Half.of(command) != nil ? screens.count * 2 : 1
         }
     }
 
-    /// A half's slot this press: its own edge on the host, or one walked along the display strip.
     private static func halfPlacement(
         _ input: Input, half: Half, host: Screen, step: Int
     ) -> Placement {
@@ -348,14 +313,12 @@ enum WindowPlacementEngine {
             return tilePlacement(half.fractions(sizeCycle[step]), on: host, gap: input.gap)
         }
         let strip = ordered(input.screens)
-        // Mid-chain the window sits on another display, so counting from it would overshoot.
         guard strip.count > 1,
             let originIndex = strip.firstIndex(where: { $0.id == input.originScreenID })
                 ?? strip.firstIndex(where: { $0.id == host.id })
         else {
             return tilePlacement(half.fractions(0.5), on: host, gap: input.gap)
         }
-        // Left and Top walk backwards, so one shortcut sweeps the whole desktop in one direction.
         let leads = half.edge == .leading
         let slot = wrapped(
             originIndex * 2 + (leads ? 0 : 1) + (leads ? -step : step), into: strip.count * 2)
@@ -380,7 +343,6 @@ enum WindowPlacementEngine {
             anchor: Anchor(horizontal: .center, vertical: .min))
     }
 
-    /// Fractional bounds of a tile command at its base position, or `nil` if it isn't one.
     private static func tileFractions(_ command: WindowCommand.ID) -> Fractions? {
         if let half = Half.of(command) { return half.fractions(0.5) }
         switch command {
@@ -419,7 +381,6 @@ enum WindowPlacementEngine {
                 x0: oneThird, x1: 1, y0: 0, y1: 1,
                 anchor: Anchor(horizontal: .max, vertical: .min))
 
-        // Half the screen's area, so it reads as the family sibling of Center Third.
         case .centerHalf:
             return centeredFractions(0.5)
         case .centerTwoThirds:
@@ -432,12 +393,10 @@ enum WindowPlacementEngine {
         }
     }
 
-    /// Whether the command lands on the fractional grid, which a display move can re-derive.
     static func isTileCommand(_ command: WindowCommand.ID) -> Bool {
         tileFractions(command) != nil
     }
 
-    /// A tile from fractional bounds of `visible`. See docs/features/window-management.md#geometry.
     static func tile(
         _ visible: CGRect, x0: CGFloat, x1: CGFloat, y0: CGFloat, y1: CGFloat, gap: CGFloat
     ) -> CGRect {
@@ -450,26 +409,20 @@ enum WindowPlacementEngine {
                 x: left, y: top, width: max(1, right - left), height: max(1, bottom - top)))
     }
 
-    /// The box free-floating commands work in: full gap on every side, not the grid's halves.
     static func canvas(_ visible: CGRect, gap: CGFloat) -> CGRect {
         rounded(visible.insetBy(dx: gap, dy: gap))
     }
 
-    // MARK: - Sizing
-
-    /// Never let repeated shrinking collapse a window to nothing.
     private static func minimumSize(in canvas: CGRect) -> CGSize {
         CGSize(
             width: min(canvas.width, max(200, canvas.width * 0.15)),
             height: min(canvas.height, max(150, canvas.height * 0.15)))
     }
 
-    /// Even, so each edge moves a whole point and the two commands stay exactly invertible.
     private static func evenStep(_ dimension: CGFloat) -> CGFloat {
         max(2, (dimension * stepFraction / 2).rounded() * 2)
     }
 
-    /// About the centre, by a fraction of the screen. docs/features/window-management.md#geometry
     private static func resized(_ frame: CGRect, in canvas: CGRect, larger: Bool) -> CGRect {
         let direction: CGFloat = larger ? 1 : -1
         let floorSize = minimumSize(in: canvas)
@@ -501,9 +454,6 @@ enum WindowPlacementEngine {
         return rounded(clamped(moved, into: canvas))
     }
 
-    // MARK: - Primitives
-
-    /// Rounds the four edges, so two tiles sharing a boundary round it identically.
     static func rounded(_ rect: CGRect) -> CGRect {
         let minX = rect.minX.rounded()
         let minY = rect.minY.rounded()
@@ -512,23 +462,19 @@ enum WindowPlacementEngine {
         return CGRect(x: minX, y: minY, width: max(0, maxX - minX), height: max(0, maxY - minY))
     }
 
-    /// Keeps `frame` inside `box` unresized; an oversized window pins its leading edge.
     static func clamped(_ frame: CGRect, into box: CGRect) -> CGRect {
         let x = min(max(frame.minX, box.minX), max(box.minX, box.maxX - frame.width))
         let y = min(max(frame.minY, box.minY), max(box.minY, box.maxY - frame.height))
         return CGRect(x: x, y: y, width: frame.width, height: frame.height)
     }
 
-    /// The gaps Settings offers, in points; the file is held to the same range.
     static let gapRange = 0...64
 
-    /// A gap wider than the screen would produce zero-width tiles, so cap it before any math.
     static func sanitizedGap(_ gap: CGFloat, in visible: CGRect) -> CGFloat {
         guard gap.isFinite, gap > 0, visible.width > 0, visible.height > 0 else { return 0 }
         return min(gap, min(visible.width, visible.height) / 10)
     }
 
-    /// Wraps into `0..<length`, so neither a negative nor an overrun step escapes the cycle.
     private static func wrapped(_ value: Int, into length: Int) -> Int {
         ((value % length) + length) % length
     }

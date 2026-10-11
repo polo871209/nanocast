@@ -104,13 +104,11 @@ final class DictationCapture {
     }
 }
 
-// Configuration stays on main; only start/stop run off-main, in sequence.
 private struct CaptureSessionBox: @unchecked Sendable {
     let session: AVCaptureSession
     init(_ session: AVCaptureSession) { self.session = session }
 }
 
-// Sample buffers and mutable state are confined to the delegate queue, including finish().
 private final class AudioCollector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate,
     @unchecked Sendable
 {

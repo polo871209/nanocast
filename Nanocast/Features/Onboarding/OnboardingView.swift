@@ -2,7 +2,6 @@ import AppKit
 import Combine
 import SwiftUI
 
-/// The first-launch wizard, built from the app's own controls; re-runnable from Settings.
 struct OnboardingView: View {
     @State private var step = 0
     @State private var model = OnboardingModel()
@@ -15,7 +14,6 @@ struct OnboardingView: View {
 
     private static let lastStep = 3
     static let width: CGFloat = 520
-    /// Only until the first layout measures the real one, which is what the window then takes.
     static let initialSize = CGSize(width: width, height: 352)
 
     var body: some View {
@@ -24,18 +22,15 @@ struct OnboardingView: View {
             stepContent
             footer
         }
-        // Less on top: the title bar adds 32pt, and the lights must be cleared.
         .padding(.top, Theme.Spacing.xs)
         .padding([.horizontal, .bottom], Theme.Spacing.xxl)
         .frame(maxWidth: .infinity)
-        // The ideal height, not the window's, so sizing to it converges instead of feeding back.
         .fixedSize(horizontal: false, vertical: true)
         .onGeometryChange(for: CGFloat.self) {
             $0.size.height
         } action: {
             core.onboardingCoordinator.fit(height: $0)
         }
-        // Only the gradient reaches under the titlebar; the content stays in the safe area.
         .background(
             LinearGradient(
                 colors: [Theme.Colors.sheen, Color.clear],
@@ -43,7 +38,6 @@ struct OnboardingView: View {
             )
             .ignoresSafeArea()
         )
-        // Onboarding's shortcut step has a recorder too, and it isn't inside a `SettingsPane`.
         .shortcutRecorderPopoverHost()
         .animation(.easeInOut(duration: 0.2), value: step)
         .onAppear { accessibilityTrusted = Permissions.isAccessibilityTrusted() }
@@ -52,8 +46,6 @@ struct OnboardingView: View {
             if trusted != accessibilityTrusted { accessibilityTrusted = trusted }
         }
     }
-
-    // MARK: - Hero (icon/glyph + title + subtitle)
 
     private var hero: some View {
         VStack(spacing: Theme.Spacing.md) {
@@ -126,8 +118,6 @@ struct OnboardingView: View {
         return Text("Nanocast is ready. Set a shortcut in Settings to summon it.")
     }
 
-    // MARK: - Step content
-
     @ViewBuilder
     private var stepContent: some View {
         switch step {
@@ -169,7 +159,7 @@ struct OnboardingView: View {
                 OnboardingRow(
                     title: String(localized: "Accessibility"),
                     subtitle: String(
-                        localized: "Allows pasting clipboard items and expanded snippets into active apps."),
+                        localized: "Allows pasting clipboard items and dictated text into active apps."),
                     systemImage: "accessibility", tint: .blue
                 ) {
                     statusBadge
@@ -215,8 +205,6 @@ struct OnboardingView: View {
         caption(String(localized: "Everything's ready. Hit Get Started to open the launcher."))
             .frame(maxWidth: .infinity, alignment: .center)
     }
-
-    // MARK: - Footer (step dots + navigation)
 
     private var footer: some View {
         VStack(spacing: Theme.Spacing.lg) {
@@ -272,7 +260,8 @@ struct OnboardingView: View {
     private var primaryTitle: String {
         switch step {
         case 0: String(localized: "Continue")
-        case 1: accessibilityTrusted ? String(localized: "Continue") : String(localized: "Grant Access")
+        case 1:
+            if accessibilityTrusted { String(localized: "Continue") } else { String(localized: "Grant Access") }
         case 2:
             if model.didImport {
                 String(localized: "Continue")
@@ -305,8 +294,6 @@ struct OnboardingView: View {
     private func advance() {
         step = min(step + 1, Self.lastStep)
     }
-
-    // MARK: - Shared bits
 
     private func caption(_ text: String) -> some View {
         Text(text)
@@ -361,7 +348,6 @@ struct OnboardingView: View {
     }()
 }
 
-/// The import step's state and async call, off the view so the body stays declarative.
 @MainActor
 @Observable
 final class OnboardingModel {

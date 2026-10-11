@@ -1,6 +1,5 @@
 import AppKit
 
-/// The editor's `NSFont`s: the system text styles one step up, since a note is for reading.
 @MainActor
 enum NoteMarkdownTypography {
     static let body = NSFont.systemFont(ofSize: size(.title3))
@@ -9,10 +8,8 @@ enum NoteMarkdownTypography {
     static let heading3 = NSFont.systemFont(ofSize: size(.title2), weight: .semibold)
     static let inlineCode = NSFont.monospacedSystemFont(ofSize: body.pointSize, weight: .regular)
     static let codeBlock = NSFont.monospacedSystemFont(ofSize: body.pointSize - 1, weight: .regular)
-    /// Small enough that a hidden marker leaves no visible gap, while staying a real glyph run.
     static let hidden = NSFont.systemFont(ofSize: 0.01)
 
-    /// Levels 4 to 6 share the third heading's style.
     static func heading(_ level: Int) -> NSFont {
         switch level {
         case 1: heading1

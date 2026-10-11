@@ -1,3 +1,4 @@
+import CoreML
 import Foundation
 
 @main

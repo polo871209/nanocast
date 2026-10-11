@@ -115,7 +115,6 @@ final class DictationAudioDucker {
             var saved = snapshot.volume
             saved.previous = saved.lastSet
             saved.lastSet = volume
-            // A crash between persistence and the hardware write must recover either volume.
             try await persist(saved)
             try Task.checkCancellation()
             guard snapshot.volume.matches(try snapshot.output.read()) else {

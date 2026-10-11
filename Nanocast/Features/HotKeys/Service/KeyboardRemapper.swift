@@ -95,7 +95,6 @@ final class KeyboardRemapper {
             case .failed: failed += 1
             }
         }
-        // A keyboard that refuses is skipped, and one connected later is placed by hot plug.
         let succeeded = mapping == nil ? savedMappings.isEmpty : keyboards.isEmpty || failed < keyboards.count
         return (succeeded, changed)
     }

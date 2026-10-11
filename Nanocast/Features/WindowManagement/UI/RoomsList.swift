@@ -43,7 +43,6 @@ private struct RoomRowView: View {
     let row: RoomRow
     let selected: Bool
     let isCurrent: Bool
-    /// Nil for the rows that make or edit a room rather than enter one.
     let layout: RoomLayoutKind?
     @State private var hovered = false
 
@@ -102,7 +101,6 @@ private struct RoomRowView: View {
                     Text(layout.title)
                         .font(metrics.typography.rowTrailing)
                         .foregroundStyle(.secondary)
-                    // Tab changes the selected room's layout, so only that row advertises it.
                     if selected { KeyCapChip(text: "⇥", style: .outline) }
                 }
             }

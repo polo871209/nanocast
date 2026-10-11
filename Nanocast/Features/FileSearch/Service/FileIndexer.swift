@@ -1,7 +1,6 @@
 import CoreServices
 import Foundation
 
-/// The crawl runs in `FileIndexHelper`, so its memory leaves when that process exits.
 @MainActor
 @Observable
 final class FileIndexer {
@@ -14,7 +13,6 @@ final class FileIndexer {
     }
 
     private(set) var status: Status = .off
-    /// An index is mapped, so searches answer even while a rebuild runs.
     private(set) var hasIndex = false
     @ObservationIgnored let index = FileIndex()
     @ObservationIgnored var onIndexChanged: (() -> Void)?
@@ -39,7 +37,6 @@ final class FileIndexer {
             activate()
         } else {
             deactivate()
-            // An index of every filename is not something to leave behind once it is unused.
             try? FileManager.default.removeItem(at: directory)
             status = .off
         }
@@ -50,7 +47,6 @@ final class FileIndexer {
         let isFirst = self.policy == nil
         self.policy = policy
         guard isEnabled else { return }
-        // Editing a list fires once per change, so a burst of them builds once.
         if isFirst || status == .needsAccess { activate() } else { build(after: .seconds(1)) }
     }
 
@@ -114,7 +110,6 @@ final class FileIndexer {
         onIndexChanged?()
     }
 
-    /// Replayed from the snapshot's own event id, so whatever changed since the crawl began lands.
     private func watch(_ snapshot: FileIndexSnapshot) {
         watcher = nil
         let index = index
@@ -124,7 +119,6 @@ final class FileIndexer {
             let recentBefore = index.recentRevision
             let needsRebuild = Self.handle(batch, roots: roots, index: index)
             let recentChanged = index.recentRevision != recentBefore
-            // Most batches touch neither the count nor Recent, and need no trip to the main actor.
             guard needsRebuild || recentChanged || index.itemCount != countBefore else { return }
             Task { @MainActor in
                 if needsRebuild {
@@ -170,7 +164,6 @@ final class FileIndexer {
         build(after: .zero)
     }
 
-    /// At most once a second, so a burst of disk activity redraws the count and Recent once.
     private func scheduleLiveRefresh(recentChanged: Bool) {
         if recentChanged { isRecentStale = true }
         guard liveRefresh == nil else { return }
@@ -188,7 +181,6 @@ final class FileIndexer {
         }
     }
 
-    /// A newer request cancels this one, which terminates its helper.
     private func build(after delay: Duration) {
         guard let policy else { return }
         buildTask?.cancel()
@@ -197,7 +189,6 @@ final class FileIndexer {
         let output = indexURL
         buildTask = Task { [weak self] in
             if delay > .zero { try? await Task.sleep(for: delay) }
-            // Checked even with no delay: a deactivate before this ran has already set the status.
             guard !Task.isCancelled else { return }
             self?.status = .building(items: 0)
             let report: @Sendable (Int) -> Void = { [weak self] count in
@@ -223,7 +214,6 @@ final class FileIndexer {
     }
 }
 
-/// One `FileIndexHelper` run: its progress lines are read off a blocking queue, never the pool.
 private enum FileIndexBuild {
     private static let queue = DispatchQueue(
         label: "com.nanocast.file-index.build", qos: .utility, attributes: .concurrent)
@@ -247,7 +237,6 @@ private enum FileIndexBuild {
         process.standardError = FileHandle.nullDevice
         process.qualityOfService = .userInitiated
         guard let exit = try? process.runObservingExit() else { return false }
-        // Cancellation can land between the check above and the launch, which nothing else catches.
         if Task.isCancelled { terminate(process) }
         return await withTaskCancellationHandler {
             await withCheckedContinuation { continuation in

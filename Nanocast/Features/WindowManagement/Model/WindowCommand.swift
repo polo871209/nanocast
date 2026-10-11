@@ -39,18 +39,13 @@ struct WindowCommand: Identifiable, Hashable, Sendable {
         case nextSpace = "next-space"
     }
 
-    /// What the mover has to do, so its dispatch stays exhaustive over the catalog.
     enum Kind: String, Sendable {
         case geometry
-        /// Geometry too, but sourced from the recorded pre-action frame rather than computed.
         case restore
-        /// No geometry at all — the native `AXFullScreen` toggle.
         case fullscreen
-        /// No window at all — a synthetic Dock gesture that moves between Spaces.
         case space
     }
 
-    /// The launcher section a command belongs to, and the order the Settings panel lists them in.
     enum Group: String, CaseIterable, Sendable {
         case halves
         case quarters
@@ -82,7 +77,6 @@ struct WindowCommand: Identifiable, Hashable, Sendable {
     let kind: Kind
     let group: Group
     let cyclesOnRepeat: Bool
-    /// False for the nudges, so the mover never writes `kAXSizeAttribute` for them.
     let resizes: Bool
 
     var entryID: String { "window-command:" + id.rawValue }
@@ -104,7 +98,6 @@ enum WindowCommandCatalog {
 
     static func command(forEntryID entryID: String) -> WindowCommand? { byEntryID[entryID] }
 
-    /// Catalog order grouped for Settings; `ID.allCases` is in group order, so this partitions.
     static func grouped() -> [(group: WindowCommand.Group, commands: [WindowCommand])] {
         WindowCommand.Group.allCases.compactMap { group in
             let commands = all.filter { $0.group == group }

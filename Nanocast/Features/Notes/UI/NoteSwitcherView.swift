@@ -103,7 +103,6 @@ struct NoteSwitcherView: View {
                     .padding(Theme.Spacing.md)
                     .measuredHeight(onContentHeight)
                 }
-                // The search row is a sibling, not a floating bar, so only the bottom edge fades.
                 .overflowFade()
                 .onChange(of: notes.switcherSelection) { _, selected in
                     if let selected { proxy.scrollTo(selected, anchor: .center) }
@@ -225,7 +224,6 @@ private struct NoteSwitcherRow: View {
         }
         .buttonStyle(.plain)
         .help(title)
-        // The row publishes both as accessibility actions, so the buttons stay out of the tree.
         .accessibilityHidden(true)
     }
 }

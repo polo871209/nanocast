@@ -37,7 +37,6 @@ struct EmojiSettingsView: View {
     }
 }
 
-/// Five previews make the picker's starting density legible before the user opens it.
 private struct EmojiColumnCountPicker: View {
     @Binding var selection: EmojiGridColumns
 
@@ -96,12 +95,10 @@ private struct EmojiColumnCountPreview: View {
     }
 }
 
-/// Dots share one lattice, so horizontal and vertical runs meet on the exact same point.
 private struct EmojiGridDots: Shape {
     let columns: Int
 
     private static let pointsPerCell = 4
-    /// Match the outline's raster weight; subpixel circles render visibly fainter at the same alpha.
     private static let dotDiameter = Theme.Size.hairline
 
     func path(in rect: CGRect) -> Path {

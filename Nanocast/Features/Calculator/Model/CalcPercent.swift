@@ -1,6 +1,5 @@
 import Foundation
 
-/// Percentage phrasings the arithmetic parser misses: `20% off 500`, `50 as % of 200`.
 enum CalcPercent {
     static func evaluate(_ tokens: [CalcToken], query: String) -> CalcResult? {
         parseOff(tokens, query: query) ?? parseAsPercentOf(tokens, query: query)
@@ -9,7 +8,6 @@ enum CalcPercent {
             ?? parseAggregate(tokens, query: query) ?? parseRoundToNearest(tokens, query: query)
     }
 
-    /// `<pct>% off <value>` → the value reduced by pct percent (`20% off 500` → 400).
     private static func parseOff(_ tokens: [CalcToken], query: String) -> CalcResult? {
         guard let off = tokens.firstIndex(of: .ident("off")), off >= 2,
             tokens[off - 1] == .op(.percent),
@@ -21,7 +19,6 @@ enum CalcPercent {
         return card(query, .number(result), target: String(localized: "Discounted"))
     }
 
-    /// `<x> as % of <y>` → x / y × 100, rendered as a percentage (`50 as % of 200` → 25%).
     private static func parseAsPercentOf(_ tokens: [CalcToken], query: String) -> CalcResult? {
         guard let asIdx = tokens.firstIndex(of: .ident("as")), asIdx + 2 < tokens.count,
             tokens[asIdx + 1] == .op(.percent), tokens[asIdx + 2] == .ident("of"),
@@ -45,7 +42,6 @@ enum CalcPercent {
             canChain: canChain)
     }
 
-    /// The tip alone, not the total: it is the number the phrase asks for.
     private static func parseTip(_ tokens: [CalcToken], query: String) -> CalcResult? {
         guard let tip = tokens.firstIndex(of: .ident("tip")), tip >= 2,
             tip + 2 < tokens.count, tokens[tip - 1] == .op(.percent),
@@ -84,7 +80,6 @@ enum CalcPercent {
         return card(query, .number(whole), target: String(localized: "Total"))
     }
 
-    /// Integers only, so the reduced pair stays exact.
     private static func parseRatio(_ tokens: [CalcToken], query: String) -> CalcResult? {
         guard tokens.count >= 5, tokens[0] == .ident("ratio"), tokens[1] == .ident("of"),
             let toIdx = tokens.firstIndex(of: .ident("to")),
@@ -116,7 +111,6 @@ enum CalcPercent {
         return card(query, .number(result), target: aggregate.name)
     }
 
-    /// Snaps to a step, not to a digit count, so `nearest 5` means multiples of 5.
     private static func parseRoundToNearest(_ tokens: [CalcToken], query: String) -> CalcResult? {
         guard tokens.count >= 5, tokens[0] == .ident("round"),
             let toIdx = tokens.firstIndex(of: .ident("to")), toIdx + 2 < tokens.count,
@@ -129,7 +123,6 @@ enum CalcPercent {
         return card(query, .number(result), target: String(localized: "Rounded"))
     }
 
-    /// The badge names which reduction ran, so `min` and `max` are told apart on the card.
     private struct Aggregate {
         let name: String
         let reduce: @Sendable ([Double]) -> Double?
@@ -145,7 +138,6 @@ enum CalcPercent {
         "max": Aggregate(name: String(localized: "Maximum")) { $0.max() }
     ]
 
-    /// Each run is evaluated whole, so `sum of 2*3, 4` stays two operands.
     private static func splitList(_ tokens: [CalcToken]) -> [Double] {
         var values: [Double] = []
         var current: [CalcToken] = []

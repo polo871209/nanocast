@@ -3,7 +3,6 @@ import Carbon.HIToolbox
 import SwiftUI
 
 enum ASCIIKeyboardLayout {
-    /// No modifiers by default: the key's base character, which is what a shortcut glyph shows.
     @MainActor static func character(for keyCode: Int, modifiers: UInt32 = 0) -> String? {
         withCurrentLayout { character(for: keyCode, modifiers: modifiers, in: $0) }
     }
@@ -27,7 +26,6 @@ enum ASCIIKeyboardLayout {
         else { return nil }
 
         let layoutData = unsafeBitCast(layoutDataPointer, to: CFData.self)
-        // The bytes belong to `source`, which stays retained until `body` returns.
         return withExtendedLifetime(source) {
             body(
                 unsafeBitCast(
@@ -58,14 +56,12 @@ enum ASCIIKeyboardLayout {
         return String(utf16CodeUnits: characters, count: length)
     }
 
-    /// A layout owns its Command table: "Dvorak – QWERTY ⌘" only restores ⌘K to QWERTY through it.
     @MainActor static func character(for event: NSEvent) -> String? {
         character(
             for: Int(event.keyCode),
             modifiers: event.modifierFlags.contains(.command) ? UInt32(cmdKey >> 8) : 0)
     }
 
-    /// SwiftUI exposes the input-source character; recover the logical ASCII key from AppKit.
     @MainActor static func keyEquivalent(fallingBackTo key: KeyEquivalent) -> KeyEquivalent {
         guard let event = NSApp.currentEvent,
             !event.modifierFlags.isDisjoint(with: [.command, .control])
@@ -80,12 +76,10 @@ enum ASCIIKeyboardLayout {
         return KeyEquivalent(layoutCharacter)
     }
 
-    /// Arrows and page keys: `UCKeyTranslate` answers these with ASCII controls the test admits.
     private static func isNamedKey(_ key: KeyEquivalent) -> Bool {
         key.character.unicodeScalars.contains { (0xF700...0xF8FF).contains($0.value) }
     }
 
-    /// Shift uppercases SwiftUI's key, but every chord spells its letter in lower case.
     private static func lowercased(_ key: KeyEquivalent) -> KeyEquivalent {
         key.character.lowercased().first.map { KeyEquivalent($0) } ?? key
     }

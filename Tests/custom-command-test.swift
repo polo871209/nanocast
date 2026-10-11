@@ -1,6 +1,5 @@
 import Foundation
 
-// Spawns real `/bin/zsh`; `ZDOTDIR` is a fixture, so every assertion is relative.
 @main
 struct CustomCommandTests {
     @MainActor
@@ -20,8 +19,6 @@ struct CustomCommandTests {
                 failures += 1
             }
         }
-
-        // MARK: Editor
 
         let editor = CustomCommandEditorSession(command: nil)
         check("a new editor starts on its name", editor.focusedField == .name)
@@ -82,8 +79,6 @@ struct CustomCommandTests {
             "editing preserves the UUID and enabled flag",
             editing.draft().id == source.id
                 && !editing.draft().isEnabled)
-
-        // MARK: Store
 
         let store = CustomCommandStore(defaults: defaults)
         let added = try? store.add(
@@ -150,7 +145,6 @@ struct CustomCommandTests {
             "commands survive a reload with their flags",
             CustomCommandStore(defaults: defaults).commands == expected)
 
-        // `replace` runs the import sanitizer, which must carry every flag through.
         store.replace(with: [
             CustomCommand(
                 name: "Imported", command: "/usr/bin/true", loadsShellEnvironment: true,
@@ -181,7 +175,6 @@ struct CustomCommandTests {
             "a blank argument is dropped without losing the command",
             store.commands.first?.arguments == [CustomCommandArgument(name: "Kept")])
 
-        // A command stored before arguments existed must still decode.
         let legacy = Data(
             """
             [{"id":"\(UUID().uuidString)","name":"Legacy","command":"/usr/bin/true"}]
@@ -197,8 +190,6 @@ struct CustomCommandTests {
             "a record written before the root-search flag still shows there",
             CustomCommandStore(defaults: defaults).commands.first?.showsInRootSearch == true)
 
-        // MARK: Batch add
-
         var commits = 0
         store.onChange = { _ in commits += 1 }
         let batched = store.add(contentsOf: [
@@ -213,8 +204,6 @@ struct CustomCommandTests {
         check(
             "a name colliding with the library or with the batch is dropped",
             store.commands.map(\.name) == ["Blanks", "One", "Two"])
-
-        // MARK: Raycast script import
 
         let shellSource = """
             #!/bin/bash
@@ -312,13 +301,11 @@ struct CustomCommandTests {
             "a folder yields its script commands in name order and nothing else",
             RaycastScriptImport.scan(directory: scriptDirectory).map(\.name) == ["First", "Second"])
 
-        // Linked scripts import, keeping the link's path so the command follows its target.
         let linkTarget = scriptDirectory.appendingPathComponent("nested/linked.sh")
         try? Data("#!/bin/bash\n# @raycast.title Linked\nprintf '%s' 'linked-target-ran'\n".utf8)
             .write(to: linkTarget)
         let link = scriptDirectory.appendingPathComponent("c-linked.sh")
         try? FileManager.default.createSymbolicLink(at: link, withDestinationURL: linkTarget)
-        // Checked, or a link that was never made would pass "doesn't import" for free.
         let skippedLinksMade =
             (try? FileManager.default.createSymbolicLink(
                 at: scriptDirectory.appendingPathComponent("d-dangling.sh"),
@@ -337,7 +324,6 @@ struct CustomCommandTests {
             linked?.command ?? "", workingDirectory: linked?.workingDirectory)
         check("a linked script runs its target", linkedRun.standardOutput == "linked-target-ran")
 
-        // The whole run, through `"$@"`: an imported script reads its value as data, never as syntax.
         try? Data("#!/bin/bash\n# @raycast.title Echo\nprintf '%s' \"$1\"\n".utf8).write(
             to: scriptDirectory.appendingPathComponent("echo.sh"))
         let imported = RaycastScriptImport.scan(directory: scriptDirectory).first { $0.name == "Echo" }
@@ -349,8 +335,6 @@ struct CustomCommandTests {
             forwarded.standardOutput == "; touch /tmp/nanocast-import-should-not-exist"
                 && !FileManager.default.fileExists(atPath: "/tmp/nanocast-import-should-not-exist"))
         try? FileManager.default.removeItem(at: scriptDirectory)
-
-        // MARK: Runner
 
         let succeeded = await ShellCommandRunner.run("/usr/bin/true")
         check("a zero exit reports success", succeeded.succeeded)
@@ -365,8 +349,6 @@ struct CustomCommandTests {
         check(
             "a non-zero exit reports its status and stderr",
             failed.termination == .exited(status: 7) && failed.standardError == "expected failure")
-
-        // MARK: Streaming output
 
         func collect(_ session: ShellCommandSession) async -> (log: String, result: ShellCommandResult?) {
             var log = ""
@@ -388,7 +370,6 @@ struct CustomCommandTests {
         check("a streamed run reports what it printed", simple.log.contains("captured"))
         check("a streamed run reports a clean exit", simple.result?.succeeded == true)
 
-        // The reported bug: brew writes `==>` to stderr, which must not reorder.
         let ordered = await collect(
             ShellCommandRunner.stream("printf 'one\\n'; printf 'two\\n' >&2; printf 'three\\n'"))
         let places = ["one", "two", "three"].map { ordered.log.range(of: $0)?.lowerBound }
@@ -396,7 +377,6 @@ struct CustomCommandTests {
             "both streams keep the order they were written in",
             places.allSatisfy { $0 != nil } && places[0]! < places[1]! && places[1]! < places[2]!)
 
-        // A pipe would block-buffer this and deliver it all at exit; a pty must not.
         let live = ShellCommandRunner.stream("echo first; sleep 1; echo second")
         let began = Date()
         var firstOutputAt: TimeInterval?
@@ -421,7 +401,6 @@ struct CustomCommandTests {
             multibyte.log.contains("h\u{e9}llo w\u{f6}rld \u{2014} \u{fc}n\u{ef}code")
                 && !multibyte.log.contains("\u{FFFD}"))
 
-        // Stop must reach the whole chain, not just the shell in front of it.
         let stoppable = ShellCommandRunner.stream("sleep 43 & sleep 44")
         Task {
             try? await Task.sleep(for: .milliseconds(600))
@@ -437,8 +416,6 @@ struct CustomCommandTests {
             "stopping kills the whole command tree, not just the shell",
             survivors.log.trimmingCharacters(in: .whitespacesAndNewlines) == "0")
 
-        // MARK: Working directory
-
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         let atHome = await collect(ShellCommandRunner.stream("pwd"))
         check("a command with no folder starts at home", atHome.log.hasSuffix(home))
@@ -450,7 +427,6 @@ struct CustomCommandTests {
         let tilde = await collect(ShellCommandRunner.stream("pwd", workingDirectory: "~/"))
         check("a tilde path is expanded", tilde.log.hasSuffix(home))
 
-        // Silently running somewhere else would be worse than not running at all.
         let gone = await collect(
             ShellCommandRunner.stream("pwd", workingDirectory: "/nope/does/not/exist"))
         var reportedMissing = false
@@ -464,8 +440,6 @@ struct CustomCommandTests {
         if case .launchFailed = notADirectory.termination { rejectedFile = true }
         check("a file is not accepted as a working folder", rejectedFile)
 
-        // MARK: One-line report
-
         let spoke = await ShellCommandRunner.run("echo first; echo 'all done'")
         check("the report shows the command's last line", spoke.lastOutputLine == "all done")
 
@@ -474,8 +448,6 @@ struct CustomCommandTests {
 
         let mute = await ShellCommandRunner.run("true")
         check("a silent command offers no line to report", mute.lastOutputLine == nil)
-
-        // MARK: Icon and folder round-trip
 
         store.replace(with: [
             CustomCommand(
@@ -497,14 +469,11 @@ struct CustomCommandTests {
             "a command with no icon falls back to the shared glyph",
             store.commands.first?.symbol == CustomCommand.sfSymbol)
 
-        // MARK: Arguments
-
         let positional = await collect(
             ShellCommandRunner.stream(
                 "test \"$1\" = alpha && test \"$2\" = beta", arguments: ["alpha", "beta"]))
         check("values arrive as positional parameters", positional.result?.succeeded == true)
 
-        // The whole reason values are passed positionally: shell syntax in one is inert.
         let injected = await collect(
             ShellCommandRunner.stream(
                 "printf '%s\\n' \"$1\"", arguments: ["; touch /tmp/nanocast-should-not-exist"]))
@@ -513,9 +482,6 @@ struct CustomCommandTests {
             injected.log.contains("; touch /tmp/nanocast-should-not-exist")
                 && !FileManager.default.fileExists(atPath: "/tmp/nanocast-should-not-exist"))
 
-        // MARK: Another interpreter
-
-        // The same text means `x` to zsh; only bash itself answers `y`.
         let bashArray = await ShellCommandRunner.run("#!/bin/bash\na=(x y)\nprintf '%s' \"${a[1]}\"")
         check("a #! line picks the interpreter that runs the text", bashArray.standardOutput == "y")
 
@@ -542,8 +508,6 @@ struct CustomCommandTests {
             "a missing interpreter is named in the failure",
             missingInterpreter.termination == .exited(status: 127)
                 && missingInterpreter.standardError?.contains("/nope/bash") == true)
-
-        // MARK: Inline argument values
 
         let search = CustomCommand(
             name: "Search", command: "open \"$1$2\"",
@@ -573,9 +537,6 @@ struct CustomCommandTests {
             "arguments are capped at three, counted after blanks drop",
             capped.map(\.name) == ["a", "b", "c"])
 
-        // MARK: Shell environment
-
-        // A throwaway ZDOTDIR proves interactive mode sources an rc file.
         let zdotdir = FileManager.default.temporaryDirectory
             .appendingPathComponent("nanocast-zdotdir-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: zdotdir, withIntermediateDirectories: true)
@@ -591,13 +552,11 @@ struct CustomCommandTests {
             "loading the shell environment resolves an rc-file alias",
             withEnvironment.succeeded)
 
-        // The reported symptom: an alias only in `.zshrc` is command-not-found.
         let withoutEnvironment = await ShellCommandRunner.run("nanocast_probe")
         check(
             "the default shell exits 127 on an rc-file alias",
             withoutEnvironment.termination == .exited(status: 127))
 
-        // The interactive-shell argument rests on this: a prompt reads EOF.
         let prompted = await ShellCommandRunner.run(
             "read -r answer", loadingShellEnvironment: true)
         check("a command reading stdin fails instead of hanging", !prompted.succeeded)

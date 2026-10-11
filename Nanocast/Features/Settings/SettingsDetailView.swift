@@ -12,28 +12,19 @@ struct SettingsDetailView: View {
             case .systemSettings: SystemSettingsSettingsView()
             case .systemActions: SystemActionsSettingsView()
             case .commands: CommandsSettingsView()
-            case .quicklinks: QuicklinksSettingsView()
-            case .appleShortcuts: AppleShortcutsSettingsView()
-            case .fallbacks: FallbacksSettingsView()
-            case .ai: AISettingsView()
-            case .quickActions: QuickActionsSettingsView()
             case .dictation: DictationSettingsView()
             case .fileSearch: FileSearchSettingsView()
             case .notes: NotesSettingsView()
-            case .snippets: SnippetsSettingsView()
             case .navigation: NavigationSettingsView()
             case .windowManagement: WindowManagementSettingsView()
             case .clipboard: ClipboardSettingsView()
             case .emoji: EmojiSettingsView()
-            case .calendar: CalendarSettingsView()
-            case .extensions: ExtensionsSettingsView()
             case .permissions: PermissionsSettingsView()
             case .backup: BackupSettingsView()
             case .about: AboutView()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // One host for every pane, above their scroll views so a callout is never clipped.
         .shortcutRecorderPopoverHost()
     }
 }

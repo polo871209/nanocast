@@ -13,13 +13,11 @@ final class FileSearchSession {
 
     private(set) var results: [FileSearchResult] = []
     private(set) var state: State = .idle
-    /// The published search: the filter belongs to it, so narrowing re-runs the same words.
     private var request: Request?
     private var revision = 0
     @ObservationIgnored private var pending: (request: Request, revision: Int)?
     @ObservationIgnored private var workerTask: Task<Void, Never>?
     @ObservationIgnored private let searchOperation: SearchOperation
-    /// Kept across closes, so the blank screen opens on its rows instead of on nothing.
     @ObservationIgnored private var recent: [FileSearchResult]?
     @ObservationIgnored private var recentStamp = 0
 
@@ -30,7 +28,6 @@ final class FileSearchSession {
         let filter: FileSearchFilter
     }
 
-    /// No debounce: a search costs milliseconds, and the worker already runs only the newest.
     init(index: FileIndex) {
         searchOperation = { query, filter in
             await Task.detached(priority: .userInitiated) {
@@ -46,7 +43,6 @@ final class FileSearchSession {
         self.searchOperation = searchOperation
     }
 
-    /// An empty query is a request too: the blank screen lists what changed recently.
     func search(_ rawQuery: String, filter: FileSearchFilter = .all) {
         let query = rawQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         let request = Request(query: query, filter: filter)
@@ -57,18 +53,15 @@ final class FileSearchSession {
         state = .ready
     }
 
-    /// Re-runs the published request; Recent's kept rows follow even behind a typed query.
     func refresh() {
         if let request { enqueue(request) }
         if request != .recent { refreshRecent() }
     }
 
-    /// Only the kept rows move, so a list on screen never shifts under the pointer.
     func refreshRecent() {
         Task { [weak self] in await self?.run(.recent) }
     }
 
-    /// Idle already means no results and nothing that can publish, so it notifies no observer.
     func cancel() {
         guard request != nil else { return }
         revision &+= 1
@@ -78,7 +71,6 @@ final class FileSearchSession {
         state = .idle
     }
 
-    /// A trashed row names a file that is gone, so it leaves the published results with it.
     func remove(_ result: FileSearchResult) {
         results.removeAll { $0.id == result.id }
         recent?.removeAll { $0.id == result.id }
@@ -106,7 +98,6 @@ final class FileSearchSession {
         workerTask = nil
     }
 
-    /// Recent's rows are kept whoever asked; stamped, so a late finisher never replaces newer rows.
     @discardableResult
     private func run(_ request: Request) async -> [FileSearchResult] {
         guard request == .recent else { return await searchOperation(request.query, request.filter) }

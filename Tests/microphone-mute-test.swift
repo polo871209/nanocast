@@ -35,7 +35,6 @@ private struct AudioFixture: Sendable {
 
 private let audio = Mutex(AudioFixture())
 
-// These module-local functions keep the shipped CoreAudio calls away from real hardware.
 func AudioObjectGetPropertyData(
     _ device: AudioObjectID, _ address: UnsafePointer<AudioObjectPropertyAddress>,
     _ qualifierSize: UInt32, _ qualifier: UnsafeRawPointer?,

@@ -1,7 +1,6 @@
 import PDFKit
 import SwiftUI
 
-/// A PDF drawn in process, where the wheel reaches it the way it reaches QuickLook's text view.
 struct PDFSurface: NSViewRepresentable {
     let url: URL
 
@@ -22,5 +21,4 @@ struct PDFSurface: NSViewRepresentable {
     }
 }
 
-/// Clicking a page must not move the keyboard off the search field.
 private final class PreviewPDFView: PDFView, KeyboardFocusRefusing {}

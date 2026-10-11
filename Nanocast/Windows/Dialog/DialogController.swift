@@ -28,7 +28,6 @@ final class DialogController: NSObject, NSWindowDelegate {
         return await present(request) == 0
     }
 
-    /// More than two ways forward; `options` is in dispatch order and the last one is the cancel.
     func choose(
         title: String, message: String?, symbol: String?, tone: DialogTone,
         options: [DialogAction], defaultIndex: Int
@@ -47,7 +46,6 @@ final class DialogController: NSObject, NSWindowDelegate {
         _ = await present(request)
     }
 
-    /// Something already went wrong, unlike `confirm`; true if recovery was taken.
     func reportFailure(
         title: String, message: String, symbol: String, recovery: String?
     ) async
@@ -55,7 +53,6 @@ final class DialogController: NSObject, NSWindowDelegate {
     {
         var actions = [DialogAction(title: String(localized: "OK"), role: .cancel)]
         if let recovery { actions.append(DialogAction(title: recovery)) }
-        // ↵ lands on the recovery action when there is one to take, not on the OK dismissal.
         let recoveryIndex = recovery == nil ? nil : actions.count - 1
         let request = DialogRequest(
             title: title, message: message, symbol: symbol, tone: .danger,
@@ -76,22 +73,6 @@ final class DialogController: NSObject, NSWindowDelegate {
             defaultIndex: 0, cancelIndex: 1, accessory: .volume(volume))
         guard await present(request) == 0 else { return nil }
         return Float32(volume.level)
-    }
-
-    func fillSnippetArguments(
-        snippetName: String, arguments: [SnippetTemplateEngine.MissingArgument]
-    ) async -> [String: String]? {
-        let state = SnippetArgumentsState(arguments: arguments)
-        let request = DialogRequest(
-            title: snippetName, message: String(localized: "Fill in the template fields."),
-            symbol: "curlybraces", tone: .neutral,
-            actions: [
-                DialogAction(title: String(localized: "Expand")),
-                DialogAction(title: String(localized: "Cancel"), role: .cancel)
-            ],
-            defaultIndex: 0, cancelIndex: 1, accessory: .snippetArguments(state))
-        guard await present(request) == 0 else { return nil }
-        return state.values
     }
 
     func editClipboardText(_ text: String) async -> String? {
@@ -115,7 +96,7 @@ final class DialogController: NSObject, NSWindowDelegate {
             let width =
                 switch request.accessory {
                 case nil, .volume: metrics.size.dialogCompactWidth
-                case .snippetArguments, .clipboardText: metrics.size.dialogWidth
+                case .clipboardText: metrics.size.dialogWidth
                 }
             let content = hostingView(
                 DialogView(
@@ -136,14 +117,12 @@ final class DialogController: NSObject, NSWindowDelegate {
                 case .confirm:
                     finish(request.defaultIndex)
                 case .increment, .decrement:
-                    // Keying the slider lands on the same values Volume Up/Down produce.
                     guard case .volume(let volume) = request.accessory else { return }
                     volume.level = VolumeLevel.stepped(volume.level, up: key == .increment)
                 }
             }
             self.panel = panel
             place(panel)
-            // Non-activating like the palette: key focus without pulling the user out.
             panel.makeKeyAndOrderFront(nil)
             panel.orderFrontRegardless()
         }
@@ -166,7 +145,6 @@ final class DialogController: NSObject, NSWindowDelegate {
     private func hostingView(_ view: some View, width: CGFloat, minHeight: CGFloat) -> NSView {
         let hosting = NSHostingView(
             rootView: AnyView(view.environment(\.metrics, metrics).motionScope()))
-        // Measure at the fixed width first: the message wraps, so height follows width.
         hosting.setFrameSize(NSSize(width: width, height: minHeight))
         let fitted = hosting.fittingSize
         hosting.setFrameSize(NSSize(width: width, height: max(fitted.height, minHeight)))
@@ -182,17 +160,13 @@ final class DialogController: NSObject, NSWindowDelegate {
                 y: visible.midY - size.height / 2 + visible.height * Self.centerLift))
     }
 
-    /// Optical centering: an exactly centred dialog reads low, as the palette would.
     private static let centerLift: CGFloat = 0.08
-    // MARK: - NSWindowDelegate
 
-    /// After AppKit's own first-responder pick, which a view's focus request can't outlast.
     func windowDidBecomeKey(_ notification: Notification) {
         guard let panel, notification.object as? NSWindow === panel else { return }
         panel.focusFirstTextField()
     }
 
-    /// Click-away resolves as a dismissal rather than leaving an orphaned dialog behind.
     func windowDidResignKey(_ notification: Notification) {
         guard let panel, notification.object as? NSWindow === panel else { return }
         panel.onKey?(.cancel)

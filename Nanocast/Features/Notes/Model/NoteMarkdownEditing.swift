@@ -1,8 +1,6 @@
 import Foundation
 
-/// Plans Markdown-aware edits as pure replacements, so every gesture is testable without AppKit.
 enum NoteMarkdownEditing {
-    /// Nil means "not mine": the caller falls through to AppKit's native behaviour.
     static func plan(
         _ action: NoteEditAction, source: String, selection: NSRange, markdown: NoteMarkdown
     ) -> NoteEditPlan? {
@@ -26,7 +24,6 @@ enum NoteMarkdownEditing {
         }
     }
 
-    /// Decided by the same span and line rules the toggles use, so a lit button always undoes.
     static func formatting(source: String, selection: NSRange, markdown: NoteMarkdown) -> NoteFormatting {
         let text = source as NSString
         guard selection.location != NSNotFound, NSMaxRange(selection) <= text.length else { return .plain }
@@ -47,8 +44,6 @@ enum NoteMarkdownEditing {
 
         private static let maximumLevel = 6
         private static let indentUnit = "    "
-
-        // MARK: - Lists and quotes
 
         func newline(at selection: NSRange) -> NoteEditPlan? {
             guard selection.length == 0, let index = markdown.lineIndex(at: selection.location)
@@ -189,8 +184,6 @@ enum NoteMarkdownEditing {
                 selection: NSRange(location: start + task.utf16.count, length: 0))
         }
 
-        // MARK: - Headings, inline styles, links
-
         func setHeading(_ level: Int, in selection: NSRange) -> NoteEditPlan? {
             var edits: [Edit] = []
             var handled = false
@@ -269,7 +262,6 @@ enum NoteMarkdownEditing {
                 selection: NSRange(location: selection.location + replacement.utf16.count, length: 0))
         }
 
-        /// The span `toggleInline` unwraps: exact for a selection, enclosing for a caret.
         private func removableSpan(
             _ style: NoteEditAction.InlineStyle, at range: NSRange, in line: Line
         ) -> NoteMarkdown.Inline? {
@@ -308,7 +300,6 @@ enum NoteMarkdownEditing {
             return plan(edits, selection: selection)
         }
 
-        /// An empty range inserts the pair; `caret` keeps its place in the text when one is given.
         private func wrap(
             _ range: NSRange, _ style: NoteEditAction.InlineStyle, caret: Int?
         ) -> NoteEditPlan {
@@ -338,7 +329,6 @@ enum NoteMarkdownEditing {
             return NSRange(start..<end)
         }
 
-        /// The one line an inline gesture acts on, with the selection clipped to its content.
         private func styledLine(for selection: NSRange) -> (Line, NSRange)? {
             let indexes = markdown.lineIndexes(intersecting: selection)
             guard indexes.count == 1, let index = indexes.first else { return nil }
@@ -356,8 +346,6 @@ enum NoteMarkdownEditing {
             while end > start, Unit.isWhitespace(text.character(at: end - 1)) { end -= 1 }
             return NSRange(start..<end)
         }
-
-        // MARK: - Code blocks and quotes
 
         func toggleQuote(in selection: NSRange) -> NoteEditPlan? {
             let candidates = quoteCandidates(markdown.lineIndexes(intersecting: selection))
@@ -401,7 +389,6 @@ enum NoteMarkdownEditing {
                 selection: after)
         }
 
-        /// A closing fence on the last line has no newline, so it takes the one before it.
         private func unfence(_ block: ClosedRange<Int>, selection: NSRange) -> NoteEditPlan? {
             let open = markdown.lines[block.lowerBound]
             let close = markdown.lines[block.upperBound]
@@ -421,7 +408,6 @@ enum NoteMarkdownEditing {
                 selection: selection)
         }
 
-        /// Skips fenced, table and rule lines, and blank lines unless one is all that is touched.
         private func quoteCandidates(_ indexes: Range<Int>) -> [Int] {
             indexes.filter { index in
                 let kind = markdown.lines[index].kind
@@ -439,8 +425,6 @@ enum NoteMarkdownEditing {
             if case .quote = kind { return true }
             return false
         }
-
-        // MARK: - Formatting
 
         func formatting(of selection: NSRange) -> NoteFormatting {
             let indexes = markdown.lineIndexes(intersecting: selection)
@@ -467,7 +451,6 @@ enum NoteMarkdownEditing {
             return result
         }
 
-        /// Mirrors `setHeading`, which acts on heading and paragraph lines and skips the rest.
         private func sharedHeadingLevel(_ lines: [Line]) -> Int? {
             let levels = lines.compactMap { line -> Int? in
                 switch line.kind {
@@ -480,9 +463,6 @@ enum NoteMarkdownEditing {
             return first
         }
 
-        // MARK: - Lines
-
-        /// A marker's digit run as the source writes it, which `007.` makes wider than its value.
         private func digitsEnd(from start: Int) -> Int {
             var index = start
             while index < text.length, Unit.isDigit(text.character(at: index)) { index += 1 }
@@ -521,8 +501,6 @@ enum NoteMarkdownEditing {
             }
         }
 
-        // MARK: - Renumbering
-
         private func inserting(_ string: String, at caret: Int) -> NoteEditPlan {
             NoteEditPlan(
                 range: NSRange(location: caret, length: 0), replacement: string,
@@ -538,7 +516,6 @@ enum NoteMarkdownEditing {
                 NoteEditPlan(range: range, replacement: "", selection: NSRange(location: caret, length: 0)))
         }
 
-        /// Folds the renumbering of the touched ordered runs into the same single replacement.
         private func renumbered(_ plan: NoteEditPlan?) -> NoteEditPlan? {
             guard let plan else { return nil }
             let edited = text.replacingCharacters(in: plan.range, with: plan.replacement) as NSString
@@ -560,7 +537,6 @@ enum NoteMarkdownEditing {
                 range: NSRange(start..<end), replacement: replacement, selection: fixes.selection)
         }
 
-        /// Each level counts up from its first number; a shallower line restarts deeper counters.
         private func renumbering(around range: NSRange) -> [Edit] {
             let lines = markdown.lines
             let touched = markdown.lineIndexes(intersecting: range)
@@ -592,7 +568,6 @@ enum NoteMarkdownEditing {
             return edits
         }
 
-        /// Sorted, non-overlapping edits as one plan; the selection follows the text it covered.
         private func plan(_ edits: [Edit], selection: NSRange) -> NoteEditPlan? {
             let edits = edits.filter { $0.range.length > 0 || !$0.replacement.isEmpty }
             guard let first = edits.first, let last = edits.last else { return nil }
@@ -623,8 +598,6 @@ enum NoteMarkdownEditing {
             }
             return position + offset
         }
-
-        // MARK: - Syntax
 
         private static func marker(for style: NoteEditAction.ListStyle, bullet: String) -> String {
             switch style {

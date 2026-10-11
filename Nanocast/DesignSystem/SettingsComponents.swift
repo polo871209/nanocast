@@ -1,8 +1,6 @@
 import AppKit
 import SwiftUI
 
-// The few pieces more than one Settings pane or editor needs; everything else stays feature-owned.
-
 struct SettingsTabIcon: View {
     let systemImage: String
     let tint: Color
@@ -55,7 +53,6 @@ struct SettingsRow<Icon: View, Trailing: View>: View {
     var subtitleLineLimit = 1
     var alignment: VerticalAlignment = .center
     var labelOpacity = 1.0
-    /// Set when a search result points at this row, so its title can carry the pulse.
     var anchor: SettingsAnchor?
     @ViewBuilder var icon: Icon
     @ViewBuilder var trailing: Trailing
@@ -182,7 +179,6 @@ extension View {
             }
     }
 
-    /// Dims as well as disables; `.disabled` alone leaves the title at full strength.
     func settingsEnabled(_ isEnabled: Bool) -> some View {
         disabled(!isEnabled).opacity(isEnabled ? 1 : 0.45)
     }
@@ -191,16 +187,10 @@ extension View {
         modifier(SettingsEditorTextField())
     }
 
-    func settingsEditorTextArea(height: CGFloat) -> some View {
-        modifier(SettingsEditorTextArea(height: height))
-    }
-
-    /// `controlsOnGlass: false` draws the glass behind, so a control keeps its accent colour.
     func settingsEditorPanelSurface(controlsOnGlass: Bool = true) -> some View {
         modifier(SettingsEditorPanelSurface(controlsOnGlass: controlsOnGlass))
     }
 
-    /// The one place that says hiding a row from the launcher never unbinds its shortcut.
     func launcherVisibilityHelp() -> some View {
         help("Show in launcher. Its shortcut works either way.")
     }
@@ -224,52 +214,12 @@ struct SettingsEditorHeader: View {
     }
 }
 
-struct SettingsEditorField<Content: View>: View {
-    let title: LocalizedStringResource
-    var labelFont: Font?
-    @ViewBuilder var content: Content
-
-    init(
-        _ title: LocalizedStringResource, labelFont: Font? = nil,
-        @ViewBuilder content: () -> Content
-    ) {
-        self.title = title
-        self.labelFont = labelFont
-        self.content = content()
-    }
-
-    var body: some View {
-        LabeledContent {
-            content
-                .labelsHidden()
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-        } label: {
-            Text(title).font(labelFont)
-        }
-    }
-}
-
 private struct SettingsEditorTextField: ViewModifier {
     func body(content: Content) -> some View {
         content
             .textFieldStyle(.plain)
             .padding(.horizontal, Theme.Spacing.lg)
             .frame(height: Theme.Size.dialogButtonHeight)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous)
-                    .fill(Theme.Colors.controlSurface))
-    }
-}
-
-private struct SettingsEditorTextArea: ViewModifier {
-    let height: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .scrollContentBackground(.hidden)
-            .padding(Theme.Spacing.sm)
-            .frame(height: height)
             .background(
                 RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous)
                     .fill(Theme.Colors.controlSurface))
@@ -325,7 +275,6 @@ struct FeatureSwitchSection: View {
                 }
             }
             Toggle("Show in launcher", isOn: $showsInLauncher)
-                // The switch above stays live so the feature can always be turned back on.
                 .settingsEnabled(isEnabled)
         } header: {
             if showsHeader { SettingsSectionHeader(anchor) }
@@ -333,7 +282,6 @@ struct FeatureSwitchSection: View {
     }
 }
 
-/// The filter row above a long list, shaped like a search field rather than a form text field.
 struct SettingsFilterField: View {
     let prompt: LocalizedStringResource
     @Binding var query: String
@@ -461,9 +409,7 @@ private struct AliasTextField: NSViewRepresentable {
     }
 }
 
-/// Dressed like `ShortcutRecorder`; the persistent AppKit field preserves focus across updates.
 struct AliasField: View {
-    /// The owner's `preferenceKey`, taken raw so a row without an `AppEntry` can carry one too.
     let key: String
     let name: String
     @Environment(AliasStore.self) private var aliases
@@ -483,7 +429,6 @@ struct AliasField: View {
                 }
                 AliasTextField(text: $draft, focused: $focused, onCancel: revert)
                     .focusEffectDisabled()
-                    // The pane's `releasesFocusOnOutsideClick` resigns; this catches it landing.
                     .onChange(of: focused) { _, now in
                         if !now { commit() }
                     }
@@ -499,11 +444,9 @@ struct AliasField: View {
             }
         }
         .onAppear { draft = aliases.alias(for: key) ?? "" }
-        // A backup import replaces the table out from under an unfocused row.
         .onChange(of: aliases.revision) { _, _ in
             if !focused { draft = aliases.alias(for: key) ?? "" }
         }
-        // A reused table row hands the field another entry; unsaved text belongs to the old one.
         .onChange(of: key) { old, new in
             if focused {
                 aliases.setAlias(draft, for: old)
@@ -519,7 +462,6 @@ struct AliasField: View {
         .accessibilityLabel("Alias for \(name)")
     }
 
-    /// The one commit path — ↵ or focus landing elsewhere; a blank draft removes the alias.
     private func commit() {
         aliases.setAlias(draft, for: key)
         draft = aliases.alias(for: key) ?? ""

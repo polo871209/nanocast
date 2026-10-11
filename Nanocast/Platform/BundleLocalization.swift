@@ -1,8 +1,6 @@
 import Foundation
 
-/// A bundle's names in the languages this Mac reads; `CFBundle` alone misses every loctable app.
 enum BundleLocalization {
-    /// Preferred languages first, English last: a user who reads Thai still types "Calendar".
     nonisolated static func indexedLanguages(_ preferred: [String]) -> [String] {
         var codes: [String] = []
         var seen = Set<String>()
@@ -43,8 +41,6 @@ enum BundleLocalization {
         Locale.Language(identifier: Locale.Language(identifier: identifier).maximalIdentifier)
     }
 
-    /// Every name the bundle carries, most preferred language first. `base` — an app's file name, a
-    /// pane's `Info.plist` — ranks with the language it is written in, unless that one renames it.
     nonisolated static func names(
         for bundleURL: URL, base: String, developmentRegion: String?, languages: [String]
     ) -> [String] {
@@ -79,7 +75,6 @@ enum BundleLocalization {
                 if code == developmentFallback && !isBaseRenamed { append(base) }
             }
         }
-        // A development region this Mac doesn't read still leaves the name searchable.
         if !isBaseRenamed { append(base) }
         return result
     }

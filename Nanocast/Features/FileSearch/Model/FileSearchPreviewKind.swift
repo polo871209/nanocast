@@ -10,7 +10,6 @@ enum FileSearchPreviewKind: Equatable, Sendable {
     /// Text QuickLook would draw as an icon: it renders only a declared `public.text` as text.
     case text
 
-    /// Nil when only the bytes can tell: an undeclared type, or `.ts`, TypeScript or MPEG-TS video.
     init?(pathExtension: String) {
         guard let type = UTType(filenameExtension: pathExtension), !type.isDynamic,
             !type.conforms(to: .mpeg2TransportStream)
@@ -18,7 +17,6 @@ enum FileSearchPreviewKind: Equatable, Sendable {
         self = Self.declared(type)
     }
 
-    /// For an extension that left it open: text if the bytes are, otherwise what it declares.
     init(pathExtension: String, head: Data, isWholeFile: Bool) {
         guard !Self.isText(head, isWholeFile: isWholeFile) else {
             self = .text
@@ -33,14 +31,12 @@ enum FileSearchPreviewKind: Equatable, Sendable {
         return .quickLook
     }
 
-    /// No NUL and valid UTF-8, forgiving the one character a partial read may have cut in half.
     static func isText(_ bytes: Data, isWholeFile: Bool) -> Bool {
         guard !bytes.contains(0) else { return false }
         let checked = isWholeFile ? bytes : bytes.dropLast(cutCharacterLength(bytes))
         return String(validating: checked, as: UTF8.self) != nil
     }
 
-    /// The bytes of a trailing multi-byte character that is missing its continuation bytes.
     private static func cutCharacterLength(_ bytes: Data) -> Int {
         guard let lead = bytes.suffix(3).lastIndex(where: { $0 & 0xC0 != 0x80 }) else { return 0 }
         let length =
