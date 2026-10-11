@@ -1,9 +1,7 @@
 import SwiftUI
 
-/// A sibling of `RaycastImportSelection`, not a generalisation: only this greys absent rows.
 struct BackupCategorySelection: View {
     @Binding var selection: Set<BackupCategory>
-    /// Categories the file actually holds, with how much. nil means everything is offered.
     var available: [BackupCategory: Int]?
 
     private static let columns = Array(

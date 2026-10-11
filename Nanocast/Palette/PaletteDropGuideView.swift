@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct PaletteDropGuideView: View {
-    /// The default placement's top-left, in the guide window's flipped coordinates.
     let topLeft: CGPoint
     let width: CGFloat
     let horizontalDistance: CGFloat

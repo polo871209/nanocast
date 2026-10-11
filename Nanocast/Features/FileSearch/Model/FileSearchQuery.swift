@@ -2,10 +2,8 @@ import Foundation
 
 enum FileSearchQuery {
     static let resultLimit = 200
-    /// A blank screen is a shortlist, not a browser: enough rows to reach, never to scroll far.
     static let recentLimit = 20
     static let launcherLimit = 5
-    /// Category search's threshold too: below it a query matches too many names to be useful.
     static let launcherMinimumLength = 3
     static let priorWeight = 1_500
     static let nonASCIIBit: UInt64 = 1 << 40
@@ -43,7 +41,6 @@ enum FileSearchQuery {
         let terms = terms(in: query).map { Array(fold($0).utf8) }
         guard !terms.isEmpty else { return nil }
         let whole = Array(terms.joined(separator: [0x20]))
-        // From the terms, not `whole`: its spaces are no letter a name has to contain.
         return Prepared(terms: terms, whole: whole, mask: mask(of: terms.joined()))
     }
 
@@ -52,7 +49,6 @@ enum FileSearchQuery {
         return text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
     }
 
-    /// A name's mask covers its folded spelling too, so `resume` still passes for `Résumé`.
     static func nameMask(_ name: UnsafeBufferPointer<UInt8>) -> UInt64 {
         let raw = mask(of: name)
         guard raw & nonASCIIBit != 0 else { return raw }
@@ -109,7 +105,6 @@ enum FileSearchQuery {
         } else if isBoundary(name, at: first) {
             score += 1_000
         }
-        // `report` should find `report.pdf` ahead of `reporting.pdf`.
         let end = first + lead.count
         if end == name.count || !isAlphanumeric(name[end]) { score += 500 }
         return score

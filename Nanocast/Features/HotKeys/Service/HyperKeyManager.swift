@@ -1,7 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// Owns the Hyper Key's lifecycle and policy. See docs/features/hotkeys.md#the-hyper-key.
 @MainActor
 @Observable
 final class HyperKeyManager: HealthCheckable {
@@ -29,6 +28,7 @@ final class HyperKeyManager: HealthCheckable {
     @ObservationIgnored private var observers: [NotificationToken] = []
     @ObservationIgnored private var darwinObservers: [DarwinNotificationToken] = []
     @ObservationIgnored private var runningAppsObservation: NSKeyValueObservation?
+    @ObservationIgnored private var settingsObservation: ObservationTracking.Token?
     @ObservationIgnored private var permissionRetry: Task<Void, Never>?
     @ObservationIgnored private var pauseReasons: Set<PauseReason> = []
 
@@ -99,9 +99,6 @@ final class HyperKeyManager: HealthCheckable {
             })
     }
 
-    // MARK: - Applying
-
-    /// Idempotent: every input funnels here, and it converges on what the settings ask for.
     private func apply() {
         let key = settings.hyperKey
         guard let route = key.route(secureInputCompatible: isSecureInputCompatible) else {
@@ -123,7 +120,7 @@ final class HyperKeyManager: HealthCheckable {
 
     private func block(by appName: String) {
         if status != .blocked(appName: appName) {
-            onProblem?(String(localized: "Quit \(appName) to use the Hyper Key"))
+            onProblem?("Quit \(appName) to use the Hyper Key")
         }
         retryLater(.blocked(appName: appName))
     }
@@ -154,7 +151,6 @@ final class HyperKeyManager: HealthCheckable {
             ?? "Nanocast"
     }
 
-    /// That press latched Caps Lock on a keyboard that lost the remap, so undo it once repaired.
     private func repairRemap() {
         guard status == .active else { return }
         let result = remapper.repair()
@@ -166,7 +162,6 @@ final class HyperKeyManager: HealthCheckable {
         settings.hyperKey.supportsSecureInputCompatibility && settings.hyperKeySecureInputCompatibility
     }
 
-    /// One-second retry while waiting, never while active. See docs/features/hotkeys.md#lifecycle.
     func healthCheck() {
         apply()
     }
@@ -188,8 +183,6 @@ final class HyperKeyManager: HealthCheckable {
         }
     }
 
-    // MARK: - Secure Input
-
     private func secureInputChanged() {
         // The tap saw neither end of anything typed inside, so a half-held chord is stale.
         tap.cancelHold()
@@ -205,26 +198,14 @@ final class HyperKeyManager: HealthCheckable {
         hotKeys.setSecureInputHint(
             swallowsCapsLock ? KeyShortcut(carbonKeyCode: kVK_F18, carbonModifiers: 0) : nil
         ) { [weak self] in
-            self?.onProblem?(String(localized: "The Hyper Key can't work while Secure Input is on"))
+            self?.onProblem?("The Hyper Key can't work while Secure Input is on")
         }
     }
 
-    // MARK: - Observation
-
-    /// Fires synchronously on main before the write lands, so the task re-arms, then applies.
     private func observeSettings() {
-        withObservationTracking {
-            _ = settings.hyperKey
-            _ = settings.hyperKeySecureInputCompatibility
-            _ = settings.hyperKeyIncludesShift
-            _ = settings.hyperKeyQuickPress
-        } onChange: { [weak self] in
-            Task { @MainActor in
-                guard let self else { return }
-                self.observeSettings()
-                self.apply()
-            }
-        }
+        settingsObservation = observeChanges(
+            of: { [settings] in HyperKeyPreferences(settings) },
+            onChange: { [weak self] in self?.apply() })
     }
 
     private func observeSystem() {
@@ -298,9 +279,24 @@ final class HyperKeyManager: HealthCheckable {
     private func name(
         of identity: HyperKeyConflictPolicy.KeyboardIdentity, among keyboards: [HIDEventSystem.Keyboard]
     ) -> String {
-        if identity.isDefault { return String(localized: "All keyboards") }
+        if identity.isDefault { return "All keyboards" }
         return keyboards.first {
             $0.vendorID == identity.vendorID && $0.productID == identity.productID
-        }?.name ?? String(localized: "Keyboard \(String(identity.vendorID))-\(String(identity.productID))")
+        }?.name ?? "Keyboard \(String(identity.vendorID))-\(String(identity.productID))"
+    }
+}
+
+private struct HyperKeyPreferences: Equatable, Sendable {
+    let key: HyperKeyPhysicalKey
+    let isSecureInputCompatible: Bool
+    let includesShift: Bool
+    let quickPress: HyperKeyQuickPress
+
+    @MainActor
+    init(_ settings: AppSettings) {
+        key = settings.hyperKey
+        isSecureInputCompatible = settings.hyperKeySecureInputCompatibility
+        includesShift = settings.hyperKeyIncludesShift
+        quickPress = settings.hyperKeyQuickPress
     }
 }

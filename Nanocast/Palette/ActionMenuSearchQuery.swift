@@ -1,6 +1,5 @@
 import Foundation
 
-/// A folded menu query reused for every row title in one menu rebuild.
 struct ActionMenuSearchQuery {
     private let needle: FuzzyMatch.Query?
 

@@ -1,9 +1,7 @@
 import AppKit
 
-/// Watches System Settings → Appearance → **Icon & widget style**; a change stales every icon.
 @MainActor
 final class IconStyleMonitor {
-    /// Measured: the swap lands ~25–120ms after the notification, jittering run to run.
     private static let pollInterval = Duration.milliseconds(40)
     private static let settleLimit = Duration.milliseconds(600)
 

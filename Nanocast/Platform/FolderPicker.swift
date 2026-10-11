@@ -1,6 +1,5 @@
 import AppKit
 
-/// The open panel a Settings row uses to pick the one folder a feature keeps its files in.
 @MainActor
 enum FolderPicker {
     static func choose(message: String, startingAt directory: URL) -> URL? {
@@ -9,7 +8,7 @@ enum FolderPicker {
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = String(localized: "Use Folder")
+        panel.prompt = "Use Folder"
         panel.message = message
         panel.directoryURL = directory
         // Nanocast is an accessory app, so the panel opens behind the frontmost app without this.

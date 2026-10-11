@@ -24,11 +24,11 @@ enum CalcStatistics {
     }
 
     private static let statistics: [Statistic] = {
-        let average = String(localized: "Average")
-        let sum = String(localized: "Sum")
-        let minimum = String(localized: "Minimum")
-        let maximum = String(localized: "Maximum")
-        let result = String(localized: "Result")
+        let average = "Average"
+        let sum = "Sum"
+        let minimum = "Minimum"
+        let maximum = "Maximum"
+        let result = "Result"
         let rows: [(String, String, String)] = [
             ("average of", "average", average), ("avg of", "average", average),
             ("mean of", "average", average),
@@ -37,11 +37,11 @@ enum CalcStatistics {
             ("sum of", "sum", sum), ("total of", "sum", sum),
             ("min of", "min", minimum), ("smaller of", "min", minimum), ("lesser of", "min", minimum),
             ("max of", "max", maximum), ("larger of", "max", maximum), ("greater of", "max", maximum),
-            ("median of", "median", String(localized: "Median")),
-            ("count of", "count", String(localized: "Count")),
-            ("standard deviation of", "stddev", String(localized: "Standard Deviation")),
-            ("std dev of", "stddev", String(localized: "Standard Deviation")),
-            ("stddev of", "stddev", String(localized: "Standard Deviation")),
+            ("median of", "median", "Median"),
+            ("count of", "count", "Count"),
+            ("standard deviation of", "stddev", "Standard Deviation"),
+            ("std dev of", "stddev", "Standard Deviation"),
+            ("stddev of", "stddev", "Standard Deviation"),
             ("gcd of", "gcd", result), ("gcf of", "gcd", result),
             ("greatest common divisor of", "gcd", result), ("greatest common factor of", "gcd", result),
             ("lcm of", "lcm", result), ("lowest common multiple of", "lcm", result),

@@ -51,25 +51,25 @@ enum CalcDateFacts {
         switch fact {
         case .week:
             return card(
-                query, day, String(localized: "Week of the Year"), calendar.component(.weekOfYear, from: date)
+                query, day, "Week of the Year", calendar.component(.weekOfYear, from: date)
             )
         case .dayOfYear:
             guard let ordinal = calendar.ordinality(of: .day, in: .year, for: date) else { return nil }
-            return card(query, day, String(localized: "Day of the Year"), ordinal)
+            return card(query, day, "Day of the Year", ordinal)
         case .weekOfMonth:
             return card(
-                query, day, String(localized: "Week of the Month"),
+                query, day, "Week of the Month",
                 calendar.component(.weekOfMonth, from: date))
         case .dayOfMonth:
             return card(
-                query, day, String(localized: "Day of the Month"), calendar.component(.day, from: date))
+                query, day, "Day of the Month", calendar.component(.day, from: date))
         case .age:
             return age(query, born: date, rest: rest, day: day, now: now, calendar: calendar)
         case .weekday:
             let name = format(date, "EEEE", calendar: calendar)
             return CalcResult(
                 expression: query, sourceBadge: format(date, "d MMMM, yyyy", calendar: calendar),
-                targetBadge: String(localized: "Day of the Week"),
+                targetBadge: "Day of the Week",
                 payload: .value(display: name, copyText: name), canChain: false)
         }
     }
@@ -97,7 +97,7 @@ enum CalcDateFacts {
             let years = calendar.dateComponents([.year], from: born, to: now).year
         else { return nil }
         return CalcResult(
-            expression: query, sourceBadge: day, targetBadge: String(localized: "Age"),
+            expression: query, sourceBadge: day, targetBadge: "Age",
             payload: .number(Double(years), suffix: years == 1 ? " year" : " years"), canChain: false)
     }
 
@@ -134,7 +134,7 @@ enum CalcDateFacts {
         }
         return CalcResult(
             expression: query, sourceBadge: period.label,
-            targetBadge: remaining ? String(localized: "Remaining") : String(localized: "Total"),
+            targetBadge: remaining ? "Remaining" : "Total",
             payload: .number(value, suffix: " " + (value == 1 ? unit.singular : unit.plural)), canChain: false
         )
     }

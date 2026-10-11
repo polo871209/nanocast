@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// A symbol falling back to a bundled asset of the same name, since not all are system.
 struct SymbolImage: View {
     let name: String
     let size: CGFloat

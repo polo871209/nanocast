@@ -1,13 +1,10 @@
 import Foundation
 
-/// Runs one `ClipboardTextHelper` per item, so Vision's allocations leave with the child process.
 nonisolated enum ClipboardTextWorker {
     enum Failure: Error { case recognition, outputLimit }
 
-    /// Mirrors `ClipboardTextExtractor.maximumTextBytes`: the helper is not in the app's module.
-    private static let maximumOutputBytes = 32_000
+    static let maximumOutputBytes = 32_000
     private static let readSize = 4096
-    /// The read loop and the exit wait block, so they stay off the cooperative pool.
     private static let queue = DispatchQueue(
         label: "com.nanocast.clipboard-text", qos: .background, attributes: .concurrent)
     static let executable = Bundle.main.bundleURL.appendingPathComponent(
@@ -20,6 +17,7 @@ nonisolated enum ClipboardTextWorker {
         return try await extract(at: URL(fileURLWithPath: path), isPDF: kind == .pdf, executable: executable)
     }
 
+    @concurrent
     static func extract(
         at url: URL, isPDF: Bool, executable: URL, timeout: Duration = .seconds(60)
     ) async throws -> String {
@@ -33,7 +31,6 @@ nonisolated enum ClipboardTextWorker {
         process.standardError = FileHandle.nullDevice
         process.qualityOfService = .background
         guard let exit = try? process.runObservingExit() else { throw Failure.recognition }
-        // Cancellation can land between the check above and the launch, which nothing else catches.
         if Task.isCancelled { terminate(process) }
         let deadline = Task.detached(priority: .background) {
             do { try await Task.sleep(for: timeout) } catch { return }
@@ -53,7 +50,6 @@ nonisolated enum ClipboardTextWorker {
         return try result.get()
     }
 
-    /// Blocking throughout, and the only place a helper is reaped: every exit runs the `defer`.
     private static func collect(
         from process: Process, awaiting exit: ProcessExit, reading output: Pipe
     ) -> Result<String, Failure> {

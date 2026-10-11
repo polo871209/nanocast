@@ -10,7 +10,6 @@ nonisolated enum ClipboardTextExtractor {
     private static let maximumDimension = 4096
     private static let maximumPixels = 2048 * 2048
     private static let stripHeight = 2048
-    /// Taller than any line of text, so every line lies whole inside at least one strip.
     private static let stripOverlap = 256
 
     enum Failure: Error { case unreadable }
@@ -44,7 +43,6 @@ nonisolated enum ClipboardTextExtractor {
         return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
     }
 
-    /// Full-width strips, so no line is cut across columns and the text keeps its reading order.
     private static func recognize(_ image: CGImage) async throws -> String {
         var text = ""
         for top in stride(from: 0, to: max(1, image.height - stripOverlap), by: stripHeight - stripOverlap) {
@@ -61,7 +59,6 @@ nonisolated enum ClipboardTextExtractor {
         return text
     }
 
-    /// Adjacent strips split their overlap down the middle, so a line there is kept exactly once.
     private static func ownedRows(isFirst: Bool, isLast: Bool, height: Int) -> Range<Double> {
         let lower = isFirst ? -.infinity : Double(stripOverlap / 2)
         let upper = isLast ? .infinity : Double(height - stripOverlap / 2)

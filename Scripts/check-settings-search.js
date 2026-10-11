@@ -1,11 +1,4 @@
 #!/usr/bin/env node
-// Every Settings search result must have somewhere to land.
-//
-// A `Form` cannot be asked what sections or rows it holds, so `SettingsSearchCatalog` is written by
-// hand and its targets are matched to the panes textually. An entry with nothing to scroll to still
-// compiles, reads fine, and fails only at runtime — as a result that navigates and then sits there.
-//
-// Usage: node Scripts/check-settings-search.js   (run by ./Scripts/lint.sh)
 "use strict";
 
 const fs = require("fs");
@@ -39,7 +32,6 @@ for (const m of anchorSource.matchAll(
 
 const problems = [];
 
-// 1. Every anchor is claimed by a section.
 for (const anchor of anchorTitles.keys()) {
   const claimed =
     source.includes(`SettingsSectionHeader(.${anchor})`) ||
@@ -49,18 +41,14 @@ for (const anchor of anchorTitles.keys()) {
   if (!claimed) problems.push(`anchor .${anchor} — no Section declares it`);
 }
 
-// 2. Every row entry is marked on a row.
 for (const m of catalog.matchAll(/\.init\(\s*\.(\w+),\s*"((?:[^"\\]|\\.)*)"/g)) {
   const [, anchor, title] = m;
   const quoted = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const marked =
     source.includes(`SettingsRowTitle(.${anchor}, "${title}")`) ||
     new RegExp(`SettingsFeatureToggleLabel\\(\\s*anchor: \\.${anchor}, title: "${quoted}"`).test(source) ||
-    // A `SettingsRow` renders the pill from its own title.
     new RegExp(`SettingsRow\\(\\s*title: "${quoted}",[\\s\\S]*?anchor: \\.${anchor}`).test(source) ||
-    // A feature pane's master switch, rendered by `FeatureSwitchSection`.
     new RegExp(`anchor: \\.${anchor},\\s*\\n\\s*enableTitle: "${quoted}"`).test(source) ||
-    // A launcher category's master switch, rendered by `LauncherCategorySwitchSection`.
     new RegExp(`anchor: \\.${anchor},\\s*title: "${quoted}"`).test(source);
   if (!marked) problems.push(`row “${title}” (.${anchor}) — no SettingsRowTitle marks it`);
 }

@@ -40,8 +40,6 @@ struct CompactBar: View {
     let commands: [CommandID]
     let selection: CommandID?
     let onRun: (CommandID) -> Void
-    /// The window caches its shadow from the shapes it first drew, before the buttons beaded out.
-    let onSettled: () -> Void
     @Environment(PaletteState.self) private var palette
     @Environment(\.metrics) private var metrics
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -50,26 +48,17 @@ struct CompactBar: View {
     var body: some View {
         let geometry = CompactBarGeometry(metrics: metrics, count: commands.count)
         let revealed = isRevealed
-        Group {
-            // Glass casting its own shadow would give the window's shadow that soft halo to trace.
-            if Theme.glassCastsShadow {
-                glass(geometry: geometry, revealed: revealed)
-                    .mask { silhouette(geometry: geometry, revealed: revealed, sparing: nil) }
-            } else {
-                glass(geometry: geometry, revealed: revealed)
+        glass(geometry: geometry, revealed: revealed)
+            .overlay { scrim(geometry: geometry, revealed: revealed) }
+            // Above the glass rather than inside it, where a morph would smear them.
+            .overlay(alignment: .topLeading) {
+                ForEach(Array(commands.enumerated()), id: \.element) { index, command in
+                    glyph(command, at: index, geometry: geometry, revealed: revealed)
+                }
             }
-        }
-        .overlay { scrim(geometry: geometry, revealed: revealed) }
-        // Above the glass rather than inside it, where a morph would smear them.
-        .overlay(alignment: .topLeading) {
-            ForEach(Array(commands.enumerated()), id: \.element) { index, command in
-                glyph(command, at: index, geometry: geometry, revealed: revealed)
-            }
-        }
-        .task(id: palette.isVisible) { await followVisibility() }
+            .task(id: palette.isVisible) { await followVisibility() }
     }
 
-    /// Left unmasked where it can be: any mask also clips the rim glass draws past its shape.
     private func glass(geometry: CompactBarGeometry, revealed: Bool) -> some View {
         let capsule = Capsule(style: .continuous)
         // One container, or the buttons could never bead off the capsule they come out of.
@@ -184,11 +173,6 @@ struct CompactBar: View {
     private func followVisibility() async {
         guard !palette.isVisible else {
             isRevealed = true
-            guard Theme.glassCastsShadow else { return }
-            let reveal = BarMotion.revealDelay + BarMotion.stagger * Double(commands.count) + BarMotion.settle
-            try? await Task.sleep(for: .seconds(Motion.duration(reveal)))
-            guard !Task.isCancelled else { return }
-            onSettled()
             return
         }
         try? await Task.sleep(for: .seconds(Motion.duration(BarMotion.parkAfterHide)))

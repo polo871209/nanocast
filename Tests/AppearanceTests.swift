@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// Pins `AGENTS.md`: a token's dark branch is the literal the forced-dark build shipped.
 @main
 @MainActor
 struct AppearanceTests {
@@ -17,7 +16,6 @@ struct AppearanceTests {
         }
     }
 
-    /// Quantized to the 8 bits that reach the framebuffer: `CGFloat`s carry Float error.
     static func components(_ color: Color, _ name: NSAppearance.Name) -> [Int] {
         var out: [Int] = []
         NSAppearance(named: name)!.performAsCurrentDrawingAppearance {
@@ -34,7 +32,6 @@ struct AppearanceTests {
         check("dark \(label)", actual == wanted, "\(actual) != \(wanted)")
     }
 
-    /// A token that resolves identically in both never adapted at all.
     static func adapts(_ label: String, _ token: Color) {
         check(
             "\(label) adapts", components(token, .darkAqua) != components(token, .aqua),
@@ -66,7 +63,6 @@ struct AppearanceTests {
         dark("iconPlaceholder", c.iconPlaceholder, is: Color.white.opacity(0.06))
         dark("sheen", c.sheen, is: Color.white.opacity(0.04))
         dark("textPrimary", c.textPrimary, is: Color.white)
-        // VolumeHUDView draws white 0.85; textPrimary is alpha 1, so opacity must reproduce it.
         dark("textPrimary at 0.85", c.textPrimary.opacity(0.85), is: Color.white.opacity(0.85))
 
         print("# every surface token resolves per appearance")

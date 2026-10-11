@@ -37,7 +37,7 @@ enum CalcNumberForm {
         case .scientific:
             guard case .scalar = value.kind, let text = scientific(value.effective) else { return nil }
             return .phrase(
-                query, .value(display: text, copyText: text), target: String(localized: "Scientific"))
+                query, .value(display: text, copyText: text), target: "Scientific")
         case .degreesMinutesSeconds:
             let degrees: Double
             switch value.kind {
@@ -50,7 +50,7 @@ enum CalcNumberForm {
             let text = sexagesimal(degrees, marks: ("° ", "′ ", "″"))
             return .phrase(
                 query, .value(display: text, copyText: text),
-                target: String(localized: "Degrees, Minutes, Seconds"),
+                target: "Degrees, Minutes, Seconds",
                 canChain: false)
         case .hoursMinutesSeconds:
             guard case .unit(let unit) = value.kind, unit.category == .time, let hour = CalcUnits.byName["hr"]
@@ -58,7 +58,7 @@ enum CalcNumberForm {
             let text = sexagesimal(value.amount * unit.factor / hour.factor, marks: ("h ", "m ", "s"))
             return .phrase(
                 query, .value(display: text, copyText: text),
-                target: String(localized: "Hours, Minutes, Seconds"),
+                target: "Hours, Minutes, Seconds",
                 canChain: false)
         case .lapTime:
             guard case .unit(let unit) = value.kind, unit.category == .time, value.amount >= 0 else {
@@ -66,14 +66,14 @@ enum CalcNumberForm {
             }
             let text = lapTime(value.amount * unit.factor)
             return .phrase(
-                query, .value(display: text, copyText: text), target: String(localized: "Lap Time"),
+                query, .value(display: text, copyText: text), target: "Lap Time",
                 canChain: false)
         case .multiplier:
             guard case .scalar = value.kind else { return nil }
             return CalcSpokenMath.multiplierCard(value.effective, query: query)
         case .plain:
             guard case .scalar = value.kind else { return nil }
-            return .phrase(query, .number(value.effective), target: String(localized: "Result"))
+            return .phrase(query, .number(value.effective), target: "Result")
         }
     }
 

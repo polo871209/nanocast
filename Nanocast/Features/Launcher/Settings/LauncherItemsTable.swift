@@ -1,17 +1,14 @@
 import AppKit
 import SwiftUI
 
-/// Launcher items as a table in one `Form` row, reusing a screenful of hosted rows as it scrolls.
 struct LauncherItemsTable: NSViewRepresentable {
     let entries: [AppEntry]
     let isEnabled: Bool
     let visibility: VisibilityStore
     let aliases: AliasStore
     let hotKeys: HotKeyManager
-    /// The open recorder's bounds in this view's space; nil while nothing is recording.
     @Binding var recorderFrame: CGRect?
 
-    /// Leave a little of the Form's edge inset at the first and last rows.
     static let tableOverhang: CGFloat = 10
     static let searchDividerHeight: CGFloat = 1
     static let rowHeight: CGFloat = 45
@@ -71,7 +68,6 @@ struct LauncherItemsTable: NSViewRepresentable {
                 table.reloadData()
                 return
             }
-            // Same rows: refresh the visible cells in place, so a focused alias keeps its editor.
             let visible = table.rows(in: table.visibleRect)
             for row in visible.location..<visible.location + visible.length {
                 let cell = table.view(atColumn: 0, row: row, makeIfNecessary: false)
@@ -161,7 +157,6 @@ private final class HostedRowsTableView: NSTableView {
     }
 }
 
-/// A reused row: its hosted text field and checkbox survive, and only the entry changes hands.
 private final class LauncherItemCellView: NSTableCellView {
     static let reuseID = NSUserInterfaceItemIdentifier("launcherItem")
     weak var coordinator: LauncherItemsTable.Coordinator?
@@ -171,7 +166,6 @@ private final class LauncherItemCellView: NSTableCellView {
         host = NSHostingView(rootView: content)
         super.init(frame: .zero)
         identifier = Self.reuseID
-        // The table fixes the row height; a hosting view left to size itself would fight it.
         host.sizingOptions = []
         host.translatesAutoresizingMaskIntoConstraints = false
         addSubview(host)
@@ -198,7 +192,6 @@ private final class LauncherItemCellView: NSTableCellView {
         return window?.makeFirstResponder(field) ?? false
     }
 
-    /// Only while the alias is being edited, so Tab off a focused checkbox keeps its default.
     private func tabbed() -> Bool {
         guard let editor = window?.firstResponder as? NSTextView, editor.isFieldEditor,
             let field = editor.delegate as? NSView, field.isDescendant(of: host), let coordinator
@@ -206,7 +199,6 @@ private final class LauncherItemCellView: NSTableCellView {
         return coordinator.focusAlias(below: self)
     }
 
-    /// The row's one editable text field is its alias; the name and the recorder are drawn text.
     private var aliasField: NSTextField? {
         var pending: [NSView] = [host]
         while let view = pending.popLast() {
@@ -222,7 +214,6 @@ private final class LauncherItemCellView: NSTableCellView {
     }
 }
 
-/// What a cell hosts: the row, plus the hairline and environment a `Form` row would hand it.
 private struct LauncherItemCell: View {
     let entry: AppEntry
     let showsDivider: Bool
@@ -237,14 +228,12 @@ private struct LauncherItemCell: View {
         VStack(spacing: 0) {
             Divider().opacity(showsDivider ? 1 : 0)
             LauncherItemRow(entry: entry)
-                // Rows are separate hosting views; the key view loop doesn't run from one to the next.
                 .onKeyPress(.tab, phases: .down) { press in
                     !press.modifiers.contains(.shift) && onTab() ? .handled : .ignored
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .disabled(!isEnabled)
-        // The recorder's anchor can't leave this hosting view; its bounds go out by hand.
         .overlayPreferenceValue(ShortcutRecorderAnchorKey.self) { anchor in
             GeometryReader { proxy in
                 Color.clear.onChange(of: anchor.map { proxy[$0] }, initial: true) { _, frame in
