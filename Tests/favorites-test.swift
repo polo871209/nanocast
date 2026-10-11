@@ -14,7 +14,6 @@ struct FavoritesTest {
             }
         }
 
-        // Ten digit keys is the ceiling: there is no ⌘10, so the eleventh favorite gets no chord.
         check("ten slots", FavoriteSlots.digits.count == 10)
         check("no digit repeats", Set(FavoriteSlots.digits).count == FavoriteSlots.digits.count)
 
@@ -36,7 +35,6 @@ struct FavoritesTest {
         check("the eleventh row shows nothing", FavoriteSlots.digit(at: 10) == nil)
         check("a negative index shows nothing", FavoriteSlots.digit(at: -1) == nil)
 
-        // The row overlay and the key handler must agree, or a row advertises another's chord.
         for index in FavoriteSlots.digits.indices {
             guard let digit = FavoriteSlots.digit(at: index) else {
                 check("slot \(index) has a digit", false)

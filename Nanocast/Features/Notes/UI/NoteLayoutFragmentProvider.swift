@@ -1,6 +1,5 @@
 import AppKit
 
-/// Vends a drawing fragment for every paragraph whose first character carries a block decoration.
 final class NoteLayoutFragmentProvider: NSObject, NSTextLayoutManagerDelegate {
     func textLayoutManager(
         _ textLayoutManager: NSTextLayoutManager,

@@ -59,10 +59,6 @@ struct PaletteShortcutTests {
             "an extra Option still reads ⇧⌘T")
         expect(resolve("y", command: true), .quickLook, "⌘Y is the Quick Look chord")
         expect(resolve("y", command: true, shift: true), .quickLook, "an extra Shift still reads ⌘Y")
-        expect(resolve("o", command: true), .openInApp, "⌘O opens the row in its own app")
-        expect(resolve("o", command: true, shift: true), nil, "⇧⌘O is not the open chord")
-        expect(resolve("i", command: true), .showDetails, "⌘I shows the row's details")
-        expect(resolve("i", command: true, shift: true), nil, "⇧⌘I is not the details chord")
 
         expect(resolve("x", control: true), .delete, "⌃X deletes the row")
         expect(resolve("x", shift: true, control: true), .deleteAll, "⌃⇧X deletes everything")
@@ -87,7 +83,7 @@ struct PaletteShortcutTests {
         expect(resolve("r", command: true), .restart, "⌘R restarts the app")
         expect(resolve("r", command: true, shift: true), .restart, "an extra Shift still reads ⌘R")
 
-        expect(resolve("j", command: true), .continueInChat, "⌘J continues Quick AI in AI Chat")
+        expect(resolve("j", command: true), nil, "⌘J is not a palette chord")
         expect(resolve("n", command: true), .newItem, "⌘N starts a new one")
         expect(resolve("n", command: true, shift: true), nil, "⇧⌘N is not the new-item chord")
         expect(resolve("e", command: true), .edit, "⌘E edits the row")
@@ -105,12 +101,12 @@ struct PaletteShortcutTests {
         expect(resolve("a"), nil, "typing is never a chord")
 
         let expanded: [PaletteShortcut] = [
-            .copyFile, .copyName, .copyPath, .copyText, .pasteFile, .quickLook, .openInApp,
-            .showDetails, .toggleFavorite, .hideFromSearch, .quit, .forceQuit, .minimizeWindow,
-            .hideApp, .restart, .edit, .duplicate, .showInFinder
+            .copyFile, .copyName, .copyPath, .copyText, .pasteFile, .quickLook, .toggleFavorite,
+            .hideFromSearch, .quit, .forceQuit, .minimizeWindow, .hideApp, .restart, .edit, .duplicate,
+            .showInFinder
         ]
         let anywhere: [PaletteShortcut] = [
-            .commandDelete, .delete, .deleteAll, .pin, .favoriteSlot(0), .continueInChat, .newItem,
+            .commandDelete, .delete, .deleteAll, .pin, .favoriteSlot(0), .newItem,
             .settings, .copyCalculation
         ]
         for shortcut in expanded {
@@ -122,12 +118,11 @@ struct PaletteShortcutTests {
 
         let closing: [PaletteShortcut] = [
             .delete, .deleteAll, .copyFile, .copyName, .copyPath, .copyText, .copyCalculation,
-            .quickLook, .openInApp, .showDetails, .toggleFavorite, .hideFromSearch, .minimizeWindow,
-            .newItem, .settings, .edit, .duplicate, .showInFinder
+            .quickLook, .toggleFavorite, .hideFromSearch, .minimizeWindow, .newItem, .settings, .edit,
+            .duplicate, .showInFinder
         ]
         let leaving: [PaletteShortcut] = [
-            .commandDelete, .pasteFile, .quit, .forceQuit, .hideApp, .restart, .pin, .favoriteSlot(0),
-            .continueInChat
+            .commandDelete, .pasteFile, .quit, .forceQuit, .hideApp, .restart, .pin, .favoriteSlot(0)
         ]
         for shortcut in closing {
             expect(shortcut.closesMenu, "\(shortcut) closes an open menu")

@@ -34,7 +34,7 @@ enum CalcRatePhrases {
             let total = CalcExpressionParser.value(grouped(parts[0]) + [.op(.multiply)] + grouped(parts[1]))
         else { return nil }
         return .phrase(
-            query, .quantity(total), target: String(localized: "Total"), isCurrency: total.isCurrency)
+            query, .quantity(total), target: "Total", isCurrency: total.isCurrency)
     }
 
     // MARK: - Transfers
@@ -49,7 +49,7 @@ enum CalcRatePhrases {
             let duration = CalcExpressionParser.value(grouped(parts[0]) + [.op(.divide)] + grouped(parts[1])),
             case .unit(let unit) = duration.kind, unit.category == .time
         else { return nil }
-        return durationCard(duration.amount * unit.factor, query: query, badge: String(localized: "Duration"))
+        return durationCard(duration.amount * unit.factor, query: query, badge: "Duration")
     }
 
     private static func durationCard(_ seconds: Double, query: String, badge: String) -> CalcResult? {
@@ -72,7 +72,7 @@ enum CalcRatePhrases {
         }
         guard var duration = CalcExpressionParser.value(Array(lead)), isDuration(duration) else { return nil }
         duration.amount *= saved ? 1 - 1 / speed : 1 / speed
-        let badge = saved ? String(localized: "Time Saved") : String(localized: "Duration")
+        let badge = saved ? "Time Saved" : "Duration"
         return duration.amount.isFinite ? .phrase(query, .quantity(duration), target: badge) : nil
     }
 
@@ -105,7 +105,7 @@ enum CalcRatePhrases {
         let suffix = "/" + per.symbol
         return .phrase(
             query, .value(display: display + suffix, copyText: copyText + suffix),
-            target: String(localized: "Rate"),
+            target: "Rate",
             canChain: false, isCurrency: amount.isCurrency)
     }
 }

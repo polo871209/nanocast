@@ -1,6 +1,5 @@
 import Foundation
 
-/// A clip in portable form: not `ClipboardItem`, whose `imagePath` names a file on one Mac.
 struct BackupClipboardItem: Codable, Sendable, Equatable {
     enum Kind: String, Codable, Sendable {
         case text
@@ -10,7 +9,6 @@ struct BackupClipboardItem: Codable, Sendable, Equatable {
 
     var kind: Kind
     var text: String?
-    /// A filename inside the bundle's `clipboard/images/`, never a path.
     var imageName: String?
     var createdAt: Date
     var sourceBundleID: String?

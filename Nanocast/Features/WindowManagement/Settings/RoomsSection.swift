@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// The room library, inside the Window Management pane: rooms tile with its gap and its grant.
 struct RoomsSection: View {
     @Environment(RoomStore.self) private var store
     @Environment(RoomCoordinator.self) private var coordinator

@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// One stack per Settings window: bindings own presentation state, this owns only AppKit edges.
 @MainActor
 final class SettingsEditorPresenter: NSObject {
     struct DismissAction {
@@ -13,36 +12,6 @@ final class SettingsEditorPresenter: NSObject {
 
         func callAsFunction() {
             action()
-        }
-    }
-
-    fileprivate struct BooleanPanelModifier<PanelContent: View>: ViewModifier {
-        @Environment(\.settingsEditorPresenter) private var presenter
-        @Binding var isPresented: Bool
-        let panelContent: () -> PanelContent
-        @State private var presentationID = UUID()
-
-        func body(content: Content) -> some View {
-            content
-                .onChange(of: isPresented, initial: true) { _, presented in
-                    guard let presenter else { return }
-                    if presented {
-                        let binding = $isPresented
-                        presenter.present(
-                            id: presentationID,
-                            onDismiss: {
-                                binding.wrappedValue = false
-                            }
-                        ) {
-                            panelContent()
-                        }
-                    } else {
-                        presenter.dismiss(id: presentationID, notifying: false)
-                    }
-                }
-                .onDisappear {
-                    presenter?.dismiss(id: presentationID)
-                }
         }
     }
 
@@ -129,12 +98,10 @@ final class SettingsEditorPresenter: NSObject {
         override var canBecomeKey: Bool { true }
         override var canBecomeMain: Bool { false }
 
-        /// A child window drags alone, so the drag goes to the window it sits on, as a sheet's does.
         override func performDrag(with event: NSEvent) {
             parent?.performDrag(with: event)
         }
 
-        /// The fallback: a panel whose content declares `.cancelAction` handles Escape itself.
         override func cancelOperation(_ sender: Any?) {
             cancelHandler?()
         }
@@ -174,7 +141,6 @@ final class SettingsEditorPresenter: NSObject {
                 return
             }
             target?.makeKeyAndOrderFront(nil)
-            // The dim covers the parent's titlebar, so it has to carry the parent's drag.
             if event.type == .leftMouseDown { parent?.performDrag(with: event) }
         }
     }
@@ -201,9 +167,6 @@ final class SettingsEditorPresenter: NSObject {
             self, selector: #selector(parentWillClose(_:)),
             name: NSWindow.willCloseNotification, object: window)
         observeResize(of: window)
-        NotificationCenter.default.addObserver(
-            self, selector: #selector(hostDidChangeFrame(_:)),
-            name: NSWindow.didMoveNotification, object: window)
         flushPending()
     }
 
@@ -274,7 +237,6 @@ final class SettingsEditorPresenter: NSObject {
             id: request.id, parent: parent, panel: panel, blocker: blocker,
             onDismiss: request.onDismiss)
         presentations.append(presentation)
-        // Its own resize too: the content sizes the panel, so a growing form must re-centre it.
         observeResize(of: panel)
         layout(presentation)
         parent.addChildWindow(blocker, ordered: .above)
@@ -296,12 +258,11 @@ final class SettingsEditorPresenter: NSObject {
 
     private func observeResize(of window: NSWindow) {
         NotificationCenter.default.addObserver(
-            self, selector: #selector(hostDidChangeFrame(_:)),
+            self, selector: #selector(hostDidResize(_:)),
             name: NSWindow.didResizeNotification, object: window)
     }
 
-    /// Outermost first, so a nested panel centres on a parent that has already settled.
-    @objc private func hostDidChangeFrame(_ notification: Notification) {
+    @objc private func hostDidResize(_ notification: Notification) {
         presentations.forEach(layout)
     }
 
@@ -310,20 +271,10 @@ final class SettingsEditorPresenter: NSObject {
         let parentContent = parent.convertToScreen(parent.contentLayoutRect)
         presentation.blocker.setFrame(parent.frame, display: false)
         let panelSize = presentation.panel.frame.size
-        let centred = NSPoint(
-            x: parentContent.midX - panelSize.width / 2, y: parentContent.midY - panelSize.height / 2)
-        guard let visible = parent.screen?.visibleFrame else {
-            presentation.panel.setFrameOrigin(centred)
-            return
-        }
-        presentation.panel.setFrameOrigin(Self.origin(centred, size: panelSize, keptIn: visible))
-    }
-
-    /// A parent dragged into a corner must not carry the editor's buttons off screen; the top wins.
-    private static func origin(_ origin: NSPoint, size: NSSize, keptIn visible: NSRect) -> NSPoint {
-        NSPoint(
-            x: max(min(origin.x, visible.maxX - size.width), visible.minX),
-            y: min(max(origin.y, visible.minY), visible.maxY - size.height))
+        presentation.panel.setFrameOrigin(
+            NSPoint(
+                x: parentContent.midX - panelSize.width / 2,
+                y: parentContent.midY - panelSize.height / 2))
     }
 
     private func blockerCornerRadius(for parent: NSWindow) -> CGFloat {
@@ -359,16 +310,6 @@ extension EnvironmentValues {
 }
 
 extension View {
-    /// Presents editor content in Nanocast's activating child panel, not an opaque macOS sheet.
-    func settingsEditorPanel<PanelContent: View>(
-        isPresented: Binding<Bool>, @ViewBuilder content: @escaping () -> PanelContent
-    ) -> some View {
-        modifier(
-            SettingsEditorPresenter.BooleanPanelModifier(
-                isPresented: isPresented, panelContent: content))
-    }
-
-    /// The item-driven form used by editors whose initial state is captured when the panel opens.
     func settingsEditorPanel<Item: Identifiable, PanelContent: View>(
         item: Binding<Item?>, @ViewBuilder content: @escaping (Item) -> PanelContent
     ) -> some View {
@@ -380,42 +321,20 @@ extension View {
         editorPresenter: SettingsEditorPresenter
     ) -> some View {
         environment(\.settingsEditorPresenter, editorPresenter)
-            .environment(
-                \.shortcutDeepLink,
-                ShortcutDeepLink(
-                    url: { [launcher = core.launcherCoordinator] in launcher.deepLink(for: $0) },
-                    copy: { [links = core.deepLinkCoordinator] in links.copy($0) })
-            )
             .environment(navigation)
             .environment(core)
             .environment(core.settings)
-            .environment(core.dictationCoordinator)
             .environment(core.appIndex)
             .environment(core.hotKeys)
             .environment(core.visibility)
             .environment(core.aliases)
-            .environment(core.fallbacks)
             .environment(core.customCommands)
             .environment(core.customCommandCoordinator)
-            .environment(core.snippetsStore)
-            .environment(core.snippetCoordinator)
-            .environment(core.quicklinks)
-            .environment(core.quicklinkCoordinator)
             .environment(core.windowLayouts)
             .environment(core.rooms)
             .environment(core.roomCoordinator)
             .environment(core.customWindowSizes)
             .environment(core.customWindowSizeCoordinator)
-            .environment(core.calendarStore)
-            .environment(core.aiSettings)
-            .environment(core.mcpSettings)
-            .environment(core.mcpCoordinator)
-            .environment(core.quickActionSettings)
-            .environment(core.customQuickActions)
-            .environment(core.chatPresets)
-            .environment(core.aiChatCoordinator)
-            .environment(core.chatGPTSubscription)
-            .environment(core.installedAI)
             .scrollContentBackground(.hidden)
             .motionScope()
     }

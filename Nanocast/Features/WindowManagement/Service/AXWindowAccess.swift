@@ -3,18 +3,13 @@ import AppKit
 // `@preconcurrency` downgrades AX diagnostics: `kAX…` are mutable C globals, but constant.
 @preconcurrency import ApplicationServices
 
-/// Every `AXUIElement` call in the feature, so no two callers disagree on what a window is.
 @MainActor
 enum AXWindowAccess {
-    /// A hung target must not stall main for the AX default. Per element, never inherited.
     static let messagingTimeout: Float = 1
-    /// Slack when checking whether the app honoured the size we asked for.
     static let clampTolerance: CGFloat = 2
 
     static let fullScreenAttribute = "AXFullScreen" as CFString
     static let fullScreenButtonAttribute = "AXFullScreenButton" as CFString
-
-    // MARK: - Finding windows
 
     static func application(for pid: pid_t, timeout: Float = messagingTimeout) -> AXUIElement {
         let application = AXUIElementCreateApplication(pid)
@@ -29,7 +24,6 @@ enum AXWindowAccess {
         return windows(in: application).first(where: isEligible)
     }
 
-    /// Every window the app reports, unfiltered and in its own order.
     static func windows(in application: AXUIElement) -> [AXUIElement] {
         var value: CFTypeRef?
         guard
@@ -40,7 +34,6 @@ enum AXWindowAccess {
         return windows
     }
 
-    /// A real, restorable window: not a sheet, popover or minimized one, and it reports geometry.
     static func isEligible(_ window: AXUIElement) -> Bool {
         guard string(window, kAXRoleAttribute) == (kAXWindowRole as String) else { return false }
         if bool(window, kAXMinimizedAttribute) == true { return false }
@@ -57,8 +50,6 @@ enum AXWindowAccess {
         else { return nil }
         return (value as? Bool) ?? false
     }
-
-    // MARK: - Bringing one forward
 
     static func unminimize(_ window: AXUIElement) -> Bool {
         AXUIElementSetAttributeValue(window, kAXMinimizedAttribute as CFString, kCFBooleanFalse)
@@ -80,14 +71,12 @@ enum AXWindowAccess {
         app.activate()
     }
 
-    /// Orders a window forward across apps: a raise alone reorders it only inside its own app.
     static func raise(_ window: AXUIElement, in application: AXUIElement) {
         AXUIElementSetAttributeValue(
             application, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
         AXUIElementPerformAction(window, kAXRaiseAction as CFString)
     }
 
-    /// The fallback for an app that refuses `NSRunningApplication.hide()` or `unhide()`.
     static func setHidden(_ hidden: Bool, application: AXUIElement) {
         AXUIElementSetAttributeValue(
             application, kAXHiddenAttribute as CFString, hidden ? kCFBooleanTrue : kCFBooleanFalse)
@@ -100,9 +89,6 @@ enum AXWindowAccess {
             enabled ? kCFBooleanTrue : kCFBooleanFalse)
     }
 
-    // MARK: - Window identity
-
-    /// The window server's number, which outlives any `AXUIElement`. See window-rooms.md.
     static func windowID(of window: AXUIElement) -> UInt32? {
         guard let copyWindowID else { return nil }
         var id: CGWindowID = 0
@@ -118,9 +104,6 @@ enum AXWindowAccess {
         return unsafeBitCast(symbol, to: CopyWindowID.self)
     }()
 
-    // MARK: - Writing a frame
-
-    /// The one write sequence, so a stubborn app lands the same way from any caller.
     static func write(
         _ target: CGRect, anchor: WindowPlacementEngine.Anchor, to window: AXUIElement,
         current: CGRect, canResize: Bool, canvas: CGRect?
@@ -134,17 +117,15 @@ enum AXWindowAccess {
             return frame(of: window) ?? current
         }
 
-        // size → position → size. See docs/features/window-management.md#applying-a-placement.
         _ = setSize(target.size, on: window)
         guard setPosition(target.origin, on: window) else {
-            _ = setSize(current.size, on: window)  // Roll the shrink back; nothing visibly moved.
+            _ = setSize(current.size, on: window)
             return nil
         }
         _ = setSize(target.size, on: window)
 
         guard var actual = frame(of: window) else { return target }
 
-        // The second resize can shift the origin: some apps anchor on a different corner.
         if abs(actual.minX - target.minX) > clampTolerance
             || abs(actual.minY - target.minY) > clampTolerance
         {
@@ -152,7 +133,6 @@ enum AXWindowAccess {
             actual = frame(of: window) ?? actual
         }
 
-        // An app-imposed minimum: re-place once per the anchor. No loop, which would jitter.
         if actual.width > target.width + clampTolerance
             || actual.height > target.height + clampTolerance
         {
@@ -164,7 +144,6 @@ enum AXWindowAccess {
         return actual
     }
 
-    /// Cleared for the writes, never while VoiceOver runs. See docs/features/window-management.md.
     static func suppressEnhancedUserInterface(on application: AXUIElement) -> () -> Void {
         let attribute = "AXEnhancedUserInterface" as CFString
         guard !NSWorkspace.shared.isVoiceOverEnabled else { return {} }
@@ -175,8 +154,6 @@ enum AXWindowAccess {
         AXUIElementSetAttributeValue(application, attribute, kCFBooleanFalse)
         return { AXUIElementSetAttributeValue(application, attribute, kCFBooleanTrue) }
     }
-
-    // MARK: - Primitives
 
     static func frame(of window: AXUIElement) -> CGRect? {
         guard let origin = point(window, kAXPositionAttribute),
@@ -220,9 +197,7 @@ enum AXWindowAccess {
             AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success,
             let value, CFGetTypeID(value) == AXValueGetTypeID()
         else { return nil }
-        // Type checked by CFGetTypeID above; `as?` on a CF type is a compile error.
-
-        let axValue = value as! AXValue
+        let axValue = unsafeDowncast(value, to: AXValue.self)
         return AXValueGetType(axValue) == type ? axValue : nil
     }
 
@@ -232,9 +207,7 @@ enum AXWindowAccess {
             AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success,
             let value, CFGetTypeID(value) == AXUIElementGetTypeID()
         else { return nil }
-        // Type checked by CFGetTypeID above; `as?` on a CF type is a compile error.
-
-        return (value as! AXUIElement)
+        return unsafeDowncast(value, to: AXUIElement.self)
     }
 
     static func string(_ element: AXUIElement, _ attribute: String) -> String? {

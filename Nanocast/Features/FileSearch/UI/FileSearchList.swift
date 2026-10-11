@@ -48,7 +48,6 @@ struct FileSearchList: View {
 }
 
 extension FileSearchResult {
-    /// The row's own fitted tile, which is warm by the time a pointer can reach it.
     func rowDrag(dropped: @escaping () -> Void) -> RowDrag {
         RowDrag(item: { .file(url, image: IconCache.cachedFitted(forFile: id)) }, dropped: dropped)
     }
@@ -81,7 +80,6 @@ struct FileSearchRow: View {
         return .clear
     }
 
-    /// A folder is named by where it sits: half the hits are some `src` or `Nanocast`.
     private var label: Text {
         guard !showsLocation, result.isDirectory, !result.parentName.isEmpty else {
             return Text(result.name)

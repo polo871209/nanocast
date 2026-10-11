@@ -1,5 +1,4 @@
 #!/bin/bash
-# Rebuild SourceKit-LSP's flag database from a build log. See docs/development.md.
 
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
@@ -11,11 +10,10 @@ if [ -z "$LOG" ] || [ ! -f "$LOG" ]; then
 fi
 command -v xcode-build-server >/dev/null || { echo "xcode-build-server not installed; skipping." >&2; exit 0; }
 
-# A build that compiled no Swift would replace .compile with an empty database, so keep the old one.
 backup="${TMPDIR:-/tmp}/nanocast-compile.bak"
 [ -f .compile ] && cp .compile "$backup"
 
-# No `-o` on purpose: only this spelling also writes buildServer.json, as `kind: manual`.
+# Only `parse` without `-o` writes buildServer.json as `kind: manual`, and `kind: xcode` ignores .compile.
 xcode-build-server parse < "$LOG" >/dev/null 2>&1
 
 if [ ! -s .compile ] || ! grep -q '"command"' .compile 2>/dev/null; then

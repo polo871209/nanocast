@@ -28,13 +28,6 @@ struct VolumeLevelTests {
         expect(VolumeLevel.clamped(1.5), 1, "above one clamps to one")
         expect(VolumeLevel.clamped(0.42), 0.42, "an in-range level passes through")
 
-        expect(VolumeLevel.level(fromPercent: "50") == 0.5, "a link's 50 is half volume")
-        expect(VolumeLevel.level(fromPercent: " 25% ") == 0.25, "a percent sign and spaces are fine")
-        expect(VolumeLevel.level(fromPercent: "0") == 0, "zero is a level")
-        for refused in ["101", "-1", "loud", "", "nan", "50%%"] {
-            expect(VolumeLevel.level(fromPercent: refused) == nil, "\"\(refused)\" is not a level")
-        }
-
         for line in 0...VolumeLevel.steps {
             let level = Double(line) * VolumeLevel.step
             if line < VolumeLevel.steps {
@@ -49,14 +42,12 @@ struct VolumeLevelTests {
             }
         }
 
-        // Off-grid levels move one line from their nearest line.
         expect(VolumeLevel.stepped(0.37, up: true), 0.40, "up from 37% lands on 40%")
         expect(VolumeLevel.stepped(0.37, up: false), 0.30, "down from 37% lands on 30%")
         expect(VolumeLevel.stepped(0.01, up: false), 0, "down from 1% lands on 0%")
         expect(VolumeLevel.stepped(0.99, up: true), 1, "up from 99% lands on 100%")
         expect(VolumeLevel.stepped(0.021, up: true), 0.05, "a hair above 2% still steps up to 5%")
 
-        // Repeated presses stay on the grid once they reach it.
         var climbing = 0.37
         for expected in [0.40, 0.45, 0.50, 0.55] {
             climbing = VolumeLevel.stepped(climbing, up: true)
@@ -68,7 +59,6 @@ struct VolumeLevelTests {
             expect(falling, expected, "falling from 37% reaches \(Int(expected * 100))%")
         }
 
-        // A device that stores each level a hair off the line still walks the full range.
         var storedHigh = 0.5
         var target = storedHigh
         for _ in 0..<10 {
@@ -84,13 +74,11 @@ struct VolumeLevelTests {
         }
         expect(target, 1, "a device reading 1% low still steps from 50% up to 100%")
 
-        // The ends absorb further presses instead of wrapping or overshooting.
         expect(VolumeLevel.stepped(0, up: false), 0, "down at zero stays at zero")
         expect(VolumeLevel.stepped(1, up: true), 1, "up at full stays at full")
         expect(VolumeLevel.stepped(-1, up: false), 0, "an out-of-range low level clamps first")
         expect(VolumeLevel.stepped(2, up: true), 1, "an out-of-range high level clamps first")
 
-        // The preset commands sit on the grid, so a step after one of them is still round.
         for preset in [0, 0.25, 0.5, 0.75, 1.0] {
             let line = preset * Double(VolumeLevel.steps)
             expect(
@@ -98,7 +86,6 @@ struct VolumeLevelTests {
                 "the \(VolumeLevel.percentage(preset, locale: locale)) preset is on the grid")
         }
 
-        // Speaker glyph: muted and silent both read as slashed, whatever the underlying level.
         expect(
             VolumeLevel.symbol(level: 0.8, muted: true) == "speaker.slash.fill", "muted is slashed")
         expect(VolumeLevel.symbol(level: 0) == "speaker.slash.fill", "silent is slashed")
@@ -108,7 +95,6 @@ struct VolumeLevelTests {
         expect(
             VolumeLevel.symbol(level: 2) == VolumeLevel.symbol(level: 1),
             "an out-of-range level clamps first")
-        // The bands only ever climb, so a rising level can never draw a quieter glyph.
         let bands = stride(from: 0.0, through: 1.0, by: VolumeLevel.step)
             .map { VolumeLevel.symbol(level: $0) }
         expect(

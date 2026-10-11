@@ -16,7 +16,6 @@ private func hyperKeyTapCallback(
 
 @MainActor
 final class HyperKeyTap {
-    /// Marker on events this tap posts, so it never reacts to its own synthetics.
     nonisolated static let syntheticTag: Int64 = 0x5459_4354
 
     var onUnmappedCapsLock: (() -> Void)?
@@ -27,7 +26,6 @@ final class HyperKeyTap {
     private var session: Session?
     private var hidConnect: io_connect_t = IO_OBJECT_NULL
 
-    // Isolated so teardown can release the main-actor IOKit connection.
     isolated deinit {
         tearDown()
         if hidConnect != IO_OBJECT_NULL { IOServiceClose(hidConnect) }
@@ -49,8 +47,6 @@ final class HyperKeyTap {
         guard session?.cancelHold() == true else { return }
         Self.postModifierRelease()
     }
-
-    // MARK: - Tap lifecycle
 
     /// Created here, so a refused grant fails synchronously; the session's thread then serves it.
     @discardableResult
@@ -98,8 +94,6 @@ final class HyperKeyTap {
         }
     }
 
-    // MARK: - Synthetics & caps state
-
     nonisolated static func postModifierRelease() {
         guard let event = CGEvent(source: nil) else { return }
         event.type = .flagsChanged
@@ -127,7 +121,6 @@ final class HyperKeyTap {
         setCapsLockState(false)
     }
 
-    /// The IOHIDSystem connection for the Caps Lock LED and lock state.
     private func hidConnection() -> io_connect_t {
         if hidConnect != IO_OBJECT_NULL { return hidConnect }
         let service = IOServiceGetMatchingService(

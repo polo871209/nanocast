@@ -6,17 +6,16 @@
 - `HotKeyBinding` — what an action is bound to: `.combo(KeyShortcut)`,
   `.doubleTap(DoubleTapModifier)`, sided `.modifier` / `.doubleModifier`, `.globe`, or `.doubleGlobe`.
 - `HotKeyCenter` — the Carbon `RegisterEventHotKey` layer, pausable.
-- Dictation alone also observes Carbon's key-release event for hold-to-talk.
 - `DoubleTapModifier` / `DoubleTapDetector` — the double-tap recognizer.
 - `ModifierKey` / `ModifierKeyDetector` — reported sides, lone presses, taps and holds.
-- `ModifierTapMonitor` — the shared modifier-only tap, including Dictation's hold/release callbacks.
+- `ModifierTapMonitor` — the shared modifier-only tap.
 
 `HotKeyManager` owns them all: persistence, conflict lookup, and dispatch. Every action reads and
 writes one `HotKeyBinding`, so all cases share persistence, conflict detection, the recorder and
 the keycap rendering — only the _engine_ differs.
 
 Carbon's dispatcher enters through an explicit `@MainActor` callback. Press and release handlers
-return `OSStatus` synchronously, preserving event order and hold-to-talk release handling.
+return `OSStatus` synchronously, preserving event order.
 
 ## Invariants
 
@@ -38,7 +37,7 @@ return `OSStatus` synchronously, preserving event order and hold-to-talk release
   decode through the initializer that masks device modifier bits off.
 - **The modifier-only detectors stay Foundation-only and pure** for `hotkey-test`, with the clock
   injected as a parameter. Every `CGEvent` call lives in
-  `Service/ModifierTapMonitor.swift`, which is listen-only, installs *only* while a modifier-only
+  `Service/ModifierTapMonitor.swift`, which is listen-only, installs _only_ while a modifier-only
   shortcut is bound, and never prompts for Accessibility.
 - **`KeyShortcut.hyperChord(includesShift:)` is the only spelling of the Hyper chord**, read by both the
   ✦ collapse and the re-point below. `HyperKeyEngine` composes its own flags because it also needs the
@@ -63,27 +62,15 @@ keeps a dropped search scope from deleting a working shortcut, and running on un
 covers LaunchServices still resolving an app for a few seconds after it is trashed.
 
 Shortcuts are also spelled as typeable chords (`ctrl+option+left`) in the opt-in
-[settings file](settings-file.md) — all but those of content, extensions and Apple Shortcuts.
+[settings file](settings-file.md) — all but those of content.
 `HotKeySpelling` is that grammar; `HotKeySettingsFile` applies through `setBinding`, so `UserDefaults`
 stays the one store either way.
 
-System Settings panes use `boundPaneBundleIDs`; custom commands, quicklinks, window layouts, rooms
-and custom window sizes use their stable UUIDs in `boundCustomCommandIDs`, `boundQuicklinkIDs`,
-`boundWindowLayoutIDs`, `boundWindowRoomIDs` and `boundCustomWindowSizeIDs`. Those five are the per-item case — unlike a fixed catalog, there is no `allCases` to walk — so each needs an index for `start()`
-to re-register from
-and to prune bindings whose record was deleted while Nanocast wasn't running. That prune is why
-`QuicklinkStore` loads at launch even when the feature is off
-(see [quicklinks.md](quicklinks.md#hotkeys)).
-Apple Shortcuts keep the same kind of index in `boundAppleShortcutIDs`, pruned not at launch but after
-the first successful read of the library, since a failed read looks exactly like deletion
-(see [apple-shortcuts.md](apple-shortcuts.md#sweeping-deleted-shortcuts)).
-
-Snippets index `StoredSnippet.ID`, the file's path, in `boundSnippetIDs`. The store runs only while
-the feature is on, so they are swept not at launch but on every snapshot, by
-`removeSnippetBindings`; a file that fails to parse still counts, since it is mid-edit rather than
-gone. A rename outside Nanocast or a new Snippets Folder therefore drops the shortcut, and none
-travels in a backup, where an imported snippet lands at a new path
-(see [snippets.md](snippets.md#shortcuts)).
+System Settings panes use `boundPaneBundleIDs`; custom commands, window layouts, rooms and custom
+window sizes use their stable UUIDs in `boundCustomCommandIDs`, `boundWindowLayoutIDs`,
+`boundWindowRoomIDs` and `boundCustomWindowSizeIDs`. Those four are the per-item case — unlike a fixed
+catalog, there is no `allCases` to walk — so each needs an index for `start()` to re-register from and
+to prune bindings whose record was deleted while Nanocast wasn't running.
 
 `HotKeyBinding` takes the synthesised `Codable`, so a `.combo` writes
 `{"combo":{"_0":{"carbonKeyCode":N,"carbonModifiers":N}}}` and a `.doubleTap` writes
@@ -93,8 +80,8 @@ but the guarantee that every decode runs through the initializer that masks devi
 export → import within one build is guaranteed to round-trip.
 
 Every built-in command is bindable: `CommandID.hotKeyAction` answers `.command(self)` by default, and
-names the three exceptions. Open in Browser and Run Shell Command are query-driven — their input is the
-typed text a chord has none of — and Quit is withheld so no chord can terminate the app outright. The
+names the two exceptions. Open in Browser is query-driven — its input is the typed text a chord has
+none of — and Quit is withheld so no chord can terminate the app outright. The
 list is a deny-list rather than an allow-list, so a new command still arrives bindable without an edit
 there. A binding therefore persists under `hotkey.<command raw value>`, as in
 `hotkey.command:clipboard-history`, which is also what puts a recorder on the command's row and a
@@ -138,12 +125,6 @@ track Globe from the physical `kVK_Function` keycode, not just the fn flag, beca
 It shares the double-tap's listen-only monitor, permission warning, lifecycle and pause while
 recording. macOS may perform its own Globe action too; set “Press fn/Globe key to” to “Do Nothing” in
 Keyboard settings if it conflicts. Globe+key chords use Carbon registration, like other combos.
-
-Dictation's hold-to-talk mode reserves its single physical modifier across both tap gestures. It
-starts after 250 ms held alone, so ordinary modifier+key chords do not briefly start recording. Another
-key, modifier or mouse click cancels a pending or active hold; Return and Escape belong to the dictation
-panel while listening. Release finishes the recording. Pausing, rebinding, disabling Dictation,
-session changes and tap teardown cancel any hold. Double-tap bindings require toggle mode.
 
 ## Double-tap modifiers
 
@@ -353,8 +334,8 @@ Carbon hotkeys still fire inside Secure Input, and both remedies are built on th
   (`KeyShortcut.secureInputEquivalent(of:)`), rebuilt with the bindings and dropped when Secure Input
   ends. The Carbon event's device flags select Right Control without querying mutable keyboard state.
   Left Control never triggers Hyper. An existing Nanocast Control binding shares the registration and
-  still runs from Left Control; Dictation receives the release for whichever action began the press.
-  Rebuilding or pausing registrations cancels an outstanding hold. Carbon reserves these Control
+  still runs from Left Control. Rebuilding or pausing registrations forgets which action an
+  outstanding press selected. Carbon reserves these Control
   combinations during Secure Input even when Left Control has no Nanocast binding.
 
 The tap still sees a modifier's `flagsChanged` inside Secure Input, but never the key pressed between
@@ -369,7 +350,7 @@ plus the key.
 
 Any combo whose modifiers are a superset of the chord renders with the Hyper set replaced by a single
 **✦** keycap — `✦G`, or `✦⇧G` when a modifier survives the subtraction. It is unconditional: there is
-no toggle, because collapsing the chord is what the feature *is*. The one condition is a Hyper key
+no toggle, because collapsing the chord is what the feature _is_. The one condition is a Hyper key
 being configured at all — `AppCore` hands `KeyShortcut.displayedHyperChord` a `nil` chord otherwise, and a
 literal ⌃⌥⌘G renders as itself. That hook is a **closure rather than a value** so reading it inside a
 view body registers the `AppSettings` dependency, and every keycap re-renders the moment a toggle moves.
@@ -377,7 +358,7 @@ view body registers the `AppSettings` dependency, and every keycap re-renders th
 ### Include Shift re-points what is already recorded
 
 A `KeyShortcut` stores absolute Carbon modifiers, captured from the already-rewritten flags, so a chord
-recorded under one Include Shift setting is stale under the other: it would stop collapsing to ✦ *and*
+recorded under one Include Shift setting is stale under the other: it would stop collapsing to ✦ _and_
 stop firing, because Carbon is registered for ⌃⌥⌘ while the tap has started emitting ⌃⌥⇧⌘. So flipping
 the toggle re-points every stored combo — `HotKeyManager.retargetHyperBindings`, driven by the same
 `AppCore.track` observation the feature switches use, swapping the stale chord for the current one
