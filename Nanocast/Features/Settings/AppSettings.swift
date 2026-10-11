@@ -315,6 +315,12 @@ final class AppSettings {
         }
     }
 
+    var windowSwitcherExcludedApps: [String] {
+        didSet {
+            defaults.set(windowSwitcherExcludedApps, forKey: Key.windowSwitcherExcludedApps.rawValue)
+        }
+    }
+
     var windowManagementEnabled: Bool {
         didSet {
             defaults.set(windowManagementEnabled, forKey: Key.windowManagementEnabled.rawValue)
@@ -482,6 +488,8 @@ final class AppSettings {
         menuSearchDisabledApps =
             defaults.stringArray(forKey: Key.menuSearchDisabledApps.rawValue) ?? []
         menuSearchShowsAppleMenu = defaults.bool(forKey: Key.menuSearchShowsAppleMenu.rawValue)
+        windowSwitcherExcludedApps =
+            defaults.stringArray(forKey: Key.windowSwitcherExcludedApps.rawValue) ?? []
         windowManagementEnabled = defaults.bool(forKey: Key.windowManagementEnabled.rawValue)
         windowManagementShowInLauncher =
             defaults.object(forKey: Key.windowManagementShowInLauncher.rawValue) == nil
