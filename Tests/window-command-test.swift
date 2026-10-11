@@ -95,6 +95,7 @@ struct WindowCommandTests {
         testTiling()
         testNonDivisible()
         testOffOriginScreens()
+        testHiddenDock()
         testGaps()
         testSizing()
         testLargerSmaller()
@@ -389,6 +390,32 @@ struct WindowCommandTests {
             "tiles respect a reserved visible frame")
         expectRect(
             frame(.maximize, on: reserved)!, reserved.visibleFrame, "maximize never covers the menu bar")
+    }
+
+    static func testHiddenDock() {
+        let docked = WindowPlacementEngine.Screen(
+            id: 1, frame: CGRect(x: 0, y: 0, width: 1512, height: 982),
+            visibleFrame: CGRect(x: 40, y: 33, width: 1432, height: 913))
+        expectRect(
+            docked.reclaiming(.bottom).visibleFrame, CGRect(x: 40, y: 33, width: 1432, height: 949),
+            "a bottom Dock gives back only the bottom edge")
+        expectRect(
+            docked.reclaiming(.left).visibleFrame, CGRect(x: 0, y: 33, width: 1472, height: 913),
+            "a left Dock gives back only the left edge")
+        expectRect(
+            docked.reclaiming(.right).visibleFrame, CGRect(x: 40, y: 33, width: 1472, height: 913),
+            "a right Dock gives back only the right edge")
+        expectRect(
+            frame(.bottomHalf, on: docked.reclaiming(.bottom))!,
+            CGRect(x: 40, y: 508, width: 1432, height: 474),
+            "bottom half reaches the screen edge under a hidden Dock")
+
+        let offOrigin = WindowPlacementEngine.Screen(
+            id: 2, frame: CGRect(x: -1440, y: 200, width: 1440, height: 900),
+            visibleFrame: CGRect(x: -1440, y: 200, width: 1440, height: 864))
+        expectRect(
+            offOrigin.reclaiming(.bottom).visibleFrame, offOrigin.frame,
+            "a hidden Dock reclaims the edge on an off-origin display")
     }
 
     static func testGaps() {

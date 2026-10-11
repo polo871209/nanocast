@@ -3,6 +3,7 @@ import Foundation
 enum HotKeyAction: Hashable, Sendable {
     case togglePalette
     case dictation
+    case windowSwitcher
     case command(CommandID)
     case app(bundleID: String)
     case settingsPane(bundleID: String)
@@ -17,6 +18,7 @@ enum HotKeyAction: Hashable, Sendable {
         switch self {
         case .togglePalette: "hotkey.togglePalette"
         case .dictation: "hotkey.dictation"
+        case .windowSwitcher: "hotkey.windowSwitcher"
         case .command(let id): "hotkey." + id.rawValue
         case .app(let bundleID): "hotkey.app." + bundleID
         case .settingsPane(let bundleID): "hotkey.pane." + bundleID
@@ -30,6 +32,9 @@ enum HotKeyAction: Hashable, Sendable {
         }
     }
 
+    var acceptsModifierOnly: Bool { self != .windowSwitcher }
+
     static let builtInActions: [HotKeyAction] =
-        [.togglePalette, .dictation] + CommandID.allCases.compactMap(\.hotKeyAction)
+        [.togglePalette, .dictation, .windowSwitcher]
+        + CommandID.allCases.compactMap(\.hotKeyAction)
 }

@@ -227,6 +227,7 @@ final class ShortcutCaptureSession {
     }
 
     private func commit(_ binding: HotKeyBinding, action: HotKeyAction, hotKeys: HotKeyManager) {
+        guard binding.shortcut != nil || action.acceptsModifierOnly else { return }
         if let owner = hotKeys.conflictOwner(of: binding, excluding: action) {
             flashConflict(Conflict(binding: binding, owner: owner))
             return
