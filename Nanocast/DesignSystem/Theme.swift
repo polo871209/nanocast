@@ -36,6 +36,9 @@ enum Theme {
         static let keyCap: CGFloat = 6
         static let recorderKeyCap: CGFloat = 4
         static let tooltip: CGFloat = 8
+        static let switcherPanel: CGFloat = 28
+        static let switcherSelection: CGFloat = 18
+        static let switcherThumbnail: CGFloat = 12
     }
 
     enum Size {
@@ -160,6 +163,16 @@ enum Theme {
         static let roomCardIconLarge: CGFloat = 96
         static let roomCardIconMinHeight: CGFloat = 160
         static let roomCardLargeIconMinSide: CGFloat = 320
+        static let switcherThumbnail = CGSize(width: 312, height: 195)
+        static let switcherBadgeIcon: CGFloat = 28
+        static let switcherBadgeInset: CGFloat = 6
+        static let switcherPlaceholderIcon: CGFloat = 96
+        static let switcherSelectionInset: CGFloat = 5
+        static let switcherGap: CGFloat = 10
+        static let switcherPadding: CGFloat = 10
+        static let switcherSelectionStroke: CGFloat = 1.5
+        static let switcherScreenFraction = CGSize(width: 0.92, height: 0.85)
+        static let switcherMinimumScale: CGFloat = 0.5
     }
 
     enum Duration {
@@ -255,6 +268,8 @@ enum Theme {
         static let sheen = ramp(dark: 0.04, light: 0.04)
         static let cardFill = ramp(dark: 0.05, light: 0.04)
         static let cardStroke = ramp(dark: 0.10, light: 0.10)
+        static let switcherSelection = ramp(dark: 0.14, light: 0.12)
+        static let switcherSelectionRim = ramp(dark: 0.50, light: 0.55)
         static let layoutPreviewWindow = adaptive(
             dark: .srgbInk(1, alpha: 0.22), light: .srgbInk(1, alpha: 0.28))
         static let layoutPreviewWindowSelected = adaptive(

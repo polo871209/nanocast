@@ -7,7 +7,6 @@ enum PaletteMode: String, CaseIterable, Identifiable {
     case emoji
     case fileSearch
     case menuSearch
-    case switchWindows
     case rooms
     case roomWindows
     case customCommandEditor
@@ -29,7 +28,6 @@ enum PaletteMode: String, CaseIterable, Identifiable {
         case .emoji: return "face.smiling"
         case .fileSearch: return "doc.text.magnifyingglass"
         case .menuSearch: return "menubar.rectangle"
-        case .switchWindows: return "macwindow.on.rectangle"
         case .rooms: return "door.left.hand.open"
         case .roomWindows: return "macwindow.badge.plus"
         case .customCommandEditor, .customCommands: return CustomCommand.sfSymbol
@@ -46,7 +44,6 @@ enum PaletteMode: String, CaseIterable, Identifiable {
         case .emoji: return String(localized: "Search emoji and symbols…")
         case .fileSearch: return String(localized: "Search files and folders…")
         case .menuSearch: return String(localized: "Search menu bar items…")
-        case .switchWindows: return String(localized: "Search open windows…")
         case .rooms: return String(localized: "Search rooms, or name a new one…")
         case .roomWindows: return String(localized: "Search windows, or type an app to add…")
         case .customCommandEditor: return String(localized: "Command editor")

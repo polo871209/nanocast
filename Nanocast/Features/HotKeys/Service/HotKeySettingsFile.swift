@@ -53,7 +53,9 @@ final class HotKeySettingsFile {
                 if current != nil { hotKeys.setBinding(nil, for: item.action) }
                 continue
             }
-            guard let binding = spelling.binding(from: text) else {
+            guard let binding = spelling.binding(from: text),
+                binding.shortcut != nil || item.action.acceptsModifierOnly
+            else {
                 issues.append(
                     .invalidEntry(
                         key,

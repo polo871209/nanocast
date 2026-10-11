@@ -570,12 +570,7 @@ value — so a command may be moved between owners without migrating anything.
 
 ## Navigation commands
 
-`CommandID.switchWindows` opens every running app's windows as a palette screen,
-`CommandID.switchWindowsBackwards` opens the same screen and steps it the other way, and
-`CommandID.searchMenuItems` does the same for the front app's menu bar. All three are plain command
-entries — no new `AppEntry.Kind` and no `VisibilityStore` category — owned by Settings › Navigation
-through `SettingsTab.ownedCommands`, so `navigationEnabled` is their switch. Their invariants and
-internals live in [navigation.md](navigation.md) and [menu-search.md](menu-search.md).
+`CommandID.searchMenuItems` opens the front app's menu bar as a palette screen. It is a plain command entry, with no new `AppEntry.Kind` and no `VisibilityStore` category, owned by Settings › Navigation through `SettingsTab.ownedCommands`, so `navigationEnabled` is its switch. The same switch turns on the ⌘Tab window switcher, which is not a command and has no palette screen. Their internals live in [navigation.md](navigation.md) and [menu-search.md](menu-search.md).
 
 > **Invariant:** `Tests/fuzz-test.swift` compiles the real `Launcher/Model/LauncherMatch.swift` and
 > `LauncherOrder.swift`, so both must stay Foundation-only and pure. There is no copy of the ranking
