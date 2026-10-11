@@ -7,13 +7,11 @@ enum UpdateDownloader {
         case finished(URL)
     }
 
-    /// Cancelling the consuming task cancels the transfer and tears the session down with it.
     static func download(
         _ release: AvailableRelease, to destination: URL
     ) -> AsyncThrowingStream<Event, any Error> {
         AsyncThrowingStream { continuation in
             let config = URLSessionConfiguration.ephemeral
-            // Cacheless, never `URLSession.shared`, so the only copy is the one on disk.
             config.urlCache = nil
             config.timeoutIntervalForRequest = 60
             let delegate = Delegate(
@@ -33,8 +31,7 @@ enum UpdateDownloader {
     }
 }
 
-/// Every stored property is immutable and `Sendable`; only `NSObject` keeps it from being checked.
-private final class Delegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
+private final class Delegate: NSObject, URLSessionDownloadDelegate, Sendable {
     private let destination: URL
     private let expected: Int64
     private let events: AsyncThrowingStream<UpdateDownloader.Event, any Error>.Continuation
@@ -63,7 +60,7 @@ private final class Delegate: NSObject, URLSessionDownloadDelegate, @unchecked S
         let status = (downloadTask.response as? HTTPURLResponse)?.statusCode ?? 0
         guard status == 200 else {
             events.finish(
-                throwing: UpdateFailure.downloadFailed(String(localized: "The server answered \(status).")))
+                throwing: UpdateFailure.downloadFailed("The server answered \(status)."))
             return
         }
         do {

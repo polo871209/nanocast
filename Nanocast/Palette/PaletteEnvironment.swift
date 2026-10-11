@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// A stored environment value would freeze at panel-build time; a body re-reads under Observation.
 private struct InterfaceMetricsScope: ViewModifier {
     let settings: AppSettings
 
@@ -10,7 +9,6 @@ private struct InterfaceMetricsScope: ViewModifier {
 }
 
 extension View {
-    /// Shared, so the ⌘K menu's own hosted hierarchy cannot drift from the palette's.
     func paletteEnvironment(_ core: AppCore) -> some View {
         self
             .modifier(InterfaceMetricsScope(settings: core.settings))
@@ -22,7 +20,6 @@ extension View {
             .environment(core.favorites)
             .environment(core.visibility)
             .environment(core.aliases)
-            .environment(core.fallbacks)
             .environment(core.calcHistory)
             .environment(core.currencyRates)
             .environment(core.emojiIndex)
@@ -34,11 +31,6 @@ extension View {
             .environment(core.runningApps)
             .environment(core.hotKeys)
             .environment(core.uninstall)
-            .environment(core.quicklinks)
-            .environment(core.snippetsStore)
-            .environment(core.extensions)
-            .environment(core.calendarStore)
-            .environment(core.meetingClock)
             .motionScope()
     }
 }

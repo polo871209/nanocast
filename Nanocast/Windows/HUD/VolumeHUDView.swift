@@ -21,10 +21,9 @@ struct VolumeHUDView: View {
                     }
                 }
                 .frame(height: Theme.Size.volumeTrackHeight)
-                // Muted prints the word: the bar is empty, and a number would contradict it.
                 Text(
                     state.muted
-                        ? String(localized: "Muted") : VolumeLevel.percentage(state.level, locale: .current)
+                        ? "Muted" : VolumeLevel.percentage(state.level, locale: .current)
                 )
                 .font(Theme.Typography.rowTrailing)
                 .foregroundStyle(Theme.Colors.textSecondary)
@@ -32,14 +31,12 @@ struct VolumeHUDView: View {
                 .frame(width: Theme.Size.volumeReadout, alignment: .trailing)
             }
         }
-        // Asymmetric: side padding costs far more on a 200pt box than a 420pt dialog.
         .padding(.vertical, Theme.Spacing.xxl)
         .padding(.horizontal, Theme.Spacing.xl)
         .frame(width: Theme.Size.hudWidth, height: Theme.Size.hudHeight)
         .background(GlassEffectView())
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.dialog, style: .continuous))
         .panelEntrance()
-        // A repeat command slides the bar to its new value instead of cutting to it.
         .animation(.easeOut(duration: Theme.Duration.exit), value: state.level)
         .animation(.easeOut(duration: Theme.Duration.exit), value: state.muted)
     }

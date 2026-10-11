@@ -1,13 +1,11 @@
 import Foundation
 
-/// settings.json's text: a printer that keeps the file's order, and a parser that reports.
 enum SettingsFileFormat {
     struct Parsed: Equatable {
         var values: [SettingsFileKey: SettingsFileJSON]
         var issues: [SettingsFileIssue]
     }
 
-    /// Every value under its section, in `SettingsFileKey` order; a key without one is left out.
     static func render(_ values: [SettingsFileKey: SettingsFileJSON]) -> Data {
         var sections: [SettingsFileJSON.Member] = []
         var members: [SettingsFileJSON.Member] = []
@@ -25,7 +23,6 @@ enum SettingsFileFormat {
         return Data((text(.object(sections), indent: 0) + "\n").utf8)
     }
 
-    /// Throws only when nothing in the file can be trusted; a single bad key is an issue instead.
     static func parse(_ data: Data) throws(SettingsFileIssue) -> Parsed {
         let object: Any
         do {
@@ -59,8 +56,6 @@ enum SettingsFileFormat {
         return parsed
     }
 
-    // MARK: - Printing
-
     private static let indentUnit = "  "
 
     private static func text(_ value: SettingsFileJSON, indent: Int) -> String {
@@ -82,7 +77,6 @@ enum SettingsFileFormat {
         }
     }
 
-    /// Empty stays on one line; anything else puts one element per line.
     private static func block(
         _ lines: [String], open: String, close: String, indent: Int
     ) -> String {
@@ -93,14 +87,12 @@ enum SettingsFileFormat {
         return open + "\n" + body + "\n" + outer + close
     }
 
-    /// Whole numbers without a trailing `.0`; JSON has no spelling for a non-finite one.
     private static func spelled(_ number: Double) -> String {
         guard number.isFinite else { return "null" }
         if let whole = Int(exactly: number) { return String(whole) }
         return String(number)
     }
 
-    /// Only what JSON requires is escaped, so paths and accented text stay as typed.
     private static func quoted(_ string: String) -> String {
         var result = "\""
         for scalar in string.unicodeScalars {
@@ -117,7 +109,6 @@ enum SettingsFileFormat {
         return result + "\""
     }
 
-    /// "Invalid value around line 3, column 7." reads better mid-sentence without its capital.
     private static func detail(of error: NSError) -> String {
         let text = error.userInfo[NSDebugDescriptionErrorKey] as? String ?? error.localizedDescription
         let trimmed = text.hasSuffix(".") ? String(text.dropLast()) : text

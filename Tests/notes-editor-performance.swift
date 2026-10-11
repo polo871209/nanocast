@@ -2,7 +2,6 @@ import AppKit
 import Foundation
 import SwiftUI
 
-/// Times the rendered Notes editor on a large note: install, one typed character, and a caret move.
 @main
 @MainActor
 struct NotesEditorPerformance {
@@ -31,8 +30,7 @@ struct NotesEditorPerformance {
         let typing = places.map { name, location in
             (
                 name,
-                median(prepare: { editor.textView.setSelectedRange(NSRange(location: location, length: 0)) })
-                {
+                median(prepare: { editor.textView.setSelectedRange(NSRange(location: location, length: 0)) }) {
                     editor.textView.insertText("x", replacementRange: editor.textView.selectedRange())
                 } after: {
                     editor.textView.deleteBackward(nil)
@@ -73,7 +71,6 @@ struct NotesEditorPerformance {
         _ = editor.window
     }
 
-    /// Median milliseconds of `body` over `runs`, with untimed setup and teardown around each run.
     private static func median(
         prepare: () -> Void = {}, _ body: () -> Void, after: () -> Void = {}
     ) -> Double {

@@ -64,7 +64,6 @@ enum CalcUnitCatalog {
         return table
     }
 
-    // Category headers; records hold symbol, label, scale, aliases and optional offset.
     private static let records = """
         length
         mm|Millimeters|0.001|mm,millimeter,millimeters,millimetre,millimetres

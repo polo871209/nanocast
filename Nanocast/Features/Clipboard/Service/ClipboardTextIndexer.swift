@@ -11,7 +11,6 @@ final class ClipboardTextIndexer {
     private var task: Task<Void, Never>?
     private var isEnabled = false
     private var waitingForRetry = false
-    /// Recognition only starts in a lull, and a busy Mac is rechecked no sooner than the same lull.
     private static let idleWindow: TimeInterval = 2
     private static let logger = Logger(subsystem: "com.nanocast", category: "ClipboardText")
 

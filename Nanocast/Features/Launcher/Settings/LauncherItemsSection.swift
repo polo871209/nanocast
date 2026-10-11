@@ -1,11 +1,10 @@
 import SwiftUI
 
-/// A category's master switch stays available while its list is disabled.
 struct LauncherCategorySwitchSection: View {
     let kind: AppEntry.Kind
     let anchor: SettingsAnchor
     /// Spelled out by the caller, so it is the very string its search entry carries.
-    let title: LocalizedStringResource
+    let title: String
 
     @Environment(VisibilityStore.self) private var visibility
 
@@ -25,12 +24,10 @@ struct LauncherCategorySwitchSection: View {
     }
 }
 
-/// One category's Settings list; never filters by visibility, so hidden rows stay listed.
 struct LauncherItemsSection: View {
     let kind: AppEntry.Kind
     let anchor: SettingsAnchor
-    let searchPrompt: LocalizedStringResource
-    var emptyMessage: LocalizedStringResource = "Nothing here yet."
+    let searchPrompt: String
 
     @Environment(AppIndex.self) private var appIndex
     @Environment(VisibilityStore.self) private var visibility
@@ -39,7 +36,6 @@ struct LauncherItemsSection: View {
     private var entries: [AppEntry] {
         let scoped = appIndex.apps.filter { $0.kind == kind && $0.settingsOwner == nil }
         guard !query.isEmpty else { return scoped }
-        // Membership only: score order would move the row being edited out from under the caret.
         let matched = Set(appIndex.matches(query).map(\.id))
         return scoped.filter { matched.contains($0.id) }
     }
@@ -48,8 +44,7 @@ struct LauncherItemsSection: View {
         Section {
             SettingsFilterField(prompt: searchPrompt, query: $query)
             LauncherItemsList(
-                entries: entries, query: query, isEnabled: visibility.isKindEnabled(kind),
-                emptyMessage: emptyMessage)
+                entries: entries, query: query, isEnabled: visibility.isKindEnabled(kind))
         } header: {
             SettingsSectionHeader(anchor)
         }
@@ -57,11 +52,10 @@ struct LauncherItemsSection: View {
     }
 }
 
-struct LauncherItemsList: View {
+private struct LauncherItemsList: View {
     let entries: [AppEntry]
     let query: String
     let isEnabled: Bool
-    var emptyMessage: LocalizedStringResource = "Nothing here yet."
 
     @Environment(VisibilityStore.self) private var visibility
     @Environment(AliasStore.self) private var aliases
@@ -70,10 +64,10 @@ struct LauncherItemsList: View {
 
     var body: some View {
         if entries.isEmpty {
-            Text(query.isEmpty ? emptyMessage : "No matches for “\(query)”.")
+            Text(query.isEmpty ? "Nothing here yet." : "No matches for “\(query)”.")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .center)
-        } else if entries.first?.kind != .application && entries.first?.kind != .appleShortcut {
+        } else if entries.first?.kind != .application {
             ForEach(entries) { entry in LauncherItemRow(entry: entry) }
         } else {
             // One row holding the table: a `Form` realizes every row it is handed.
@@ -86,7 +80,6 @@ struct LauncherItemsList: View {
         }
     }
 
-    /// The open recorder's anchor can't leave its hosted row, so this republishes its bounds here.
     @ViewBuilder
     private var recorderStandIn: some View {
         if let recorderFrame {
@@ -99,7 +92,6 @@ struct LauncherItemsList: View {
     }
 }
 
-/// One launcher item's row; a table cell hosts it and hands it new entries as the list scrolls.
 struct LauncherItemRow: View {
     let entry: AppEntry
     @Environment(VisibilityStore.self) private var visibility
@@ -109,7 +101,6 @@ struct LauncherItemRow: View {
             title: entry.name,
             labelOpacity: visibility.isItemVisible(entry) ? 1 : 0.45
         ) {
-            // Keyed so a reused cell seeds the new entry's icon on its first frame.
             AppIconView(app: entry)
                 .frame(width: SettingsListMetrics.iconSize, height: SettingsListMetrics.iconSize)
                 .id(entry.iconKey)

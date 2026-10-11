@@ -19,7 +19,6 @@ struct DictionaryEntryView: View {
         }
         .edgeDissolve()
         .thinScrollbar()
-        // A new term starts at its headword, not wherever the last one was scrolled to.
         .id(entry.term)
     }
 }
@@ -29,7 +28,6 @@ private struct DictionaryBlockView: View {
     let block: DictionaryEntry.Block
     let leadsPage: Bool
 
-    /// Sense numbers hang in it, so every definition, bullet and note starts on one line.
     private var gutter: CGFloat { metrics.spacing.xxl }
     private var textColumn: CGFloat { gutter + metrics.spacing.sm }
 
@@ -53,7 +51,6 @@ private struct DictionaryBlockView: View {
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
-            // A homograph's page follows the one before it, so it needs the room of a new entry.
             .padding(.top, leadsPage ? 0 : metrics.spacing.xxxl)
         case .partOfSpeech(let runs):
             Text(runs.attributed(base: Theme.Colors.textSecondary))
@@ -113,7 +110,6 @@ private struct DictionaryBlockView: View {
 }
 
 extension [DictionaryEntry.Run] {
-    /// Styles by intent rather than by font, so each run keeps the size its block sets.
     fileprivate func attributed(base: Color = Theme.Colors.textPrimary) -> AttributedString {
         reduce(into: AttributedString()) { result, run in
             var piece = AttributedString(run.text)

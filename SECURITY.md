@@ -11,7 +11,7 @@ We'll respond as quickly as we can and keep you posted.
 
 ## Supported Versions
 
-Current stable and beta only. Update (`brew upgrade --cask nanocast`) before reporting.
+The current release only. Update (`brew upgrade --cask nanocast`) before reporting.
 
 ## Scope
 

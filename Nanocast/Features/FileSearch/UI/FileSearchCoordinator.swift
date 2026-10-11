@@ -54,7 +54,6 @@ final class FileSearchCoordinator {
         return core.favorites.files(homeDirectory: FileManager.default.homeDirectoryForCurrentUser)
     }
 
-    /// Borrows the screen's session, so Search Files then opens on the request already answered.
     func searchFromLauncher(_ query: String) {
         guard showsFilesInLauncher, FileSearchQuery.answersLauncher(query) else {
             session.cancel()
@@ -63,7 +62,6 @@ final class FileSearchCoordinator {
         session.search(query)
     }
 
-    /// Checks the switch before reading the session, so with it off the launcher observes nothing.
     func launcherFiles(for query: String) -> [FileSearchResult] {
         guard settings.fileSearchEnabled, !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         else {
@@ -87,11 +85,10 @@ final class FileSearchCoordinator {
         Permissions.openFullDiskAccessSettings()
     }
 
-    /// `query` is the fallback row's: the screen opens already narrowed to what was typed.
-    func show(query: String = "") {
+    func show() {
         guard settings.fileSearchEnabled else { return }
         indexer.refreshAccess()
-        paletteCoordinator.togglePalette(mode: .fileSearch, seeding: query.isEmpty ? nil : query)
+        paletteCoordinator.togglePalette(mode: .fileSearch)
     }
 
     func open(_ result: FileSearchResult) {
@@ -102,7 +99,7 @@ final class FileSearchCoordinator {
                     result.url, configuration: NSWorkspace.OpenConfiguration())
             } catch {
                 await core.showNotice(
-                    title: String(localized: "Couldn’t Open \(result.name)"),
+                    title: "Couldn’t Open \(result.name)",
                     message: error.localizedDescription,
                     symbol: result.isDirectory ? "folder" : "doc", tone: .danger)
             }
@@ -114,7 +111,6 @@ final class FileSearchCoordinator {
         AppLauncher.showInFinder(result.url)
     }
 
-    /// macOS's own share sheet, anchored to the palette's trailing edge so the row stays beside it.
     func share(_ result: FileSearchResult) {
         guard let provider = NSItemProvider(contentsOf: result.url),
             let anchor = paletteCoordinator.anchorView
@@ -129,21 +125,19 @@ final class FileSearchCoordinator {
 
     func copyPath(_ result: FileSearchResult) {
         Paster.copyPlainText(result.id)
-        core.showMessage(String(localized: "Copied path"))
+        core.showMessage("Copied path")
     }
 
     func copyName(_ result: FileSearchResult) {
         Paster.copyPlainText(result.name)
-        core.showMessage(String(localized: "Copied name"))
+        core.showMessage("Copied name")
     }
 
-    /// The file itself rather than its path, so Finder and Mail paste a copy of it.
     func copyFile(_ result: FileSearchResult) {
         PasteboardFiles.write(result.url, to: .general)
-        core.showMessage(String(localized: "Copied file"))
+        core.showMessage("Copied file")
     }
 
-    /// Into whichever app the palette was summoned over, which is what the row's title names.
     func pasteFile(_ result: FileSearchResult) {
         let previous = windowController.previousApp
         paletteCoordinator.hidePalette(restoreFocus: false)
@@ -157,10 +151,10 @@ final class FileSearchCoordinator {
                     try FileManager.default.trashItem(at: result.url, resultingItemURL: nil)
                 }.value
                 session.remove(result)
-                core.showMessage(String(localized: "Moved to Trash"))
+                core.showMessage("Moved to Trash")
             } catch {
                 await core.showNotice(
-                    title: String(localized: "Couldn’t Move \(result.name) to Trash"),
+                    title: "Couldn’t Move \(result.name) to Trash",
                     message: error.localizedDescription,
                     symbol: "trash", tone: .danger)
             }

@@ -24,22 +24,15 @@ open with an `## Invariants` section; read it before changing anything in that a
 
 [palette](features/palette.md) ·
 [launcher](features/launcher.md) ·
-[AI providers and chat](features/ai.md) ·
-[quick actions](features/quick-actions.md) ·
 [clipboard](features/clipboard.md) ·
 [calculator](features/calculator.md) ·
-[calendar](features/calendar.md) ·
 [camera](features/camera.md) ·
 [emoji](features/emoji.md) ·
 [dictionary](features/dictionary.md) ·
 [file search](features/file-search.md) ·
 [menu search](features/menu-search.md) ·
 [notes](features/notes.md) ·
-[snippets](features/snippets.md) ·
-[quicklinks](features/quicklinks.md) ·
-[Apple Shortcuts](features/apple-shortcuts.md) ·
 [hotkeys](features/hotkeys.md) ·
-[deeplinks](features/deeplinks.md) ·
 [navigation](features/navigation.md) ·
 [window management](features/window-management.md) ·
 [window layouts](features/window-layouts.md) ·
@@ -49,11 +42,8 @@ open with an `## Invariants` section; read it before changing anything in that a
 [backup](features/backup.md) ·
 [settings file](features/settings-file.md) ·
 [Raycast import](features/raycast-import.md) ·
-[Raycast extensions](features/extensions.md) ·
-[updates](features/updates.md) ·
-[support](features/support.md)
+[updates](features/updates.md)
 
-## Contributing
+## Security
 
-[`CONTRIBUTING.md`](../CONTRIBUTING.md) covers the workflow — what to open, what to test, what a PR needs.
 [`SECURITY.md`](../SECURITY.md) covers vulnerability reports.

@@ -101,7 +101,6 @@ struct WindowManagementSettingsView: View {
                         guard let chosenPreset else { return }
                         Task { await core.windowShortcutPresetCoordinator.apply(chosenPreset) }
                     }
-                    // Live bindings decide, so one edit to an applied preset re-enables it.
                     .disabled(
                         chosenPreset == nil
                             || chosenPreset == core.windowShortcutPresetCoordinator.matchingPreset)
@@ -115,7 +114,6 @@ struct WindowManagementSettingsView: View {
         }
     }
 
-    /// One section per catalog group, so the sidebar's own grouping carries the headings.
     private var commands: some View {
         ForEach(WindowCommandCatalog.grouped(), id: \.group) { section in
             Section {
@@ -141,7 +139,6 @@ private struct WindowCommandSettingsRow: View {
         SettingsRow(title: command.name) {
             Image(systemName: command.sfSymbol)
         } trailing: {
-            // The ranker never sees a hidden entry, so typing here would match nothing.
             AliasField(entry: entry)
                 .settingsEnabled(showsInLauncher && isVisible)
 

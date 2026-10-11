@@ -1,21 +1,4 @@
 #!/usr/bin/env node
-// Generate Nanocast/Features/Calculator/Model/CurrencyData.generated.swift.
-//
-// Usage: node Scripts/gen-currencies.js [rates.json cldr-currencies.json cldr-currency-data.json]
-// Downloads the sources when paths aren't given. Run occasionally, commit the output.
-//
-// Three sources, joined on the ISO code:
-//   - The fiat rate feed decides *which* currencies exist — the same feed CurrencyRateStore pulls
-//     rates from, so the table can never list a currency the app can't price.
-//   - CLDR's supplemental currency data decides which of those are still *in use*. The feed carries
-//     no retirement dates and happily quotes codes their countries abandoned years ago.
-//   - CLDR's `en` numbers data decides what humans *call* them: display name, currency sign, and the
-//     singular/plural noun. Read from the pinned cldr-json checkout rather than the host's `Intl`,
-//     whose output shifts with the local ICU version and would make this file unreproducible.
-//
-// Only unambiguous data is emitted. A sign or noun claimed by more than one currency is left out
-// and decided by hand in CalcCurrency.swift, because picking one is a product call, not a lookup.
-// Crypto is hand-written in CalcCurrency.swift too — no standards body names it.
 "use strict";
 
 const fs = require("fs");
@@ -26,9 +9,7 @@ const CLDR = "https://raw.githubusercontent.com/unicode-org/cldr-json/main/cldr-
 const CLDR_NAMES = `${CLDR}/cldr-numbers-full/main/en/currencies.json`;
 const CLDR_CURRENCY_DATA = `${CLDR}/cldr-core/supplemental/currencyData.json`;
 
-// The feed serves ~170 codes and ~159 survive the filter; well below that is a bad response.
 const MIN_EXPECTED = 150;
-// The crypto table in CalcCurrency.swift owns this one, and prices it from the dedicated feed.
 const CRYPTO_OWNED = new Set(["BTC"]);
 // CLDR carries no name for the Crown Dependencies' pounds, and the feed supplies no names at all.
 const UNNAMED = { GGP: "Guernsey Pound", IMP: "Isle of Man Pound", JEP: "Jersey Pound" };
@@ -41,27 +22,18 @@ async function load(url, argPath) {
 }
 
 const fold = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
-// A sign has to be punctuation the tokenizer can recognise on sight. CLDR also lists bare Latin
-// letters ("P" for BWP, "L" for HNL); those are indistinguishable from a word and must not appear.
 const isSign = (s) => [...s].length === 1 && !/[\p{L}\p{N}]/u.test(s);
 
-// Capitalise each word without touching the rest, so "UAE dirham" survives as "UAE Dirham".
 const titleCase = (s) => s.replace(/(^|[\s(])(\p{Ll})/gu, (_, lead, c) => lead + c.toUpperCase());
 
-// The noun is taken as the last word of the name, which only fails where that word isn't a noun for
-// the money itself: nobody asks to convert "1 rights". Naming the exceptions beats parsing grammar.
 const NOT_NOUNS = new Set(["rights"]);
 
-/// The card's badge is a small pill, so prefer whichever CLDR form is shorter: `displayName` is the
-/// title-cased label ("US Dollar"), but for a few currencies the singular is far tighter
-/// ("United Arab Emirates Dirham" vs "UAE dirham").
 function displayName(entry, fallback) {
   const long = entry?.displayName || fallback;
   const short = titleCase(entry?.["displayName-count-one"] || "");
   return short && short.length < long.length ? short : long;
 }
 
-/// Keep only the entries exactly one currency lays claim to.
 function unambiguous(claims) {
   return new Map(
     [...claims].filter(([, owners]) => owners.size === 1).map(([key, owners]) => [key, [...owners][0]]),
@@ -78,9 +50,6 @@ function swiftString(value) {
   return `"${value}"`;
 }
 
-/// Codes CLDR knows at all, and codes it still shows some region using. A code CLDR has never heard
-/// of stays in: absence of evidence isn't retirement, and it is what keeps CNH, XAU, XDR and the
-/// Crown Dependencies' pounds, none of which are any region's tender.
 function inUse(currencyData) {
   const known = new Set();
   const live = new Set();
@@ -141,8 +110,6 @@ async function main() {
     if (cldrEntry["symbol-alt-narrow"] && isSign(cldrEntry["symbol-alt-narrow"]))
       claim(narrowClaims, cldrEntry["symbol-alt-narrow"], code);
 
-    // The noun is the last word of the name ("US dollars" -> "dollars"). Accented forms are claimed
-    // both as written and folded, so "krónur" and "kronur" both resolve without a US keyboard.
     for (const field of ["displayName-count-one", "displayName-count-other"]) {
       const word = (cldrEntry[field] || "").toLowerCase().split(/\s+/).filter(Boolean).pop() || "";
       if (word.length < 3 || !/^\p{L}+$/u.test(word) || NOT_NOUNS.has(word)) continue;
@@ -151,8 +118,7 @@ async function main() {
     }
   }
 
-  // The standard symbol wins: CLDR writes every dollar but USD as "CA$"/"A$"/"NT$", which is exactly
-  // the tie-break. Narrow symbols only fill gaps, where they too are unique (₽ for RUB, ฿ for THB).
+  // CLDR writes every dollar but USD as "CA$"/"A$"/"NT$", so the standard symbol is the tie-break.
   const signs = unambiguous(signClaims);
   for (const [sign, code] of unambiguous(narrowClaims)) if (!signs.has(sign)) signs.set(sign, code);
   const aliases = unambiguous(wordClaims);

@@ -1,22 +1,17 @@
 import Foundation
 
-/// What the user reaches for, offered while the search field is empty.
 enum LauncherSuggestions {
     static let limit = 5
-    /// A just-installed app or extension is offered before it has ever been opened.
     static let recentInstallLimit = 2
     static let recentInstallWindow: TimeInterval = 5 * 60
 
     struct Traits: Sendable {
         var signals: LauncherOrder.Signals
         var installedAt: Date?
-        /// A bound shortcut is already a faster way in than this section.
         var hasHotKey: Bool
-        /// A built-in command worth offering someone with no history yet; higher first.
         var priority: Int?
     }
 
-    /// `items` holds only what may be suggested: no favorites, meetings or Nanocast itself.
     static func select<Item>(from items: [Item], now: Date, traits: (Item) -> Traits) -> [Item] {
         let all = items.map(traits)
         let signals: (Int) -> LauncherOrder.Signals = { all[$0].signals }

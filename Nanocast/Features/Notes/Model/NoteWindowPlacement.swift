@@ -1,7 +1,6 @@
 import CoreGraphics
 
 enum NoteWindowPlacement {
-    /// The top edge holds until the bottom would leave the visible frame, then the window moves up.
     static func fitting(
         _ frame: CGRect, toHeight height: CGFloat, within heights: ClosedRange<CGFloat>,
         in visibleFrame: CGRect

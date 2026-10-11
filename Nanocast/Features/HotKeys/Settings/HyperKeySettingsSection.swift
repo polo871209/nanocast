@@ -10,14 +10,12 @@ struct HyperKeySettingsSection: View {
 
     private var hyperGlyphs: String { settings.hyperKeyIncludesShift ? "⌃⌥⇧⌘" : "⌃⌥⌘" }
 
-    /// Only a choice made here resets Quick Press: settings.json may set both keys at once.
     private var hyperKeySelection: Binding<HyperKeyPhysicalKey> {
         Binding(
             get: { settings.hyperKey },
             set: { key in
                 guard key != settings.hyperKey else { return }
                 settings.hyperKey = key
-                // A Quick Press choice is meaningless for a different key.
                 settings.hyperKeyQuickPress = .none
                 if key != .none { Permissions.ensureAccessibility() }
             })
@@ -25,10 +23,9 @@ struct HyperKeySettingsSection: View {
 
     private var hyperSubtitle: String {
         guard settings.hyperKey != .none else {
-            return String(localized: "Use one key to hold \(hyperGlyphs) together.")
+            return "Use one key to hold \(hyperGlyphs) together."
         }
-        return String(
-            localized: "\(settings.hyperKey.title) sends \(hyperGlyphs), shown as ✦ in shortcuts.")
+        return "\(settings.hyperKey.title) sends \(hyperGlyphs), shown as ✦ in shortcuts."
     }
 
     var body: some View {
@@ -68,7 +65,6 @@ struct HyperKeySettingsSection: View {
             Toggle(isOn: $settings.hyperKeyIncludesShift) {
                 SettingsRowTitle(.generalHyperKey, "Include Shift (⇧)")
             }
-            // Flipping it re-points recorded chords, so it needs a chord to mean.
             .settingsEnabled(settings.hyperKey != .none)
 
             if settings.hyperKey.supportsSecureInputCompatibility {
@@ -113,7 +109,7 @@ struct HyperKeySettingsSection: View {
         let toggleDiagnostics: () -> Void
 
         var body: some View {
-            SettingsRow(title: String(localized: "Status"), subtitle: detail, subtitleLineLimit: 3) {
+            SettingsRow(title: "Status", subtitle: detail, subtitleLineLimit: 3) {
                 HStack(spacing: Theme.Spacing.sm) {
                     ColorDot(color: tint)
                     Text(title).foregroundStyle(.secondary)
@@ -127,14 +123,14 @@ struct HyperKeySettingsSection: View {
         }
 
         private var title: String {
-            if takeover != nil { return String(localized: "Taken Over") }
+            if takeover != nil { return "Taken Over" }
             switch status {
-            case .off: return String(localized: "Off")
-            case .active: return String(localized: "Active")
-            case .needsAccessibility: return String(localized: "Needs Accessibility")
-            case .blocked: return String(localized: "Blocked")
-            case .remapUnavailable: return String(localized: "Unavailable")
-            case .paused: return String(localized: "Paused")
+            case .off: return "Off"
+            case .active: return "Active"
+            case .needsAccessibility: return "Needs Accessibility"
+            case .blocked: return "Blocked"
+            case .remapUnavailable: return "Unavailable"
+            case .paused: return "Paused"
             }
         }
 
@@ -142,11 +138,10 @@ struct HyperKeySettingsSection: View {
             if let takeover { return describe(takeover) }
             switch status {
             case .blocked(let appName):
-                return String(localized: "\(appName) runs its own Hyper Key. Quit it to use this one.")
-            case .remapUnavailable: return String(localized: "macOS refused to remap the keyboard.")
+                return "\(appName) runs its own Hyper Key. Quit it to use this one."
+            case .remapUnavailable: return "macOS refused to remap the keyboard."
             case .paused:
-                return String(
-                    localized: "The key works normally during sleep, screen lock or user switching.")
+                return "The key works normally during sleep, screen lock or user switching."
             case .off, .active, .needsAccessibility: return nil
             }
         }
@@ -162,10 +157,10 @@ struct HyperKeySettingsSection: View {
 
         private func describe(_ takeover: HyperKeyDiagnostics.Takeover) -> String {
             let keyboards = takeover.keyboards.formatted(.list(type: .and))
-            var sentences = [String(localized: "Another app now remaps Caps Lock on \(keyboards).")]
+            var sentences = ["Another app now remaps Caps Lock on \(keyboards)."]
             if !takeover.likelyApps.isEmpty {
                 sentences.append(
-                    String(localized: "Probably \(takeover.likelyApps.formatted(.list(type: .or)))."))
+                    "Probably \(takeover.likelyApps.formatted(.list(type: .or))).")
             }
             return sentences.joined(separator: " ")
         }

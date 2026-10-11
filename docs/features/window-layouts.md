@@ -188,10 +188,6 @@ moment an app is picked, and a panel sized to its content would resize under the
 **Bring to front** is a switch on the selected entry. Turning it on for a second entry moves the
 mark rather than refusing, because the draft holds one ID, not a flag per entry.
 
-A **quicklink argument is copied as its link text, not referenced.** A run is one non-interactive
-pass, so a quicklink that later grows a `{placeholder}` would have nothing to prompt with; copying
-also removes a whole failure class and any run-time dependency on `QuicklinkStore`.
-
 ## Wiring
 
 - **`AppEntry.Kind.windowLayout`** — entries are `window-layout:<uuid>`, published by
@@ -199,7 +195,7 @@ also removes a whole failure class and any run-time dependency on `QuicklinkStor
   `LauncherList.rows` mirrors that position; the slice order is the flat-selection invariant, and its
   `assert` proves membership but **not** order, so the two arrays must move together.
 - **`HotKeyAction.windowLayout(id:)`** — persisted under `hotkey.windowLayout.<uuid>` with a
-  `boundWindowLayoutIDs` index, the shape quicklinks and custom commands use. `WindowLayoutStore`
+  `boundWindowLayoutIDs` index, the shape custom commands use. `WindowLayoutStore`
   decodes in `init`, so its live IDs are known by the time `hotKeys.start` prunes.
 - **Settings** — one new key, `windowLayoutsShowInLauncher` (on). Its own flag rather than sharing
   `windowManagementShowInLauncher`: 34 command rows and three named layouts are different amounts of

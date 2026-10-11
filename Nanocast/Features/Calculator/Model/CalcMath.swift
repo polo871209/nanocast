@@ -18,7 +18,6 @@ enum CalcMath {
         "pi": .pi, "π": .pi, "e": M_E, "tau": 2 * .pi, "τ": 2 * .pi, "phi": (1 + sqrt(5.0)) / 2
     ]
 
-    /// Factorial for non-negative integers; 170! is the last value representable as a Double.
     static func factorial(_ value: Double) -> Double? {
         guard value >= 0, value.rounded() == value, value <= 170 else { return nil }
         var result = 1.0

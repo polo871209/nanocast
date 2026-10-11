@@ -1,6 +1,5 @@
 import Foundation
 
-/// Reads a Dictionary Services XHTML record, whose span classes are its only structure.
 enum DictionaryMarkup {
     static func blocks(fromXHTML xhtml: String) -> [DictionaryEntry.Block] {
         let reader = Reader()
@@ -19,7 +18,6 @@ private final class Reader: NSObject, XMLParserDelegate {
         case partOfSpeech, sense(number: String?), subsense, note, phrase, paragraph
     }
 
-    /// What an element started, so its end knows what to close.
     private enum Role {
         case none, ignored, headGroup, headword, syllables, homograph, pronunciation, senseNumber
         case sectionLabel, block, container
@@ -30,12 +28,10 @@ private final class Reader: NSObject, XMLParserDelegate {
         let style: Style?
     }
 
-    /// Elements that end an auto-opened paragraph: the etymology, a sub-entry, a sense group.
     private static let containers: Set<String> = [
         "entry", "sg", "se1", "se2", "etym", "subEntry", "subEntryBlock"
     ]
 
-    /// The `| … |` a pronunciation is printed between.
     private static let pronunciationFrame = CharacterSet.whitespaces.union(["|"])
 
     private static let styles: [String: Style] = [
@@ -132,7 +128,6 @@ private final class Reader: NSObject, XMLParserDelegate {
         }
         if classes.contains("hg") { return .headGroup }
         if classes.contains("x_xoLblBlk") { return .sectionLabel }
-        // A sense's `sn` is its number; a sub-sense's is the `•` its block already implies.
         if classes.contains("sn") { return classes.contains("tg_se2") ? .senseNumber : .ignored }
         if !classes.isDisjoint(with: ["posg", "msDict", "note", "x_xoh"]) { return .block }
         if !classes.isDisjoint(with: Self.containers) { return .container }
@@ -156,7 +151,6 @@ private final class Reader: NSObject, XMLParserDelegate {
     private func append(_ string: String) {
         if open == nil {
             guard !string.allSatisfy(\.isWhitespace) else { return }
-            // Loose text belongs to the nearest container, so it closes when that does.
             let depth = stack.lastIndex { $0.role == .container } ?? 0
             open = (.paragraph, [], depth)
         }
@@ -187,7 +181,6 @@ private final class Reader: NSObject, XMLParserDelegate {
 }
 
 extension [DictionaryEntry.Run] {
-    /// Whitespace collapsed across run boundaries, and none left at either end.
     fileprivate var trimmed: [DictionaryEntry.Run] {
         var result: [DictionaryEntry.Run] = []
         var endsInSpace = true

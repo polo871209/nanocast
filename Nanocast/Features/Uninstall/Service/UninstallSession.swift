@@ -13,7 +13,6 @@ final class UninstallSession {
     private(set) var state: State = .idle
     private(set) var selection: UninstallSelection?
     private(set) var isTrashing = false
-    /// Kept for the confirmation copy and the post-uninstall cleanup.
     private(set) var app: AppEntry?
 
     @ObservationIgnored private var scanTask: Task<Void, Never>?
@@ -61,7 +60,6 @@ final class UninstallSession {
         }
     }
 
-    /// Releases an in-flight scan; called whenever the palette leaves the screen.
     func cancel() {
         scanTask?.cancel()
         scanTask = nil
@@ -79,7 +77,6 @@ final class UninstallSession {
         isTrashing = trashing
     }
 
-    /// Rows are already on screen, so each walk writes its own row rather than gating the list.
     private func measurePending(in plan: UninstallPlan) async {
         let paths = plan.candidates.filter { $0.size == nil }.map(\.path)
         guard !paths.isEmpty else { return }
@@ -90,7 +87,6 @@ final class UninstallSession {
         }
     }
 
-    /// Off-main, and `scanTask`'s own child: that is what makes `cancel()` release the scan itself.
     private nonisolated static func runDiscovery(
         url: URL, name: String, bundleID: String?, otherAppNames: [String],
         otherBundleIDs: [String], isRunning: Bool
@@ -106,7 +102,6 @@ final class UninstallSession {
         }
     }
 
-    /// Off-main: it opens a file.
     private nonisolated static func makeTarget(
         url: URL, name: String, bundleID: String?
     )

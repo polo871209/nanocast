@@ -17,7 +17,6 @@ enum SpaceDirection: Sendable {
     }
 }
 
-/// The synthetic Dock swipe macOS switches Spaces with, as data rather than events.
 enum SpaceGesture {
     /// The Dock ignores a gesture that skips a phase, so all three are always posted.
     enum Phase: Int64, CaseIterable, Sendable {
@@ -31,7 +30,6 @@ enum SpaceGesture {
         case double(Double)
     }
 
-    /// One `CGEvent` field write, keyed by raw number so this file needs no CoreGraphics.
     struct Field: Equatable, Sendable {
         let raw: UInt32
         let value: FieldValue
@@ -46,39 +44,25 @@ enum SpaceGesture {
     /// The serialization version `CGEventCreateData` emits; the splice only knows this layout.
     static let dataVersion: [UInt8] = [0, 0, 0, 2]
 
-    // MARK: - Fields
-
-    /// The gesture fields for one phase. `augmented` selects the macOS 27 encoding.
-    static func fields(
-        phase: Phase, direction: SpaceDirection, augmented: Bool, timestamp: UInt64
-    ) -> [Field] {
+    static func fields(phase: Phase, direction: SpaceDirection, timestamp: UInt64) -> [Field] {
         let sign = direction == .next ? 1.0 : -1.0
         var fields = [
             Field(raw: eventTypeField, value: .integer(dockControlEventType)),
             Field(raw: hidTypeField, value: .integer(dockSwipeHIDType)),
             Field(raw: phaseField, value: .integer(phase.rawValue)),
-            Field(raw: progressField, value: .double(sign * progressMagnitude(augmented))),
-            Field(raw: motionField, value: .integer(horizontalMotion))
+            Field(raw: progressField, value: .double(sign * progressMagnitude)),
+            Field(raw: motionField, value: .integer(horizontalMotion)),
+            Field(raw: phaseAliasField, value: .integer(phase.rawValue)),
+            Field(raw: zoomDeltaYField, value: .double(zoomDeltaY)),
+            Field(raw: processAliasField, value: .double(Double(timestamp))),
+            Field(raw: positionXField, value: .double(positionX))
         ]
-
-        guard augmented else {
-            fields.append(Field(raw: velocityXField, value: .double(sign * velocity)))
-            fields.append(Field(raw: velocityYField, value: .double(sign * velocity)))
-            return fields
-        }
-
-        fields.append(Field(raw: phaseAliasField, value: .integer(phase.rawValue)))
-        fields.append(Field(raw: zoomDeltaYField, value: .double(zoomDeltaY)))
-        fields.append(Field(raw: processAliasField, value: .double(Double(timestamp))))
-        fields.append(Field(raw: positionXField, value: .double(positionX)))
         // Velocity on any phase but the last makes the Space slide back before it settles.
         if phase == .ended {
             fields.append(Field(raw: velocityXField, value: .double(sign * velocity)))
         }
         return fields
     }
-
-    // MARK: - IOHID payload
 
     /// The record header `CGEventCreateData` frames a field with: big-endian size, then tag and id.
     static func payloadRecordHeader(payloadCount: Int) -> [UInt8] {
@@ -95,13 +79,12 @@ enum SpaceGesture {
 
         var payload = queueHeader(
             timestamp: timestamp, eventCount: carriesVelocity ? 2 : 1)
-        payload.append(fluidRecord(phase: phase, progress: sign * progressMagnitude(true)))
+        payload.append(fluidRecord(phase: phase, progress: sign * progressMagnitude))
         guard carriesVelocity else { return payload }
         payload.append(velocityRecord(x: sign * velocity))
         return payload
     }
 
-    /// 16.16 fixed point, floored to ±1 so a value too small to encode never lands on zero.
     static func fixed1616(_ value: Double) -> Int32 {
         let fixed = Int32(value * 65536)
         if fixed == 0, value != 0 { return value > 0 ? 1 : -1 }
@@ -156,12 +139,8 @@ enum SpaceGesture {
         return base
     }
 
-    /// `leastNonzeroMagnitude` survives the legacy path but truncates to zero in 16.16.
-    private static func progressMagnitude(_ augmented: Bool) -> Double {
-        augmented ? 0.000016 : Double(Float.leastNonzeroMagnitude)
-    }
-
-    // MARK: - Undocumented constants
+    /// The smallest progress that survives 16.16 quantization as one step rather than zero.
+    private static let progressMagnitude = 0.000016
 
     static let payloadField: UInt32 = 4205
 
@@ -171,7 +150,6 @@ enum SpaceGesture {
     private static let progressField: UInt32 = 124
     private static let positionXField: UInt32 = 125
     private static let velocityXField: UInt32 = 129
-    private static let velocityYField: UInt32 = 130
     private static let phaseField: UInt32 = 132
     private static let phaseAliasField: UInt32 = 134
     private static let zoomDeltaYField: UInt32 = 138

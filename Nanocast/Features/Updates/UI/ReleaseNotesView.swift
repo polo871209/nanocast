@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// `AttributedString` only does inline styling, so headings and bullets are placed here.
 struct ReleaseNotesView: View {
     let text: String
 
@@ -41,7 +40,6 @@ struct ReleaseNotesView: View {
         return false
     }
 
-    /// GitHub release bodies are Markdown; anything it can't parse still reads fine as plain text.
     private func markdown(_ text: String) -> AttributedString {
         let options = AttributedString.MarkdownParsingOptions(
             interpretedSyntax: .inlineOnlyPreservingWhitespace)
