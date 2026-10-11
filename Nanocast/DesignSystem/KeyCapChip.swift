@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// A single keycap chip: `.outline` for hotkey hints on rows, `.filled` for footer shortcuts.
 struct KeyCapChip: View {
     struct Label: View {
         let text: String
@@ -36,7 +35,6 @@ struct KeyCapChip: View {
         case filled
     }
 
-    /// Sanctioned cap sizes, so a bigger or smaller one is a named choice, not a stray frame.
     enum Scale {
         case compact
         case standard

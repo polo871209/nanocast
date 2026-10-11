@@ -1,11 +1,9 @@
 import AppKit
 import SwiftUI
 
-/// The Argument row: none, a file, a folder, a URL, or one of the user's quicklinks.
 struct WindowLayoutArgumentField: View {
     let draft: WindowLayoutDraft
 
-    @Environment(QuicklinkStore.self) private var quicklinks
     @State private var isEditingURL = false
     @State private var urlText = ""
     @FocusState private var isURLFocused: Bool
@@ -21,7 +19,6 @@ struct WindowLayoutArgumentField: View {
                     .focused($isURLFocused)
                     .focusEffectDisabled()
                     .layoutFieldChrome(isFocused: isURLFocused)
-                    // Live for the same reason the number fields are: ⌘↵ never blurs this field.
                     .onChange(of: urlText) { _, typed in draft.setArgument(typed) }
             }
         }
@@ -36,21 +33,10 @@ struct WindowLayoutArgumentField: View {
                 urlText = draft.selectedEntry?.argument ?? ""
                 isEditingURL = true
             }
-            if !quicklinks.quicklinks.isEmpty {
-                // Copied, not referenced: a run is one pass, with nothing to prompt a placeholder.
-                Section("Quicklinks") {
-                    ForEach(quicklinks.quicklinks) { quicklink in
-                        Button(quicklink.name) {
-                            isEditingURL = false
-                            draft.setArgument(quicklink.link)
-                        }
-                    }
-                }
-            }
         } label: {
             HStack(spacing: Theme.Spacing.sm) {
                 if let argument = draft.selectedEntry?.argument,
-                    let destination = QuicklinkDestination.detect(argument)
+                    let destination = LinkDestination.detect(argument)
                 {
                     Image(systemName: destination.defaultSymbol)
                     Text(destination.displayText)

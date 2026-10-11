@@ -1,6 +1,5 @@
 import AppKit
 
-/// Owns layouts: the library, the one run funnel with its gate, capture, and a deletion's cleanup.
 @MainActor
 final class WindowLayoutCoordinator {
     private let store: WindowLayoutStore
@@ -13,9 +12,7 @@ final class WindowLayoutCoordinator {
     private let aliases: AliasStore
     private let paletteCoordinator: PaletteCoordinator
     private let settingsCoordinator: SettingsCoordinator
-    /// Dialog and message-HUD presentation, and the editor handoff. Never state this type owns.
     private unowned let core: AppCore
-    /// One run at a time: a held shortcut must not stack two passes over the same windows.
     private var run: Task<Void, Never>?
 
     init(
@@ -38,8 +35,6 @@ final class WindowLayoutCoordinator {
         self.core = core
     }
 
-    // MARK: - Feature presence
-
     func applyWindowLayoutsPresence() {
         let visible = settings.windowManagementEnabled && settings.windowLayoutsShowInLauncher
         appIndex.setWindowLayouts(visible ? store.layouts : [])
@@ -48,11 +43,8 @@ final class WindowLayoutCoordinator {
         appIndex.setCommandsListed(commands, settings.windowLayoutsShowInLauncher)
     }
 
-    // MARK: - Running
-
     func runWindowLayout(id: UUID) {
         guard settings.windowManagementEnabled, let layout = store.layout(id: id) else { return }
-        // Never restoreFocus: an opened app activates itself, and handing focus back races that.
         if paletteCoordinator.isVisible { paletteCoordinator.hidePalette(restoreFocus: false) }
         let gap = CGFloat(settings.windowGap)
         run?.cancel()
@@ -66,8 +58,6 @@ final class WindowLayoutCoordinator {
         run?.cancel()
         run = nil
     }
-
-    // MARK: - Library
 
     @discardableResult
     func addWindowLayout(
@@ -90,7 +80,6 @@ final class WindowLayoutCoordinator {
 
     func deleteWindowLayout(id: UUID) {
         guard let layout = store.remove(id: id) else { return }
-        // Unwound only once the row is gone, so a kept record never loses its shortcut.
         removeWindowLayoutReferences(ids: [layout.id], entryIDs: [layout.entryID])
     }
 
@@ -105,22 +94,17 @@ final class WindowLayoutCoordinator {
         return count
     }
 
-    // MARK: - Editing
-
-    /// Opens the Window Management pane with the editor showing `layout`; nil is a new one.
     func editWindowLayout(_ layout: WindowLayout?) {
         core.pendingWindowLayoutEdit = WindowLayoutEditRequest(layout: layout)
         settingsCoordinator.showSettings(tab: .windowManagement)
     }
 
-    /// Capture never saves silently: the draft lands in the editor so it can be seen and named.
     func captureWindowLayout() {
         let (entries, frontmostEntryID) = WindowLayoutRunner.captureCurrentWindows()
         guard !entries.isEmpty else {
-            core.showMessage(String(localized: "No windows to capture"), tone: .neutral)
+            core.showMessage("No windows to capture", tone: .neutral)
             return
         }
-        // Gapless by construction, so a later change to `windowGap` can't move every window.
         let draft = WindowLayout(
             name: Self.uniqueCaptureName(among: store.layouts), usesPreferredGap: false,
             entries: entries, frontmostEntryID: frontmostEntryID)
@@ -128,22 +112,19 @@ final class WindowLayoutCoordinator {
         settingsCoordinator.showSettings(tab: .windowManagement)
     }
 
-    // MARK: - Reporting
-
     private func report(_ outcome: WindowLayoutRunner.Outcome, for layout: WindowLayout) async {
         if outcome.isBlockedOnPermission {
             let openSettings = await core.reportFailure(
-                title: String(localized: "Nanocast Needs Accessibility Access"),
-                message: String(localized: "Arranging windows uses the same permission as pasting."),
-                symbol: layout.symbol, recovery: String(localized: "Open Settings"))
+                title: "Nanocast Needs Accessibility Access",
+                message: "Arranging windows uses the same permission as pasting.",
+                symbol: layout.symbol, recovery: "Open Settings")
             if openSettings { Permissions.openAccessibilitySettings() }
             return
         }
-        // Placing windows is its own feedback, so a clean run says nothing at all.
         guard let detail = detail(for: outcome) else { return }
         guard outcome.didAnything else {
             await core.showNotice(
-                title: String(localized: "Couldn't Run “\(layout.name)”"), message: detail,
+                title: "Couldn't Run “\(layout.name)”", message: detail,
                 symbol: layout.symbol, tone: .danger)
             return
         }
@@ -157,19 +138,19 @@ final class WindowLayoutCoordinator {
         }
         if !outcome.neverAppeared.isEmpty {
             let count = outcome.neverAppeared.count
-            parts.append(String(localized: "\(count) apps didn't open"))
+            parts.append(count == 1 ? "1 app didn't open" : "\(count) apps didn't open")
         }
         let failed = outcome.openFailures.count
         if failed > 0 {
-            parts.append(String(localized: "\(failed) apps couldn't open"))
+            parts.append(failed == 1 ? "1 app couldn't open" : "\(failed) apps couldn't open")
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     private func report(failure: WindowLayoutValidationError) async {
         await core.showNotice(
-            title: String(localized: "Couldn't Save the Layout"),
-            message: failure.errorDescription ?? String(localized: "The layout could not be saved."),
+            title: "Couldn't Save the Layout",
+            message: failure.errorDescription ?? "The layout could not be saved.",
             symbol: WindowLayout.sfSymbol, tone: .danger)
     }
 
@@ -187,10 +168,9 @@ final class WindowLayoutCoordinator {
         }
     }
 
-    /// "Captured Layout", then " 2", so the editor opens on a name that will validate.
     private static func uniqueCaptureName(among existing: [WindowLayout]) -> String {
         let taken = Set(existing.map { $0.name.lowercased() })
-        let base = String(localized: "Captured Layout")
+        let base = "Captured Layout"
         guard taken.contains(base.lowercased()) else { return base }
         var index = 2
         while taken.contains("\(base) \(index)".lowercased()) { index += 1 }

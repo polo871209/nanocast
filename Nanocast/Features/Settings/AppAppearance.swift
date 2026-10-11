@@ -1,6 +1,5 @@
 import AppKit
 
-/// Which appearance Nanocast renders in; an unset key reads as `.system`.
 enum AppAppearance: String, CaseIterable, Identifiable, Sendable {
     case system
     case light
@@ -10,13 +9,12 @@ enum AppAppearance: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .system: String(localized: "System")
-        case .light: String(localized: "Light")
-        case .dark: String(localized: "Dark")
+        case .system: "System"
+        case .light: "Light"
+        case .dark: "Dark"
         }
     }
 
-    /// `nil` hands the choice back to AppKit, which then follows macOS live and for free.
     var nsAppearance: NSAppearance? {
         switch self {
         case .system: nil

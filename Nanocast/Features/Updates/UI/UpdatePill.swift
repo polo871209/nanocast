@@ -45,26 +45,26 @@ struct UpdatePill: View {
             return Content(
                 tint: Theme.Colors.progress, glyph: .symbol("arrow.down.circle"),
                 title: "v\(release.version.description)",
-                action: (String(localized: "Update"), updates.install),
-                closeTitle: String(localized: "Later"))
+                action: ("Update", updates.install),
+                closeTitle: "Later")
         case .installing(_, let phase):
             return Content(
                 tint: Theme.Colors.progress, glyph: phase.fraction.map(Glyph.ring) ?? .spinner,
                 title: phase.message,
                 detail: phase.fraction?.formatted(.percent.precision(.fractionLength(0))),
-                closeTitle: String(localized: "Cancel"))
+                closeTitle: "Cancel")
         case .readyToRelaunch:
             return Content(
                 tint: Theme.Colors.success, glyph: .symbol("checkmark.circle.fill"),
-                title: String(localized: "Update ready"),
-                action: (String(localized: "Relaunch"), updates.relaunch),
-                closeTitle: String(localized: "Later"))
+                title: "Update ready",
+                action: ("Relaunch", updates.relaunch),
+                closeTitle: "Later")
         case .failed:
             return Content(
                 tint: Theme.Colors.destructive, glyph: .symbol("exclamationmark.circle.fill"),
-                title: String(localized: "Update failed"),
-                action: (String(localized: "Details"), updates.showFailure),
-                closeTitle: String(localized: "Close"))
+                title: "Update failed",
+                action: ("Details", updates.showFailure),
+                closeTitle: "Close")
         }
     }
 

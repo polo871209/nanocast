@@ -66,7 +66,7 @@ enum CalcSubstance {
         guard let grams = gramsPerCup[name] else { return nil }
         let text = CalcFormatter.display(grams / cupMilliliters) + " g/cm³"
         return CalcResult(
-            expression: query, sourceBadge: name.capitalized, targetBadge: String(localized: "Density"),
+            expression: query, sourceBadge: name.capitalized, targetBadge: "Density",
             payload: .value(display: text, copyText: text), canChain: false)
     }
 

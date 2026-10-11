@@ -1,6 +1,3 @@
-// Standalone test for clipboard capture and paste, compiling the real sources rather than copies.
-// Every case drives `NSPasteboard.withUniqueName()`: writing to `.general` would land in the
-// reader's own running Nanocast as a genuine copy.
 import AppKit
 
 @main
@@ -29,8 +26,6 @@ struct PasteboardTests {
         if failures > 0 { exit(1) }
     }
 
-    // MARK: - Reading
-    /// One reader, every flavour: a board naming a file must never fall through to its name.
     static func everyFileFlavourIsRead() {
         withScratch { dir in
             let file = dir.appendingPathComponent("Nanocast-Settings-2026-08-20.json")
@@ -97,14 +92,12 @@ struct PasteboardTests {
             }
             let pb = board()
             pb.writeObjects(urls as [NSURL])
-            // Reversed, so inserting in order leaves the first file copied leading the history.
             expect(
                 ClipboardManager.fileURLs(on: pb, volatileRoots: []) == urls.map(\.path).reversed(),
                 "three files read back reversed")
         }
     }
 
-    /// Only a real file URL counts, so a copied link stays a link.
     static func linksAndTextAreNotFiles() {
         let pb = board()
         pb.declareTypes([.string], owner: nil)
@@ -119,7 +112,6 @@ struct PasteboardTests {
         expect(ClipboardManager.fileURLs(on: board()) == nil, "an empty pasteboard reads as nil")
     }
 
-    /// An app that stages a temp file beside better inline content must keep the inline content.
     static func volatileAndMissingFilesFallThrough() {
         let temp = URL(fileURLWithPath: "/private/tmp/nanocast-volatile-\(UUID().uuidString).png")
         try? Data("x".utf8).write(to: temp)
@@ -198,7 +190,6 @@ struct PasteboardTests {
         }
     }
 
-    /// Bounding lives in the reader now, so both the limit and the predicate must stop exactly.
     static func theBoundedReaderStopsAtItsLimit() {
         let urls = (0..<100).map { URL(fileURLWithPath: "/fixture/\($0).txt") }
         let pb = fileBoard(urls, legacy: false)
@@ -227,7 +218,6 @@ struct PasteboardTests {
             "and every URL is tested once, with testing stopping at the limit")
     }
 
-    /// A board naming a file in the modern flavour must never fall back, even when we reject it.
     static func aModernFileURLSuppressesTheLegacyFallback() {
         withScratch { dir in
             let legacy = dir.appendingPathComponent("legacy.txt")
@@ -298,9 +288,6 @@ struct PasteboardTests {
         expect(ClipboardManager.plainText(fromRichTextOn: board()) == nil, "an empty board is nil")
     }
 
-    // MARK: - Writing
-
-    /// The round trip: what Finder handed us goes back out as a file, plus the path as text.
     static func fileEntriesWriteBackAsFiles() {
         withScratch { dir in
             let file = dir.appendingPathComponent("report.pdf")
@@ -355,8 +342,6 @@ struct PasteboardTests {
         }
     }
 
-    // MARK: - Harness
-
     static func board() -> NSPasteboard { NSPasteboard.withUniqueName() }
 
     static func withScratch(_ body: (URL) -> Void) {
@@ -380,8 +365,6 @@ struct PasteboardTests {
         print("FAIL: \(message)")
     }
 }
-
-// MARK: - Stubs for what the shipped sources reach that this harness does not exercise
 
 @MainActor
 final class AppSettings {

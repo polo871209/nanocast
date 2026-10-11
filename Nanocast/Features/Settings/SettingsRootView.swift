@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// A SwiftUI split, not `NSSplitViewController`: only its sidebar gives `.searchable` a soft edge.
 struct SettingsRootView: View {
     @Environment(SettingsNavigationState.self) private var navigation
 

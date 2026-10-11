@@ -1,10 +1,8 @@
 import Foundation
 
-/// Fills in a preset, asking first only when that replaces shortcuts the user set.
 @MainActor
 final class WindowShortcutPresetCoordinator {
     private let hotKeys: HotKeyManager
-    /// Dialog and HUD presentation only. Never state this type owns.
     private unowned let core: AppCore
 
     init(hotKeys: HotKeyManager, core: AppCore) {
@@ -12,7 +10,6 @@ final class WindowShortcutPresetCoordinator {
         self.core = core
     }
 
-    /// Read from the live bindings, so any edit that breaks the match clears it.
     var matchingPreset: WindowShortcutPreset? {
         WindowShortcutPreset.matching(currentBindings())
     }
@@ -21,23 +18,22 @@ final class WindowShortcutPresetCoordinator {
         var current = currentBindings()
         var plan = WindowShortcutPresetPlan(preset: preset, current: current)
         guard !plan.assignments.isEmpty else {
-            core.showMessage(String(localized: "\(preset.title) shortcuts already set"))
+            core.showMessage("\(preset.title) shortcuts already set")
             return
         }
         if !plan.overwritten.isEmpty {
             let confirmed = Set(plan.overwritten)
             guard
                 await core.confirm(
-                    title: String(localized: "Replace \(plan.overwritten.count) shortcuts?"),
+                    title: plan.overwritten.count == 1
+                        ? "Replace 1 shortcut?" : "Replace \(plan.overwritten.count) shortcuts?",
                     message: replacementMessage(plan.overwritten, preset: preset),
-                    symbol: "keyboard", confirmTitle: String(localized: "Replace"))
+                    symbol: "keyboard", confirmTitle: "Replace")
             else { return }
-            // A settings.json reload can rebind while the dialog waits; never replace an unseen key.
             current = currentBindings()
             plan = WindowShortcutPresetPlan(preset: preset, current: current)
             guard Set(plan.overwritten).isSubset(of: confirmed) else { return await apply(preset) }
         }
-        // Cleared before any is set, so a key moving between two commands never blocks itself.
         for id in plan.displaced + plan.assignments.keys where current[id] != nil {
             hotKeys.setBinding(nil, for: .windowCommand(id: id))
         }
@@ -51,7 +47,6 @@ final class WindowShortcutPresetCoordinator {
             }
             hotKeys.setBinding(binding, for: action)
         }
-        // The old binding returns when it is still free, so a clash never costs a working one.
         for id in skipped {
             let action = HotKeyAction.windowCommand(id: id)
             if let previous = current[id],
@@ -61,11 +56,10 @@ final class WindowShortcutPresetCoordinator {
             }
         }
         if skipped.isEmpty {
-            core.showMessage(String(localized: "Applied \(preset.title) shortcuts"))
+            core.showMessage("Applied \(preset.title) shortcuts")
         } else {
             core.showMessage(
-                String(
-                    localized: "Applied \(preset.title) shortcuts — \(skipped.count) skipped, keys in use"),
+                "Applied \(preset.title) shortcuts — \(skipped.count) skipped, keys in use",
                 tone: .danger)
         }
     }
@@ -84,14 +78,12 @@ final class WindowShortcutPresetCoordinator {
         let names = ids.compactMap { WindowCommandCatalog.command(id: $0)?.name }
         guard names.count > 3 else {
             let listed = names.formatted(.list(type: .and))
-            return String(
-                localized: "\(listed) will use the \(preset.title) keys instead of the ones you set.")
+            return "\(listed) will use the \(preset.title) keys instead of the ones you set."
         }
         let listed = names.prefix(3).joined(separator: ", ")
         let more = names.count - 3
-        return String(
-            localized: """
-                \(listed) and \(more) more will use the \(preset.title) keys instead of the ones you set.
-                """)
+        return """
+            \(listed) and \(more) more will use the \(preset.title) keys instead of the ones you set.
+            """
     }
 }

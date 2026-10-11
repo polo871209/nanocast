@@ -49,7 +49,7 @@ enum CalcGrowth {
             start.amount *= pow(1 + perPeriod, periods)
             guard start.amount.isFinite else { return nil }
             return .phrase(
-                query, .quantity(start), target: String(localized: "Future Value"),
+                query, .quantity(start), target: "Future Value",
                 isCurrency: start.isCurrency)
         }
         return nil
@@ -74,7 +74,7 @@ enum CalcGrowth {
                 amount: CalcQuantity.convertUnit(duration.amount, from: periodUnit, to: unit),
                 kind: .unit(unit))
         }
-        return .phrase(query, .quantity(duration), target: String(localized: "Duration"))
+        return .phrase(query, .quantity(duration), target: "Duration")
     }
 
     private static func compoundedPeriods(_ tokens: [CalcToken]) -> (Double, [CalcToken])? {
@@ -109,6 +109,6 @@ enum CalcGrowth {
         let perPeriod = pow(change, 1 / periods) - 1
         let value = (lead == "decay" ? -perPeriod : perPeriod) * 100
         guard value.isFinite else { return nil }
-        return .phrase(query, .number(value, suffix: "%"), target: String(localized: "Growth Rate"))
+        return .phrase(query, .number(value, suffix: "%"), target: "Growth Rate")
     }
 }

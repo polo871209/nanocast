@@ -16,7 +16,6 @@ final class UpdateCoordinator {
     private(set) var stage: Stage = .idle
 
     private let store: UpdateCheckStore
-    /// For other features only — never for state this type owns.
     private unowned let core: AppCore
     @ObservationIgnored private var installTask: Task<Void, Never>?
     @ObservationIgnored private var staged: UpdateInstaller.Staged?
@@ -27,7 +26,6 @@ final class UpdateCoordinator {
         self.core = core
     }
 
-    /// A local build has no release stream, so it does not advertise the command either.
     func applyEnabled() {
         core.appIndex.setCommandsVisible([.checkForUpdates], store.channel.updatesItself)
     }
@@ -40,13 +38,10 @@ final class UpdateCoordinator {
         }
     }
 
-    // MARK: - Entry points
-
-    /// Never re-offers an update under way: that would discard it.
     func checkForUpdates() {
         guard store.channel.updatesItself else {
             core.showMessage(
-                String(localized: "This is a local build — rebuild it to move it forward."),
+                "This is a local build — rebuild it to move it forward.",
                 tone: .neutral)
             return
         }
@@ -72,14 +67,11 @@ final class UpdateCoordinator {
         }
     }
 
-    // MARK: - Actions
-
     func install() {
         guard let release = pendingRelease else { return }
         stage = .installing(release, .downloading(received: 0, expected: release.assetSize))
         staged = nil
         let installer = self.installer
-        // Hoisted: nesting the hop inside the task body would re-capture its weak `self`.
         let onProgress: @Sendable (UpdateInstaller.Phase) -> Void = { [weak self] phase in
             Task { @MainActor in self?.report(phase, for: release) }
         }
@@ -118,8 +110,8 @@ final class UpdateCoordinator {
             .joined(separator: " ")
         Task {
             let retry = await core.reportFailure(
-                title: String(localized: "Update failed"), message: message,
-                symbol: "arrow.down.circle", recovery: String(localized: "Try Again"))
+                title: "Update failed", message: message,
+                symbol: "arrow.down.circle", recovery: "Try Again")
             if retry, case .failed = stage { install() }
         }
     }
@@ -139,11 +131,9 @@ final class UpdateCoordinator {
         }
     }
 
-    // MARK: - Private
-
     private func check() {
         stage = .checking
-        core.showProgress(String(localized: "Checking for updates…"))
+        core.showProgress("Checking for updates…")
         Task { [weak self] in
             guard let self else { return }
             let answered = await store.check()
@@ -156,10 +146,10 @@ final class UpdateCoordinator {
             stage = .idle
             if answered {
                 core.showMessage(
-                    String(localized: "\(Bundle.main.appDisplayName) is up to date"))
+                    "\(Bundle.main.appDisplayName) is up to date")
             } else {
                 core.showMessage(
-                    String(localized: "Nanocast could not reach GitHub."), tone: .danger)
+                    "Nanocast could not reach GitHub.", tone: .danger)
             }
         }
     }

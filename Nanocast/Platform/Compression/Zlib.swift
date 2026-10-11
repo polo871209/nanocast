@@ -5,28 +5,23 @@ enum ZlibError: Error { case notGzip, corrupt, tooLarge }
 
 /// Apple's `Compression` speaks only raw DEFLATE, so framing and checksums are done here.
 enum Zlib {
-    /// The cap stops a bomb: the import envelope is inflated before it is authenticated.
     static let defaultMaxOutput = 64 * 1024 * 1024
-
-    // MARK: - gzip (RFC 1952)
 
     static func gunzip(_ data: Data, maxOutput: Int = defaultMaxOutput) throws -> Data {
         let bytes = [UInt8](data)
-        // Magic (1f 8b) + deflate method (08) + the 10-byte fixed header and 8-byte trailer.
         guard bytes.count >= 18, bytes[0] == 0x1f, bytes[1] == 0x8b, bytes[2] == 0x08 else {
             throw ZlibError.notGzip
         }
         let flags = bytes[3]
         var index = 10
-        if flags & 0x04 != 0 {  // FEXTRA: 2-byte length + payload
+        if flags & 0x04 != 0 {
             guard index + 2 <= bytes.count else { throw ZlibError.corrupt }
             index += 2 + (Int(bytes[index]) | Int(bytes[index + 1]) << 8)
         }
-        if flags & 0x08 != 0 { index = try skipCString(bytes, from: index) }  // FNAME
-        if flags & 0x10 != 0 { index = try skipCString(bytes, from: index) }  // FCOMMENT
-        if flags & 0x02 != 0 { index += 2 }  // FHCRC
+        if flags & 0x08 != 0 { index = try skipCString(bytes, from: index) }
+        if flags & 0x10 != 0 { index = try skipCString(bytes, from: index) }
+        if flags & 0x02 != 0 { index += 2 }
         guard index < bytes.count - 8 else { throw ZlibError.corrupt }
-        // Slice `bytes`, not `data`: `data` may be a slice whose indices start elsewhere.
         return try inflateRaw(Data(bytes[index..<(bytes.count - 8)]), maxOutput: maxOutput)
     }
 
@@ -38,28 +33,6 @@ enum Zlib {
         return out
     }
 
-    // MARK: - zlib (RFC 1950)
-
-    static func inflate(_ data: Data, maxOutput: Int = defaultMaxOutput) throws -> Data {
-        // 0x78 is the only CMF byte deflate produces; anything else is already a raw stream.
-        guard data.count > 6, data[data.startIndex] & 0x0f == 8 else {
-            return try inflateRaw(data, maxOutput: maxOutput)
-        }
-        let start = data.startIndex + 2
-        let end = data.endIndex - 4
-        guard start < end else { throw ZlibError.corrupt }
-        return try inflateRaw(data.subdata(in: start..<end), maxOutput: maxOutput)
-    }
-
-    static func deflate(_ data: Data) throws -> Data {
-        var out = Data([0x78, 0x9c])
-        out.append(try deflateRaw(data))
-        out.append(bigEndian(adler32(data)))
-        return out
-    }
-
-    // MARK: - raw DEFLATE (RFC 1951)
-
     static func inflateRaw(_ data: Data, maxOutput: Int = defaultMaxOutput) throws -> Data {
         try stream(data, operation: COMPRESSION_STREAM_DECODE, maxOutput: maxOutput)
     }
@@ -67,8 +40,6 @@ enum Zlib {
     static func deflateRaw(_ data: Data) throws -> Data {
         try stream(data, operation: COMPRESSION_STREAM_ENCODE, maxOutput: Int.max)
     }
-
-    // MARK: - Internals
 
     private static func skipCString(_ bytes: [UInt8], from start: Int) throws -> Int {
         var i = start
@@ -133,25 +104,9 @@ enum Zlib {
         return crc ^ 0xFFFF_FFFF
     }
 
-    static func adler32(_ data: Data) -> UInt32 {
-        var a: UInt32 = 1
-        var b: UInt32 = 0
-        for byte in data {
-            a = (a + UInt32(byte)) % 65521
-            b = (b + a) % 65521
-        }
-        return (b << 16) | a
-    }
-
     private static func littleEndian(_ value: UInt32) -> Data {
         Data([
             UInt8(value & 0xff), UInt8((value >> 8) & 0xff), UInt8((value >> 16) & 0xff), UInt8(value >> 24)
-        ])
-    }
-
-    private static func bigEndian(_ value: UInt32) -> Data {
-        Data([
-            UInt8(value >> 24), UInt8((value >> 16) & 0xff), UInt8((value >> 8) & 0xff), UInt8(value & 0xff)
         ])
     }
 }

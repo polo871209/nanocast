@@ -11,7 +11,6 @@ struct FileSearchPolicy: Sendable, Equatable {
     let homeDirectory: URL
     let roots: [String]
     let ignore: FileSearchIgnoreList
-    /// Stable across processes, unlike `Hasher`, so a stored index can be matched to its settings.
     let fingerprint: UInt64
     private let homePath: String
 
@@ -36,7 +35,6 @@ struct FileSearchPolicy: Sendable, Equatable {
     init(_ request: Request) {
         self.request = request
         homeDirectory = URL(filePath: request.homeDirectory, directoryHint: .isDirectory)
-        // Not standardized: that drops a leading `/private`, and the crawl compares real paths.
         homePath = homeDirectory.path
         roots = FileSearchScope.roots(for: request.scopes, homeDirectory: homeDirectory)
         ignore = FileSearchIgnoreList(patterns: request.ignorePatterns, homeDirectory: homeDirectory)
@@ -45,7 +43,6 @@ struct FileSearchPolicy: Sendable, Equatable {
 
     static func == (lhs: Self, rhs: Self) -> Bool { lhs.request == rhs.request }
 
-    /// A folder's files inherit its prior, so it is worked out once per folder.
     func prior(of path: String) -> Int8 {
         if FileSearchScope.contains(homePath, path) {
             let rest = path.dropFirst(homePath.count)

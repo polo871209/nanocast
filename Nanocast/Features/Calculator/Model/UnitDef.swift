@@ -1,9 +1,8 @@
 import Foundation
 
-/// A unit as an affine map onto its base: `base = value * factor + offset`. Temperature only.
 final class UnitDef: Equatable, Sendable {
-    let symbol: String  // canonical display form: "mi", "°F", "GiB"
-    let name: String  // long label for the card badge: "Miles", "Fahrenheit"
+    let symbol: String
+    let name: String
     let category: UnitCategory
     let factor: Double
     let offset: Double

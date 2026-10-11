@@ -5,7 +5,6 @@ enum RaycastScriptImport {
     private static let directivePrefix = "@raycast."
     private static let commentMarkers = ["#", "//", "--"]
 
-    /// Non-recursive, like Raycast's own script directories; a non-command file is skipped.
     nonisolated static func scan(
         directory: URL, fileManager: FileManager = .default
     ) -> [CustomCommand] {
@@ -17,7 +16,6 @@ enum RaycastScriptImport {
             contents
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
             .compactMap { url in
-                // A symlink reports its own type, not its target's; script folders are often links.
                 guard isRegularFile(url) || isRegularFile(url.resolvingSymlinksInPath()),
                     let source = head(of: url)
                 else { return nil }
@@ -29,12 +27,10 @@ enum RaycastScriptImport {
         (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true
     }
 
-    /// A file is a script command when it names an interpreter and declares a title.
     nonisolated static func command(at url: URL, source: String) -> CustomCommand? {
         guard let interpreter = shebang(in: source) else { return nil }
         let directives = directives(in: source)
         guard let title = directives["title"] else { return nil }
-        // The runner's values land on zsh's positional list; unforwarded, the script sees none.
         return CustomCommand(
             name: title,
             command: "\(interpreter) \(shellQuoted(url.path)) \"$@\"",
@@ -44,7 +40,6 @@ enum RaycastScriptImport {
             workingDirectory: workingDirectory(directives["currentDirectoryPath"], script: url))
     }
 
-    /// Raycast requires one, and naming it rather than relying on the exec bit leaves the file be.
     private static func shebang(in source: String) -> String? {
         let first = source.prefix { !$0.isNewline }
         guard first.hasPrefix("#!") else { return nil }
@@ -52,7 +47,6 @@ enum RaycastScriptImport {
         return interpreter.isEmpty ? nil : interpreter
     }
 
-    /// The block ends where the code starts; past that, `@raycast.` is the script's own text.
     private static func directives(in source: String) -> [String: String] {
         var values: [String: String] = [:]
         for line in source.split(separator: "\n", omittingEmptySubsequences: false) {
@@ -79,7 +73,6 @@ enum RaycastScriptImport {
         mode == "compact" || mode == "fullOutput"
     }
 
-    /// Raycast allows three, each a JSON object whose placeholder is what we prompt with.
     private static func arguments(in directives: [String: String]) -> [CustomCommandArgument] {
         (1...3).compactMap { index in
             guard let json = directives["argument\(index)"]?.data(using: .utf8),
@@ -91,23 +84,19 @@ enum RaycastScriptImport {
         }
     }
 
-    /// The script's own folder unless it says otherwise, which is what its relative paths mean.
     private static func workingDirectory(_ declared: String?, script: URL) -> String {
         let path = declared ?? script.deletingLastPathComponent().path
         return (path as NSString).abbreviatingWithTildeInPath
     }
 
-    /// Single-quoted, so a path holding a space, a `$` or a quote is still one word to zsh.
     private static func shellQuoted(_ path: String) -> String {
         "'" + path.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 
-    /// The shebang and the directives are at the top, and a body running to megabytes is not.
     private static func head(of url: URL) -> String? {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         guard var data = try? handle.read(upToCount: headSize), !data.isEmpty else { return nil }
-        // Cut at a newline, which no multi-byte character contains: a full read lands mid-line.
         if data.count == headSize, let end = data.lastIndex(of: UInt8(ascii: "\n")) {
             data = data[..<end]
         }
