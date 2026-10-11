@@ -1,7 +1,6 @@
 import CryptoKit
 import Foundation
 
-/// Unwraps the `RAYCFG3` container down to its payload JSON. See docs/features/raycast-import.md.
 enum RaycastDecoder {
     private struct Header: Decodable {
         struct Encryption: Decodable {
@@ -13,12 +12,10 @@ enum RaycastDecoder {
         let encryption: Encryption
     }
 
-    /// From the leading bytes alone, so a file is labelled before a passphrase is typed.
     static func isExport(_ raw: Data) -> Bool { raw.starts(with: magic) }
 
     static func decrypt(_ raw: Data, passphrase: String) throws -> Data {
         guard isExport(raw) else { throw RaycastImportError.notRaycastFile }
-        // `raw` can be a slice, so every offset below is measured from its own start.
         let base = raw.startIndex
         guard raw.count >= fixedHeaderLength else { throw RaycastImportError.corrupt }
         let headerLength =
@@ -66,7 +63,6 @@ enum RaycastDecoder {
     private static let containerSchemaVersion = 3
     private static let fixedHeaderLength = 12
     private static let maximumHeaderLength = 1024 * 1024
-    // AES already authenticated this stream; the cap is only a memory bound.
     private static let maximumPayloadLength = 512 * 1024 * 1024
     private static let authenticationTagLength = 16
     private static let ivLength = 16

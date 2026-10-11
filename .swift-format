@@ -3,7 +3,7 @@
   "indentation": {
     "spaces": 4
   },
-  "lineLength": 110,
+  "lineLength": 130,
   "respectsExistingLineBreaks": true,
   "maximumBlankLines": 1,
   "multiElementCollectionTrailingCommas": false,

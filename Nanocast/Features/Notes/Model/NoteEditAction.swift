@@ -10,13 +10,11 @@ enum NoteEditAction: Sendable, Equatable {
     case outdent
     case toggleInline(InlineStyle)
     case toggleLink
-    /// Level 0 turns the line back into a plain paragraph.
     case setHeading(level: Int)
     case toggleList(ListStyle)
     case toggleCodeBlock
     case toggleQuote
     case toggleTask(lineIndex: Int)
-    /// The `[] ` input rule.
     case typedSpace
     case pasteURL(String)
 }

@@ -1,5 +1,3 @@
-// Standalone contract tests for the pure window-layout model, geometry, plan and store,
-// and for the custom sizes that share the layouts' anchor grid.
 import CoreGraphics
 import Foundation
 
@@ -42,19 +40,14 @@ struct WindowLayoutTests {
         }
     }
 
-    // MARK: - Fixtures
-
-    /// The reference display: at the AX origin, evenly divisible by halves and thirds.
     static let mainScreen = WindowPlacementEngine.Screen(
         id: 1, frame: CGRect(x: 0, y: 0, width: 1440, height: 900),
         visibleFrame: CGRect(x: 0, y: 0, width: 1440, height: 900))
 
-    /// A second display to the right, differently sized, with a menu-bar inset.
     static let rightScreen = WindowPlacementEngine.Screen(
         id: 2, frame: CGRect(x: 1440, y: -300, width: 2560, height: 1440),
         visibleFrame: CGRect(x: 1440, y: -275, width: 2560, height: 1415))
 
-    /// A display entirely in negative coordinates: the case a stray absolute coordinate breaks.
     static let leftScreen = WindowPlacementEngine.Screen(
         id: 3, frame: CGRect(x: -1920, y: -100, width: 1920, height: 1080),
         visibleFrame: CGRect(x: -1920, y: -75, width: 1920, height: 1055))
@@ -115,15 +108,13 @@ struct WindowLayoutTests {
         if failures > 0 { exit(1) }
     }
 
-    // MARK: - Record
-
     static func recordIdentity() {
         let value = layout(entries: [entry()])
         expect(value.entryID.hasPrefix("window-layout:"), "an entry id is namespaced")
         expect(
             WindowLayout.id(fromEntryID: value.entryID) == value.id, "the entry id round-trips")
         expect(
-            WindowLayout.id(fromEntryID: "quicklink:\(value.id)") == nil,
+            WindowLayout.id(fromEntryID: "custom-command:\(value.id)") == nil,
             "another feature's entry id is not claimed")
         expect(
             WindowLayout.id(fromEntryID: "window-layout:not-a-uuid") == nil,
@@ -155,7 +146,6 @@ struct WindowLayoutTests {
             Set(WindowLayoutAnchor.allCases.map(\.title)).count == 9,
             "every anchor has a distinct label")
 
-        // The AX-orientation lock: `.min` is the TOP, since +Y points down here.
         let box = mainScreen.visibleFrame
         let size = CGSize(width: 400, height: 300)
         expect(
@@ -179,8 +169,6 @@ struct WindowLayoutTests {
                 "\(anchor.rawValue) round-trips through its axis pair")
         }
     }
-
-    // MARK: - Resolver
 
     static func resolverExactFrames() {
         expectRect(
@@ -229,7 +217,6 @@ struct WindowLayoutTests {
                 on: mainScreen, gap: 0),
             CGRect(x: 40, y: 40, width: 720, height: 450), "an offset moves by exactly that")
 
-        // A nudge that would leave the display clamps, and the clamp never resizes.
         let pushed = WindowLayoutGeometry.resolve(
             entry(width: 0.5, height: 0.5, anchor: .bottomRight, offset: CGPoint(x: 999, y: 999)),
             on: mainScreen, gap: 0)
@@ -291,12 +278,9 @@ struct WindowLayoutTests {
                 WindowLayoutGeometry.box(mainScreen, gap: gap) == mainScreen.visibleFrame,
                 "a \(gap) gap behaves as no gap")
         }
-        // Capped at a tenth of the shorter side, so a huge gap can't produce a zero-size box.
         let huge = WindowLayoutGeometry.box(mainScreen, gap: 100_000)
         expect(huge.width > 0 && huge.height > 0, "an absurd gap still leaves a usable box")
     }
-
-    // MARK: - Capture
 
     static func describeExactAnchors() {
         let box = mainScreen.visibleFrame
@@ -333,8 +317,6 @@ struct WindowLayoutTests {
                                 width: size.width, height: size.height))
                     }
                 }
-                // Whole points only: `resolve` rounds its four edges, so a half-point frame
-                // round-trips to its rounded self — pinned separately below.
                 for frame in frames.map(WindowPlacementEngine.rounded) where box.contains(frame) {
                     checked += 1
                     let capture = WindowLayoutGeometry.describe(frame, on: screen, gap: gap)
@@ -355,7 +337,6 @@ struct WindowLayoutTests {
         expect(problems.isEmpty, "resolve(describe(frame)) == frame for every whole-point frame")
         for problem in problems.prefix(5) { print("      \(problem)") }
 
-        // A window can report a fractional frame; it comes back snapped, never a point out.
         let half = CGRect(x: 100.5, y: 200.5, width: 400, height: 300)
         let capture = WindowLayoutGeometry.describe(half, on: mainScreen, gap: 0)
         var item = entry(
@@ -384,7 +365,6 @@ struct WindowLayoutTests {
             WindowLayoutGeometry.describe(right, on: mainScreen, gap: 0).anchor == .right,
             "a window against the trailing edge describes as trailing")
 
-        // Per-axis independence: moving vertically must never change the horizontal choice.
         var independent = true
         for dy in stride(from: CGFloat(0), through: 600, by: 50) {
             let frame = CGRect(x: box.minX, y: box.minY + dy, width: size.width, height: size.height)
@@ -394,8 +374,6 @@ struct WindowLayoutTests {
         }
         expect(independent, "each axis picks its anchor from its own axis alone")
     }
-
-    // MARK: - Plan
 
     static func planSkipsAbsentDisplays() {
         let value = layout(entries: [entry(display: 1), entry(display: 2)])
@@ -407,7 +385,7 @@ struct WindowLayoutTests {
             plan.skipped.first?.reason == .displayDisconnected(name: "Display 2"),
             "the skip names the stored display")
         expect(
-            plan.skippedSummary == String(localized: "\(1) displays not connected"),
+            plan.skippedSummary == "1 display not connected",
             "the summary names the cause")
 
         let none = WindowLayoutPlan.make(
@@ -516,8 +494,6 @@ struct WindowLayoutTests {
         expect(frontmost(UUID()) == nil, "a dangling mark focuses nothing")
     }
 
-    // MARK: - Codable
-
     static func codableRoundTrip() {
         let marked = entry(bundleID: "com.example.other", display: 2, argument: "https://example.com")
         let value = WindowLayout(
@@ -563,8 +539,6 @@ struct WindowLayoutTests {
         expect(onlyEntry.offset == .zero, "an absent offset defaults to none")
         expect(onlyEntry.display.name == "Display", "an absent display name has a fallback")
     }
-
-    // MARK: - Store
 
     static func withStore(_ body: (WindowLayoutStore) -> Void) {
         let name = "nanocast-window-layout-test-\(UUID().uuidString)"
@@ -697,8 +671,6 @@ struct WindowLayoutTests {
         expect(reopened.layouts.first == stored, "every field survives the round trip")
     }
 
-    // MARK: - Fuzz
-
     static func fuzzSweep() {
         let screens = [mainScreen, rightScreen, leftScreen]
         let fractions: [CGFloat] = [0, 0.05, 0.5, 1, 2, -1, .nan, .infinity]
@@ -740,7 +712,6 @@ struct WindowLayoutTests {
                             if WindowLayoutGeometry.resolve(item, on: screen, gap: gap) != frame {
                                 problems.append("non-deterministic: \(label)")
                             }
-                            // Describing what we just produced and resolving again must not drift.
                             let capture = WindowLayoutGeometry.describe(frame, on: screen, gap: gap)
                             var again = item
                             again.widthFraction = capture.widthFraction
@@ -764,8 +735,6 @@ struct WindowLayoutTests {
         expect(problems.isEmpty, "fuzz sweep found no violations")
         for problem in problems.prefix(10) { print("      \(problem)") }
     }
-
-    // MARK: - Custom sizes
 
     static func customSize(
         _ name: String = "Wide", width: CustomWindowSize.Dimension = .init(1200, .points),

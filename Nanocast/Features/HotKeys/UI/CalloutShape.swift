@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Rounded rect plus a rounded-tip triangle pointer, as one path so the glass lenses them together.
 struct CalloutShape: Shape {
     let caretEdge: CalloutPlacement.CaretEdge
     let caretX: CGFloat
@@ -19,7 +18,6 @@ struct CalloutShape: Shape {
         let half = caretWidth / 2
         let baseY = up ? body.minY : body.maxY
         let tipY = up ? rect.minY : rect.maxY
-        // Two straight edges meeting at an arc: a triangle whose tip is rounded, not a dome.
         path.move(to: CGPoint(x: caretX - half, y: baseY))
         path.addArc(
             tangent1End: CGPoint(x: caretX, y: tipY),

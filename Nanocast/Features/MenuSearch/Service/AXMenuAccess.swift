@@ -1,11 +1,8 @@
 // `@preconcurrency` downgrades AX diagnostics: `kAX…` are mutable C globals, but constant.
 @preconcurrency import ApplicationServices
 
-/// Every menu-bar `AXUIElement` read in the feature: no actor state, so the walk runs off-main.
 enum AXMenuAccess {
-    /// A hung target must not stall the summon; per element, matching the window sweep.
     static let sweepTimeout: Float = 0.2
-    /// One budget for the whole walk; a huge bar truncates rather than delays the list.
     static let walkBudget: Duration = .seconds(1)
 
     static func application(for pid: pid_t) -> AXUIElement {
@@ -21,7 +18,6 @@ enum AXMenuAccess {
         return readNodes(children(of: bar), deadline: deadline)
     }
 
-    /// The live element behind a snapshot row, matched by path; nil when the menu moved on.
     static func resolveLeaf(
         in application: AXUIElement, path: [String], title: String
     ) -> AXUIElement? {
@@ -33,15 +29,12 @@ enum AXMenuAccess {
         AXUIElementPerformAction(element, kAXPressAction as CFString) == .success
     }
 
-    /// A resolved leaf is still worth pressing: enabled, visible, and pressable right now.
     static func isActionable(_ element: AXUIElement) -> Bool {
         guard bool(element, kAXEnabledAttribute) != false,
             bool(element, kAXHiddenAttribute) != true
         else { return false }
         return canPress(element)
     }
-
-    // MARK: - Reading
 
     private static func readNodes(
         _ candidates: [AXUIElement], deadline: ContinuousClock.Instant
@@ -74,7 +67,6 @@ enum AXMenuAccess {
             children: [])
     }
 
-    /// One round trip for the leaf's value reads, falling back to single reads as a unit.
     private static func batch(
         _ element: AXUIElement
     ) -> (
@@ -107,9 +99,6 @@ enum AXMenuAccess {
             && (actions as? [String])?.contains(kAXPressAction) == true
     }
 
-    // MARK: - Resolving
-
-    /// Mirrors the snapshot walk level for level, so a displayed row always resolves.
     private static func resolve(
         candidates: [AXUIElement], trail: [String], path: [String], title: String
     ) -> AXUIElement? {
@@ -134,8 +123,6 @@ enum AXMenuAccess {
         return nil
     }
 
-    // MARK: - Primitives
-
     private static func children(of element: AXUIElement) -> [AXUIElement] {
         (attribute(element, kAXChildrenAttribute) as? [AXUIElement]) ?? []
     }
@@ -144,8 +131,7 @@ enum AXMenuAccess {
         guard let value = self.attribute(element, attribute),
             CFGetTypeID(value) == AXUIElementGetTypeID()
         else { return nil }
-        // Type checked by CFGetTypeID above; `as?` on a CF type is a compile error.
-        return (value as! AXUIElement)
+        return unsafeDowncast(value, to: AXUIElement.self)
     }
 
     private static func string(_ element: AXUIElement, _ attribute: String) -> String? {

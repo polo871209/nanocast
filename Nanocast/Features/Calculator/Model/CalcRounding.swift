@@ -53,7 +53,7 @@ enum CalcRounding {
         value.amount = precision.apply(to: value.amount, rule: rule ?? .toNearestOrAwayFromZero)
         guard value.amount.isFinite else { return nil }
         return .phrase(
-            query, .quantity(value), target: String(localized: "Rounded"), isCurrency: value.isCurrency)
+            query, .quantity(value), target: "Rounded", isCurrency: value.isCurrency)
     }
 
     private static func direction(_ rest: inout ArraySlice<CalcToken>) -> FloatingPointRoundingRule? {
@@ -85,8 +85,7 @@ enum CalcRounding {
     }
 
     /// `nearest 5`, `next 10`, `nearest 8th`, `2 dp`; a bare `10` is a step only after `up` or `down`.
-    private static func precision(_ tokens: [CalcToken], rule: inout FloatingPointRoundingRule?) -> Precision?
-    {
+    private static func precision(_ tokens: [CalcToken], rule: inout FloatingPointRoundingRule?) -> Precision? {
         var target = tokens[...]
         if target.first == .ident("the") { target.removeFirst() }
         switch target.first {
@@ -137,7 +136,7 @@ enum CalcRounding {
             let (numerator, denominator) = simplestFraction(value.effective)
         else { return nil }
         let text = denominator == 1 ? "\(numerator)" : "\(numerator)/\(denominator)"
-        return .phrase(query, .value(display: text, copyText: text), target: String(localized: "Fraction"))
+        return .phrase(query, .value(display: text, copyText: text), target: "Fraction")
     }
 
     private static let fractionTargets: [[CalcToken?]] = ["as", "to", "in"].flatMap { connector in

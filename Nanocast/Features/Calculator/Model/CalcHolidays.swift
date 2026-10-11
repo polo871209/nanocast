@@ -155,8 +155,7 @@ enum CalcHolidays {
     }
 
     /// The first time a day of the Islamic year falls in Gregorian `year`, which is eleven days longer.
-    private static func islamic(month: Int, day: Int, offset: Int, in year: Int, calendar: Calendar) -> Date?
-    {
+    private static func islamic(month: Int, day: Int, offset: Int, in year: Int, calendar: Calendar) -> Date? {
         var islamic = Calendar(identifier: .islamicUmmAlQura)
         islamic.timeZone = calendar.timeZone
         guard let newYear = calendar.date(from: DateComponents(year: year, month: 1, day: 1)) else {

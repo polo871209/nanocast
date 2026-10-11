@@ -10,6 +10,7 @@ final class DictationKeyManager: HealthCheckable {
     private let instanceLock: RemapInstanceLock
     private let remapper: KeyboardRemapper
     private var sessionTokens: [NotificationToken] = []
+    private var hotKeysObservation: ObservationTracking.Token?
     private var isRunning = false
     private var isSessionActive = true
 
@@ -36,6 +37,7 @@ final class DictationKeyManager: HealthCheckable {
         isRunning = false
         healthTicker?.unsubscribe(self)
         sessionTokens.removeAll()
+        hotKeysObservation = nil
         remapper.apply(nil)
         instanceLock.release()
     }
@@ -44,9 +46,12 @@ final class DictationKeyManager: HealthCheckable {
         apply()
     }
 
+    private var isWanted: Bool {
+        hotKeys.recordingAction != nil || hotKeys.bindsDictationKey
+    }
+
     private func apply() {
         guard isRunning else { return }
-        let isWanted = hotKeys.recordingAction != nil || hotKeys.bindsDictationKey
         let wanted = isWanted && isSessionActive ? HIDKeyMapping.dictationKeyToF20 : nil
         guard wanted == nil || instanceLock.acquire() else {
             healthTicker?.subscribe(self)
@@ -55,22 +60,14 @@ final class DictationKeyManager: HealthCheckable {
         healthTicker?.unsubscribe(self)
         let isChange = wanted != remapper.mapping
         if !remapper.apply(wanted), wanted != nil, isChange, hotKeys.bindsDictationKey {
-            onProblem?(String(localized: "macOS refused to remap the Dictation key"))
+            onProblem?("macOS refused to remap the Dictation key")
         }
         if wanted == nil { instanceLock.release() }
     }
 
-    /// onChange fires before the write lands.
     private func observeHotKeys() {
-        withObservationTracking {
-            _ = hotKeys.recordingAction
-            _ = hotKeys.bindsDictationKey
-        } onChange: { [weak self] in
-            Task { @MainActor in
-                guard let self, self.isRunning else { return }
-                self.observeHotKeys()
-                self.apply()
-            }
+        hotKeysObservation = observeChanges(of: { [weak self] in self?.isWanted }) { [weak self] in
+            self?.apply()
         }
     }
 

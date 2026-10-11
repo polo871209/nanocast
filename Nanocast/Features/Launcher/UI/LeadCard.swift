@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Fill and hover for every lead card, so none can answer a selection differently from another.
 private struct LeadCardChrome: ViewModifier {
     @Environment(\.metrics) private var metrics
     let selected: Bool
@@ -25,7 +24,6 @@ private struct LeadCardChrome: ViewModifier {
 }
 
 extension View {
-    /// Padding stays each card's own: a meeting card is deliberately shorter than an answer.
     func leadCard(selected: Bool) -> some View {
         modifier(LeadCardChrome(selected: selected))
     }

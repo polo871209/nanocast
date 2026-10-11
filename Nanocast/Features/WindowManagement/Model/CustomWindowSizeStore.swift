@@ -1,6 +1,5 @@
 import Foundation
 
-/// The custom-size library, as JSON in `UserDefaults`. Authored data, so a bad record is cleaned.
 @MainActor
 @Observable
 final class CustomWindowSizeStore {
@@ -49,7 +48,6 @@ final class CustomWindowSizeStore {
         return removed
     }
 
-    /// Replaces the whole library on backup import, cleaning rather than rejecting.
     @discardableResult
     func replace(with incoming: [CustomWindowSize]) -> Int {
         let updated = Self.sanitized(incoming)
@@ -91,7 +89,6 @@ final class CustomWindowSizeStore {
         var result: [CustomWindowSize] = []
         for value in values {
             let cleaned = value.sanitized
-            // Unlocalized, so an import refuses exactly the names `validated` refuses.
             let foldedName = cleaned.name.folding(options: [.caseInsensitive], locale: nil)
             guard !cleaned.name.isEmpty, !cleaned.name.contains("\0"),
                 ids.insert(cleaned.id).inserted, names.insert(foldedName).inserted

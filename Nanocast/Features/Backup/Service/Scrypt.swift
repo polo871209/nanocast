@@ -3,7 +3,6 @@ import Foundation
 
 /// Minimal scrypt (RFC 7914), so the import needs no third-party crypto dependency.
 enum Scrypt {
-    /// Derive `dkLen` key bytes. For Raycast: `n=16384, r=8, p=1, dkLen=32`.
     static func derive(
         passphrase: [UInt8], salt: [UInt8], n: Int, r: Int, p: Int, dkLen: Int
     ) -> [UInt8] {
@@ -16,8 +15,6 @@ enum Scrypt {
         }
         return pbkdf2(password: passphrase, salt: b, rounds: 1, dkLen: dkLen)
     }
-
-    // MARK: - PBKDF2-HMAC-SHA256
 
     private static func pbkdf2(
         password: [UInt8], salt: [UInt8], rounds: Int, dkLen: Int
@@ -49,8 +46,6 @@ enum Scrypt {
         Array(HMAC<SHA256>.authenticationCode(for: data, using: key))
     }
 
-    // MARK: - ROMix / BlockMix / Salsa20/8
-
     private static func romix(_ b: inout [UInt8], n: Int, r: Int) {
         let blockLen = 128 * r
         var x = b
@@ -67,7 +62,6 @@ enum Scrypt {
         b = x
     }
 
-    /// `B` is `2r` 64-byte blocks → `Y[0],Y[2],…,Y[2r-2],Y[1],Y[3],…,Y[2r-1]`.
     private static func blockMix(_ input: [UInt8], r: Int) -> [UInt8] {
         var x = Array(input[(2 * r - 1) * 64..<2 * r * 64])
         var out = [UInt8](repeating: 0, count: 128 * r)
@@ -80,7 +74,6 @@ enum Scrypt {
         return out
     }
 
-    /// Little-endian 32-bit word at the start of the last 64-byte block, mod N.
     private static func integerify(_ x: [UInt8], r: Int) -> Int {
         let o = (2 * r - 1) * 64
         return Int(

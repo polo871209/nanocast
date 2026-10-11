@@ -1,5 +1,4 @@
 #!/bin/bash
-# Build a signed Nanocast.app into build/Nanocast-<version>.dmg. Usage: build-dmg.sh [version]
 set -euo pipefail
 
 cd "$(dirname "$0")/.." || exit 1

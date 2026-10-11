@@ -5,62 +5,36 @@ struct AvailableRelease: Codable, Hashable, Sendable {
     let tag: String
     let assetURL: URL
     let assetSize: Int64
-    let signatureURL: URL?
     let publishedAt: Date?
 }
 
-/// Nothing throws: an unusable body means nothing to install, and the pump retries.
 enum ReleaseFeed {
-    static let repository = "abue-ammar/tinycast"
+    static let repository = "polo871209/nanocast"
 
-    /// The only artifact with an x86_64 slice, so the only one an Intel Mac can install.
-    private static let universalMarker = "-Universal-"
-
-    /// The newest release this channel accepts, ignoring drafts and anything without a usable zip.
-    static func newest(
-        from data: Data, channel: ReleaseChannel, architecture: ReleaseArchitecture
-    ) -> AvailableRelease? {
+    static func newest(from data: Data, channel: ReleaseChannel) -> AvailableRelease? {
         guard let entries = try? JSONDecoder().decode([Entry].self, from: data) else { return nil }
         return
             entries
-            .compactMap { release(from: $0, channel: channel, architecture: architecture) }
+            .compactMap { release(from: $0, channel: channel) }
             .max { $0.version < $1.version }
     }
 
-    /// The release worth offering: strictly newer than what runs.
     static func offer(_ release: AvailableRelease?, running: AppVersion) -> AvailableRelease? {
         guard let release, release.version > running else { return nil }
         return release
     }
 
-    private static func release(
-        from entry: Entry, channel: ReleaseChannel, architecture: ReleaseArchitecture
-    ) -> AvailableRelease? {
+    private static func release(from entry: Entry, channel: ReleaseChannel) -> AvailableRelease? {
         guard !entry.draft, channel.accepts(prerelease: entry.prerelease),
             let version = AppVersion(entry.tagName),
-            // A tag disagreeing with the prerelease flag is a mis-published release, not an update.
-            version.isPrerelease == entry.prerelease,
-            let asset = asset(from: entry.assets, for: architecture)
+            let asset = entry.assets.first(where: { $0.name.hasSuffix(".zip") })
         else { return nil }
         return AvailableRelease(
             version: version,
             tag: entry.tagName,
             assetURL: asset.browserDownloadURL,
             assetSize: asset.size,
-            signatureURL: entry.assets.first { $0.name == asset.name + ".sig" }?.browserDownloadURL,
             publishedAt: entry.publishedAt.flatMap { try? Date($0, strategy: .iso8601) })
-    }
-
-    /// Never the DMG: the updater expands an archive rather than mounting a volume.
-    private static func asset(
-        from assets: [Entry.Asset], for architecture: ReleaseArchitecture
-    ) -> Entry.Asset? {
-        let zips = assets.filter { $0.name.hasSuffix(".zip") }
-        let universal = zips.first { $0.name.contains(universalMarker) }
-        switch architecture {
-        case .intel: return universal
-        case .appleSilicon: return zips.first { !$0.name.contains(universalMarker) } ?? universal
-        }
     }
 
     private struct Entry: Decodable {

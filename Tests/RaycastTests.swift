@@ -49,9 +49,6 @@ enum RaycastTests {
         if failures > 0 { exit(1) }
     }
 
-    // MARK: - Fixtures
-
-    /// gzip of `{"raycast_version":"1.104.24"}`, produced with mtime 0 so the bytes are stable.
     static let gzippedJSON = Data([
         0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xab, 0x56,
         0x2a, 0x4a, 0xac, 0x4c, 0x4e, 0x2c, 0x2e, 0x89, 0x2f, 0x4b, 0x2d, 0x2a,
@@ -63,7 +60,6 @@ enum RaycastTests {
 
     static let passphrase = "12345678"
 
-    /// Built in-process, so no real export is committed; the one scrypt derive is shared.
     static let fixture: (file: Data, payloadStart: Int, futureSchema: Data)? = {
         let salt = Data(repeating: 0x22, count: 16)
         let iv = Data(repeating: 0x33, count: 16)
@@ -100,8 +96,6 @@ enum RaycastTests {
         return (file, file.count - sealed.ciphertext.count - 16, futureSchema)
     }()
 
-    // MARK: - Recognition
-
     static func recognition() {
         expect(
             RaycastDecoder.isExport(Data("RAYCFG3\n".utf8)),
@@ -114,8 +108,6 @@ enum RaycastTests {
             !RaycastDecoder.isExport(Data("RAYCFG3".utf8)),
             "the signature includes its trailing newline")
     }
-
-    // MARK: - Decrypt
 
     static func decryption() {
         guard let fixture else {
@@ -132,13 +124,11 @@ enum RaycastTests {
             try RaycastDecoder.decrypt(file, passphrase: "wrong-passphrase")
         }
 
-        // A slice keeps the caller's indices, which the offsets inside the decoder must not assume.
         let padded = Data(repeating: 0x00, count: 7) + file
         expect(
             (try? RaycastDecoder.decrypt(padded.dropFirst(7), passphrase: passphrase)) == plainJSON,
             "a non-zero-based slice decrypts the same as the whole file")
 
-        // Everything below is rejected before the key derivation, so none of it pays scrypt's cost.
         expectThrows("without the container signature", .notRaycastFile) {
             try RaycastDecoder.decrypt(file.dropFirst(), passphrase: passphrase)
         }
@@ -149,7 +139,6 @@ enum RaycastTests {
             try RaycastDecoder.decrypt(fixture.futureSchema, passphrase: passphrase)
         }
 
-        // Every truncation short of the payload, so no offset can run off an end.
         var misclassified: [Int] = []
         for cut in 0..<fixture.payloadStart {
             let expected: RaycastImportError = cut < 8 ? .notRaycastFile : .corrupt
@@ -175,8 +164,6 @@ enum RaycastTests {
         }
         expect(lengthsRead.isEmpty, "an out-of-range header length is rejected: \(lengthsRead)")
     }
-
-    // MARK: - Clipboard
 
     static func clipboardEntry(
         _ text: String, createdAt: String = "2001-01-01T00:00:00.123Z", pinned: Any? = nil
@@ -355,10 +342,7 @@ enum RaycastTests {
             "an old pinned image survives import-time retention and reload too")
     }
 
-    // MARK: - Zlib
-
     static func gunzipSlices() {
-        // `decompress` indexes a zero-based copy, so a slice must not be re-indexed.
         var prefixed = Data(repeating: 0xa5, count: 32)
         prefixed.append(gzippedJSON)
         expect(
@@ -368,7 +352,6 @@ enum RaycastTests {
         expect((try? Zlib.gunzip(Data(repeating: 0x00, count: 32))) == nil, "non-gzip throws")
     }
 
-    /// Built here, never committed: a fixture past the default cap cannot live in the repo.
     static func gunzipCap() {
         let oversized = Data(repeating: 0x5a, count: 70 * 1024 * 1024)
         guard let gzipped = try? Zlib.gzip(oversized) else {
