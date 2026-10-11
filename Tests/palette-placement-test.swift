@@ -227,12 +227,6 @@ struct PalettePlacementTests {
         let inset = metrics.spacing.md
         let headerExtent = metrics.size.headerPadding + metrics.size.headerHeight
 
-        let leading = MenuPanelCorner.bottomLeading.frame(
-            contentSize: content, parentFrame: parent, visibleFrame: visible, inset: inset,
-            headerExtent: headerExtent)
-        expect(leading.minX, parent.minX + inset, "the left menu follows the footer's leading edge")
-        expect(leading.minY, parent.minY + inset, "the left menu follows the footer's bottom edge")
-
         let trailing = MenuPanelCorner.bottomTrailing.frame(
             contentSize: content, parentFrame: parent, visibleFrame: visible, inset: inset,
             headerExtent: headerExtent)

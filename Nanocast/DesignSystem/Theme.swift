@@ -111,7 +111,6 @@ enum Theme {
         static let menuRowSpacing: CGFloat = 1
         static let menuSectionHeader: CGFloat = 16
         static let menuVisibleRows: CGFloat = 5.5
-        static let appMenuVisibleRows: CGFloat = 4.5
         static var menuRowsMaxHeight: CGFloat {
             (menuVisibleRows * (menuRowHeight + menuRowSpacing)).rounded()
         }
