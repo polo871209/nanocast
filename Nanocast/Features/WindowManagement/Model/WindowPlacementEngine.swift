@@ -2,10 +2,27 @@ import CoreGraphics
 import Foundation
 
 enum WindowPlacementEngine {
+    enum DockEdge: String, Sendable {
+        case bottom, left, right
+    }
+
     struct Screen: Equatable, Sendable {
         let id: Int
         let frame: CGRect
         let visibleFrame: CGRect
+
+        /// Stretches `visibleFrame` out to `frame` on `edge`, leaving the other three edges alone.
+        func reclaiming(_ edge: DockEdge) -> Screen {
+            var visible = visibleFrame
+            switch edge {
+            case .bottom: visible.size.height = frame.maxY - visible.minY
+            case .left:
+                visible.size.width = visible.maxX - frame.minX
+                visible.origin.x = frame.minX
+            case .right: visible.size.width = frame.maxX - visible.minX
+            }
+            return Screen(id: id, frame: frame, visibleFrame: visible)
+        }
     }
 
     struct Anchor: Equatable, Sendable {
