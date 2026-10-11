@@ -27,7 +27,7 @@ struct RoomPickerScreen: PaletteScreen {
 
     var rows: [RoomPickerRow] { coordinator.pickerRows(for: vm.query) }
 
-    var primaryActionTitle: String {
+    private var primaryActionTitle: String {
         let rows = rows
         let name = session.roomName
         let add = String(localized: "Add to “\(name)”")

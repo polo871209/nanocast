@@ -17,7 +17,6 @@ struct RootPaletteView: View {
     @Environment(UninstallSession.self) private var uninstall
     @Environment(AppSettings.self) private var settings
     @Environment(\.metrics) private var metrics
-    @Environment(\.openURL) private var openURL
     @FocusState private var searchFocused: Bool
     @FocusState private var argumentFocused: String?
     @State private var openMenu: OpenMenu?
@@ -120,39 +119,6 @@ struct RootPaletteView: View {
             })
     }
 
-    private var appMenuContent: PopoverMenuContent {
-        let appName = Bundle.main.appDisplayName
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-        let title = version.map { "\(appName) v\($0)" } ?? appName
-        return PopoverMenuContent(
-            header: title,
-            items: [
-                PopoverMenuItem(
-                    title: String(localized: "Changelog"),
-                    systemImage: "clock.arrow.trianglehead.2.counterclockwise.rotate.90"
-                ) {
-                    if let url = URL(string: "https://github.com/polo871209/nanocast/releases") {
-                        openURL(url)
-                    }
-                },
-                PopoverMenuItem(title: String(localized: "About Nanocast"), systemImage: "info.circle") {
-                    core.settingsCoordinator.showAbout()
-                },
-                PopoverMenuItem(
-                    title: String(localized: "Settings"), systemImage: "gearshape", shortcut: "⌘,"
-                ) {
-                    core.settingsCoordinator.showSettings()
-                },
-                PopoverMenuItem(
-                    title: String(localized: "Quit \(appName)"),
-                    systemImage: "rectangle.portrait.and.arrow.right",
-                    isDestructive: true
-                ) {
-                    NSApp.terminate(nil)
-                }
-            ])
-    }
-
     private var menuContent: PaletteMenuContent? {
         switch openMenu {
         case .actions:
@@ -161,13 +127,6 @@ struct RootPaletteView: View {
             let filtered = content.matching(ActionMenuSearchQuery(vm.menuQuery))
             return PaletteMenuContent(
                 popover: filtered.content, selection: $menuSelection,
-                search: PopoverMenu.Search(placeholder: "Search for actions…", placement: .bottom),
-                onActivate: activateMenuItem, preferredSelection: filtered.bestMatch)
-        case .app:
-            let filtered = appMenuContent.matching(ActionMenuSearchQuery(vm.menuQuery))
-            return PaletteMenuContent(
-                popover: filtered.content, selection: $menuSelection,
-                visibleRows: Theme.Size.appMenuVisibleRows,
                 search: PopoverMenu.Search(
                     placeholder: String(localized: "Search for actions…"), placement: .bottom),
                 onActivate: activateMenuItem, preferredSelection: filtered.bestMatch)
@@ -193,11 +152,7 @@ struct RootPaletteView: View {
 
     var body: some View {
         let screen = screen
-        let count = screen.rows.count
-        let sel = selection(count: count)
-        let showActionGroup =
-            (count > 0 || screen.actsWithoutRows)
-            && screen.hasPrimaryAction(at: sel)
+        let sel = selection(count: screen.rows.count)
 
         return keyHandlers(
             stateObservers(
@@ -209,15 +164,6 @@ struct RootPaletteView: View {
                     }
                 }
                 .safeAreaInset(edge: .top, spacing: 0) { header }
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    if !isCollapsed {
-                        bottomBar(
-                            pillLabel: screen.primaryActionTitle, showActionGroup: showActionGroup,
-                            formPrimaryShortcut: screen.hidesSearchField && screen.actsWithoutRows,
-                            primaryActionEnabled: screen.isPrimaryActionEnabled(at: sel),
-                            showActions: screen.hasActions(at: sel))
-                    }
-                }
                 .overlay(alignment: .top) { topDragStrip }
                 .background(
                     WindowReader {
@@ -636,74 +582,6 @@ struct RootPaletteView: View {
             }
     }
 
-    private var pillTint: Color {
-        vm.mode == .uninstall ? Theme.Colors.destructive : .primary
-    }
-
-    private func bottomBar(
-        pillLabel: String, showActionGroup: Bool, formPrimaryShortcut: Bool,
-        primaryActionEnabled: Bool, showActions: Bool
-    ) -> some View {
-        HStack(spacing: 0) {
-            appMenuButton
-            if showActionGroup {
-                actionGroup(
-                    pillLabel: pillLabel, formPrimaryShortcut: formPrimaryShortcut,
-                    primaryActionEnabled: primaryActionEnabled,
-                    showActions: showActions
-                )
-                .fixedSize()
-            }
-        }
-        .padding(.horizontal, metrics.spacing.md)
-        .frame(height: metrics.size.bottomBarHeight)
-        .frame(maxWidth: .infinity)
-    }
-
-    private var appMenuButton: some View {
-        MenuCircleButton {
-            if openMenu == .app { closeMenus() } else { open(.app, highlighting: 0) }
-        }
-    }
-
-    private func actionGroup(
-        pillLabel: String, formPrimaryShortcut: Bool, primaryActionEnabled: Bool, showActions: Bool
-    ) -> some View {
-        HStack(spacing: 2) {
-            BarButton(action: activateSelection) {
-                HStack(spacing: metrics.spacing.sm) {
-                    Text(pillLabel)
-                        .font(metrics.typography.bar)
-                        .foregroundStyle(pillTint)
-                    if formPrimaryShortcut {
-                        HStack(spacing: metrics.spacing.xxs) {
-                            KeyCapChip(text: "⌘", style: .outline)
-                            KeyCapChip(text: "↵", style: .outline)
-                        }
-                    } else {
-                        KeyCapChip(text: "↵", style: .outline)
-                    }
-                }
-            }
-            .disabled(!primaryActionEnabled)
-            if showActions {
-                BarButton(action: toggleActions) {
-                    HStack(spacing: metrics.spacing.sm) {
-                        Text("Actions")
-                            .font(metrics.typography.bar)
-                            .foregroundStyle(Theme.Colors.textSecondary)
-                        HStack(spacing: metrics.spacing.xxs) {
-                            KeyCapChip(text: "⌘", style: .outline)
-                            KeyCapChip(text: "K", style: .outline)
-                        }
-                    }
-                }
-            }
-        }
-        .padding(metrics.spacing.xs)
-        .frosted(in: Capsule())
-    }
-
     private func openActions() {
         let launcher = screen as? LauncherScreen
         selectionIsRunning = launcher.map { $0.isRunning(at: selection(in: $0)) } ?? false
@@ -912,7 +790,6 @@ struct RootPaletteView: View {
 
     private var menuCorner: MenuPanelCorner? {
         switch openMenu {
-        case .app: .bottomLeading
         case .actions: .bottomTrailing
         case .inputOptions(let corner): corner
         case .clipboardFilter, .fileSearchFilter, .emojiCategory:
@@ -1085,7 +962,6 @@ struct RootPaletteView: View {
 private enum OpenMenu: Equatable {
     case actions
     case inputOptions(MenuPanelCorner)
-    case app
     case clipboardFilter
     case fileSearchFilter
     case emojiCategory
@@ -1108,28 +984,6 @@ private struct SearchFieldHiding: ViewModifier {
 
     func body(content: Content) -> some View {
         content.onChange(of: hidden) { _, hidden in apply(hidden) }
-    }
-}
-
-private struct MenuCircleButton: View {
-    let action: () -> Void
-    @State private var hovered = false
-    @Environment(\.metrics) private var metrics
-
-    var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 3) {
-                Capsule().frame(width: 14, height: 1.5)
-                Capsule().frame(width: 8, height: 1.5)
-            }
-            .foregroundStyle(Theme.Colors.textSecondary)
-            .frame(width: metrics.size.menuButton, height: metrics.size.menuButton)
-            .background(Circle().fill(hovered ? Theme.Colors.rowHover : Color.clear))
-            .contentShape(.circle)
-        }
-        .buttonStyle(.plain)
-        .onHover { hovered = $0 }
-        .frosted(in: Circle())
     }
 }
 
