@@ -1,7 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// Holds the keyboard input source at the palette's preferred one for the life of one summon.
 @MainActor
 final class InputSourceSwitcher {
     struct Option: Identifiable, Hashable {
@@ -12,7 +11,6 @@ final class InputSourceSwitcher {
     static let sourcesDidChange = Notification.Name(
         kTISNotifyEnabledKeyboardInputSourcesChanged as String)
 
-    /// The source to restore is kept as the object TIS vended, so hiding never re-reads the list.
     private struct Session {
         let previousSource: TISInputSource
         let preferredInputSourceID: String
@@ -21,7 +19,6 @@ final class InputSourceSwitcher {
 
     private var session: Session?
 
-    /// A `selected` source that is gone stays listed, so Settings keeps showing it.
     func options(selecting selected: String?) -> [Option] {
         var options = Self.enabledKeyboardSources().compactMap(Self.option(for:))
         if let selected, !options.contains(where: { $0.id == selected }) {
@@ -30,7 +27,6 @@ final class InputSourceSwitcher {
         return options
     }
 
-    /// Records what to go back to; skipped when the preferred source is already the active one.
     func beginSession(preferredInputSourceID: String?) {
         guard session == nil, let preferredInputSourceID,
             let current = Self.currentSource(),
@@ -39,14 +35,12 @@ final class InputSourceSwitcher {
         session = Session(previousSource: current, preferredInputSourceID: preferredInputSourceID)
     }
 
-    /// Goes through the field's own context, so the switch follows the palette's focus.
     func applySession(to inputContext: NSTextInputContext) {
         guard let session, !session.applied else { return }
         inputContext.selectedKeyboardInputSource = session.preferredInputSourceID
         self.session?.applied = true
     }
 
-    /// Undoes only our own switch: a source picked since, by the user or another app, stands.
     func endSession() {
         guard let session else { return }
         self.session = nil

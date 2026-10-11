@@ -1,7 +1,6 @@
 import Darwin
 import Foundation
 
-/// Mapped read-only: clean file-backed pages, which never count as app memory.
 final class FileIndexSnapshot: @unchecked Sendable {
     static let fileName = "index.bin"
 
@@ -35,7 +34,6 @@ final class FileIndexSnapshot: @unchecked Sendable {
             ]
         }
 
-        /// Bounds every count before it is used, so a damaged file cannot overflow the layout.
         func isValid(fileSize: Int) -> Bool {
             magic == Header.magic && version == Header.version && rootCount > 0
                 && UInt64(rootCount) <= entryCount && entryCount <= UInt64(UInt32.max)
@@ -47,7 +45,6 @@ final class FileIndexSnapshot: @unchecked Sendable {
     let rootCount: Int
     let entryCount: Int
     let nameCount: Int
-    /// The FSEvents id from before the crawl began, so a replay from it misses nothing.
     let eventID: UInt64
     let fingerprint: UInt64
     let builtAt: Date
@@ -170,7 +167,6 @@ final class FileIndexSnapshot: @unchecked Sendable {
         return nil
     }
 
-    /// Folders are numbered in entry order, so a folder's number is the directories before it.
     private func folder(of index: Int) -> Int? {
         let word = index >> 6
         let bit: UInt64 = 1 << UInt64(index & 63)
@@ -178,7 +174,6 @@ final class FileIndexSnapshot: @unchecked Sendable {
         return Int(directoryRank[word]) + (directoryBits[word] & (bit - 1)).nonzeroBitCount
     }
 
-    /// Only block starts are stored, not a parent per entry.
     private func parent(of index: Int) -> Int {
         var low = 0
         var high = blockStart.count
@@ -212,7 +207,6 @@ final class FileIndexSnapshot: @unchecked Sendable {
         return offsets
     }
 
-    /// Block order: each folder's children are one sorted run, and a subtree is one range.
     static func write(
         _ crawl: [FileIndexCrawler.Listing], roots: [(path: String, prior: Int8)],
         eventID: UInt64, fingerprint: UInt64, to url: URL

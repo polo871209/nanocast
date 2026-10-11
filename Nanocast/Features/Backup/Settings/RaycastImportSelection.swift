@@ -12,27 +12,24 @@ struct RaycastImportSelection: View {
     }
 
     private static let categories: [Category] = [
-        .init(option: .shortcuts, symbol: "command", label: String(localized: "Shortcuts")),
-        .init(option: .favorites, symbol: "star", label: String(localized: "Favorites")),
+        .init(option: .shortcuts, symbol: "command", label: "Shortcuts"),
+        .init(option: .favorites, symbol: "star", label: "Favorites"),
         .init(
-            option: .aliases, symbol: "character.cursor.ibeam", label: String(localized: "Aliases")),
+            option: .aliases, symbol: "character.cursor.ibeam", label: "Aliases"),
         .init(
             option: .emojiSkinTone, symbol: "face.smiling",
-            label: String(localized: "Emoji skin tone")),
-        .init(option: .launchAtLogin, symbol: "power", label: String(localized: "Launch at login")),
+            label: "Emoji skin tone"),
+        .init(option: .launchAtLogin, symbol: "power", label: "Launch at login"),
         .init(
             option: .menuBarVisibility, symbol: "menubar.rectangle",
-            label: String(localized: "Menu-bar icon")),
+            label: "Menu-bar icon"),
         .init(
             option: .clipboardHistory, symbol: "doc.on.clipboard",
-            label: String(localized: "Clipboard history")),
-        .init(option: .snippets, symbol: "curlybraces", label: String(localized: "Snippets")),
-        .init(
-            option: .quicklinks, symbol: Quicklink.sfSymbol, label: String(localized: "Quicklinks")),
+            label: "Clipboard history"),
         .init(
             option: .popToRoot, symbol: "arrow.uturn.backward",
-            label: String(localized: "Pop to root")),
-        .init(option: .compactMode, symbol: "macwindow", label: String(localized: "Compact mode"))
+            label: "Pop to root"),
+        .init(option: .compactMode, symbol: "macwindow", label: "Compact mode")
     ]
 
     private static let columns = Array(

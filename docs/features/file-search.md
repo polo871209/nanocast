@@ -243,7 +243,7 @@ its default app. A system `QLPreviewPanel` would take key, and the palette hides
 
 None of the copies is marked with `ClipboardManager.internalType`, so a copied file enters clipboard
 history like any other copy. Move to Trash rides the clipboard's own ⌃X, asks nothing first — trashing is
-undoable, as it is for Uninstall and for an extension's `trash` — and has no ⌃⇧X counterpart, since there
+undoable, as it is for Uninstall — and has no ⌃⇧X counterpart, since there
 is no "all" to trash. The three ⌘C chords differ only by their second modifier, which
 `PaletteShortcut` reads in order — ⇧, then ⌥, then ⌃; bare ⌘C stays with the search field.
 
@@ -266,14 +266,13 @@ delay old, since the reset clears its session.
 ## In the launcher
 
 **Show in launcher** (`fileSearchShowInLauncher`, under the feature switch) adds a **Files** section to
-root search, between the ranked results and the `Use "…" with` fallbacks, so ↵ on a typed app name never
+root search, below the ranked results, so ↵ on a typed app name never
 opens a file. It lists the top five hits (`FileSearchQuery.launcherLimit`) once the trimmed query has
 three characters (`launcherMinimumLength`), the threshold category search uses. Shorter cancels the
 query and releases its rows.
 
 The launcher borrows this screen's `FileSearchSession` rather than keeping its own. Only one palette
-mode shows at a time, so nothing is held twice. An index swap or a trashed row updates both. And the
-Search Files fallback opens on the request the launcher just answered, with its rows already listed.
+mode shows at a time, so nothing is held twice. An index swap or a trashed row updates both.
 `FileSearchCoordinator.searchFromLauncher` is the one entry point: `RootPaletteView` calls it per
 keystroke and when the launcher becomes the mode, and `applyLauncherFiles` re-runs it when the switch
 changes. `cancel()` returns early on an idle session, so with the section off a keystroke publishes

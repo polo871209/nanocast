@@ -1,12 +1,10 @@
 import AppKit
 
-/// The one dispatch funnel for system actions, its gates and their feedback.
 @MainActor
 final class SystemActionCoordinator {
     private let paletteCoordinator: PaletteCoordinator
     private var isTogglingMicrophone = false
     @ObservationIgnored private lazy var volumeHUD = VolumeHUDController(settings: core.settings)
-    /// Dialog and message-HUD presentation only — never for state this type owns.
     private unowned let core: AppCore
 
     init(paletteCoordinator: PaletteCoordinator, core: AppCore) {
@@ -14,7 +12,6 @@ final class SystemActionCoordinator {
         self.core = core
     }
 
-    /// The one funnel for every activation route, so no gate can be bypassed.
     func runSystemAction(id: SystemAction.ID) {
         let target = paletteCoordinator.targetApp
         if paletteCoordinator.isVisible { paletteCoordinator.hidePalette(restoreFocus: false) }
@@ -67,13 +64,11 @@ final class SystemActionCoordinator {
         }
     }
 
-    /// Level and mute actions; macOS draws its HUD only for real media keys.
     private static let showsVolumeFeedback: Set<SystemAction.ID> = [
         .setVolume, .volumeUp, .volumeDown, .toggleMute,
         .volume0, .volume25, .volume50, .volume75, .volume100
     ]
 
-    /// Sync entry point for the runner's own async completion handlers, which can't await.
     func presentSystemActionFailure(id: SystemAction.ID, failure: SystemActionFailure) {
         Task { await presentFailure(action: SystemActionCatalog.action(id: id), failure: failure) }
     }
@@ -81,9 +76,9 @@ final class SystemActionCoordinator {
     private func presentFailure(action: SystemAction, failure: SystemActionFailure) async {
         guard
             await core.reportFailure(
-                title: String(localized: "“\(action.name)” Failed"), message: failure.message,
+                title: "“\(action.name)” Failed", message: failure.message,
                 symbol: action.sfSymbol,
-                recovery: failure.settings == nil ? nil : String(localized: "Open System Settings…")),
+                recovery: failure.settings == nil ? nil : "Open System Settings…"),
             let settings = failure.settings
         else { return }
         let pane: String
@@ -97,15 +92,14 @@ final class SystemActionCoordinator {
         }
     }
 
-    /// Quit All confirms first, and the resolved list is both counted and terminated.
     private func quitAllApps() async {
         let targets = AppLauncher.quitAllTargets()
         guard !targets.isEmpty,
             await core.confirm(
-                title: String(localized: "Quit \(targets.count) applications?"),
-                message: String(localized: "Applications with unsaved changes will ask you to save."),
+                title: targets.count == 1 ? "Quit 1 application?" : "Quit \(targets.count) applications?",
+                message: "Applications with unsaved changes will ask you to save.",
                 symbol: SystemActionCatalog.action(id: .quitAllApps).sfSymbol,
-                confirmTitle: String(localized: "Quit All"))
+                confirmTitle: "Quit All")
         else { return }
         for app in targets { app.terminate() }
     }

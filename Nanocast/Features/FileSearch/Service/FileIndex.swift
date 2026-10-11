@@ -3,7 +3,6 @@ import Synchronization
 import UniformTypeIdentifiers
 
 final class FileIndex: Sendable {
-    /// Past this many changes since the snapshot, a rebuild is cheaper than carrying them.
     static let rebuildThreshold = 100_000
 
     private struct Added: Sendable {
@@ -83,7 +82,6 @@ final class FileIndex: Sendable {
         }
     }
 
-    /// Moves only when a file Recent can list comes, goes or is saved.
     var recentRevision: Int { state.withLock { $0.recentRevision } }
 
     func replace(with snapshot: FileIndexSnapshot?, policy: FileSearchPolicy?) {
@@ -187,7 +185,6 @@ final class FileIndex: Sendable {
         }
     }
 
-    /// Only the overall best come back, so no more paths are built than can be shown.
     private static func collect(
         _ snapshot: FileIndexSnapshot, limit: Int,
         _ scan: @Sendable (Range<Int>, inout TopHits) -> Void
@@ -204,7 +201,6 @@ final class FileIndex: Sendable {
         return Array(hits.prefix(limit))
     }
 
-    /// Splits `range` across the cores; `alignment` keeps chunks off each other's bitset words.
     private static func chunked(
         _ range: Range<Int>, alignment: Int = 1, _ body: @Sendable (Range<Int>) -> Void
     ) {
@@ -217,12 +213,10 @@ final class FileIndex: Sendable {
         }
     }
 
-    /// Idempotent, so a replayed or duplicate event is harmless; true asks for a rebuild.
     @discardableResult
     func apply(folder path: String, recursive: Bool = false) -> Bool {
         guard let (snapshot, changes) = diff(folder: path, recursive: recursive) else { return false }
         return state.withLock { state in
-            // A rebuild landed meanwhile; it replays this event from its own start.
             guard state.snapshot === snapshot else { return false }
             for index in changes.kills { state.kill(index, in: snapshot) }
             for removal in changes.removals { state.remove(removal.path, isDirectory: removal.isDirectory) }
@@ -231,7 +225,6 @@ final class FileIndex: Sendable {
         }
     }
 
-    /// Its copy of the state dies on return, so `apply` writes the overlay without copying it.
     private func diff(
         folder path: String, recursive: Bool
     ) -> (FileIndexSnapshot, FolderDiff.Changes)? {
@@ -257,7 +250,6 @@ final class FileIndex: Sendable {
         return (snapshot, diff.changes)
     }
 
-    /// One folder's changes. A row that did not change costs a `memcmp` and allocates nothing.
     private struct FolderDiff {
         struct Changes {
             var kills: [Int] = []
@@ -272,7 +264,6 @@ final class FileIndex: Sendable {
         let snapshot: FileIndexSnapshot
         let policy: FileSearchPolicy
         private(set) var changes = Changes()
-        /// Walked once the listing is released, since walking reuses the same lister.
         private var newFolders: [(path: String, prior: Int8)] = []
 
         init(folder: String, state: State, snapshot: FileIndexSnapshot, policy: FileSearchPolicy) {
@@ -282,7 +273,6 @@ final class FileIndex: Sendable {
             self.policy = policy
         }
 
-        /// Both sides are sorted by name bytes, so one merge pass finds every difference.
         mutating func compare(base: Int?, prior: Int8, using lister: FileIndexCrawler.Lister) -> Bool {
             let overlayNames = state.addedChildren[folder] ?? []
             let listed: Void? = lister.list(folder, prior: prior, policy: policy) { entries, order, name in
@@ -328,7 +318,6 @@ final class FileIndex: Sendable {
             return true
         }
 
-        /// For an event that lost its detail: everything beneath the folder is listed afresh.
         mutating func rescan(base: Int?, prior: Int8, using lister: FileIndexCrawler.Lister) -> Bool {
             if let base {
                 for row in snapshot.children(of: base) { killIfAlive(row) }
@@ -342,7 +331,6 @@ final class FileIndex: Sendable {
             return true
         }
 
-        /// Only Recent reads a date, and it lists home files alone, so other churn is ignored.
         private func hasChanged(_ row: Int, to entry: FileIndexCrawler.Entry) -> Bool {
             if snapshot.isDirectory(row) != entry.isDirectory { return true }
             return !entry.isDirectory && snapshot.prior[row] == 2 && snapshot.mtime[row] != entry.mtime
@@ -366,7 +354,6 @@ final class FileIndex: Sendable {
             if !state.isDead(row) { kill(row) }
         }
 
-        /// A vanished folder also takes whatever the overlay added beneath it.
         private mutating func kill(_ row: Int) {
             changes.kills.append(row)
             guard snapshot.isDirectory(row) else { return }
@@ -423,7 +410,6 @@ private struct TopHits {
     var best: [Hit] { Array(hits.sorted { $0.score > $1.score }.prefix(limit)) }
 }
 
-/// Unchecked: each chunk writes only its own 64-aligned range of names.
 private final class NameScores: @unchecked Sendable {
     private let matched: UnsafeMutableBufferPointer<UInt64>
     private let scores: UnsafeMutableBufferPointer<Int32>

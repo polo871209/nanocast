@@ -1,10 +1,8 @@
 import Foundation
 
-/// Ordered user favorites, persisted separately from learned usage so neither can rewrite the other.
 @MainActor
 @Observable
 final class PinnedEmojiStore {
-    /// The catalog is currently smaller; this only bounds a malformed or hand-edited file.
     private static let cap = 3_000
 
     private let fileURL: URL
@@ -30,13 +28,11 @@ final class PinnedEmojiStore {
         didChange()
     }
 
-    /// Restores authored pins from a backup, preserving order while dropping invalid duplicates.
     func replace(_ imported: [String]) {
         glyphs = Self.normalized(imported)
         didChange()
     }
 
-    /// The caller names the neighbour: a stored pin the catalog cannot show is not one.
     func swap(_ glyph: String, with other: String) {
         guard let source = glyphs.firstIndex(of: glyph),
             let destination = glyphs.firstIndex(of: other)

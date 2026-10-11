@@ -30,8 +30,6 @@ final class DictationCoordinator {
     @ObservationIgnored private var pendingStartCue: UUID?
     @ObservationIgnored private var finishWhenStarted = false
     @ObservationIgnored private var target: InjectionTarget?
-    /// The field a mic button is dictating into; nil for a shortcut's session.
-    private(set) var field: DictationField?
 
     init(
         settings: AppSettings, hotKeys: HotKeyManager, models: DictationModelStore,
@@ -74,7 +72,7 @@ final class DictationCoordinator {
             guard !Task.isCancelled else { return }
             guard granted else {
                 showMessage(
-                    String(localized: "Allow Nanocast to use the microphone in System Settings"), .danger)
+                    "Allow Nanocast to use the microphone in System Settings", .danger)
                 return
             }
             settings.dictationEnabled = true
@@ -95,10 +93,10 @@ final class DictationCoordinator {
     var holdShortcutIssue: String? {
         guard let binding = hotKeys.binding(for: .dictation) else { return nil }
         guard binding.shortcut != nil || binding.holdKey != nil else {
-            return String(localized: "Record a single modifier or a key combination for hold to talk.")
+            return "Record a single modifier or a key combination for hold to talk."
         }
         if let owner = hotKeys.conflictOwner(of: binding, excluding: .dictation) {
-            return String(localized: "This shortcut is also used by \(owner). Record another shortcut.")
+            return "This shortcut is also used by \(owner). Record another shortcut."
         }
         return nil
     }
@@ -111,7 +109,7 @@ final class DictationCoordinator {
             hotKeys.binding(for: .dictation)?.holdKey == nil
         {
             showMessage(
-                String(localized: "Hold to talk needs a key combination or a single modifier"), .danger)
+                "Hold to talk needs a key combination or a single modifier", .danger)
             return
         }
         if phase != .idle {
@@ -119,20 +117,6 @@ final class DictationCoordinator {
             return
         }
         begin(target: InjectionTarget.current())
-    }
-
-    var isEnabled: Bool { settings.dictationEnabled }
-    var hasModel: Bool { models.isInstalled(settings.dictationModel) }
-
-    /// A field's own mic: click to start and click to finish, whatever the shortcut's mode or focus.
-    func toggle(into editor: any InjectableTextView) {
-        guard settings.dictationEnabled, phase != .stopping else { return }
-        guard phase == .idle else {
-            if field?.editor == ObjectIdentifier(editor) { finish() }
-            return
-        }
-        field = DictationField(editor: ObjectIdentifier(editor))
-        begin(target: .ownEditor(editor))
     }
 
     private func finish() {
@@ -145,8 +129,7 @@ final class DictationCoordinator {
 
     private func begin(target: InjectionTarget?) {
         guard models.isInstalled(settings.dictationModel) else {
-            field = nil
-            showMessage(String(localized: "Download the dictation model in Settings first"), .danger)
+            showMessage("Download the dictation model in Settings first", .danger)
             return
         }
         token = UUID()
@@ -203,7 +186,6 @@ final class DictationCoordinator {
         guard phase == .listening else { return }
         phase = .transcribing
         panel.state.phase = .transcribing
-        field?.isTranscribing = true
         if settings.dictationPlaysSounds {
             audioDucker.restoreImmediately()
             cues.play(.stop)
@@ -225,11 +207,11 @@ final class DictationCoordinator {
             if !liveText.isEmpty { await injector.drain() }
             guard token == current else { return }
             let tail = liveOffset < samples.count ? Array(samples[liveOffset...]) : []
-            let destination = field == nil ? settings.dictationDestination : .paste
+            let destination = settings.dictationDestination
             if tail.count < 1_600 {
                 if liveText.isEmpty {
                     reset(cancelTranscription: false)
-                    showMessage(String(localized: "No speech was recorded"), .danger)
+                    showMessage("No speech was recorded", .danger)
                 } else {
                     finishWithoutRemainder(destination)
                 }
@@ -240,7 +222,6 @@ final class DictationCoordinator {
                     tail, model: model,
                     language: language)
                 guard token == current else { return }
-                // A mic belongs to its field: the text goes in there, never to the clipboard.
                 let context = destination.pastes ? insertionContext() : nil
                 let text = DictationTextFormatter.format(
                     transcript, context: context,
@@ -251,8 +232,7 @@ final class DictationCoordinator {
                 panel.close()
                 if destination.pastes {
                     injector.deliver(
-                        InjectedText(text), target: target, expectedKeyword: nil,
-                        keywordLength: 0, automaticGeneration: nil,
+                        text, target: target,
                         isValid: { [weak self] in self?.token == current },
                         onDelivered: { [weak self] in
                             guard let self, token == current else { return }
@@ -261,7 +241,7 @@ final class DictationCoordinator {
                             reset(cancelTranscription: false)
                             if lost, destination.pastes {
                                 showMessage(
-                                    String(localized: "Couldn't paste some dictation into this app"),
+                                    "Couldn't paste some dictation into this app",
                                     .danger)
                             }
                         },
@@ -269,7 +249,7 @@ final class DictationCoordinator {
                             guard let self, token == current else { return }
                             reset(cancelTranscription: false)
                             if destination.copies { Paster.copyPlainText(assembled) }
-                            showMessage(String(localized: "Couldn't paste dictation into this app"), .danger)
+                            showMessage("Couldn't paste dictation into this app", .danger)
                         })
                 } else {
                     Paster.copyPlainText(text)
@@ -289,13 +269,8 @@ final class DictationCoordinator {
         reset(cancelTranscription: false)
         if !text.isEmpty, destination.copies { Paster.copyPlainText(text) }
         if lost, destination.pastes {
-            showMessage(String(localized: "Couldn't paste some dictation into this app"), .danger)
+            showMessage("Couldn't paste some dictation into this app", .danger)
         }
-    }
-
-    /// Chunks already pasted only make sense where text is pasted at all.
-    private var insertionPastes: Bool {
-        field == nil ? settings.dictationDestination.pastes : true
     }
 
     /// Chunk spacing from the caret, else from pasted text, so chunks never glue without a space.
@@ -306,7 +281,7 @@ final class DictationCoordinator {
     }
 
     private func startLiveInsertion(token current: UUID) {
-        guard insertionPastes, settings.dictationLiveInsertion else { return }
+        guard settings.dictationDestination.pastes, settings.dictationLiveInsertion else { return }
         liveTask = Task { [weak self] in
             guard let self else { return }
             while !Task.isCancelled {
@@ -346,8 +321,7 @@ final class DictationCoordinator {
             liveText += stripped
             let target = self.target
             injector.deliver(
-                InjectedText(stripped), target: target, expectedKeyword: nil,
-                keywordLength: 0, automaticGeneration: nil,
+                stripped, target: target,
                 isValid: { [weak self] in self?.token == current },
                 onDelivered: {},
                 onFailed: { [weak self] in
@@ -357,11 +331,6 @@ final class DictationCoordinator {
         } catch {
             // The final pass starts at liveOffset, so it covers what this chunk left behind.
         }
-    }
-
-    func cancel(in editor: any InjectableTextView) {
-        guard let target = target?.ownEditor, target === editor else { return }
-        cancel()
     }
 
     func cancel() {
@@ -403,14 +372,7 @@ final class DictationCoordinator {
         transcriptionTask = nil
         phase = .idle
         target = nil
-        field = nil
         panel.close()
         audioDucker.end()
     }
-}
-
-/// Which editor a mic session belongs to, so only that field's button shows it running.
-struct DictationField: Equatable {
-    let editor: ObjectIdentifier
-    var isTranscribing = false
 }

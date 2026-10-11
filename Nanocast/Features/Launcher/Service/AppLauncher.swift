@@ -57,7 +57,6 @@ enum AppLauncher {
         NSWorkspace.shared.open(url)
     }
 
-    /// Focus the app if it isn't frontmost, hide it if it is, launch it if it isn't running.
     @MainActor
     static func toggle(bundleID: String) {
         let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
@@ -73,7 +72,6 @@ enum AppLauncher {
             NSWorkspace.shared.openApplication(
                 at: url, configuration: NSWorkspace.OpenConfiguration())
         } else if let running {
-            // Running app whose bundle URL can't be resolved (moved or deleted since launch).
             running.unhide()
             running.activate()
         }
@@ -89,10 +87,8 @@ enum AppLauncher {
         return !running.isEmpty
     }
 
-    /// Long enough for any app to exit, short enough not to relaunch under the user.
     private static let exitGrace = Duration.seconds(5)
 
-    /// A refused quit — a save sheet left standing — relaunches nothing.
     @MainActor
     static func restart(bundleID: String, url: URL) async {
         let target = url.resolvingSymlinksInPath().standardizedFileURL
@@ -135,10 +131,8 @@ enum AppLauncher {
     /// Finder is never a Quit All target: `terminate()` only makes it relaunch.
     private static let quitAllExclusions: Set<String> = ["com.apple.finder"]
 
-    /// Every app with a Dock presence, bar Finder and us; resolved once, so it can't drift.
     @MainActor
     static func quitAllTargets() -> [NSRunningApplication] {
-        // By PID, not policy: About/Settings flips us to `.regular` temporarily.
         let ownPID = NSRunningApplication.current.processIdentifier
         return NSWorkspace.shared.runningApplications.filter { app in
             app.activationPolicy == .regular

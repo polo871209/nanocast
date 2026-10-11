@@ -66,11 +66,10 @@ struct DictationSettingsView: View {
                         let issue = coordinator.holdShortcutIssue
                         Text(
                             issue
-                                ?? String(
-                                    localized: """
-                                        Hold a key combination or a single modifier; release it to \
-                                        transcribe. Double taps work in toggle mode.
-                                        """)
+                                ?? """
+                                Hold a key combination or a single modifier; release it to \
+                                transcribe. Double taps work in toggle mode.
+                                """
                         )
                         .font(.caption)
                         .foregroundStyle(issue == nil ? Color.secondary : Color.orange)
@@ -123,15 +122,14 @@ struct DictationSettingsView: View {
                         } label: {
                             Text(
                                 installed
-                                    ? LocalizedStringResource(
-                                        "dictation-model-installed", defaultValue: "Installed")
+                                    ? "Installed"
                                     : "Not installed")
                             Text(modelDescription)
                         }
                     }
                     if settings.dictationModel.isQwen, installed {
                         Picker(selection: languageBinding) {
-                            Text(LocalizedStringResource("dictation-language-auto", defaultValue: "Auto"))
+                            Text("Auto")
                                 .tag("")
                             Divider()
                             ForEach(DictationLanguage.allCases) { language in
@@ -251,8 +249,8 @@ struct DictationSettingsView: View {
     private var modelDescription: String {
         let approximate = Int64(settings.dictationModel.approximateInstalledMegabytes) * 1_000_000
         return modelSize.map {
-            String(localized: "\(ByteCountFormatter.string(fromByteCount: $0, countStyle: .file)) on disk")
-        } ?? String(localized: "About \(approximate.formatted(.byteCount(style: .file))) on disk")
+            "\(ByteCountFormatter.string(fromByteCount: $0, countStyle: .file)) on disk"
+        } ?? "About \(approximate.formatted(.byteCount(style: .file))) on disk"
     }
 
     private struct DownloadProgressView: View {
@@ -292,10 +290,10 @@ struct DictationSettingsView: View {
 
         private var title: String {
             guard let progress = models.downloadProgress else {
-                return String(localized: "Preparing download…")
+                return "Preparing download…"
             }
             return progress.total > 0 && progress.received >= progress.total
-                ? String(localized: "Finishing download…") : String(localized: "Downloading model…")
+                ? "Finishing download…" : "Downloading model…"
         }
     }
 

@@ -1,16 +1,16 @@
-// Compiles the real root-search scorer and comparator, so a ranking change is caught here.
 import Foundation
+import Synchronization
 
 @main
 struct FuzzTest {
-    nonisolated(unsafe) static var failures = 0
+    static let failures = Mutex(0)
 
     static func check(_ description: String, _ condition: Bool, _ detail: @autoclosure () -> String = "") {
         if condition {
             print("PASS  \(description)")
         } else {
             print("FAIL  \(description)  \(detail())")
-            failures += 1
+            failures.withLock { $0 += 1 }
         }
     }
 
@@ -25,11 +25,10 @@ struct FuzzTest {
         suggestions()
         sharedFold()
         properties()
-        print(failures == 0 ? "\nALL PASSED" : "\n\(failures) FAILED")
-        exit(failures == 0 ? 0 : 1)
+        let failed = failures.withLock { $0 }
+        print(failed == 0 ? "\nALL PASSED" : "\n\(failed) FAILED")
+        exit(failed == 0 ? 0 : 1)
     }
-
-    // MARK: - The scorer
 
     static func outcome(_ query: String, _ target: String) -> LauncherMatch.Outcome? {
         LauncherMatch.match(
@@ -82,8 +81,6 @@ struct FuzzTest {
         check("…but not in a name the fold can shift", score("s", "CaféStack") == 2)
     }
 
-    // MARK: - Sensitivity
-
     static func passes(_ query: String, _ target: String, _ sensitivity: SearchSensitivity) -> Bool {
         guard let outcome = outcome(query, target) else { return false }
         return sensitivity.accepts(outcome, queryLength: SearchText(query, transliterated: true).units.count)
@@ -107,8 +104,6 @@ struct FuzzTest {
         check("Low accepts any alignment", passes("sfr", "Safari", .low))
     }
 
-    // MARK: - Transliteration
-
     static func latin(_ raw: String) -> String { SearchText(raw, transliterated: true).string }
 
     static func transliteration() {
@@ -128,8 +123,6 @@ struct FuzzTest {
             "invisible format scalars never reach the scorer",
             latin("\u{200E}Safari") == "safari")
     }
-
-    // MARK: - Naming
 
     static func profile(
         _ name: String, alternates: [String] = [], subtitle: String? = nil, keywords: [String] = []
@@ -163,8 +156,6 @@ struct FuzzTest {
         check("an unbuilt entry matches nothing", SearchProfile.unnamed.title.isEmpty)
     }
 
-    // MARK: - The comparator, rule by rule
-
     struct Item {
         let name: String
         var alternates: [String] = []
@@ -172,10 +163,8 @@ struct FuzzTest {
         var keywords: [String] = []
         var alias: String?
         var frecency: Double = 1
-        /// Most recent last, as the store keeps them.
         var terms: [String] = []
         var priority = 3
-        var boosted: Set<String> = []
 
         var profile: SearchProfile {
             FuzzTest.profile(name, alternates: alternates, subtitle: subtitle, keywords: keywords)
@@ -185,7 +174,7 @@ struct FuzzTest {
             LauncherOrder.Signals(
                 alias: alias.map { SearchText($0, transliterated: false) },
                 usage: LauncherUsage(frecency: frecency, searchTerms: terms), priority: priority,
-                title: name, boostedTerms: boosted)
+                title: name)
         }
     }
 
@@ -206,19 +195,6 @@ struct FuzzTest {
             "an exact alias beats an exact title",
             first("fig", [Item(name: "Fig"), Item(name: "Figma", alias: "fig")]) == "Figma")
         check(
-            "a boosted term beats a stronger alignment",
-            first("chat", [Item(name: "ChatGPT"), Item(name: "AI Chat", boosted: ["ai", "chat"])])
-                == "AI Chat")
-        check(
-            "…until the other entry is the one the user opens more",
-            first(
-                "chat",
-                [
-                    Item(name: "ChatGPT", frecency: 300),
-                    Item(name: "AI Chat", frecency: 101, boosted: ["chat"])
-                ])
-                == "ChatGPT")
-        check(
             "past three letters an exact title beats any habit",
             first("notes", [Item(name: "Search Notes", frecency: 900, terms: ["notes"]), Item(name: "Notes")])
                 == "Notes")
@@ -229,7 +205,7 @@ struct FuzzTest {
             "an exact search term beats a stronger alignment",
             first("sa", [Item(name: "Safari"), Item(name: "Slack", frecency: 150, terms: ["sa"])]) == "Slack")
         check(
-            "an exact subtitle lists an extension's commands first",
+            "an exact subtitle lists the entries it labels first",
             first("brew", [Item(name: "Brewer"), Item(name: "Search", subtitle: "Brew")]) == "Search")
         check(
             "an alias prefix beats a stronger alignment",
@@ -343,8 +319,6 @@ struct FuzzTest {
             LauncherOrder.CategoryQuery(" \nＳＹＳＴＥＭ\tSettings ").name == "system settings")
     }
 
-    // MARK: - A dense index
-
     static let now = Date(timeIntervalSince1970: 2_000_000_000)
 
     static let apps: [Item] = [
@@ -352,7 +326,6 @@ struct FuzzTest {
         "网易云音乐", "Телеграм", "Café Noir"
     ].map { Item(name: $0, priority: 4) }
 
-    /// Synthetic, and dense where names collide. A new complaint is a new case in `denseIndex`.
     static let index: [Item] =
         apps + [
             Item(name: "Safari", alternates: ["浏览器"], priority: 4),
@@ -365,14 +338,11 @@ struct FuzzTest {
             Item(name: "Visual Studio Code", keywords: ["Code"], priority: 4),
             Item(name: "Game Center", priority: 1), Item(name: "Sound", priority: 1),
             Item(name: "Nanocast Settings"), Item(name: "Calculator History"),
-            Item(name: "AI Chat", boosted: ["ai", "chat"]), Item(name: "Search Files"),
             Item(name: "Switch Windows"),
             Item(name: "Search Notes"), Item(name: "Show Notes"), Item(name: "Set Volume"),
-            Item(name: "Search", subtitle: "Brew"), Item(name: "Upgrade", subtitle: "Brew"),
-            Item(name: "Signature Block", alternates: ["sig"])
+            Item(name: "Search", subtitle: "Brew"), Item(name: "Upgrade", subtitle: "Brew")
         ]
 
-    /// One pick, replayed through the shipped store's own arithmetic.
     static func picking(_ name: String, by query: String, daysAgo: Double = 0) -> [Item] {
         let at = now.addingTimeInterval(-daysAgo * 86_400)
         let visit = LauncherVisit(
@@ -401,14 +371,12 @@ struct FuzzTest {
             ("code", "Visual Studio Code", "a last word, where Xcode only matches mid-word"),
             ("gc", "Google Chrome", "initials, over a pane sharing them"),
             ("calcu", "Calculator", "an app wins the tie with the command named after it"),
-            ("ai", "AI Chat", "a boosted term over an app it ties"),
             ("notes", "Notes", "past three letters, an exact title wins"),
             ("cafe", "Café Noir", "an accent typed without it"), ("ｃａｆｅ", "Café Noir", "…full-width"),
             ("微信", "微信", "a Chinese name typed in Chinese"), ("weixin", "微信", "…as pinyin"),
             ("wx", "微信", "…as pinyin initials"), ("wyyyl", "网易云音乐", "…initials of a longer name"),
             ("telegram", "Телеграм", "a Cyrillic name typed in Latin"),
-            ("sig", "Signature Block", "a snippet's keyword"),
-            ("brew", "Search", "an extension's title lists its commands"),
+            ("brew", "Search", "a subtitle lists the entries it labels"),
             ("window", "Switch Windows", "an ordinary command still matches a category prefix")
         ]
         for test in cases {
@@ -429,8 +397,6 @@ struct FuzzTest {
             "a launch from the empty list is use too",
             rank("c", picking("Contacts", by: "")).first == "Contacts")
     }
-
-    // MARK: - Suggestions
 
     static func suggestions() {
         print("\n# suggestions")
@@ -455,15 +421,16 @@ struct FuzzTest {
         }
 
         let commands = [
-            Candidate(name: "Search Files", priority: 70), Candidate(name: "Clipboard History", priority: 80),
-            Candidate(name: "My Schedule", priority: 60),
+            Candidate(name: "Search Menu Items", priority: 70), Candidate(name: "Clipboard History", priority: 80),
+            Candidate(name: "Search Notes", priority: 60),
             Candidate(name: "Search Emoji & Symbols", priority: 50),
-            Candidate(name: "Create Snippet", priority: 30)
+            Candidate(name: "Create Note", priority: 30)
         ]
         check(
             "a new user gets the built-ins, highest priority first",
             select(commands) == [
-                "Clipboard History", "Search Files", "My Schedule", "Search Emoji & Symbols", "Create Snippet"
+                "Clipboard History", "Search Menu Items", "Search Notes", "Search Emoji & Symbols",
+                "Create Note"
             ])
         let used = [Candidate(name: "Safari", frecency: 40), Candidate(name: "Slack", frecency: 300)]
         check(
@@ -490,8 +457,6 @@ struct FuzzTest {
         check("an install older than five minutes is not fresh", !picked.contains("Old"))
     }
 
-    // MARK: - The fold other searches share
-
     static func sharedFold() {
         print("\n# shared fold")
         check("exact tier", FuzzyMatch.match(query: "chess", candidate: "Chess")?.tier == .exact)
@@ -509,9 +474,6 @@ struct FuzzTest {
         )
     }
 
-    // MARK: - Randomized properties
-
-    /// Seeded, so a failure reproduces on the next run instead of vanishing.
     struct SplitMix64: RandomNumberGenerator {
         private var state: UInt64
         init(seed: UInt64) { state = seed }
@@ -542,7 +504,6 @@ struct FuzzTest {
             let query = String((0..<length).map { _ in alphabet.randomElement(using: &generator)! })
             let first = outcome(query, name)
             if first != outcome(query, name) { nondeterministic += 1 }
-            // Extending a query can only narrow what it matches, once it holds a letter to match.
             if first == nil, query.contains(where: \.isLetter), outcome(query + "a", name) != nil {
                 widened += 1
             }

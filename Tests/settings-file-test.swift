@@ -23,14 +23,46 @@ struct SettingsFileTest {
         exit(failures == 0 ? 0 : 1)
     }
 
-    // MARK: - Layout
-
     private static func testLayout() {
         let malformed = SettingsFileKey.allCases.filter { key in
             key.rawValue.split(separator: ".", omittingEmptySubsequences: false).count != 2
                 || key.section.isEmpty || key.name.isEmpty
         }
         check("every key is one section and one name", malformed.isEmpty)
+
+        let fileKeys: Set<String> = [
+            "general.launcherShortcut", "general.showInMenuBar",
+            "general.automaticallyCheckForUpdates", "general.popToRootSeconds",
+            "general.escapeKeyBehavior", "general.autoSwitchInputSource",
+            "appearance.theme",
+            "appearance.animations", "dictation.playsSounds",
+            "appearance.interfaceSize", "appearance.compactMode",
+            "appearance.compactBarCommands", "appearance.followCursorAcrossDisplays",
+            "appearance.dragToReposition", "hyperKey.key", "hyperKey.includesShift",
+            "hyperKey.quickPress", "hyperKey.secureInputCompatibility", "calculator.numberStyle",
+            "search.showsSuggestions", "search.sensitivity", "applications.enabled",
+            "applications.searchScopes", "applications.apps", "systemSettings.enabled",
+            "systemSettings.panes", "systemActions.enabled", "systemActions.actions",
+            "commands.builtInEnabled", "commands.builtIn", "commands.enabled",
+            "commands.showInLauncher", "dictation.mode", "dictation.shortcut", "dictation.model",
+            "dictation.microphone", "dictation.destination", "dictation.adaptsCapitalization",
+            "dictation.liveInsertion", "dictation.releaseAfterMinutes", "dictation.language",
+            "fileSearch.enabled", "fileSearch.scopes", "fileSearch.ignorePatterns",
+            "fileSearch.removedDefaultPatterns", "fileSearch.showInLauncher", "fileSearch.commands",
+            "notes.enabled", "notes.rendersMarkdown", "notes.showsFormattingBar", "notes.folder",
+            "notes.commands", "navigation.enabled", "navigation.menuSearchShowsAppleMenu",
+            "navigation.menuSearchDisabledApps", "navigation.commands", "windowManagement.enabled",
+            "windowManagement.showInLauncher", "windowManagement.gap", "windowManagement.cycle",
+            "windowManagement.layoutsShowInLauncher", "windowManagement.roomsShowInLauncher",
+            "windowManagement.shortcuts", "windowManagement.aliases",
+            "windowManagement.customSizes", "windowManagement.layouts", "windowManagement.rooms",
+            "windowManagement.commands", "clipboard.enabled", "clipboard.retentionDays",
+            "clipboard.defaultAction", "clipboard.disabledApps", "clipboard.commands",
+            "emoji.skinTone", "emoji.gridColumns", "emoji.commands"
+        ]
+        check(
+            "every SettingsFileKey raw value is a published spelling, so a case rename cannot move one",
+            Set(SettingsFileKey.allCases.map(\.rawValue)) == fileKeys)
 
         var closed: Set<String> = []
         var current: String?
@@ -45,23 +77,15 @@ struct SettingsFileTest {
             "sections follow the Settings sidebar",
             SettingsFileKey.sections == [
                 "general", "appearance", "hyperKey", "calculator", "search", "applications",
-                "systemSettings", "systemActions", "commands", "quicklinks", "appleShortcuts", "ai",
-                "quickActions", "dictation", "fileSearch", "notes", "snippets", "navigation",
-                "windowManagement", "clipboard", "emoji", "calendar", "extensions"
+                "systemSettings", "systemActions", "commands", "dictation", "fileSearch", "notes",
+                "navigation", "windowManagement", "clipboard", "emoji"
             ])
 
-        // A file that could switch one of these on would grant what only the app may ask for.
-        let grantPaths = [
-            "snippets.enabled", "extensions.enabled", "calendar.enabled",
-            "calendar.autoJoinMeetings", "calendar.cameraPreview", "quickActions.enabled",
-            "ai.mcpEnabled", "mcp.enabled", "clipboard.textSearchEnabled", "dictation.enabled"
-        ]
+        let grantPaths = ["clipboard.textSearchEnabled", "dictation.enabled"]
         check(
             "no capability grant has a settings.json key",
             grantPaths.allSatisfy { SettingsFileKey(rawValue: $0) == nil })
     }
-
-    // MARK: - Values
 
     private enum Flavor: String, CaseIterable, SettingsFileRawValue {
         case vanilla, mint
@@ -106,8 +130,6 @@ struct SettingsFileTest {
         check("a token enum writes its word", Keep.forever.settingsJSON == "forever")
     }
 
-    // MARK: - Text
-
     private static func testFormat() {
         let values: [SettingsFileKey: SettingsFileJSON] = [
             .windowShortcuts: .object([]),
@@ -116,7 +138,7 @@ struct SettingsFileTest {
             .showInMenuBar: true,
             .automaticallyCheckForUpdates: false,
             .escapeKeyBehavior: "say \"hi\"\\ / é\n\t\u{01}",
-            .fileSearchIgnorePatterns: .array([]),
+            .menuSearchDisabledApps: .array([]),
             .popToRootTimeout: 5,
             .windowGap: .number(-1.5)
         ]
@@ -135,8 +157,8 @@ struct SettingsFileTest {
                   "~/Applications"
                 ]
               },
-              "fileSearch": {
-                "ignorePatterns": []
+              "navigation": {
+                "menuSearchDisabledApps": []
               },
               "windowManagement": {
                 "gap": -1.5,
@@ -185,8 +207,6 @@ struct SettingsFileTest {
                 == "settings.json: unknown setting “a.b” (+1 more)")
         check("no issues, no HUD", SettingsFileIssue.summary([]) == nil)
     }
-
-    // MARK: - Repository
 
     @Observable
     final class Fixture {
@@ -254,7 +274,6 @@ struct SettingsFileTest {
         check("and changes nothing", fixture.seconds == 60 && !fixture.shows)
 
         fixture.name = "ABC"
-        // Long enough for the change to schedule its save, well short of the save's own delay.
         try await Task.sleep(for: .milliseconds(50))
         synced.flush()
         check("flush writes a pending change at once", contents(of: url).contains(#""ABC""#))
@@ -332,8 +351,6 @@ struct SettingsFileTest {
             contents(of: target).contains(#""popToRootSeconds": 15"#))
     }
 
-    // MARK: - Paths
-
     private static func testContentFolders() throws {
         let bundleID = "com.nanocast.settings-file-test.\(UUID().uuidString)"
         let standard = AppPaths.applicationSupport(bundleID: bundleID)
@@ -352,25 +369,25 @@ struct SettingsFileTest {
 
         let folder = scratchFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
-        let target = folder.appending(path: "dotfiles/snippets")
-        let link = folder.appending(path: "Snippets")
+        let target = folder.appending(path: "dotfiles/notes")
+        let link = folder.appending(path: "Notes")
         try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
         try FileManager.default.createSymbolicLink(at: link, withDestinationURL: target)
         check(
             "a symlinked folder resolves to its target",
-            AppPaths.contentFolder(link.path, named: "Snippets", bundleID: bundleID).path
+            AppPaths.contentFolder(link.path, named: "Notes", bundleID: bundleID).path
                 == target.resolvingSymlinksInPath().path)
 
-        let defaultFolder = AppPaths.contentFolder(nil, named: "Snippets", bundleID: bundleID)
+        let defaultFolder = AppPaths.contentFolder(nil, named: "Notes", bundleID: bundleID)
         check(
             "choosing the default folder stores nothing",
-            AppPaths.contentFolderSetting(for: defaultFolder, named: "Snippets", bundleID: bundleID)
+            AppPaths.contentFolderSetting(for: defaultFolder, named: "Notes", bundleID: bundleID)
                 == nil)
         check(
             "choosing one in the home folder stores it under ~",
             AppPaths.contentFolderSetting(
-                for: URL(filePath: home + "/Dotfiles/snippets"), named: "Snippets", bundleID: bundleID)
-                == "~/Dotfiles/snippets")
+                for: URL(filePath: home + "/Dotfiles/notes"), named: "Notes", bundleID: bundleID)
+                == "~/Dotfiles/notes")
     }
 
     private static func testPaths() {
@@ -385,8 +402,6 @@ struct SettingsFileTest {
                     "/.config/\(folder)/settings.json"))
         }
     }
-
-    // MARK: - Helpers
 
     private static func scratchFolder() -> URL {
         FileManager.default.temporaryDirectory.appending(

@@ -11,10 +11,10 @@ final class DictationCapture {
 
         var errorDescription: String? {
             switch self {
-            case .microphoneUnavailable: String(localized: "No microphone is available.")
+            case .microphoneUnavailable: "No microphone is available."
             case .microphoneDenied:
-                String(localized: "Allow Nanocast to use the microphone in System Settings.")
-            case .captureUnavailable: String(localized: "Couldn't start recording from this microphone.")
+                "Allow Nanocast to use the microphone in System Settings."
+            case .captureUnavailable: "Couldn't start recording from this microphone."
             }
         }
     }
@@ -104,13 +104,11 @@ final class DictationCapture {
     }
 }
 
-// Configuration stays on main; only start/stop run off-main, in sequence.
 private struct CaptureSessionBox: @unchecked Sendable {
     let session: AVCaptureSession
     init(_ session: AVCaptureSession) { self.session = session }
 }
 
-// Sample buffers and mutable state are confined to the delegate queue, including finish().
 private final class AudioCollector: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate,
     @unchecked Sendable
 {

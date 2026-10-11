@@ -9,25 +9,18 @@ struct ClipboardItem: Identifiable, Hashable, Sendable {
 
     let id: UUID
     let kind: Kind
-    /// The copied text, or for a `.file` entry the absolute path — which is what FTS indexes.
     let text: String?
-    /// Absolute path on disk; only files under `imagesDir` are ours to delete.
     let imagePath: String?
     let createdAt: Date
-    /// Bundle ID of the app frontmost when the copy was captured (see `ClipboardManager.poll`).
     let sourceBundleID: String?
-    /// When the entry was pinned; pins lead the list and are exempt from pruning.
     let pinnedAt: Date?
 
     var isPinned: Bool { pinnedAt != nil }
 
-    /// The referenced path, so no call site re-derives a file entry's meaning from `text`.
     var filePath: String? { kind == .file ? text : nil }
 
-    /// What Paste as Plain Text writes: the text, or a file's path in place of the file.
     var plainText: String? { kind == .image ? nil : text }
 
-    /// Whether Copy Text (⇧⌘T) applies: a captured image, or an image file copied in Finder.
     var offersTextExtraction: Bool {
         switch kind {
         case .image: return imagePath != nil
@@ -48,7 +41,6 @@ struct ClipboardItem: Identifiable, Hashable, Sendable {
             sourceBundleID: sourceBundleID)
     }
 
-    /// Referenced where it lies: `imagePath` stays nil, keeping an unowned file from `deleteBlob`.
     init(filePath: String, createdAt: Date = Date(), sourceBundleID: String?) {
         self.init(
             id: UUID(), kind: .file, text: filePath, imagePath: nil, createdAt: createdAt,
@@ -68,7 +60,6 @@ struct ClipboardItem: Identifiable, Hashable, Sendable {
         self.pinnedAt = pinnedAt
     }
 
-    /// Copy with the two fields the store rewrites; the pin is always stated outright.
     func with(createdAt: Date? = nil, pinnedAt: Date?) -> ClipboardItem {
         ClipboardItem(
             id: id, kind: kind, text: text, imagePath: imagePath,
@@ -76,13 +67,11 @@ struct ClipboardItem: Identifiable, Hashable, Sendable {
             pinnedAt: pinnedAt)
     }
 
-    /// Case-insensitive substring match: how the store filters without FTS.
     func matches(_ query: String) -> Bool {
         text?.localizedCaseInsensitiveContains(query) ?? false
     }
 }
 
-/// Retention in days; `forever` is -1, so an unset key (0) falls through to the default.
 enum ClipboardRetention: Int, CaseIterable, Identifiable, Sendable {
     case day = 1
     case week = 7
@@ -96,13 +85,13 @@ enum ClipboardRetention: Int, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .day: return String(localized: "1 Day")
-        case .week: return String(localized: "1 Week")
-        case .month: return String(localized: "1 Month")
-        case .threeMonths: return String(localized: "3 Months")
-        case .sixMonths: return String(localized: "6 Months")
-        case .year: return String(localized: "1 Year")
-        case .forever: return String(localized: "Forever")
+        case .day: return "1 Day"
+        case .week: return "1 Week"
+        case .month: return "1 Month"
+        case .threeMonths: return "3 Months"
+        case .sixMonths: return "6 Months"
+        case .year: return "1 Year"
+        case .forever: return "Forever"
         }
     }
 
@@ -111,7 +100,6 @@ enum ClipboardRetention: Int, CaseIterable, Identifiable, Sendable {
     }
 }
 
-/// What ↵ does on a clipboard entry; Paste takes the chord the chosen action leaves free.
 enum ClipboardDefaultAction: String, CaseIterable, Identifiable, Sendable {
     case paste
     case copy
@@ -121,16 +109,14 @@ enum ClipboardDefaultAction: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .paste: return String(localized: "Paste")
-        case .copy: return String(localized: "Copy to Clipboard")
-        case .pastePlainText: return String(localized: "Paste as Plain Text")
+        case .paste: return "Paste"
+        case .copy: return "Copy to Clipboard"
+        case .pastePlainText: return "Paste as Plain Text"
         }
     }
 
-    /// What `chord` runs on `item` with this as the default; nil when it has no text to paste.
     func action(for chord: ClipboardChord, on item: ClipboardItem) -> Self? {
         let hasPlainText = item.plainText != nil
-        // An image has no text, so a plain-text default pastes it as it is.
         let resolved: Self = self == .pastePlainText && !hasPlainText ? .paste : self
         let action: Self =
             switch chord {
@@ -142,7 +128,6 @@ enum ClipboardDefaultAction: String, CaseIterable, Identifiable, Sendable {
         return action == .pastePlainText && !hasPlainText ? nil : action
     }
 
-    /// The chord an action answers while Paste is the default.
     private var ownChord: ClipboardChord {
         switch self {
         case .paste: .return
@@ -152,7 +137,6 @@ enum ClipboardDefaultAction: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-/// The ↵ chords a default reorders; ⌥↵ always pastes, so it is not one of them.
 enum ClipboardChord: CaseIterable, Sendable {
     case `return`
     case command
@@ -172,7 +156,6 @@ enum ClipboardChord: CaseIterable, Sendable {
 final class ClipboardStore {
     enum UpdateError: Error { case tooLong, writeFailed }
 
-    /// Newest-first with pins in place, every pin resident. docs/features/clipboard.md
     private(set) var items: [ClipboardItem] = [] {
         didSet {
             if !textSearchMatches.isEmpty {
@@ -185,9 +168,7 @@ final class ClipboardStore {
     }
     @ObservationIgnored var onItemsChanged: (() -> Void)?
     @ObservationIgnored var onSearchResultsChanged: ((String, [ClipboardItem], [ClipboardItem]) -> Void)?
-    /// Rotated whenever the history is replaced, so a helper's late answer lands on nothing.
     @ObservationIgnored private(set) var extractionGeneration = UUID()
-    /// The only thing a view observes for search freshness; `items` cannot speak for OCR.
     private var searchRevision = 0
     @ObservationIgnored private(set) var textSearchEnabled = false
     @ObservationIgnored private var textSearchActive = true
@@ -200,16 +181,12 @@ final class ClipboardStore {
 
     var maxAge: TimeInterval = ClipboardRetention.threeMonths.maxAge
 
-    /// One-entry memo so repeated renders reuse the FTS result; cleared when `items` changes.
-    @ObservationIgnored private var searchCache:
-        (query: String, filter: ClipboardFilter, result: [ClipboardItem])?
-    /// Same memo for the empty query, so the pinned split runs once per mutation.
+    @ObservationIgnored private var searchCache: (query: String, filter: ClipboardFilter, result: [ClipboardItem])?
     @ObservationIgnored private var orderedCache: [ClipboardItem]?
 
     /// Longest text history holds; a longer copy is skipped, since truncation would lose the tail.
     nonisolated static let maxTextLength = 32_000
     nonisolated private static let memoryWindow = 1000
-    /// The most unpinned rows any one query answers with, ordinary and OCR-only alike.
     nonisolated private static let searchLimit = 200
 
     nonisolated private static let insertSQL = """
@@ -271,7 +248,6 @@ final class ClipboardStore {
           WHERE kind IN ('image', 'file');
         """
 
-    /// Internal, not private: a backup names both to stream the table and adopt its blobs.
     let imagesDir: URL
     let dbURL: URL
     @ObservationIgnored private var db: OpaquePointer?
@@ -284,7 +260,6 @@ final class ClipboardStore {
     @ObservationIgnored private var staleImagesStmt: OpaquePointer?
     @ObservationIgnored private var deleteStaleStmt: OpaquePointer?
 
-    /// `directory` defaults to the per-channel store; the harness passes a throwaway one.
     init(directory: URL? = nil) {
         let base = directory ?? Self.defaultDirectory
         imagesDir = base.appendingPathComponent("images", isDirectory: true)
@@ -293,11 +268,9 @@ final class ClipboardStore {
         open()
     }
 
-    /// Idempotent, so the coordinator can re-open the file when the feature is switched back on.
     func open() {
         guard db == nil else { return }
         if openDatabase() { return }
-        // Captured, not authored: discard a corrupt or outdated database and start over.
         closeDatabase()
         for suffix in ["", "-wal", "-shm"] {
             try? FileManager.default.removeItem(atPath: dbURL.path + suffix)
@@ -305,7 +278,6 @@ final class ClipboardStore {
         if !openDatabase() { closeDatabase() }
     }
 
-    /// Every accessor is statement-guarded, so a closed store answers as an empty history.
     func close() {
         setTextSearchEnabled(false)
         extractionGeneration = UUID()
@@ -313,7 +285,6 @@ final class ClipboardStore {
         items = []
     }
 
-    /// Application Support, not Caches: a history the OS may reclaim is not a history.
     private static var defaultDirectory: URL {
         let bundleID = Bundle.main.bundleIdentifier ?? "com.nanocast.app"
         return FileManager.default
@@ -321,7 +292,6 @@ final class ClipboardStore {
             .appendingPathComponent(bundleID, isDirectory: true)
     }
 
-    // Isolated so teardown may touch the main-actor pointers; the release is already on main.
     isolated deinit {
         textSearchTask?.cancel()
         closeDatabase()
@@ -340,7 +310,6 @@ final class ClipboardStore {
         sqlite3_clear_bindings(stmt)
         items = loaded
         ImageDerivative.removeOrphans(in: imagesDir)
-        // Age passes while the app isn't running; insert-time pruning alone can't catch that.
         enforceLimits()
     }
 
@@ -348,7 +317,6 @@ final class ClipboardStore {
         prune()
     }
 
-    /// The floor rowid `loadStmt` reads from; 0 means no floor, so load everything.
     private func windowFloor() -> sqlite3_int64 {
         guard let stmt = windowFloorStmt else { return 0 }
         defer {
@@ -364,9 +332,7 @@ final class ClipboardStore {
         insert(ClipboardItem(text: text, sourceBundleID: sourceBundleID))
     }
 
-    /// One row per file. Batched, so a multi-file copy prunes once rather than once per file.
     func addFiles(_ paths: [String], sourceBundleID: String?) {
-        // Only a single file can be a ⌘C repeat, which is the case `addText` also guards.
         if paths.count == 1, items.first?.kind == .file, items.first?.text == paths[0] { return }
         for path in paths {
             let item = ClipboardItem(filePath: path, sourceBundleID: sourceBundleID)
@@ -380,17 +346,14 @@ final class ClipboardStore {
     func addImage(_ data: Data, sourceBundleID: String?) {
         let url = imagesDir.appendingPathComponent(UUID().uuidString + ".png")
         let item = ClipboardItem(imagePath: url.path, sourceBundleID: sourceBundleID)
-        // The blob write is multi-MB I/O; only the row insert returns to the main actor.
         Task.detached(priority: .utility) { [weak self] in
             guard (try? data.write(to: url, options: .atomic)) != nil else { return }
             await self?.insert(item)
         }
     }
 
-    /// Bulk-insert from an import: original timestamps, external image paths, deduped.
     @discardableResult
     func importEntries(_ entries: [ClipboardItem]) -> Int {
-        // Oldest first so newest ends up with the highest rowid (load orders by rowid DESC).
         let inserted = Self.importStoredItems(
             inDatabaseAt: dbURL, entries.sorted { $0.createdAt < $1.createdAt })
         load()
@@ -398,7 +361,6 @@ final class ClipboardStore {
     }
 
     func promote(_ item: ClipboardItem) {
-        // A pinned row holds its place, so re-recencying it would rewrite for no change.
         guard !item.isPinned, items.first?.id != item.id else { return }
         reinsert(item.with(createdAt: Date(), pinnedAt: nil))
     }
@@ -445,11 +407,9 @@ final class ClipboardStore {
         deleteBlob(item)
     }
 
-    /// A pin is a deliberate keep, so it outlives the bulk clear; `remove` is the way to drop one.
     func clearAll() {
         invalidateSearch()
         extractionGeneration = UUID()
-        // RETURNING hands back the deleted blobs in the same pass, so no separate SELECT is needed.
         if db != nil,
             let stmt = prepare("DELETE FROM items WHERE pinned_at IS NULL RETURNING image_path")
         {
@@ -464,7 +424,6 @@ final class ClipboardStore {
                 }
             }
         }
-        // Every pinned row is resident however old, so the window stays whole without a reload.
         items = items.filter(\.isPinned)
     }
 
@@ -530,7 +489,6 @@ final class ClipboardStore {
         sqlite3_step(stmt)
     }
 
-    /// Selects the row rather than naming it, so an item deleted mid-recognition stays deleted.
     @discardableResult
     func setExtractedText(_ text: String, for item: ClipboardItem, generation: UUID) -> Bool {
         guard textSearchEnabled, generation == extractionGeneration,
@@ -570,34 +528,27 @@ final class ClipboardStore {
         return URL(filePath: path, directoryHint: .inferFromPath)
     }
 
-    /// Display order for `query` under `filter`: pinned entries first, each block newest-first.
     func search(_ query: String, filter: ClipboardFilter) -> [ClipboardItem] {
-        // Load-bearing: a settled OCR query changes the answer without `items` changing.
         _ = searchRevision
         let q = query.trimmingCharacters(in: .whitespaces)
         updateTextSearch(q, filter: filter)
-        // The filter joins the key: `rows` rebuilds per render, so a query-only memo goes stale.
         if let searchCache, searchCache.query == q, searchCache.filter == filter {
             return searchCache.result
         }
-        // Filtering after the split leaves a matching pin in the Pinned section, in pin order.
         let result = filter.apply(to: unfiltered(q, filter: filter))
         searchCache = (q, filter, result)
         return result
     }
 
-    /// Row index of `item` as currently listed, so the palette can follow a row that moved.
     func rowIndex(of item: ClipboardItem, in query: String, filter: ClipboardFilter) -> Int? {
         search(query, filter: filter).firstIndex { $0.id == item.id }
     }
 
-    /// The Nth visible pinned entry under `query` and `filter`, where 0 is the first pinned row.
     func pinnedItem(at index: Int, in query: String, filter: ClipboardFilter) -> ClipboardItem? {
         guard index >= 0 else { return nil }
         return search(query, filter: filter).prefix(while: \.isPinned).dropFirst(index).first
     }
 
-    /// Where a reset lands: past the pins to the newest clip, or on the first match once typed.
     func landingIndex(in query: String, filter: ClipboardFilter) -> Int {
         guard query.trimmingCharacters(in: .whitespaces).isEmpty else { return 0 }
         return search(query, filter: filter).firstIndex { !$0.isPinned } ?? 0
@@ -605,7 +556,6 @@ final class ClipboardStore {
 
     private func unfiltered(_ q: String, filter: ClipboardFilter) -> [ClipboardItem] {
         guard !q.isEmpty else { return orderedItems }
-        // Pins are matched in memory: all resident, and the LIMIT would otherwise drop one.
         let ordinary = pinnedItems.filter { $0.matches(q) } + runSearch(q).filter { !$0.isPinned }
         guard !textSearchMatches.isEmpty else { return ordinary }
         let ordinaryIDs = Set(ordinary.map(\.id))
@@ -613,7 +563,6 @@ final class ClipboardStore {
         let pins = (ordinary + additional).filter(\.isPinned)
             .sorted { ($0.pinnedAt ?? .distantFuture) < ($1.pinnedAt ?? .distantFuture) }
         let unpinned = ordinary.filter { !$0.isPinned }
-        // OCR-only rows fill what is left of the budget the FTS `LIMIT` gives ordinary ones.
         let remaining = max(0, Self.searchLimit - filter.apply(to: unpinned).count)
         // `Array(…)` spelled out: left open, `prefix` resolves as `Sequence` and the chain fails.
         let extra = Array(filter.apply(to: additional.filter { !$0.isPinned }).prefix(remaining))
@@ -621,7 +570,6 @@ final class ClipboardStore {
     }
 
     private func runSearch(_ q: String) -> [ClipboardItem] {
-        // Trigram FTS needs ≥3 characters; shorter queries filter the in-memory window.
         guard let stmt = searchStmt, q.count >= 3 else { return fallbackSearch(q) }
         let match = "\"" + q.replacingOccurrences(of: "\"", with: "\"\"") + "\""
         sqlite3_bind_text(stmt, 1, match, -1, SQLITE_TRANSIENT)
@@ -758,8 +706,6 @@ final class ClipboardStore {
         return Task.isCancelled ? [] : matches
     }
 
-    // MARK: - Private
-
     private func fallbackSearch(_ q: String) -> [ClipboardItem] {
         items.filter { $0.matches(q) }
     }
@@ -767,19 +713,16 @@ final class ClipboardStore {
     private var orderedItems: [ClipboardItem] {
         if let orderedCache { return orderedCache }
         let pinned = pinnedItems
-        // An unpinned history renders `items` as-is, so it never pays for the split.
         let result = pinned.isEmpty ? items : pinned + items.filter { !$0.isPinned }
         orderedCache = result
         return result
     }
 
-    /// The Pinned section in pin order, so a new pin joins the end rather than the head.
     private var pinnedItems: [ClipboardItem] {
         items.filter(\.isPinned)
             .sorted { ($0.pinnedAt ?? .distantFuture) < ($1.pinnedAt ?? .distantFuture) }
     }
 
-    /// The row keeps its place and gains a stamp, which heads the Pinned section.
     private func pin(_ item: ClipboardItem) {
         let stamp = Date()
         let current = items.first { $0.id == item.id } ?? item
@@ -794,18 +737,15 @@ final class ClipboardStore {
         if let index = items.firstIndex(where: { $0.id == item.id }) {
             items[index] = pinned
         } else {
-            // Pinned from an FTS hit outside the window, so splice it in by recency.
             let index = items.firstIndex { $0.createdAt < pinned.createdAt } ?? items.count
             items.insert(pinned, at: index)
         }
     }
 
-    /// Unpinning rejoins as the newest entry. See docs/features/clipboard.md#pinned-entries.
     private func unpin(_ item: ClipboardItem) {
         reinsert(item.with(createdAt: Date(), pinnedAt: nil))
     }
 
-    /// Rewrites the row under the same id so it leads; a delete would take its derived text too.
     private func reinsert(_ updated: ClipboardItem) {
         if let stmt = prepare(
             """
@@ -823,13 +763,11 @@ final class ClipboardStore {
             sqlite3_step(stmt)
             sqlite3_finalize(stmt)
         }
-        // Array ops also cover items surfaced by FTS from beyond the in-memory window.
         items.removeAll { $0.id == updated.id }
         items.insert(updated, at: 0)
         trimWindow()
     }
 
-    /// Cap the in-memory window, but never drop a pinned row: those render however old they are.
     private func trimWindow() {
         guard items.count > Self.memoryWindow, let index = items.lastIndex(where: { !$0.isPinned })
         else { return }
@@ -872,7 +810,6 @@ final class ClipboardStore {
         sqlite3_clear_bindings(stmt)
     }
 
-    /// Whether a path is inside our images directory; only those are ours to delete.
     private func owns(_ path: String) -> Bool {
         path.hasPrefix(imagesDir.path + "/")
     }
@@ -884,7 +821,6 @@ final class ClipboardStore {
             sqlite3_bind_double(imagesStmt, 1, cutoff.timeIntervalSince1970)
             var staleOwnedPaths: [String] = []
             while sqlite3_step(imagesStmt) == SQLITE_ROW {
-                // Only delete files we own; an external reference just loses its row.
                 if let path = Self.columnString(imagesStmt, 0), owns(path) {
                     staleOwnedPaths.append(path)
                 }
@@ -899,14 +835,12 @@ final class ClipboardStore {
             }
             sqlite3_reset(deleteStmt)
             sqlite3_clear_bindings(deleteStmt)
-            // A retention cut can strand hundreds of files, so delete them off the main actor.
             if !staleOwnedPaths.isEmpty {
                 Task.detached(priority: .utility) {
                     for path in staleOwnedPaths { Self.removeBlob(atPath: path) }
                 }
             }
         }
-        // Against the oldest unpinned row: an exempt pin would make this permanently true.
         if items.last(where: { !$0.isPinned }).map({ $0.createdAt < cutoff }) == true {
             items.removeAll { $0.createdAt < cutoff && !$0.isPinned }
         }
@@ -932,7 +866,6 @@ final class ClipboardStore {
             sqlite3_exec(db, Self.schema, nil, nil, nil) == SQLITE_OK
         else { return false }
         insertStmt = prepare(Self.insertSQL)
-        // Two indexed branches, deliberately not one OR. See docs/features/clipboard.md#store.
         loadStmt = prepare(
             """
             SELECT id, kind, text, image_path, created_at, source_app, pinned_at FROM (
@@ -952,7 +885,6 @@ final class ClipboardStore {
             ) f JOIN items i ON i.rowid = f.rowid ORDER BY f.rowid DESC
             """)
         deleteByIDStmt = prepare("DELETE FROM items WHERE id = ?")
-        // Only ever sets a stamp: unpinning rewrites the whole row so it leads the history again.
         pinStmt = prepare("UPDATE items SET pinned_at = ? WHERE id = ?")
         staleImagesStmt = prepare(
             """
@@ -988,7 +920,6 @@ final class ClipboardStore {
         db = nil
     }
 
-    /// A staged blob moves into `imagesDirectory`, making `owns` true so retention reclaims it.
     nonisolated static func importStoredItems(
         inDatabaseAt url: URL, adoptingImagesInto imagesDirectory: URL? = nil,
         _ items: some Sequence<ClipboardItem>
@@ -1002,7 +933,6 @@ final class ClipboardStore {
             return 0
         }
         defer { sqlite3_close_v2(db) }
-        // A capture from the poller can hold the write lock; without this the import truncates.
         sqlite3_busy_timeout(db, 5_000)
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, insertSQL, -1, &stmt, nil) == SQLITE_OK, let stmt else {
@@ -1010,7 +940,6 @@ final class ClipboardStore {
         }
         defer { sqlite3_finalize(stmt) }
         var inserted = 0
-        // One transaction for the batch: ~1 WAL commit rather than one per row.
         sqlite3_exec(db, "BEGIN", nil, nil, nil)
         for staged in items {
             let item = adoptionTarget(staged, in: imagesDirectory)
@@ -1027,16 +956,13 @@ final class ClipboardStore {
         return inserted
     }
 
-    /// Hashed, never held: a whole history's text must not sit in memory to dedupe an import.
     nonisolated private static func importKey(_ item: ClipboardItem) -> Int {
         var hasher = Hasher()
         hasher.combine(item.kind)
-        // Keyed off `text` for everything but an image, or every file entry hashes alike.
         hasher.combine(item.kind == .image ? item.imagePath : item.text)
         return hasher.finalize()
     }
 
-    /// Keeps the staged name, so a backup imported twice dedupes rather than copying every image.
     nonisolated private static func adoptionTarget(
         _ item: ClipboardItem, in directory: URL?
     ) -> ClipboardItem {
@@ -1048,7 +974,6 @@ final class ClipboardStore {
             sourceBundleID: item.sourceBundleID, pinnedAt: item.pinnedAt)
     }
 
-    /// false leaves the row out, so none ever points into a staging tree about to be discarded.
     nonisolated private static func moveBlob(from source: String?, to destination: String?) -> Bool {
         guard let source, let destination else { return false }
         let from = URL(fileURLWithPath: source)

@@ -12,7 +12,6 @@ final class UninstallCoordinator {
     private let visibility: VisibilityStore
     private let ranking: LauncherRankingStore
     private let aliases: AliasStore
-    /// Dialog and message-HUD presentation only — never for state this type owns.
     private unowned let core: AppCore
 
     init(
@@ -41,10 +40,8 @@ final class UninstallCoordinator {
         self.core = core
     }
 
-    /// The palette is already up, so this swaps the sub-screen rather than re-showing it.
     func beginUninstall(_ app: AppEntry) {
         guard app.kind == .application else { return }
-        // What stops a name or a shared bundle-ID namespace being misattributed.
         let others = appIndex.apps.filter { $0.kind == .application && $0.id != app.id }
         session.begin(
             app: app, otherAppNames: others.map(\.name),
@@ -52,7 +49,6 @@ final class UninstallCoordinator {
         paletteCoordinator.navigate(to: .uninstall)
     }
 
-    /// The one funnel for the screen's ↵ and Actions row, so neither skips the confirmation.
     func performUninstall() {
         guard let app = session.app, let plan = session.plan, session.canConfirm else { return }
         let items = session.selectedCandidates
@@ -60,16 +56,15 @@ final class UninstallCoordinator {
         Task {
             let running = plan.isTargetRunning || runningApps.isRunning(app)
             let size = MeasuredSize(bytes: items.reduce(0) { $0 + ($1.size?.bytes ?? 0) }).formatted
-            var message = String(
-                localized: """
-                    \(items.count) items (\(size)) will be moved to the Trash, where you can put them \
-                    back.
-                    """)
-            if running { message += " " + String(localized: "\(app.name) will quit first.") }
+            var message =
+                items.count == 1
+                ? "1 item (\(size)) will be moved to the Trash, where you can put it back."
+                : "\(items.count) items (\(size)) will be moved to the Trash, where you can put them back."
+            if running { message += " " + "\(app.name) will quit first." }
             guard
                 await core.confirm(
-                    title: String(localized: "Uninstall “\(app.name)”?"), message: message,
-                    symbol: "trash", confirmTitle: String(localized: "Move to Trash"))
+                    title: "Uninstall “\(app.name)”?", message: message,
+                    symbol: "trash", confirmTitle: "Move to Trash")
             else { return }
 
             session.setTrashing(true)
@@ -79,8 +74,8 @@ final class UninstallCoordinator {
             {
                 session.setTrashing(false)
                 await core.showNotice(
-                    title: String(localized: "Nothing Was Moved"),
-                    message: String(localized: "\(app.name) didn’t quit. Quit it, then try again."),
+                    title: "Nothing Was Moved",
+                    message: "\(app.name) didn’t quit. Quit it, then try again.",
                     symbol: "trash", tone: .danger)
                 return
             }
@@ -96,10 +91,9 @@ final class UninstallCoordinator {
         }
     }
 
-    /// Stays on the screen: losing a whole scan to copy one path is a poor trade.
     func copyUninstallPath(_ candidate: UninstallCandidate) {
         Paster.copyPlainText(candidate.path)
-        core.showMessage(String(localized: "Copied path"))
+        core.showMessage("Copied path")
     }
 
     func showUninstallItemInFinder(_ candidate: UninstallCandidate) {
@@ -112,12 +106,11 @@ final class UninstallCoordinator {
         Task {
             guard await !AppLauncher.showInfoInFinder(candidate.url) else { return }
             await core.showNotice(
-                title: String(localized: "Couldn’t Open Get Info"),
-                message: String(
-                    localized: """
-                        Allow Nanocast to control Finder in System Settings › Privacy & Security \
-                        › Automation, then try again.
-                        """),
+                title: "Couldn’t Open Get Info",
+                message: """
+                    Allow Nanocast to control Finder in System Settings › Privacy & Security \
+                    › Automation, then try again.
+                    """,
                 symbol: "info.circle", tone: .danger)
         }
     }
@@ -137,16 +130,17 @@ final class UninstallCoordinator {
         guard report.hasFailures else {
             guard report.trashedCount > 0 else { return }
             let freed = MeasuredSize(bytes: report.freedBytes).formatted
-            core.showMessage(String(localized: "Moved \(report.trashedCount) items to the Trash · \(freed)"))
+            let moved = report.trashedCount == 1 ? "1 item" : "\(report.trashedCount) items"
+            core.showMessage("Moved \(moved) to the Trash · \(freed)")
             return
         }
         let listed = report.failed.prefix(5).map { "\($0.name) — \($0.reason)" }
         let remaining = report.failed.count - listed.count
         await core.showNotice(
             title: report.trashedCount > 0
-                ? String(localized: "Some Items Weren’t Moved") : String(localized: "Nothing Was Moved"),
+                ? "Some Items Weren’t Moved" : "Nothing Was Moved",
             message: listed.joined(separator: "\n")
-                + (remaining > 0 ? "\n" + String(localized: "and \(remaining) more.") : ""),
+                + (remaining > 0 ? "\n" + "and \(remaining) more." : ""),
             symbol: "trash", tone: .danger)
     }
 }

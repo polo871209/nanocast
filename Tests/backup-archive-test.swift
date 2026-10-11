@@ -2,7 +2,6 @@ import AppleArchive
 import Foundation
 import System
 
-/// Compiles the shipped bundle and archive layer, so a `.nanocast` can't quietly change shape.
 @main
 @MainActor
 struct BackupArchiveTest {
@@ -17,7 +16,6 @@ struct BackupArchiveTest {
         }
     }
 
-    /// UUID-suffixed, per docs/testing.md: harnesses run in parallel against the real system.
     static func scratch() -> URL {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("backup-archive-test-\(UUID().uuidString)")
@@ -43,20 +41,17 @@ struct BackupArchiveTest {
         exit(failures == 0 ? 0 : 1)
     }
 
-    // MARK: - Round trip
-
     static func roundTrip(in root: URL) {
         let source = root.appendingPathComponent("seal")
         let bundle = BackupBundle(root: source)
         try? bundle.prepare(BackupCategory.all)
 
-        // A binary blob, so a wrong keyset or a text-only path shows up as corruption.
         let png = Data((0..<200_000).map { UInt8($0 % 251) })
         try? bundle.write(png, to: bundle.clipboardImagesDirectory.appendingPathComponent("a.png"))
         _ = try? bundle.writeDocument(
             title: "Café — notes/with:separators", extension: "md", contents: "héllo\nwörld",
             in: bundle.notesDirectory)
-        try? bundle.write(Data(), to: bundle.snippetsDirectory.appendingPathComponent("empty.md"))
+        try? bundle.write(Data(), to: bundle.notesDirectory.appendingPathComponent("empty.txt"))
         let manifest = BackupManifest(
             appVersion: "1.2.3", createdAt: Date(timeIntervalSince1970: 1_700_000_000),
             counts: ["clipboard": 1, "notes": 1])
@@ -86,23 +81,20 @@ struct BackupArchiveTest {
         check(
             "a zero-byte file survives",
             reopened.documents(
-                in: reopened.snippetsDirectory, extension: "md"
+                in: reopened.notesDirectory, extension: "txt"
             ).first?.contents == "")
         let decoded = try? reopened.readManifest()
         check("the manifest round trips", decoded == manifest)
         check("an absent category reads as absent", decoded?.categories == [.clipboard, .notes])
         check("a present category keeps its count", decoded?.count(.clipboard) == 1)
-        check("an absent category counts zero", decoded?.count(.snippets) == 0)
+        check("an absent category counts zero", decoded?.count(.learning) == 0)
 
-        // Ownership must not travel: the extract belongs to whoever opened it.
         let attributes = try? FileManager.default.attributesOfItem(
             atPath: reopened.clipboardImagesDirectory.appendingPathComponent("a.png").path)
         check(
             "the extracted file is owned by the current user",
             (attributes?[.ownerAccountID] as? NSNumber)?.uint32Value == getuid())
     }
-
-    // MARK: - Clipboard
 
     static func clipboardLines(in root: URL) {
         let bundle = BackupBundle(root: root.appendingPathComponent("clips"))
@@ -126,14 +118,12 @@ struct BackupArchiveTest {
 
         check("every clip round trips through JSONL", Array(bundle.clipboardItems()) == items)
 
-        // The invariant the line splitting rests on: a newline in a clip is escaped, never raw.
         let raw = (try? Data(contentsOf: bundle.clipboardItemsURL)) ?? Data()
         check(
             "one line per clip, whatever the clip contains",
             raw.split(separator: 0x0A, omittingEmptySubsequences: true).count == items.count)
     }
 
-    /// The analogue of settings-backup-test's `snippetsEnabled` check: this file leaves the Mac.
     static func noAbsolutePathsEscape(in root: URL) {
         let bundle = BackupBundle(root: root.appendingPathComponent("paths"))
         try? bundle.prepare([.clipboard])
@@ -146,8 +136,6 @@ struct BackupArchiveTest {
         check("no home directory leaks into the file", !text.contains("/Users"))
         check("no image path leaks into the file", !text.contains("/Library"))
     }
-
-    // MARK: - Guards
 
     static func formatGuard(in root: URL) {
         for offset in [-1, 1] {
@@ -191,9 +179,7 @@ struct BackupArchiveTest {
         }
     }
 
-    /// A hostile archive must not write outside the directory the caller chose.
     static func refusesTraversal(in root: URL) {
-        // Header-by-header: `writeDirectoryContents` refuses to emit the `..` path we need here.
         let archive = root.appendingPathComponent("evil.nanocast")
         let payload = Data("escaped".utf8)
         guard
@@ -238,7 +224,6 @@ struct BackupArchiveTest {
             !FileManager.default.fileExists(atPath: escaped.path))
     }
 
-    /// A link entry names no `..` at all, and reading through it would leave the extract.
     static func refusesSymbolicLinks(in root: URL) {
         let archive = root.appendingPathComponent("linked.nanocast")
         guard
@@ -254,7 +239,6 @@ struct BackupArchiveTest {
         do {
             try ArchiveStream.withEncodeStream(writingTo: compressor) { encoder in
                 let header = ArchiveHeader()
-                // 76 is `L`; the Swift overlay names no symbolic-link case to spell it with.
                 header.append(.uint(key: ArchiveHeader.FieldKey("TYP"), value: 76))
                 header.append(.string(key: ArchiveHeader.FieldKey("PAT"), value: "notes"))
                 header.append(
@@ -280,9 +264,6 @@ struct BackupArchiveTest {
         }
     }
 
-    // MARK: - Declarations
-
-    /// The tripwire for adding a case and forgetting the layout or the picker.
     static func categoriesAreComplete() {
         var subpaths: Set<String> = []
         for category in BackupCategory.allCases {

@@ -1,21 +1,13 @@
 import Foundation
 
-/// A note's title is its filename; one the user has not named yet borrows its first line to show.
 enum NoteTitle {
     static let untitled = "Untitled"
 
-    static func displayName(_ title: String) -> String {
-        guard isUnnamed(title) else { return title }
-        return String(localized: "Untitled") + title.dropFirst(untitled.count)
-    }
-
-    /// Wide enough that the scanned prefix is covered even where every character is four bytes.
     static let headByteCount = 4096
 
     private static let scanLimit = 1024
     private static let displayLimit = 120
 
-    /// True only for the names `create` claims — `Untitled`, `Untitled 2`, … — never a typed one.
     static func isUnnamed(_ title: String) -> Bool {
         guard title.hasPrefix(untitled) else { return false }
         let suffix = title.dropFirst(untitled.count)
@@ -25,7 +17,6 @@ enum NoteTitle {
             && digits.allSatisfy { $0.isASCII && $0.isNumber }
     }
 
-    /// The first line carrying visible text, without its Markdown markers and capped to one row.
     static func firstLine(of source: String) -> String? {
         let head = String(source.prefix(scanLimit))
         let text = head as NSString
@@ -38,7 +29,6 @@ enum NoteTitle {
         return nil
     }
 
-    /// A line as it reads when rendered, with the setting on or off: syntax never titles a note.
     private static func visibleText(
         of line: NoteMarkdown.Line, in markdown: NoteMarkdown, text: NSString
     ) -> String {

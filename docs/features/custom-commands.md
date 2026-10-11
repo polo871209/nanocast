@@ -159,8 +159,8 @@ own cap, and what keeps the fields on screen. `CustomCommandArgument.sanitized` 
 path in, so a stored or imported command carrying more keeps its first three and drops the rest, the
 way Raycast ignores an `argument4`. The editor's **Add** stops at three.
 
-They are filled **inline beside the search field** when the command's row is selected in root search,
-as a quicklink's are (see [palette.md](palette.md#inline-row-arguments)).
+They are filled **inline beside the search field** when the command's row is selected in root search
+(see [palette.md](palette.md#inline-row-arguments)).
 `CustomCommandArgumentsAccessory` builds the strip; Tab walks into it, and ↵ with a required field
 still empty focuses that field instead of running — Raycast's rule. An optional field left empty is
 never marked as owed.
@@ -229,8 +229,7 @@ The log is an `NSTextView` and only the undrawn tail is appended; a quarter-mega
 re-laid-out per line is seconds of work. The run publishes each append as an explicit `delta` and
 `revision`, so the view adds just that when it is exactly one step behind and redraws from the whole
 log otherwise — a new run, a trim, or a window reopened onto a finished one. Past 256 KiB the head is dropped. Following the tail stops
-when the reader scrolls up and resumes when they reach the bottom, the same band the chat transcript
-uses.
+when the reader scrolls up and resumes when they reach the bottom.
 
 **The window replaces the failure dialog rather than joining it**, so a run is never reported twice;
 the success pill is skipped for the same reason.
@@ -242,15 +241,6 @@ the success pill is skipped for the same reason.
 - **Stop is the one exception** to "Nanocast never kills a running command". Only the button does it;
   a second command superseding the window never touches the first.
 - Escape closes the window without stopping its command.
-
-#### The ad-hoc run
-
-The launcher's **Run Shell Command** fallback (see [launcher.md](launcher.md#fallbacks)) is a
-`CustomCommand` that is built, run and thrown away — same `streamOutput`, same window, same Stop
-button. It is not gated on `customCommandsEnabled`: that switch governs a library of saved commands,
-not a line someone types on purpose, and the fallback's own checkbox is its switch. Because it has no
-library entry, `rerunOutput` checks `lastShellCommand` before falling through to `runCustomCommand`,
-or the window's Rerun would look up an id the store has never held and do nothing.
 
 ### Run In
 

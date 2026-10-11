@@ -17,7 +17,7 @@ struct CompactBarTests {
     static func main() throws {
         let defaults = CommandID.defaultCompactBarCommands
         check(
-            defaults == [.clipboardHistory, .searchFiles, .searchSnippets, .searchQuicklinks],
+            defaults == [.clipboardHistory, .searchFiles, .searchEmoji, .showNotes],
             "the existing four commands remain the default")
         check(CommandID.compactBarOptions.count == 8, "eight supported destinations")
         for count in 0...CommandID.compactBarLimit {
@@ -40,12 +40,12 @@ struct CompactBarTests {
         check(selection.command == .searchFiles, "reordering preserves the selected command")
         selection.reconcile(commands: [.clipboardHistory])
         check(selection.command == nil, "removing or disabling the selected command returns to Search")
-        selection.command = .showNotes
+        selection.command = .searchNotes
         selection.move(by: 1, commands: defaults)
         check(selection.command == defaults.first, "an obsolete selection starts from Search")
 
         check(CommandID.compactBarCommands(from: []) == [], "empty means no shortcuts")
-        let chosen: [CommandID] = [.quickAI, .searchEmoji, .mySchedule, .showNotes]
+        let chosen: [CommandID] = [.searchMenuItems, .searchEmoji, .calculatorHistory, .showNotes]
         check(
             CommandID.compactBarCommands(from: chosen.map(\.rawValue)) == chosen,
             "all additional destinations retain their order")
@@ -89,7 +89,7 @@ struct CompactBarTests {
             "settings JSON round trip retains identifiers")
         for invalid: SettingsFileJSON in [
             .array([.string("unknown")]), .array([.string(CommandID.quit.rawValue)]),
-            .array([.string(CommandID.quickAI.rawValue), .string(CommandID.quickAI.rawValue)]),
+            .array([.string(CommandID.searchNotes.rawValue), .string(CommandID.searchNotes.rawValue)]),
             Array(CommandID.compactBarOptions.prefix(5)).settingsJSON, .bool(false)
         ] {
             check(

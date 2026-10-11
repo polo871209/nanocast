@@ -1,7 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// Local monitors for the one active recording. See docs/features/hotkeys.md#recorder.
 @MainActor
 @Observable
 final class ShortcutCaptureSession {
@@ -30,7 +29,6 @@ final class ShortcutCaptureSession {
     @ObservationIgnored private var conflictReset: Task<Void, Never>?
     @ObservationIgnored private var modifierCommit: Task<Void, Never>?
     @ObservationIgnored private weak var activeRecorderView: NSView?
-    /// The same recognizer the global monitor uses, so recording needs no tap and no grant.
     @ObservationIgnored private var detector = ModifierKeyDetector()
 
     func start(action: HotKeyAction, hotKeys: HotKeyManager) {
@@ -53,7 +51,7 @@ final class ShortcutCaptureSession {
                         keyCode: keyCode, flags: flags, action: action,
                         hotKeys: hotKeys)
                 }
-                return nil  // always consume: no beeps, no leaking keys to the window
+                return nil
             })
         {
             monitors.append(monitor)
@@ -92,7 +90,6 @@ final class ShortcutCaptureSession {
             monitors.append(monitor)
         }
 
-        // A click ends the recording then travels on, so one click can move to another row.
         if let monitor = NSEvent.addLocalMonitorForEvents(
             matching: [.leftMouseDown, .rightMouseDown],
             handler: { @MainActor [weak self, weak hotKeys] event in
@@ -148,7 +145,6 @@ final class ShortcutCaptureSession {
         keyCode: Int, flags: NSEvent.ModifierFlags,
         action: HotKeyAction, hotKeys: HotKeyManager
     ) {
-        // A key press makes any modifier held at the moment part of a combo, not a tap.
         detector.cancel()
         cancelModifierCommit()
         if isHyperKey(keyCode) {
@@ -170,7 +166,6 @@ final class ShortcutCaptureSession {
             hotKeys.recordingAction = nil
             return
         }
-        // Not a bindable combo (e.g. a bare letter): swallow it and keep recording.
         guard let shortcut = KeyShortcut(keyCode: keyCode, modifierFlags: flags) else { return }
         commit(.combo(shortcut), action: action, hotKeys: hotKeys)
     }

@@ -1,10 +1,8 @@
 import AppKit
 
 extension ClipDragPayload {
-    /// The row tile is already cached at this size, so the preview costs no decode.
     private static let previewPixel: CGFloat = 64
 
-    /// A link writes two types from one item, so the receiver takes whichever it reads.
     var dragItem: RowDragItem {
         switch self {
         case .file(let url):

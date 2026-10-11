@@ -1,7 +1,6 @@
 // Adapted from Rooms (MIT): https://github.com/saragordic/rooms/blob/main/LICENSE
 import SwiftUI
 
-/// One picker row: an open window, or an app that joins the room without one open.
 enum RoomPickerRow: Identifiable {
     case window(RoomLiveWindow)
     case app(RoomSession.App)
@@ -21,7 +20,6 @@ enum RoomPickerRow: Identifiable {
     }
 }
 
-/// Choose a room's members: the field filters, ↵ adds or removes one, ⌘↵ saves and walks in.
 struct RoomPickerScreen: PaletteScreen {
     let coordinator: RoomCoordinator
     let session: RoomSession
@@ -29,13 +27,13 @@ struct RoomPickerScreen: PaletteScreen {
 
     var rows: [RoomPickerRow] { coordinator.pickerRows(for: vm.query) }
 
-    var primaryActionTitle: String {
+    private var primaryActionTitle: String {
         let rows = rows
         let name = session.roomName
-        let add = String(localized: "Add to “\(name)”")
+        let add = "Add to “\(name)”"
         guard rows.indices.contains(vm.selection) else { return add }
         return session.picked.contains(rows[vm.selection].pick)
-            ? String(localized: "Remove from “\(name)”") : add
+            ? "Remove from “\(name)”" : add
     }
 
     func activate(at selection: Int) {
@@ -49,7 +47,6 @@ struct RoomPickerScreen: PaletteScreen {
         return true
     }
 
-    /// ⇥ would otherwise leave for the launcher and drop everything picked so far.
     func tab(at selection: Int, backwards: Bool) -> Bool { true }
 
     func actions(at selection: Int) -> PopoverMenuContent? {
@@ -62,7 +59,7 @@ struct RoomPickerScreen: PaletteScreen {
                     activate(at: selection)
                 },
                 PopoverMenuItem(
-                    title: String(localized: "Save Room"), systemImage: Room.sfSymbol, shortcut: "⌘↵"
+                    title: "Save Room", systemImage: Room.sfSymbol, shortcut: "⌘↵"
                 ) {
                     coordinator.savePicked()
                 }
@@ -86,9 +83,9 @@ struct RoomPickerScreen: PaletteScreen {
     }
 
     private var emptyText: String {
-        guard session.isLoaded else { return String(localized: "Reading windows…") }
+        guard session.isLoaded else { return "Reading windows…" }
         return vm.query.isEmpty
-            ? String(localized: "No open windows — type an app's name to add it")
-            : String(localized: "No windows or apps found")
+            ? "No open windows — type an app's name to add it"
+            : "No windows or apps found"
     }
 }

@@ -13,11 +13,8 @@ in `Features/Settings/` (`Model/`, `Service/`, `SettingsFileSchema.swift`), the 
   deleting it, or updating the app never loses a setting, so there is nothing to migrate.
 - **Off by default, and only the pane turns it on.** `settingsFileEnabled` has no key in the file and is
   excluded from backups: a file or an import must never switch on something that reads a file.
-- **A capability grant never has a key.** Snippets, Extensions, Calendar access, Auto Join, Camera
-  Preview, Quick Actions, MCP and clipboard text recognition are switched on only in the app, which
-  asks first. `settings-file-test` checks those paths stay absent.
-- **Removing a key ships a migration that strips it.** The import reports a key it no longer knows on
-  every launch, until a change made in the app rewrites the file. See [migrations.md](../migrations.md).
+- **A capability grant never has a key.** Dictation and clipboard text recognition are switched on
+  only in the app, which asks first. `settings-file-test` checks those paths stay absent.
 - **`SettingsFileSchema`'s switch is exhaustive.** A new `SettingsFileKey` case fails to build until it
   is bound to a property.
 - **A bad edit never costs a setting.** A key the file leaves out keeps its value; a value Nanocast
@@ -26,17 +23,15 @@ in `Features/Settings/` (`Model/`, `Service/`, `SettingsFileSchema.swift`), the 
   record's field left out or of the wrong type keeps its value, and `null` clears it.
 - **Applying the file never writes it.** Only a change made in the app rewrites the file, so hand
   formatting stays until then.
-- **Content and machine state never enter it.** Notes, snippets, custom commands, quicklinks, MCP
-  servers and AI connections stay where they are — the file can say which folder notes and snippets
-  live in, never what is in them — as do the palette's position, the extension toolchain,
-  the shortcuts and aliases of content, extensions and Apple Shortcuts, and what a room learns by
-  being entered.
+- **Content and machine state never enter it.** Notes and custom commands stay where they are — the
+  file can say which folder notes live in, never what is in them — as do the palette's position, the
+  shortcuts and aliases of content, and what a room learns by being entered.
 
 ## Layout
 
 `appearance.compactBarCommands` is an ordered array of zero to four unique command identifiers.
-For example, `["command:clipboard-history", "command:search-emoji", "command:ai-chat"]` shows
-Clipboard History, Emoji & Symbols and Quick AI in that order. Only the eight commands offered by
+For example, `["command:clipboard-history", "command:search-emoji", "command:show-notes"]` shows
+Clipboard History, Emoji & Symbols and Show Notes in that order. Only the eight commands offered by
 Compact Shortcuts are accepted; unknown, duplicate, unsupported or excess entries reject the whole
 value. `[]` removes every shortcut, and omitting the key leaves the current selection unchanged.
 
@@ -84,8 +79,7 @@ target, so a file linked from a dotfiles repository stays linked.
 - **Turning it off** stops both directions and leaves the file on disk.
 
 A side effect of a setting runs from an `AppCore` `track` sink, never from a pane's `.onChange`: the file
-can change a setting while no pane is open. Clipboard retention, AI retention and the extensions'
-launcher presence are the three that moved for this.
+can change a setting while no pane is open. Clipboard retention moved for this.
 
 ## The format
 
@@ -96,13 +90,11 @@ because the app rewrites the file.
 ```json
 {
   "general": {
-    "language": "en",
     "showInMenuBar": true,
     "automaticallyCheckForUpdates": true,
     "popToRootSeconds": 0,
     "escapeKeyBehavior": "navigateBackOrClose",
-    "autoSwitchInputSource": null,
-    "supportReminders": true
+    "autoSwitchInputSource": null
   },
   "clipboard": {
     "enabled": true,
@@ -121,22 +113,9 @@ Where a number has a special case, the case is a word:
 
 | Key | Values |
 | --- | --- |
-| `general.language` | `"en"`, `"de"`, `"es"`, `"fr"`, `"ja"`, `"ko"`, `"pt"`, `"ru"`, `"zh-Hans"` |
 | `clipboard.retentionDays` | 1, 7, 30, 90, 180, 365, `"forever"` |
-| `ai.retentionDays` | 7, 30, 90, `"forever"` |
-| `ai.newChatAfterMinutes` | 2, 5, 10, 30, `"never"` |
-| `ai.toolRounds` | 10, 25, 50, 100, `"unlimited"` |
-| `ai.opensTo` | `"recent"`, `"newConversation"` |
-| `calendar.launcherLimit` | 1, 3, 5, `"all"` |
-| `calendar.span` | `"today"`, `"todayAndTomorrow"`, `"nextSevenDays"` |
-| `calendar.menuBar` | `"disabled"`, `"meetingIcon"`, `"meetingTitle"` |
-| `calendar.menuBarUpcomingEvents` | `"today"`, or 2, 5, 10, 30 minutes before |
-| `calendar.hideCurrentEventAfterMinutes` | `"never"`, 0 (as it starts), 5, 10, 30 |
 | `windowManagement.gap` | 0 to 64 |
-| `snippets.folder`, `notes.folder` | an absolute or `~/` path, or `null` for Application Support |
-
-On first launch, `general.language` is set to the primary system language if supported, otherwise
-`"en"`. That explicit choice is saved; later system-language changes do not change it.
+| `notes.folder` | an absolute or `~/` path, or `null` for Application Support |
 
 ## Shortcut chords
 

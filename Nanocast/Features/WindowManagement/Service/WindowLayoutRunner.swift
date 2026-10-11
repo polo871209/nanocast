@@ -1,31 +1,23 @@
 import AppKit
 @preconcurrency import ApplicationServices
 
-/// Applies a layout in one pass: place what exists, open what doesn't, place that too.
 @MainActor
 enum WindowLayoutRunner {
-    /// Long enough for a cold app to draw, short enough a stuck one can't hold the run.
     private static let launchDeadline = Duration.seconds(10)
-    /// An AX round trip per pending app per tick, so this is deliberately not per-frame.
     private static let pollInterval = Duration.milliseconds(200)
 
     struct Outcome: Sendable {
         var placed = 0
         var opened = 0
         var skipped: [WindowLayoutPlan.Skipped] = []
-        /// Apps that opened but never produced a window before the deadline.
         var neverAppeared: [String] = []
-        /// Launch failures, already localised by `QuicklinkLauncher`.
         var openFailures: [String] = []
-        /// The grant is missing, which is the one failure the user must act on.
         var isBlockedOnPermission = false
 
         var didAnything: Bool { placed > 0 }
     }
 
-    /// The one entry point. `gap` is the preferred gap; the layout decides whether to use it.
     static func run(_ layout: WindowLayout, gap: CGFloat) async -> Outcome {
-        // An explicit user gesture, so prompting for the grant is appropriate here.
         guard Permissions.ensureAccessibility() else {
             return Outcome(isBlockedOnPermission: true)
         }
@@ -46,7 +38,6 @@ enum WindowLayoutRunner {
             await open(pending, outcome: &outcome)
             await placeOpened(pending, bound: &bound, outcome: &outcome)
         }
-        // Last, so no app this run opened can activate over the one the layout names.
         if !Task.isCancelled, let frontmost = plan.frontmostEntryID.flatMap({ bound[$0] }),
             !userSwitchedApps(since: startingApp, opening: pending)
         {
@@ -55,7 +46,6 @@ enum WindowLayoutRunner {
         return outcome
     }
 
-    /// A launch taking the front is expected; any other app there means the user moved on.
     private static func userSwitchedApps(
         since startingApp: pid_t?, opening placements: [WindowLayoutPlan.Placement]
     ) -> Bool {
@@ -65,7 +55,6 @@ enum WindowLayoutRunner {
         return !placements.contains { $0.bundleID == current.bundleIdentifier }
     }
 
-    /// Every window a layout could name, with the focused one marked to end a run frontmost.
     static func captureCurrentWindows() -> (entries: [WindowLayoutEntry], frontmostEntryID: UUID?) {
         guard Permissions.ensureAccessibility() else { return ([], nil) }
         let snapshot = WindowInventory.snapshot(positionableOnly: true)
@@ -87,7 +76,6 @@ enum WindowLayoutRunner {
         return (entries, frontmostEntryID)
     }
 
-    /// Nil when Nanocast itself is frontmost, as it is when capturing from Settings.
     private static func focusedWindowHandle(in snapshot: WindowInventory.Snapshot) -> Int? {
         guard let app = NSWorkspace.shared.frontmostApplication,
             let focused = AXWindowAccess.element(
@@ -100,9 +88,6 @@ enum WindowLayoutRunner {
         }?.key
     }
 
-    // MARK: - Placing
-
-    /// One suppress/restore per application, not per window: the flag is application-scoped.
     private static func placeExisting(
         _ plan: WindowLayoutPlan, snapshot: WindowInventory.Snapshot,
         bound: inout [UUID: WindowInventory.Element], outcome: inout Outcome
@@ -128,7 +113,6 @@ enum WindowLayoutRunner {
         _ placement: WindowLayoutPlan.Placement, on window: AXUIElement
     ) -> Bool {
         AXUIElementSetMessagingTimeout(window, AXWindowAccess.messagingTimeout)
-        // Checked before any write, so an unpositionable window is left untouched.
         guard AXWindowAccess.isSettable(kAXPositionAttribute, on: window),
             let current = AXWindowAccess.frame(of: window)
         else { return false }
@@ -137,8 +121,6 @@ enum WindowLayoutRunner {
             placement.frame, anchor: placement.anchor.placement, to: window, current: current,
             canResize: canResize, canvas: placement.canvas) != nil
     }
-
-    // MARK: - Opening
 
     private static func open(
         _ placements: [WindowLayoutPlan.Placement], outcome: inout Outcome
@@ -156,10 +138,13 @@ enum WindowLayoutRunner {
                 outcome.opened += 1
                 continue
             }
+            guard let target = argumentURL(argument) else {
+                outcome.openFailures.append(argument)
+                continue
+            }
             do {
-                // The same open a quicklink makes, so a path, a host and a deeplink all behave.
-                try await QuicklinkLauncher.open(
-                    argument, openWithBundleID: placement.bundleID, inNewWindow: false)
+                _ = try await NSWorkspace.shared.open(
+                    [target], withApplicationAt: url, configuration: NSWorkspace.OpenConfiguration())
                 outcome.opened += 1
             } catch {
                 outcome.openFailures.append(error.localizedDescription)
@@ -167,13 +152,20 @@ enum WindowLayoutRunner {
         }
     }
 
-    /// A bounded wait inside this gesture's own task: no timer, no observer, nothing left behind.
+    private static func argumentURL(_ argument: String) -> URL? {
+        switch LinkDestination.detect(argument) {
+        case .web(let url), .network(let url), .deeplink(let url): url
+        case .path(let path):
+            FileManager.default.fileExists(atPath: path) ? URL(fileURLWithPath: path) : nil
+        case nil: nil
+        }
+    }
+
     private static func placeOpened(
         _ placements: [WindowLayoutPlan.Placement],
         bound: inout [UUID: WindowInventory.Element], outcome: inout Outcome
     ) async {
         var pending = placements
-        // `ContinuousClock`, so a clock step or a sleep cannot shorten or extend the wait.
         let deadline = ContinuousClock.now + launchDeadline
         while !pending.isEmpty, ContinuousClock.now < deadline, !Task.isCancelled {
             try? await Task.sleep(for: pollInterval, tolerance: pollInterval)

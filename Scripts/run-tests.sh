@@ -1,16 +1,14 @@
 #!/bin/bash
-# The test suite: each harness compiles the shipped sources it guards. See docs/testing.md.
 
 set -uo pipefail
 
-# Absolute: the workers re-enter this script after the cd, where a relative $0 would not resolve.
 SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 cd "$(dirname "$0")/.." || exit 1
 
 BIN="${TMPDIR:-/tmp}/nanocast-harness"
+SWIFT_FLAGS=(-swift-version 6 -enable-upcoming-feature MemberImportVisibility)
 mkdir -p "$BIN"
 
-# `--exec` is the worker half: xargs re-enters here once per queued harness.
 if [ "${1:-}" = "--exec" ]; then
     shift
     name=$1 opt=$2
@@ -23,7 +21,7 @@ if [ "${1:-}" = "--exec" ]; then
         exit 0
     }
     TIMEFORMAT=%1R
-    if ! compiled=$( { time swiftc -swift-version 6 "$opt" "$@" "Tests/$name.swift" -o "$BIN/$name" > "$BIN/$name.log" 2>&1; } 2>&1 ); then
+    if ! compiled=$( { time swiftc "${SWIFT_FLAGS[@]}" "$opt" "$@" "Tests/$name.swift" -o "$BIN/$name" > "$BIN/$name.log" 2>&1; } 2>&1 ); then
         fail "did not compile"
     fi
     { time "$BIN/$name" > "$BIN/$name.log" 2>&1; } 2> "$BIN/$name.time" &
@@ -58,7 +56,6 @@ failed=()
 ran=0
 only="${1:-}"
 
-# `--index` feeds harness compile commands to .compile, as xcodebuild never compiles Tests/.
 emit_db=0
 DB="${TMPDIR:-/tmp}/nanocast-compile-db.json"
 if [ "$only" = "--index" ]; then
@@ -67,7 +64,6 @@ if [ "$only" = "--index" ]; then
     printf '[' > "$DB"
 fi
 
-# `slow` dispatches in the first wave; `index` only claims editor flags for a hand-run harness.
 run() {
     local opt=-Onone pri=1 index_only=0 queue="$QUEUE"
     while :; do
@@ -90,10 +86,9 @@ run() {
         local sources=()
         for source in "$@" "Tests/$name.swift"; do sources+=("$PWD/$source"); done
         [ "$ran" -gt 1 ] && printf ',' >> "$DB"
-        printf '{"directory":"%s","command":"swiftc -swift-version 6 -sdk %s' \
-            "$PWD" "$(xcrun --show-sdk-path --sdk macosx)" >> "$DB"
+        printf '{"directory":"%s","command":"swiftc %s -sdk %s' \
+            "$PWD" "${SWIFT_FLAGS[*]}" "$(xcrun --show-sdk-path --sdk macosx)" >> "$DB"
         printf ' %s' "${sources[@]}" >> "$DB"
-        # Only `Tests/` files: `.compile` is last-wins, so a shipped source keeps the app's command.
         local claimed=""
         for source in "${sources[@]}"; do
             case "$source" in *"/Tests/"*) claimed="$claimed${claimed:+,}\"$source\"";; esac
@@ -102,7 +97,6 @@ run() {
         return 0
     fi
 
-    # xargs splits the queue on whitespace, so no harness source path may contain a space.
     printf '%s %s %s %s\n' "$pri" "$name" "$opt" "$*" >> "$queue"
 }
 
@@ -110,6 +104,7 @@ L=Nanocast/Features/Launcher/Model
 run slow -O fuzz-test      $L/SearchRelevance.swift $L/ScriptRomanization.swift \
                            $L/LauncherMatch.swift $L/EntryNaming.swift $L/LauncherOrder.swift \
                            $L/LauncherRankingStore.swift $L/LauncherSuggestions.swift
+run link-destination-test  $L/LinkDestination.swift
 FS=Nanocast/Features/FileSearch
 FILE_INDEX="$FS/Service/FileIndex.swift $FS/Service/FileIndexSnapshot.swift $FS/Service/FileIndexCrawler.swift"
 run file-search-test       $FS/Model/*.swift
@@ -125,7 +120,7 @@ run ranking-test           $L/SearchRelevance.swift $L/ScriptRomanization.swift 
                            $L/LauncherMatch.swift $L/LauncherRankingStore.swift
 run scopes-test            $L/SearchScopes.swift
 run app-name-test          Nanocast/Platform/AppDisplayName.swift \
-                           Nanocast/Platform/BundleLocalization.swift \
+                           Nanocast/Platform/BundleEnglishName.swift \
                            $L/SearchRelevance.swift
 run favorites-test         $L/FavoriteSlots.swift
 run app-installation-test  $L/SearchRelevance.swift $L/ScriptRomanization.swift \
@@ -138,15 +133,14 @@ run app-installation-test  $L/SearchRelevance.swift $L/ScriptRomanization.swift 
                            Nanocast/Features/Launcher/Service/AliasStore.swift \
                            Nanocast/Features/Launcher/Service/VisibilityStore.swift \
                            Nanocast/Features/Launcher/Service/BundleNameCache.swift \
-                           Nanocast/Platform/AppDisplayName.swift Nanocast/Platform/BundleLocalization.swift \
-                           Nanocast/Platform/SystemLanguages.swift \
+                           Nanocast/Platform/AppDisplayName.swift Nanocast/Platform/BundleEnglishName.swift \
                            Nanocast/Platform/Images/FileIconStamp.swift Nanocast/Platform/Memo.swift \
-                           Nanocast/Platform/Signposts.swift Nanocast/Platform/NotificationToken.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Platform/Signposts.swift Nanocast/Platform/NotificationToken.swift
 run launcher-file-test     $L/LauncherFileFormat.swift \
                            Nanocast/Features/Settings/Model/SettingsFileJSON.swift
 run launcher-settings-file-test \
                            $L/LauncherFileFormat.swift $L/CommandID.swift $L/CommandCatalog.swift \
+                           $L/LinkDestination.swift \
                            Nanocast/Features/Launcher/Service/LauncherSettingsFile.swift \
                            Nanocast/Features/Launcher/Service/AliasStore.swift \
                            Nanocast/Features/Launcher/Service/VisibilityStore.swift \
@@ -162,18 +156,10 @@ run launcher-settings-file-test \
                            Nanocast/Features/HotKeys/Model/HyperKey.swift \
                            Nanocast/Features/HotKeys/Model/HIDKeyMapping.swift \
                            Nanocast/Platform/ASCIIKeyboardLayout.swift \
-                           Nanocast/Features/QuickActions/Model/BuiltInQuickAction.swift \
-                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
                            Nanocast/Features/SystemActions/Model/SystemAction.swift \
-                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Nanocast/Features/Snippets/Model/Snippet.swift \
-                           Nanocast/Platform/LocalizedResource.swift
-run apple-shortcut-test    Nanocast/Features/AppleShortcuts/Model/*.swift
+                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift
 run calc-test              Nanocast/Features/Calculator/Model/*.swift
 run index calc-performance Nanocast/Features/Calculator/Model/*.swift
-run calendar-test          Nanocast/Features/Calendar/Model/*.swift \
-                           Nanocast/Features/Calendar/UI/EventEditorSession.swift
 run clipboard-test         Nanocast/Features/Clipboard/Model/ClipboardStore.swift \
                            Nanocast/Platform/Images/ImageDerivative.swift \
                            Nanocast/Features/Clipboard/Model/ClipboardFilter.swift \
@@ -188,8 +174,7 @@ run clipboard-coordinator-test Nanocast/Features/Clipboard/UI/ClipboardCoordinat
                            Nanocast/Palette/HoverArming.swift \
                            Nanocast/Features/Emoji/Model/EmojiCatalog.swift \
                            Nanocast/Features/FileSearch/Model/FileSearchFilter.swift \
-                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/Launcher/Model/LinkDestination.swift \
                            Nanocast/Features/CustomCommands/Model/CustomCommand.swift
 run clipboard-thumbnail-test Nanocast/Features/Clipboard/Model/ClipboardStore.swift \
                            Nanocast/Platform/Images/ImageDerivative.swift \
@@ -201,8 +186,7 @@ run clipboard-thumbnail-test Nanocast/Features/Clipboard/Model/ClipboardStore.sw
                            Nanocast/Platform/ProcessExit.swift \
                            Nanocast/Platform/Images/ImageThumbnail.swift \
                            Nanocast/Platform/Images/ThumbnailCache.swift
-# `Q` is the URL detector a drag payload builds its link with, rather than a second one.
-Q=Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift
+Q=$L/LinkDestination.swift
 run clipboard-search-test  Nanocast/Features/Clipboard/Model/*.swift Nanocast/Platform/Images/ImageDerivative.swift $Q
 run paste-sequence-test    Nanocast/Features/Clipboard/Model/*.swift Nanocast/Platform/Images/ImageDerivative.swift $Q
 run clipboard-text-test    Nanocast/Features/Clipboard/Model/*.swift Nanocast/Platform/Images/ImageDerivative.swift $Q \
@@ -258,8 +242,6 @@ run appearance-test        Nanocast/Platform/Appearance.swift \
                            Nanocast/DesignSystem/Theme.swift \
                            Nanocast/DesignSystem/InterfaceMetrics.swift \
                            Nanocast/Features/Settings/AppAppearance.swift
-run language-test          Nanocast/Features/Settings/AppLanguage.swift
-run localized-resource-test Nanocast/Platform/LocalizedResource.swift
 run exclusive onboarding-test Nanocast/Features/Onboarding/OnboardingCoordinator.swift \
                            Nanocast/Windows/AppWindowController.swift \
                            Nanocast/DesignSystem/Interaction/Motion.swift \
@@ -268,8 +250,7 @@ run relaunch-test          Nanocast/App/AppDelegate.swift Nanocast/Platform/Rela
 run interface-size-test    Nanocast/Platform/Appearance.swift \
                            Nanocast/DesignSystem/Theme.swift \
                            Nanocast/DesignSystem/InterfaceMetrics.swift \
-                           Nanocast/Features/Settings/InterfaceSize.swift \
-                           Nanocast/Features/Extensions/Model/ExtensionFormMetrics.swift
+                           Nanocast/Features/Settings/InterfaceSize.swift
 run palette-placement-test Nanocast/Platform/Appearance.swift \
                            Nanocast/DesignSystem/Theme.swift \
                            Nanocast/DesignSystem/InterfaceMetrics.swift \
@@ -289,15 +270,12 @@ run form-input-test        Nanocast/Platform/Appearance.swift \
                            Nanocast/DesignSystem/FormTextInput.swift \
                            Nanocast/DesignSystem/FormTextArea.swift
 run scroll-reveal-test     Nanocast/DesignSystem/Scrolling/SelectionReveal.swift
-run redaction-test         Nanocast/DesignSystem/RedactedPlaceholder.swift
 run keyboard-focus-test    Nanocast/DesignSystem/Interaction/KeyboardFocus.swift
 run command-escape-tap-test Nanocast/Palette/CommandEscapeTap.swift
 run palette-escape-test    Nanocast/Palette/PaletteMode.swift \
                            Nanocast/Palette/PaletteEscapeAction.swift \
                            Nanocast/Palette/CommandEscapeTap.swift \
                            Nanocast/Features/Settings/EscapeKeyBehavior.swift \
-                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
                            Nanocast/Features/CustomCommands/Model/CustomCommand.swift
 run palette-navigation-test Nanocast/Palette/PaletteState.swift \
                            Nanocast/Palette/PaletteMode.swift \
@@ -311,13 +289,9 @@ run palette-navigation-test Nanocast/Palette/PaletteState.swift \
                            Nanocast/Features/Clipboard/Model/ColorValue.swift \
                            Nanocast/Features/Clipboard/Model/ColorFormat.swift \
                            Nanocast/Features/Clipboard/Model/ColorSpaces.swift \
-                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
                            Nanocast/Features/CustomCommands/Model/CustomCommand.swift
 run palette-filter-test    Nanocast/Palette/PaletteMode.swift \
                            Nanocast/Palette/PaletteFilterAction.swift \
-                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
                            Nanocast/Features/CustomCommands/Model/CustomCommand.swift
 run action-menu-search-test Nanocast/Palette/ActionMenuSearchQuery.swift \
                             Nanocast/Features/Launcher/Model/SearchRelevance.swift
@@ -325,52 +299,18 @@ run palette-shortcut-test  Nanocast/Palette/PaletteShortcut.swift
 run ascii-layout-test      Nanocast/Platform/ASCIIKeyboardLayout.swift
 run palette-tab-test       Nanocast/Palette/PaletteMode.swift \
                            Nanocast/Palette/PaletteTabAction.swift \
-                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
                            Nanocast/Features/CustomCommands/Model/CustomCommand.swift
 run compact-bar-test       Nanocast/Features/Launcher/Model/CompactBarSelection.swift \
                            Nanocast/Features/Settings/AppSettingsKey.swift \
                            Nanocast/Features/Settings/Model/*.swift \
                            Nanocast/Features/Launcher/Model/CommandID.swift \
                            Nanocast/Features/HotKeys/Model/HotKeyAction.swift \
-                           Nanocast/Features/QuickActions/Model/QuickAction.swift \
-                           Nanocast/Features/QuickActions/Model/BuiltInQuickAction.swift \
-                           Nanocast/Features/QuickActions/Model/CustomQuickAction.swift \
-                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
                            Nanocast/Features/SystemActions/Model/SystemAction.swift \
-                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Nanocast/Features/Snippets/Model/Snippet.swift \
-                           Nanocast/Platform/LocalizedResource.swift
-run fallback-test          Nanocast/Features/Launcher/Model/Fallback.swift \
-                           Nanocast/Features/Launcher/Model/CommandID.swift \
-                           Nanocast/Features/HotKeys/Model/HotKeyAction.swift \
-                           Nanocast/Features/QuickActions/Model/QuickAction.swift \
-                           Nanocast/Features/QuickActions/Model/BuiltInQuickAction.swift \
-                           Nanocast/Features/QuickActions/Model/CustomQuickAction.swift \
-                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Nanocast/Features/SystemActions/Model/SystemAction.swift \
-                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Nanocast/Features/Snippets/Model/Snippet.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift
 run dictionary-test        Nanocast/Features/Dictionary/Model/DictionaryEntry.swift \
                            Nanocast/Features/Dictionary/Model/DictionaryMarkup.swift
 run dictation-test         Nanocast/Features/Dictation/Model/DictationModel.swift Nanocast/Features/Dictation/Model/DictationIdleRelease.swift Nanocast/Features/Dictation/Model/DictationLanguage.swift Nanocast/Features/Dictation/Model/DictationTextFormatter.swift
 run dictation-cue-test     Nanocast/Features/Dictation/Service/DictationCueRunner.swift
-run dictation-field-test   Nanocast/Features/Dictation/Model/DictationModel.swift \
-                           Nanocast/Features/Dictation/Model/DictationAudioChunks.swift \
-                           Nanocast/Features/Dictation/Model/DictationMode.swift \
-                           Nanocast/Features/Dictation/Model/DictationDestination.swift \
-                           Nanocast/Features/Dictation/Model/DictationTextFormatter.swift \
-                           Nanocast/Features/Dictation/Service/DictationCoordinator.swift \
-                           Nanocast/Features/Dictation/Service/DictationInsertionContext.swift \
-                           Nanocast/Features/AI/UI/ChatComposerTextView.swift \
-                           Nanocast/Features/TextInjection/Service/*.swift \
-                           Nanocast/Features/Snippets/Model/*.swift \
-                           Nanocast/Platform/AccessibilityText.swift \
-                           Nanocast/Platform/PasteboardFiles.swift \
-                           Nanocast/Platform/Appearance.swift Nanocast/DesignSystem/Theme.swift
 run dictation-volume-test  Nanocast/Features/Dictation/Model/DictationVolumeSnapshot.swift \
                            Nanocast/Features/Dictation/Service/DictationAudioDucker.swift \
                            Nanocast/Platform/AppPaths.swift
@@ -399,16 +339,9 @@ run hotkey-test            Nanocast/Features/HotKeys/Model/DoubleTapModifier.swi
                            Nanocast/Platform/ASCIIKeyboardLayout.swift \
                            Nanocast/Features/HotKeys/Service/KeyShortcut.swift \
                            Nanocast/Features/HotKeys/Model/HotKeyAction.swift \
-                           Nanocast/Features/QuickActions/Model/QuickAction.swift \
-                           Nanocast/Features/QuickActions/Model/BuiltInQuickAction.swift \
-                           Nanocast/Features/QuickActions/Model/CustomQuickAction.swift \
                            Nanocast/Features/Launcher/Model/CommandID.swift \
-                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
                            Nanocast/Features/SystemActions/Model/SystemAction.swift \
-                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Nanocast/Features/Snippets/Model/Snippet.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift
 run callout-test          Nanocast/Platform/Appearance.swift \
                            Nanocast/DesignSystem/Theme.swift \
                            Nanocast/DesignSystem/InterfaceMetrics.swift \
@@ -418,38 +351,14 @@ run icon-cache-test        Nanocast/Platform/Appearance.swift \
 run entry-icon-test        Nanocast/Platform/Appearance.swift \
                            Nanocast/Platform/Images/IconCache.swift \
                            Nanocast/Platform/Images/FileIconStamp.swift
-run ext-icon-test          Nanocast/Platform/Appearance.swift \
-                           Nanocast/Platform/AppDisplayName.swift \
-                           Nanocast/Platform/Images/IconCache.swift \
-                           Nanocast/Platform/Compression/Zlib.swift \
-                           Nanocast/DesignSystem/Theme.swift \
-                           Nanocast/DesignSystem/InterfaceMetrics.swift \
-                           Nanocast/Features/Extensions/Model/ExtensionBootConfig.swift \
-                           Nanocast/Features/Extensions/Model/ExtensionLaunchType.swift \
-                           Nanocast/Features/Extensions/Model/ExtensionManifest.swift \
-                           Nanocast/Features/Extensions/Model/ExtensionRefreshPolicy.swift \
-                           Nanocast/Features/Extensions/Model/ExtensionRefreshState.swift \
-                           Nanocast/Features/Extensions/Model/RenderNode.swift \
-                           Nanocast/Features/Extensions/Service/ExtensionCatalog.swift \
-                           Nanocast/Features/Extensions/Service/ExtensionFetcher.swift \
-                           Nanocast/Platform/ProcessExit.swift \
-                           Nanocast/Features/Extensions/Service/ExtensionNodeShims.swift \
-                           Nanocast/Features/Extensions/Service/ExtensionRuntime.swift \
-                           Nanocast/Features/Extensions/Service/ExtensionIconCache.swift \
-                           Nanocast/Features/Extensions/UI/ExtensionAnimatedImage.swift \
-                           Nanocast/Features/Extensions/UI/ExtensionImage.swift \
-                           Nanocast/Features/Clipboard/Model/ColorValue.swift \
-                           Nanocast/Features/Clipboard/Model/ColorSpaces.swift
-run system-action-test     Nanocast/Features/SystemActions/Model/SystemAction.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+run system-action-test     Nanocast/Features/SystemActions/Model/SystemAction.swift
 run microphone-mute-test   Nanocast/Features/SystemActions/Service/SystemActionFailure.swift \
                            Nanocast/Features/SystemActions/Service/SystemActionRunner+Microphone.swift
 run volume-test            Nanocast/Features/SystemActions/Model/VolumeLevel.swift
 run window-command-test    Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
                            Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
                            Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
-                           Nanocast/Features/WindowManagement/Model/WindowActionMemory.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/WindowActionMemory.swift
 run window-preset-test     Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
                            Nanocast/Features/WindowManagement/Model/WindowShortcutPreset.swift \
                            Nanocast/Features/HotKeys/Model/DoubleTapModifier.swift \
@@ -458,11 +367,9 @@ run window-preset-test     Nanocast/Features/WindowManagement/Model/WindowComman
                            Nanocast/Features/HotKeys/Model/HyperKey.swift \
                            Nanocast/Features/HotKeys/Model/HIDKeyMapping.swift \
                            Nanocast/Platform/ASCIIKeyboardLayout.swift \
-                           Nanocast/Features/HotKeys/Service/KeyShortcut.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/HotKeys/Service/KeyShortcut.swift
 run space-gesture-test     Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Nanocast/Features/WindowManagement/Model/SpaceGesture.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/SpaceGesture.swift
 run window-layout-test     Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
                            Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
                            Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
@@ -473,8 +380,7 @@ run window-layout-test     Nanocast/Features/WindowManagement/Model/WindowComman
                            Nanocast/Features/WindowManagement/Model/WindowLayoutPlan.swift \
                            Nanocast/Features/WindowManagement/Model/WindowLayoutStore.swift \
                            Nanocast/Features/WindowManagement/Model/CustomWindowSize.swift \
-                           Nanocast/Features/WindowManagement/Model/CustomWindowSizeStore.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/CustomWindowSizeStore.swift
 run window-room-test       Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
                            Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
                            Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
@@ -494,8 +400,7 @@ run window-room-test       Nanocast/Features/WindowManagement/Model/WindowComman
                            Nanocast/Features/WindowManagement/Model/RoomArrangement.swift \
                            Nanocast/Features/WindowManagement/Model/RoomStore.swift \
                            Nanocast/Features/WindowManagement/Model/RoomMinimumSizeStore.swift \
-                           Nanocast/Features/WindowManagement/Model/RoomParkingLedger.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/RoomParkingLedger.swift
 run window-file-test       Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
                            Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
                            Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
@@ -511,8 +416,7 @@ run window-file-test       Nanocast/Features/WindowManagement/Model/WindowComman
                            Nanocast/Features/WindowManagement/Model/RoomLayoutEngine.swift \
                            Nanocast/Features/WindowManagement/Model/WindowManagementFileFormat.swift \
                            Nanocast/Features/Settings/Model/SettingsFileJSON.swift \
-                           Nanocast/Features/Settings/Model/SettingsFileIdentity.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/Settings/Model/SettingsFileIdentity.swift
 run custom-command-test    Nanocast/Platform/PseudoTerminal.swift \
                            Nanocast/Platform/ProcessExit.swift \
                            Nanocast/Features/CustomCommands/Model/CustomCommand.swift \
@@ -528,27 +432,7 @@ run uninstall-test         Nanocast/Features/Uninstall/Model/UninstallTarget.swi
                            Nanocast/Features/Uninstall/Model/UninstallRules.swift \
                            Nanocast/Features/Uninstall/Model/UninstallProtection.swift \
                            Nanocast/Features/Uninstall/Model/UninstallPlan.swift
-run quicklink-test         Nanocast/Features/Quicklinks/Model/Quicklink.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkStore.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkArchive.swift \
-                           Nanocast/Features/Quicklinks/Model/RaycastQuicklinkImport.swift \
-                           Nanocast/Features/Quicklinks/UI/QuicklinkEditorSession.swift
-run quicklink-coordinator-test Nanocast/Features/Quicklinks/Model/Quicklink.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkStore.swift \
-                           Nanocast/Features/Quicklinks/Model/QuicklinkArchive.swift \
-                           Nanocast/Features/Quicklinks/UI/QuicklinkCoordinator.swift \
-                           Nanocast/Features/Quicklinks/UI/QuicklinkEditorSession.swift \
-                           Nanocast/Features/Quicklinks/UI/QuicklinkArgumentsAccessory.swift \
-                           Nanocast/Features/Snippets/Model/Snippet.swift \
-                           Nanocast/Features/Snippets/Model/SnippetTemplateEngine.swift
-run slow snippets-test     Nanocast/Platform/NotificationToken.swift \
-                           Nanocast/Platform/HealthTicker.swift \
-                           Nanocast/Platform/AccessibilityText.swift \
-                           Nanocast/Features/Snippets/Model/*.swift \
-                           Nanocast/Features/Snippets/Service/*.swift \
-                           Nanocast/Features/Snippets/UI/SnippetEditorSession.swift \
+run text-injection-test    Nanocast/Platform/AccessibilityText.swift \
                            Nanocast/Features/TextInjection/Service/*.swift
 run notes-test             Nanocast/Platform/Signposts.swift \
                            $L/SearchRelevance.swift \
@@ -648,223 +532,24 @@ run settings-file-test     Nanocast/Features/Settings/Model/*.swift \
                            Nanocast/Features/Settings/Service/SettingsFileMonitor.swift \
                            Nanocast/Features/Settings/Service/SettingsFileRepository.swift \
                            Nanocast/Platform/AppPaths.swift
-run compact-favorites-migration-test Nanocast/Migrations/CompactFavoritesMigration.swift \
-                           Nanocast/Features/Settings/Model/*.swift \
-                           Nanocast/Platform/AppPaths.swift
-run backup-archive-test   Nanocast/Platform/AppPaths.swift \
+run backup-archive-test    Nanocast/Platform/AppPaths.swift \
                            Nanocast/Features/Backup/Model/BackupArchive.swift \
                            Nanocast/Features/Backup/Model/BackupBundle.swift \
                            Nanocast/Features/Backup/Model/BackupCategory.swift \
                            Nanocast/Features/Backup/Model/BackupClipboardItem.swift \
                            Nanocast/Features/Backup/Model/BackupManifest.swift \
                            Nanocast/Features/Backup/Service/BackupStaging.swift
-E=Nanocast/Features/Extensions
-run symbols-test           $E/Service/SymbolCatalog.swift
-run ext-cleanup-test       $E/Service/ExtensionCleanup.swift \
-                           $E/Service/ExtensionCatalog.swift \
-                           Nanocast/Platform/AppDisplayName.swift \
-                           $E/Model/ExtensionManifest.swift \
-                           $E/Model/ExtensionLaunchType.swift \
-                           $E/Model/ExtensionRefreshPolicy.swift \
-                           $E/Model/ExtensionRefreshState.swift
-run ext-refresh-test       $E/Model/ExtensionManifest.swift \
-                           Nanocast/Platform/AppDisplayName.swift \
-                           $E/Model/ExtensionLaunchType.swift \
-                           $E/Model/ExtensionRefreshPolicy.swift \
-                           $E/Model/ExtensionRefreshState.swift
-run ext-metadata-test      $E/Model/ExtensionCommandMetadata.swift \
-                           $E/Model/ExtensionMenuBarSnapshot.swift \
-                           $E/Service/ExtensionCommandMetadataStore.swift
-run ext-version-test       $E/Model/ExtensionListing.swift \
-                           $E/Service/ExtensionVersionStore.swift
-run ext-store-test         $E/Model/ExtensionGitHubSource.swift \
-                           $E/Model/ExtensionListing.swift \
-                           $E/Model/ExtensionPackageManager.swift \
-                           $E/Model/ExtensionStoreResponse.swift
-run ext-form-test          $E/Model/ExtensionFormMetrics.swift \
-                           $E/Model/ExtensionFormField.swift \
-                           $E/UI/ExtensionFormKey.swift \
-                           $E/Model/ExtensionDateExpression.swift \
-                           $E/UI/ExtensionListKey.swift \
-                           Tests/ext-list-key-test.swift
-run ext-image-size-test   $E/Model/ExtensionImageSize.swift
-run ext-accessory-test     $E/Model/RenderNode.swift \
-                           $E/Model/ExtensionPickerItem.swift \
-                           $E/Model/ExtensionSearchAccessory.swift \
-                           $E/Service/ExtensionStorage.swift
-run slow ext-test          -parse-as-library \
-                           Tests/ext-menu-bar-test.swift \
-                           Tests/ext-fetch-test.swift \
-                           $E/Model/ExtensionLaunchError.swift \
-                           $E/Model/ExtensionMenuBarSnapshot.swift \
-                           $E/Service/ExtensionStorage.swift \
-                           $E/Service/ExtensionMenuBarManager.swift \
-                           $E/Model/ExtensionCommandMetadata.swift \
-                           $E/Service/ExtensionCommandMetadataStore.swift \
-                           $E/UI/ExtensionMenuBarController.swift \
-                           $E/UI/ExtensionMenuBarImage.swift \
-                           Nanocast/Platform/Appearance.swift \
-                           Nanocast/Platform/AppDisplayName.swift \
-                           Nanocast/Platform/Images/IconCache.swift \
-                           Nanocast/DesignSystem/Theme.swift \
-                           Nanocast/DesignSystem/InterfaceMetrics.swift \
-                           $E/Model/ExtensionBootConfig.swift \
-                           $E/Model/ExtensionDeepLink.swift \
-                           $E/Model/ExtensionLaunchType.swift \
-                           $E/Model/ExtensionFormField.swift \
-                           $E/Model/ExtensionGridLayout.swift \
-                           $E/Model/ExtensionSearchState.swift \
-                           $E/Model/ExtensionManifest.swift \
-                           $E/Model/ExtensionRefreshPolicy.swift \
-                           $E/Model/ExtensionRefreshState.swift \
-                           $E/Model/RenderNode.swift \
-                           $E/Model/ExtensionPickerItem.swift \
-                           $E/Model/ExtensionSearchAccessory.swift \
-                           $E/Service/ExtensionCatalog.swift \
-                           $E/Service/ExtensionFetcher.swift \
-                           Nanocast/Platform/ProcessExit.swift \
-                           $E/Service/ExtensionIconCache.swift \
-                           $E/Service/ExtensionNodeShims.swift \
-                           $E/Service/ExtensionRuntime.swift \
-                           $E/Service/ExtensionNameResolver.swift \
-                           $E/Service/ExtensionWebSocketBridge.swift \
-                           $E/UI/ExtensionAnimatedImage.swift \
-                           $E/UI/ExtensionImage.swift \
-                           $E/UI/ExtensionScreen.swift \
-                           $L/SearchRelevance.swift \
-                           Nanocast/Platform/Compression/Zlib.swift \
-                           Nanocast/Features/Clipboard/Model/ColorValue.swift \
-                           Nanocast/Features/Clipboard/Model/ColorSpaces.swift
 run settings-history-test  Nanocast/Features/Settings/SettingsTab.swift \
                            Nanocast/Features/Settings/SettingsHistory.swift \
                            Nanocast/Features/Settings/SettingsAnchor.swift \
                            Nanocast/Features/Settings/SettingsNavigationState.swift \
                            Nanocast/Features/Settings/SettingsSearchCatalog.swift \
-                           $L/SearchRelevance.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           $L/SearchRelevance.swift
 run updates-test           Nanocast/Features/Updates/Model/*.swift \
                            Nanocast/Features/Updates/Service/BundleSignature.swift
 run update-check-test      Nanocast/Features/Updates/Model/*.swift \
                            Nanocast/Features/Updates/Service/UpdateCheckStore.swift \
                            Nanocast/Platform/AppPaths.swift
-run support-test           Nanocast/Features/Support/Model/*.swift
-run ai-provider-test       Nanocast/Features/Settings/AppSettingsKey.swift \
-                           Nanocast/Features/AI/Model/*.swift \
-                           Nanocast/Features/AI/Settings/AISettingsStore.swift
-run ai-chat-test           Nanocast/Features/AI/Model/AIRequest.swift \
-                           Nanocast/Features/AI/Model/AIConnection.swift \
-                           Nanocast/Features/AI/Model/AIConversationOpenPolicy.swift \
-                           Nanocast/Features/AI/Model/AppleIntelligence.swift \
-                           Nanocast/Features/AI/Model/AIAttachmentPolicy.swift \
-                           Nanocast/Features/AI/Model/AIRetention.swift \
-                           Nanocast/Features/AI/Model/AITool.swift \
-                           Nanocast/Features/AI/Model/JSONValue.swift \
-                           Nanocast/Features/AI/Model/ChatMessage.swift \
-                           Nanocast/Features/AI/Model/ChatSession.swift \
-                           Nanocast/Features/AI/Model/ChatChoices.swift \
-                           Nanocast/Features/AI/Model/ChatReferences.swift \
-                           Nanocast/Features/AI/Model/ChatTitle.swift \
-                           Nanocast/Features/AI/Model/ChatFind.swift \
-                           Nanocast/Features/AI/Model/ChatCitations.swift \
-                           Nanocast/Features/AI/Model/ChatToolScope.swift \
-                           Nanocast/Features/AI/Model/MarkdownBlock.swift \
-                           Nanocast/Features/AI/Model/MarkdownMath.swift \
-                           Nanocast/Features/AI/Model/MathFormula.swift \
-                           Nanocast/Features/AI/Model/MathNode.swift \
-                           Nanocast/Features/AI/Model/MathSymbolCatalog.swift \
-                           Nanocast/Features/AI/Service/AIProvider.swift \
-                           Nanocast/Features/AI/Service/ChatHistoryStore.swift \
-                           Nanocast/Features/AI/Service/AIToolLoopProvider.swift \
-                           Nanocast/Features/AI/UI/AIChatState.swift \
-                           Nanocast/Features/AI/UI/AIChatSurfacesState.swift \
-                           Nanocast/Features/AI/UI/ChatFindState.swift
-run chat-markdown-test     Nanocast/Platform/Appearance.swift \
-                           Nanocast/DesignSystem/Theme.swift \
-                           Nanocast/DesignSystem/InterfaceMetrics.swift \
-                           Nanocast/Features/Settings/InterfaceSize.swift \
-                           Nanocast/Features/AI/Model/AIRequest.swift \
-                           Nanocast/Features/AI/Model/AITool.swift \
-                           Nanocast/Features/AI/Model/JSONValue.swift \
-                           Nanocast/Features/AI/Model/ChatMessage.swift \
-                           Nanocast/Features/AI/Model/ChatChoices.swift \
-                           Nanocast/Features/AI/Model/ChatReferences.swift \
-                           Nanocast/Features/AI/Model/ChatCitations.swift \
-                           Nanocast/Features/AI/Model/ChatFind.swift \
-                           Nanocast/Features/AI/Model/MarkdownBlock.swift \
-                           Nanocast/Features/AI/Model/MarkdownMath.swift \
-                           Nanocast/Features/AI/Model/MathFormula.swift \
-                           Nanocast/Features/AI/Model/MathNode.swift \
-                           Nanocast/Features/AI/Model/MathSymbolCatalog.swift \
-                           Nanocast/Features/AI/Model/SyntaxGrammar.swift \
-                           Nanocast/Features/AI/Model/SyntaxHighlighter.swift \
-                           Nanocast/Features/AI/Model/SyntaxStructuredLexers.swift \
-                           Nanocast/Features/AI/UI/ChatTextHighlight.swift \
-                           Nanocast/Features/AI/UI/ChatMarkdownRenderer.swift \
-                           Nanocast/Features/AI/UI/MathAttachmentCell.swift \
-                           Nanocast/Features/AI/UI/MathBox.swift \
-                           Nanocast/Features/AI/UI/MathFont.swift \
-                           Nanocast/Features/AI/UI/MathLayoutEngine.swift
-run syntax-highlight-test  Nanocast/Features/AI/Model/SyntaxGrammar.swift \
-                           Nanocast/Features/AI/Model/SyntaxHighlighter.swift \
-                           Nanocast/Features/AI/Model/SyntaxStructuredLexers.swift
-run mcp-test               Nanocast/Features/Settings/AppSettingsKey.swift \
-                           Nanocast/Features/AI/Model/AIConnection.swift \
-                           Nanocast/Features/AI/Model/AppleIntelligence.swift \
-                           Nanocast/Features/AI/Model/AITool.swift \
-                           Nanocast/Features/AI/Model/AIToolServer.swift \
-                           Nanocast/Features/AI/Model/JSONValue.swift \
-                           Nanocast/Features/MCP/Model/*.swift \
-                           Nanocast/Features/MCP/Settings/MCPSettingsStore.swift
-run -O text-diff-test      Nanocast/Features/QuickActions/Model/TextDiffEngine.swift
-run index text-diff-performance Nanocast/Features/QuickActions/Model/TextDiffEngine.swift
-run quick-action-test      Nanocast/Features/Settings/AppSettingsKey.swift \
-                           Nanocast/Features/AI/Model/AIConnection.swift \
-                           Nanocast/Features/AI/Model/AppleIntelligence.swift \
-                           Nanocast/Features/AI/Model/ChatGPTSubscription.swift \
-                           Nanocast/Features/AI/Model/InstalledAI.swift \
-                           Nanocast/Features/QuickActions/Model/BuiltInQuickAction.swift \
-                           Nanocast/Features/QuickActions/Model/CustomQuickAction.swift \
-                           Nanocast/Features/QuickActions/Model/CustomQuickActionStore.swift \
-                           Nanocast/Features/QuickActions/Model/QuickAction.swift \
-                           Nanocast/Features/QuickActions/Model/QuickActionFailure.swift \
-                           Nanocast/Features/QuickActions/Model/QuickActionPrompt.swift \
-                           Nanocast/Features/QuickActions/Model/QuickActionSettings.swift \
-                           Nanocast/Features/QuickActions/Settings/QuickActionSettingsStore.swift \
-                           Nanocast/Platform/LocalizedResource.swift
-run apple-intelligence-test Nanocast/Features/Settings/AppSettingsKey.swift \
-                           Nanocast/Features/AI/Model/*.swift \
-                           Nanocast/Features/AI/Service/AIProvider.swift \
-                           Nanocast/Features/AI/Service/AppleIntelligenceProvider.swift
-run mcp-oauth-test         Nanocast/Platform/ExecutableLocator.swift \
-                           Nanocast/Platform/ProcessExit.swift \
-                           Nanocast/Platform/KeychainSecretStore.swift \
-                           Nanocast/Features/Settings/AppSettingsKey.swift \
-                           Nanocast/Features/AI/Model/AIConnection.swift \
-                           Nanocast/Features/AI/Model/AppleIntelligence.swift \
-                           Nanocast/Features/AI/Model/AITool.swift \
-                           Nanocast/Features/AI/Model/AIToolServer.swift \
-                           Nanocast/Features/AI/Model/AIStreamDecoder.swift \
-                           Nanocast/Features/AI/Model/AIProviderFailure.swift \
-                           Nanocast/Features/AI/Model/AIThinkTagDecoder.swift \
-                           Nanocast/Features/AI/Model/AIRequest.swift \
-                           Nanocast/Features/AI/Model/JSONValue.swift \
-                           Nanocast/Features/MCP/Model/*.swift \
-                           Nanocast/Features/MCP/Service/*.swift
-run slow mcp-stdio-test    Nanocast/Platform/ExecutableLocator.swift \
-                           Nanocast/Platform/ProcessExit.swift \
-                           Nanocast/Platform/KeychainSecretStore.swift \
-                           Nanocast/Features/Settings/AppSettingsKey.swift \
-                           Nanocast/Features/AI/Model/AIConnection.swift \
-                           Nanocast/Features/AI/Model/AppleIntelligence.swift \
-                           Nanocast/Features/AI/Model/AITool.swift \
-                           Nanocast/Features/AI/Model/AIToolServer.swift \
-                           Nanocast/Features/AI/Model/AIStreamDecoder.swift \
-                           Nanocast/Features/AI/Model/AIProviderFailure.swift \
-                           Nanocast/Features/AI/Model/AIThinkTagDecoder.swift \
-                           Nanocast/Features/AI/Model/AIRequest.swift \
-                           Nanocast/Features/AI/Model/JSONValue.swift \
-                           Nanocast/Features/MCP/Model/*.swift \
-                           Nanocast/Features/MCP/Service/*.swift
 
 if [ "$emit_db" -eq 1 ]; then
     printf ']\n' >> "$DB"
@@ -886,12 +571,10 @@ if [ "$ran" -eq 0 ]; then
     exit 2
 fi
 
-# `sort -s` is stable, so the slow harnesses lead and everything else keeps its declaration order.
 JOBS="${NANOCAST_TEST_JOBS:-4}"
 export NANOCAST_TEST_TIMEOUT="${NANOCAST_TEST_TIMEOUT:-300}"
 started=$SECONDS
 
-# Numbers each result, and names what is still running whenever the output goes quiet.
 report() {
     local finished=0 line asked running file
     while :; do
@@ -917,7 +600,6 @@ dispatch() {
     sort -s -k1,1n "$1" | cut -d' ' -f2- | xargs -P "$2" -L1 "$SELF" --exec
 }
 
-# Without this the suite reports "all passed" whenever dispatch itself dies and no harness ran.
 if ! {
     dispatch "$QUEUE" "$JOBS" && dispatch "$EXCLUSIVE_QUEUE" 1
     echo "dispatch $?"

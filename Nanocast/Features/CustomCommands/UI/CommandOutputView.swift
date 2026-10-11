@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// One flat surface: the log is the page, separated by space and weight, not by rules.
 struct CommandOutputView: View {
     let presenter: CommandOutputPresenter
 
@@ -21,8 +20,6 @@ struct CommandOutputView: View {
         .background(Theme.Colors.terminalSurface)
     }
 
-    // MARK: - Header
-
     private func header(_ run: CommandRun) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.md) {
             SymbolImage(name: run.symbol, size: Self.headerGlyph)
@@ -39,7 +36,6 @@ struct CommandOutputView: View {
             Spacer(minLength: Theme.Spacing.md)
             actions(run)
         }
-        // Less on top: the transparent title bar already contributes its own height above this.
         .padding(.top, Theme.Spacing.md)
         .padding(.horizontal, Theme.Spacing.xxl)
         .padding(.bottom, Theme.Spacing.lg)
@@ -49,9 +45,9 @@ struct CommandOutputView: View {
         HStack(spacing: Theme.Spacing.xs) {
             CopyLogButton(log: run.log)
             if run.isRunning {
-                iconButton("stop.fill", help: String(localized: "Stop")) { presenter.stopRunning() }
+                iconButton("stop.fill", help: "Stop") { presenter.stopRunning() }
             } else {
-                iconButton("arrow.clockwise", help: String(localized: "Run Again")) { presenter.runAgain() }
+                iconButton("arrow.clockwise", help: "Run Again") { presenter.runAgain() }
             }
         }
     }
@@ -66,8 +62,6 @@ struct CommandOutputView: View {
         }
         .tooltip(help)
     }
-
-    // MARK: - Footer
 
     private func footer(_ run: CommandRun) -> some View {
         HStack(spacing: Theme.Spacing.sm) {
@@ -99,7 +93,6 @@ struct CommandOutputView: View {
         .padding(.vertical, Theme.Spacing.lg)
     }
 
-    /// Ticks itself rather than being driven by a timer the window would have to own.
     private func elapsed(from start: Date) -> some View {
         TimelineView(.periodic(from: start, by: 1)) { context in
             Text(CommandDuration.text(from: start, to: context.date))
@@ -107,7 +100,6 @@ struct CommandOutputView: View {
         }
     }
 
-    /// Sits above the footer rather than in it: the nudge is a sentence, and the bar is a line.
     @ViewBuilder
     private func hint(_ run: CommandRun) -> some View {
         if let hint = run.outcome?.hint {
@@ -145,7 +137,7 @@ private struct CopyLogButton: View {
                 .font(Theme.Typography.bar)
                 .foregroundStyle(copiedAt == nil ? Theme.Colors.textSecondary : Theme.Colors.success)
         }
-        .tooltip(String(localized: "Copy Output"))
+        .tooltip("Copy Output")
         .task(id: copiedAt) {
             guard copiedAt != nil else { return }
             try? await Task.sleep(for: .seconds(Theme.Duration.copyFeedback))
