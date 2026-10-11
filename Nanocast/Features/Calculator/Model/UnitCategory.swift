@@ -10,40 +10,40 @@ enum UnitCategory: String, CaseIterable, Sendable {
 
     var displayName: String {
         switch self {
-        case .length: return String(localized: "Length")
-        case .weight: return String(localized: "Weight")
-        case .temperature: return String(localized: "Temperature")
-        case .time: return String(localized: "unit-category-time", defaultValue: "Time")
-        case .area: return String(localized: "Area")
-        case .volume: return String(localized: "Volume")
-        case .digitalStorage: return String(localized: "Digital Storage")
-        case .angle: return String(localized: "Angle")
-        case .speed: return String(localized: "Speed")
-        case .pressure: return String(localized: "Pressure")
-        case .dataRate: return String(localized: "Data Transfer Rate")
-        case .acceleration: return String(localized: "Acceleration")
-        case .force: return String(localized: "Force")
-        case .energy: return String(localized: "Energy")
-        case .power: return String(localized: "Power")
-        case .frequency: return String(localized: "Frequency")
-        case .electricCurrent: return String(localized: "Electric Current")
-        case .voltage: return String(localized: "Voltage")
-        case .resistance: return String(localized: "Resistance")
-        case .electricCharge: return String(localized: "Electric Charge")
-        case .volumeFlow: return String(localized: "Volume Flow Rate")
-        case .capacitance: return String(localized: "Capacitance")
-        case .inductance: return String(localized: "Inductance")
-        case .conductance: return String(localized: "Conductance")
-        case .magneticFlux: return String(localized: "Magnetic Flux")
-        case .magneticFluxDensity: return String(localized: "Magnetic Flux Density")
-        case .torque: return String(localized: "Torque")
-        case .substance: return String(localized: "Amount of Substance")
-        case .fuelEconomy: return String(localized: "Fuel Economy")
-        case .fuelConsumption: return String(localized: "Fuel Consumption")
-        case .compound: return String(localized: "Compound Units")
-        case .pixels: return String(localized: "Pixels")
-        case .pixelArea: return String(localized: "Pixel Area")
-        case .pixelDensity: return String(localized: "Pixel Density")
+        case .length: return "Length"
+        case .weight: return "Weight"
+        case .temperature: return "Temperature"
+        case .time: return "Time"
+        case .area: return "Area"
+        case .volume: return "Volume"
+        case .digitalStorage: return "Digital Storage"
+        case .angle: return "Angle"
+        case .speed: return "Speed"
+        case .pressure: return "Pressure"
+        case .dataRate: return "Data Transfer Rate"
+        case .acceleration: return "Acceleration"
+        case .force: return "Force"
+        case .energy: return "Energy"
+        case .power: return "Power"
+        case .frequency: return "Frequency"
+        case .electricCurrent: return "Electric Current"
+        case .voltage: return "Voltage"
+        case .resistance: return "Resistance"
+        case .electricCharge: return "Electric Charge"
+        case .volumeFlow: return "Volume Flow Rate"
+        case .capacitance: return "Capacitance"
+        case .inductance: return "Inductance"
+        case .conductance: return "Conductance"
+        case .magneticFlux: return "Magnetic Flux"
+        case .magneticFluxDensity: return "Magnetic Flux Density"
+        case .torque: return "Torque"
+        case .substance: return "Amount of Substance"
+        case .fuelEconomy: return "Fuel Economy"
+        case .fuelConsumption: return "Fuel Consumption"
+        case .compound: return "Compound Units"
+        case .pixels: return "Pixels"
+        case .pixelArea: return "Pixel Area"
+        case .pixelDensity: return "Pixel Density"
         }
     }
 

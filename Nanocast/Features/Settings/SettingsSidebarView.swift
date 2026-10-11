@@ -48,11 +48,9 @@ struct SettingsSidebarView: View {
 
     @ViewBuilder private var found: some View {
         if results.isEmpty {
-            // Greedy: a finite max height here becomes a constraint that shrinks the whole window.
             ContentUnavailableView.search(text: query)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            // A second `List`, so result IDs and `SettingsTab` never share a selection namespace.
             List(selection: $highlighted) {
                 Section("Results") {
                     ForEach(results) { entry in
@@ -68,7 +66,6 @@ struct SettingsSidebarView: View {
         }
     }
 
-    /// ⌘F with no menu item to hang it on; zero-sized so it only ever contributes the shortcut.
     private var focusShortcut: some View {
         Button("Search Settings") { searching = true }
             .keyboardShortcut("f", modifiers: .command)
@@ -78,7 +75,6 @@ struct SettingsSidebarView: View {
             .accessibilityHidden(true)
     }
 
-    /// `List` hands back an optional selection; routing it through `select` records history.
     private var selection: Binding<SettingsTab?> {
         Binding(
             get: { navigation.tab },
@@ -103,7 +99,6 @@ private struct SettingsSearchResultRow: View {
         } icon: {
             SettingsTabIcon(systemImage: entry.tab.systemImage, tint: .accentColor)
         }
-        // Centred, not first-baseline: the tile sits against a two-line title and breadcrumb.
         .labelStyle(CenteredLabelStyle())
     }
 }

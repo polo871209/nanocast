@@ -1,6 +1,5 @@
 import Foundation
 
-/// A launcher item's row as settings.json spells it: shortcut, alias and launcher visibility.
 enum LauncherFileFormat {
     struct Record: Equatable, Sendable {
         var shortcut: String?
@@ -32,7 +31,7 @@ enum LauncherFileFormat {
             let fields = member.value
             guard fields.members != nil else {
                 decoded.records[member.key] = current(member.key)
-                decoded.problems.append(String(localized: "“\(member.key)” needs an object"))
+                decoded.problems.append("“\(member.key)” needs an object")
                 continue
             }
             var record = current(member.key)
@@ -43,7 +42,7 @@ enum LauncherFileFormat {
             case .bool(let shown)?: record.showInLauncher = shown
             default:
                 decoded.problems.append(
-                    String(localized: "“\(member.key)”: “showInLauncher” needs true or false"))
+                    "“\(member.key)”: “showInLauncher” needs true or false")
             }
             decoded.records[member.key] = record
         }
@@ -63,7 +62,7 @@ enum LauncherFileFormat {
         case .null?: value = nil
         case .string(let text)?: value = text
         default:
-            decoded.problems.append(String(localized: "“\(name)”: “\(field)” needs quotes, or null"))
+            decoded.problems.append("“\(name)”: “\(field)” needs quotes, or null")
         }
     }
 }

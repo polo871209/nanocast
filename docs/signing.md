@@ -1,13 +1,13 @@
 # Signing
 
-Nanocast has two signing identities:
+Nanocast is signed with a **stable self-signed identity** called `Nanocast Self-Signed`. Keeping the
+_same_ identity on every build is what makes macOS remember the Accessibility permission across
+rebuilds and updates — ad-hoc signing changes every build and macOS forgets the grant.
 
-- **Local builds** sign with a **stable self-signed identity** called `Nanocast Self-Signed`.
-  Keeping the _same_ identity on every build is what makes macOS remember the Accessibility
-  permission across rebuilds — ad-hoc signing changes every build and macOS forgets the grant. Each
-  contributor creates their own, once (§1).
-- **Releases** sign with the team's **Developer ID** and are notarized. That identity exists only in
-  the release workflow's secrets (§2), so a contributor never needs it.
+You create this identity **once**. The same identity is used for:
+
+- **local dev builds** — so Accessibility persists while you develop (the Xcode project signs with it), and
+- **CI releases** — exported into two GitHub secrets the release workflow imports.
 
 ## 1. Create the `Nanocast Self-Signed` identity (once)
 
@@ -23,8 +23,8 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
   -addext "keyUsage=critical,digitalSignature" \
   -addext "extendedKeyUsage=critical,codeSigning"
 
-# Bundle it as a .p12 (the non-empty password keeps `security import` happy).
-openssl pkcs12 -export -inkey /tmp/tc-key.pem -in /tmp/tc-cert.pem \
+# Bundle it as a .p12. `security import` reads only the legacy format, and `-legacy` needs OpenSSL 3+.
+openssl pkcs12 -export -legacy -inkey /tmp/tc-key.pem -in /tmp/tc-cert.pem \
   -name "Nanocast Self-Signed" -out /tmp/tc.p12 -passout pass:nanocast
 
 # Import into the login keychain so codesign can use it without prompting.
@@ -42,50 +42,36 @@ security find-identity -p codesigning | grep "Nanocast Self-Signed"
 
 Now local builds (Xcode, VS Code F5, `xcodebuild`) sign with it, and you grant Accessibility once.
 
-## 2. The release secrets
+## 2. Generate the CI secrets
 
-Releases read six secrets from the repo's `release` environment (**Settings → Environments**). The
-environment deploys from `main` only, so a workflow pushed to any other branch can never read them.
-
-| Secret                              | Holds                                                                                           |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `DEVELOPER_ID_P12_BASE64`           | the Developer ID Application certificate and its private key, base64 `.p12`                     |
-| `DEVELOPER_ID_P12_PASSWORD`         | the password the `.p12` was exported with                                                       |
-| `NOTARY_KEY_P8_BASE64`              | an App Store Connect API team key (`.p8`) with Developer access, base64                         |
-| `NOTARY_KEY_ID`, `NOTARY_ISSUER_ID` | that key's ID and its issuer ID                                                                 |
-| `UPDATE_SIGNING_KEY`                | the release key: an Ed25519 private key, base64, whose public half is `NanocastUpdatePublicKey` |
-
-Export the Developer ID identity alone — `security export -t identities` bundles every identity in
-the keychain. In Keychain Access, open **My Certificates**, select
-`Developer ID Application: … (J656U8XZ93)`, choose **File → Export Items…** and save a `.p12` with a
-password. Then:
+The release workflow needs the same identity as two repo secrets. Export it, base64-encode it, and
+pick a password:
 
 ```sh
-base64 -i DeveloperID.p12 | gh secret set DEVELOPER_ID_P12_BASE64 --env release --repo abue-ammar/tinycast
-gh secret set DEVELOPER_ID_P12_PASSWORD --env release --repo abue-ammar/tinycast
-base64 -i AuthKey_<key-id>.p8 | gh secret set NOTARY_KEY_P8_BASE64 --env release --repo abue-ammar/tinycast
-gh secret set NOTARY_KEY_ID --env release --repo abue-ammar/tinycast --body "<key-id>"
-gh secret set NOTARY_ISSUER_ID --env release --repo abue-ammar/tinycast --body "<issuer-id>"
-gh secret set UPDATE_SIGNING_KEY --env release --repo abue-ammar/tinycast
+# Pick a random password for the exported bundle.
+P12_PASSWORD="$(openssl rand -base64 24)"; echo "password: $P12_PASSWORD"
+
+# Export the identity (approve the keychain dialog if asked) and base64-encode it.
+security export -t identities -f pkcs12 \
+  -k ~/Library/Keychains/login.keychain-db \
+  -P "$P12_PASSWORD" -o /tmp/signing.p12
+base64 -i /tmp/signing.p12 | tr -d '\n' > /tmp/signing.p12.base64
+rm -f /tmp/signing.p12
 ```
 
-The password and the private key go in at `gh`'s prompt, never through `--body`, which would leave
-them in your shell history.
-
-The release key is made once and never renewed. This prints its private half, then the public half
-that goes into `Info.plist` as `NanocastUpdatePublicKey`:
+Then set the two secrets on the repo (via `gh`, authed as the repo owner, or paste them in the GitHub
+UI under **Settings → Secrets and variables → Actions**):
 
 ```sh
-echo 'import CryptoKit; let k = Curve25519.Signing.PrivateKey()
-print(k.rawRepresentation.base64EncodedString(), k.publicKey.rawRepresentation.base64EncodedString())' |
-    xcrun swift -
+gh secret set SIGNING_P12_BASE64   --repo polo871209/nanocast < /tmp/signing.p12.base64
+gh secret set SIGNING_P12_PASSWORD --repo polo871209/nanocast --body "$P12_PASSWORD"
+rm -f /tmp/signing.p12.base64   # holds your private key — delete it
 ```
 
-**Renew the certificate yearly.** Apple issues a Developer ID certificate for about 13 months.
-Before it expires, the account holder creates a new one on developer.apple.com (**Developer ID
-Application**, **G2 Sub-CA**) and replaces the two `DEVELOPER_ID_P12_*` secrets. Nothing else
-changes: a shipped build stays valid because its signature carries Apple's timestamp, and macOS and
-the updater both match the team rather than the certificate. The API key does not expire.
+If you ever lose the secrets, just re-run this section — as long as the `Nanocast Self-Signed`
+identity is still in your keychain, the exported identity is the same, so users are unaffected. If you
+lose the identity entirely, recreate it (step 1) and re-do this; existing users will re-grant
+Accessibility once on their next update, then it's stable again.
 
 ## Hardened runtime
 
@@ -97,10 +83,8 @@ Accessibility grant. Each entitlement in `Nanocast/Nanocast.entitlements` earns 
 
 | Entitlement | Without it |
 | --- | --- |
-| `com.apple.security.cs.allow-jit` | JavaScriptCore cannot JIT, and every extension command runs on the interpreter |
-| `com.apple.security.automation.apple-events` | Every Apple event is refused with `-1743` and no prompt — Get Info, the Finder selection an extension reads, and the System Events–driven system actions all die silently |
+| `com.apple.security.automation.apple-events` | Every Apple event is refused with `-1743` and no prompt — Get Info and the System Events–driven system actions all die silently |
 | `com.apple.security.device.camera` | The camera prompt never appears and access resolves as denied |
-| `com.apple.security.personal-information.calendars` | `requestFullAccessToEvents()` returns `false` in milliseconds with no dialog, and Nanocast never appears under System Settings › Calendars |
 
 **A usage string is not enough under the hardened runtime.** `tccd` checks the matching entitlement
 *before* it prompts, and without it logs "requires entitlement … but it is missing" and denies on the
@@ -118,42 +102,22 @@ Nothing else is needed: the only `dlopen` is Apple's own IOBluetooth, so library
 on, and `node`, `ray` and shell commands are separate processes it never reaches. Bluetooth has no
 hardened-runtime entitlement.
 
-`./Scripts/verify-signature.sh <path-to-.app>` asserts all of this — the runtime flag and a
-timestamped Developer ID signature on the app *and* every helper, an intact nested seal, no
-`get-task-allow`, and an entitlement for every usage string `Info.plist` declares. Both release jobs
-run it before submitting: a nested binary missing the runtime flag is the most common notarization
-rejection, and a usage string missing its entitlement ships a permission that can never be granted.
+`./Scripts/verify-signature.sh <path-to-.app>` asserts all of this — the runtime flag on the app *and*
+on `Contents/Helpers/ClipboardTextHelper` and `FileIndexHelper`, an intact nested seal, no `get-task-allow`, and an
+entitlement for every usage string `Info.plist` declares. Both release jobs run it before packaging:
+a nested binary missing the runtime flag is the most common notarization rejection, and a usage string
+missing its entitlement ships a permission that can never be granted.
 
 ## Update trust
 
-The updater trusts a downloaded bundle through either of two roots
-([features/updates.md](features/updates.md)):
+The updater installs a downloaded bundle only when it satisfies the running copy's own designated
+requirement. For a `Nanocast Self-Signed` build, that requirement pins the bundle id and the
+certificate, so every release must be signed with the same identity. A release signed with any other
+identity can never be installed by the updater, and every existing copy has to be replaced by hand.
 
-- **The release key.** `Scripts/sign-update.swift` signs every updater zip with
-  `UPDATE_SIGNING_KEY`, and refuses unless the built app's `NanocastUpdatePublicKey` is its public
-  half, so a release can never ship trusting a key the next one is not signed with. The bundle must
-  still carry a Developer ID signature, from any team, so a leaked key alone cannot ship an ad-hoc
-  build.
-- **The running copy's designated requirement**, read at runtime rather than pinned. For a Developer
-  ID build that is the team, so a certificate renewal still matches.
+## Quarantine (separate from signing)
 
-**Never change both in one release.** A new Apple team ships signed by the old key, a new key under
-the old team, and the release after that may change the other. `Scripts/check-update-path.sh`
-enforces it: before notarizing, it downloads the last release on the channel and fails the run
-unless that release trusts the new build's key or the new build satisfies its designated
-requirement.
-
-## Developer ID stays in CI
-
-**The Developer ID identity stays a CI-only fact.** It is named in the release workflow's
-`SIGNING_IDENTITY` and nowhere else: `project.yml` keeps signing with `Nanocast Self-Signed`, so a
-contributor builds with the one they created in §1 — same name, their own key, never shared.
-
-macOS keys a TCC grant to the app's designated requirement, so a certificate renewal keeps
-Accessibility and every other grant, while a new team asks for each one again.
-
-## Quarantine
-
-A release is notarized and its DMG stapled, so Gatekeeper opens a downloaded copy without a warning.
-A local `build-dmg.sh` DMG is self-signed and never notarized, so it is for testing on the Mac that
-built it, not for sharing.
+macOS quarantines anything downloaded from the internet, and Gatekeeper blocks even a correctly
+self-signed app with an "unverified developer" warning. The Homebrew cask runs
+`xattr -dr com.apple.quarantine` in `postflight_steps`, so **brew users never touch it**. People who
+download the DMG directly clear it once by hand.

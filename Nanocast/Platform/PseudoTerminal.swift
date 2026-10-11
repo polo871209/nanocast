@@ -2,8 +2,7 @@ import Darwin
 import Foundation
 
 /// libc block-buffers a pipe, so a pty is what makes output live and correctly ordered.
-final class PseudoTerminal: @unchecked Sendable {
-    /// Everything the command writes to any of its three descriptors arrives here.
+final class PseudoTerminal: Sendable {
     let parentEnd: Int32
     let processID: pid_t
 
@@ -23,7 +22,6 @@ final class PseudoTerminal: @unchecked Sendable {
 
         var attributes: posix_spawnattr_t?
         posix_spawnattr_init(&attributes)
-        // The whole point: the child leads its session, so `kill(-pid)` reaches it all.
         posix_spawnattr_setflags(&attributes, Int16(POSIX_SPAWN_SETSID))
 
         var actions: posix_spawn_file_actions_t?
@@ -50,7 +48,6 @@ final class PseudoTerminal: @unchecked Sendable {
             Darwin.close(parentEnd)
             return nil
         }
-        // Stands in for `/dev/null` stdin: a prompting command reads EOF and moves on.
         var endOfTransmission: UInt8 = 0x04
         _ = write(parentEnd, &endOfTransmission, 1)
         return PseudoTerminal(parentEnd: parentEnd, processID: processID)
@@ -62,7 +59,6 @@ final class PseudoTerminal: @unchecked Sendable {
         kill(-processID, signal)
     }
 
-    /// Blocks until the command exits. A signalled death reports the signal, the way a shell does.
     func wait() -> Int32 {
         var status: Int32 = 0
         while waitpid(processID, &status, 0) < 0 && errno == EINTR {}

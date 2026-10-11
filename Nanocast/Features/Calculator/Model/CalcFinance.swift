@@ -22,13 +22,13 @@ enum CalcFinance {
             switch ask {
             case .interest:
                 answer.amount *= growth - 1
-                badge = String(localized: "Interest")
+                badge = "Interest"
             case .presentValue:
                 answer.amount /= growth
-                badge = String(localized: "Present Value")
+                badge = "Present Value"
             default:
                 answer.amount *= growth
-                badge = String(localized: "Future Value")
+                badge = "Future Value"
             }
         case .payment(let frequency), .loanInterest(let frequency):
             let months = terms.years * 12
@@ -70,17 +70,17 @@ enum CalcFinance {
 
         var badge: String {
             switch self {
-            case .monthly: String(localized: "Monthly Payment")
-            case .annual: String(localized: "Annual Payment")
-            case .total: String(localized: "Total Payment")
+            case .monthly: "Monthly Payment"
+            case .annual: "Annual Payment"
+            case .total: "Total Payment"
             }
         }
 
         var interestBadge: String {
             switch self {
-            case .monthly: String(localized: "Monthly Interest")
-            case .annual: String(localized: "Annual Interest")
-            case .total: String(localized: "Total Interest")
+            case .monthly: "Monthly Interest"
+            case .annual: "Annual Interest"
+            case .total: "Total Interest"
             }
         }
     }
@@ -165,7 +165,7 @@ enum CalcFinance {
         if let parts = rest.operands(of: [nil, .ident("invested"), nil, .ident("returned")]),
             let gain = ratio(parts[1], parts[0])
         {
-            return percentCard((gain - 1) * 100, query: query, badge: String(localized: "Return"))
+            return percentCard((gain - 1) * 100, query: query, badge: "Return")
         }
         let perYear: [String: Double] = [
             "annual": 1, "annualized": 1, "yearly": 1, "quarterly": 4, "monthly": 12, "weekly": 52,
@@ -187,7 +187,7 @@ enum CalcFinance {
             let years = years(parts[2]), years > 0
         else { return nil }
         let rate = pow(gain, 1 / (years * periods)) - 1
-        return percentCard(rate * 100, query: query, badge: String(localized: "Return"))
+        return percentCard(rate * 100, query: query, badge: "Return")
     }
 
     /// `investment required for $50,000/year at 4%`: the capital whose yield pays that rate forever.
@@ -207,7 +207,7 @@ enum CalcFinance {
         yearly.amount /= rate / 100
         guard yearly.amount.isFinite else { return nil }
         return .phrase(
-            query, .quantity(yearly), target: String(localized: "Investment"), isCurrency: yearly.isCurrency)
+            query, .quantity(yearly), target: "Investment", isCurrency: yearly.isCurrency)
     }
 
     private static func ratio(_ a: [CalcToken], _ b: [CalcToken]) -> Double? {

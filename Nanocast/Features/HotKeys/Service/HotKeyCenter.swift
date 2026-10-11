@@ -22,7 +22,6 @@ private func hotKeyCarbonEventHandler(
     return center.handle(hotKeyID, kind: kind, flagsRaw: flagsRaw)
 }
 
-/// The Carbon layer only; which shortcuts exist is `HotKeyManager`'s business.
 @MainActor
 final class HotKeyCenter {
     private struct Entry {
@@ -37,9 +36,8 @@ final class HotKeyCenter {
     private var idToKey: [UInt32: String] = [:]
     private var nextCarbonID: UInt32 = 0
     private var eventHandler: EventHandlerRef?
-    private let signature: OSType = 0x5459_4354  // FourCC "TYCT"
+    private let signature: OSType = 0x5459_4354
 
-    /// While true every hotkey is soft-unregistered, so a recorder can capture combos.
     var isPaused = false {
         didSet {
             guard isPaused != oldValue else { return }
@@ -49,7 +47,6 @@ final class HotKeyCenter {
         }
     }
 
-    /// Registers `shortcut` under `id`, dropping any previous one so no combo leaks.
     func register(
         id: String, shortcut: KeyShortcut, onKeyDown: @escaping (UInt64) -> Void,
         onKeyUp: (() -> Void)? = nil

@@ -33,7 +33,7 @@ in (see Currency below).
 - **A workday is 8 hours, and nothing consults a calendar.** Weekends and public holidays would make
   the same query answer differently on two Macs, and the only supported source for them is EventKit,
   whose Full Calendar Access grant a calculator must never provoke mid-keystroke. `workdays` is
-  therefore an ordinary time unit, and `calendarEnabled` stays the Calendar feature's own consent.
+  therefore an ordinary time unit.
 - **`CurrencyData.generated.swift` is emitted by `node Scripts/gen-currencies.js`** and never hand-edited.
   Four currency tables are hand-maintained, all in `CalcCurrency`: `contested`, the nouns several
   currencies share (`dollars`, `pounds`); `isoNames`, the standard's own names where CLDR substitutes
@@ -842,10 +842,6 @@ The fetch runs on a private **cacheless** `URLSession` (`.ephemeral`, `urlCache 
 `URLSession.shared`, so `currency-rates.json` stays the only copy on disk. The feed serves the table
 `Cache-Control: public, max-age=…`, so the shared session would keep a second copy in the on-disk
 `URLCache` that deleting the snapshot doesn't touch.
-
-Both feeds are served by the website's Worker at `tinycast.dev/api/v1/currencies`, which reshapes the
-CC0 [exchange-api](https://github.com/fawazahmed0/exchange-api) daily snapshot and edge-caches it
-(see `website/worker/currencies.ts`).
 
 Rates come from `CurrencyRateStore` (`Calculator/Service/`, owned by `AppCore`), which issues two
 requests concurrently: the fiat table, keyed `<base><code>` with the base's own row omitted, and the

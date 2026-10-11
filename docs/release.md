@@ -11,89 +11,52 @@ the signing identity itself is in [signing.md](signing.md).
 ```
 
 It builds a Release `Nanocast.app` signed with `Nanocast Self-Signed` and packs it with an
-`/Applications` symlink. Official per-channel releases are built by CI, below.
+`/Applications` symlink. Official releases are built by CI, below.
 
 ## Signing & Gatekeeper
 
-CI releases are signed with the team's Developer ID, notarized and stapled, so a downloaded DMG
-opens without a Gatekeeper warning. Local builds, `build-dmg.sh` included, keep signing with
-`Nanocast Self-Signed` and are never notarized. Full details in [signing.md](signing.md).
+Both local builds and CI releases sign with the same stable `Nanocast Self-Signed` identity, not an
+Apple Developer ID — so macOS quarantines a directly-downloaded DMG. The Homebrew cask strips that
+automatically; direct downloaders run `xattr -dr com.apple.quarantine /Applications/Nanocast.app` once.
+Full details in [signing.md](signing.md).
 
 ## How the in-app updater consumes a release
 
-Every release publishes three assets from one build: `Nanocast-<version>.dmg`, which people download
-by hand and which the cask installs, `Nanocast-<version>.zip`, which the in-app updater installs, and
-`Nanocast-<version>.zip.sig`, the zip's signature by the release key. The zip is produced with
-`ditto -c -k --keepParent --sequesterRsrc` — the only zip that leaves the code signature verifiable,
-which matters because the updater refuses any bundle it cannot prove is ours.
-
-A stable release publishes two more from the `universal` job, `Nanocast-Universal-<version>.dmg` and
-`.zip`, built from the same commit at the same version and bundle id but with both slices. They are
-uploaded _after_ the thin pair, which keeps the thin zip first in the asset list so builds predating
-architecture-aware selection keep choosing it.
+Every release publishes two assets from one build: `Nanocast-<version>.dmg`, which people download by
+hand and which the cask installs, and `Nanocast-<version>.zip`, which the in-app updater installs. The
+zip is produced with `ditto -c -k --keepParent --sequesterRsrc` — the only zip that leaves the code
+signature verifiable, which matters because the updater refuses any bundle whose signature does not
+prove it is ours.
 
 Three things a release must keep true, or the updater skips it:
 
-- **It carries a `.zip` asset this Mac can run.** A DMG-only release is not installable and is not
-  offered, and an Intel build is offered nothing rather than a thin arm64 zip.
-- **The tag parses as `vMAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH-beta.N`,** and agrees with the
-  `prerelease` flag. A tag of any other shape is treated as mis-published and skipped.
+- **It carries a `.zip` asset.** A DMG-only release is not installable and is not offered.
+- **The tag parses as `vMAJOR.MINOR.PATCH-REVISION` and the release is not a prerelease.** A tag of any other shape is skipped.
 - **It is not a draft.**
 
-**Every cask declares `auto_updates true`.** That is Homebrew's flag for an app that manages its own
+**The cask declares `auto_updates true`.** That is Homebrew's flag for an app that manages its own
 version, and it is what keeps `brew update && brew upgrade` from fighting an app that updated itself:
 brew never reports Nanocast outdated, never re-downloads it, and never rolls a self-updated copy back.
 Removing that line would reintroduce exactly those three problems. See
 [features/updates.md](features/updates.md).
 
-## Pull request review
+## Checks before a merge
 
-There is no CI workflow and no automated reviewer, so the whole bar in
-[testing.md](testing.md#definition-of-done) is run locally before a PR is opened.
+The whole bar in [testing.md](testing.md#definition-of-done) runs locally before a change lands on the default branch. The one CI check is `.github/workflows/cask.yml`, which runs `brew style` and `brew audit --cask --strict` when a pull request or push touches `Casks/`.
 
 ## Releasing
 
-`.github/workflows/release.yml` builds and publishes a DMG from GitHub Actions, no local machine
-needed. Run it from the **Actions** tab (`Release` → **Run workflow**) and pick:
+`.github/workflows/release.yml` builds and publishes a release from GitHub Actions, no local machine needed. Run it from the **Actions** tab (`Release` → **Run workflow**). It takes no input, because the version comes from Tinycast.
 
-- **channel** — `beta` or `stable`. Each builds a distinct app (`Nanocast Beta.app` / `Nanocast.app`)
-  with its own bundle id, alongside the local `Nanocast Dev.app`. Beta gets an auto-incrementing
-  `-beta.N` suffix (`N` = the Actions run number) so re-running never collides; stable ships the
-  version as-is.
-- **version** — base semver, e.g. `0.2.0`.
+The version is `<tinycast>-<revision>`, for example `0.11.21-1`. Nanocast has no version line of its own:
 
-Its first step is `Scripts/check-migrations.sh`: a migration that a stable release already shipped
-stops the run until it is deleted ([migrations.md](migrations.md)). The check reads tags and history,
-so the checkout fetches every commit without blobs.
+1. The job finds the `Rename upstream <sha> to Nanocast` snapshot and fetches the Tinycast tags into `refs/tags/tinycast/`.
+2. `<tinycast>` is the nearest Tinycast tag below the snapshot, without its channel suffix. `v0.11.21-beta.120` gives `0.11.21`.
+3. `<revision>` is one more than the highest `v<tinycast>-N` tag on `origin`, and starts at `1` after each upstream sync that moves the base.
 
-It builds on an `xcode-27` runner with the newest released Xcode 27 and publishes a GitHub Release
-tagged `v<full-version>` with a versioned DMG and zip asset, marked prerelease for beta. On success
-it also announces the release on Discord. A stable run also dispatches the Website workflow, because
-the site reads the latest version and the [changelog](https://tinycast.dev/changelog/) from GitHub at
-build time.
+It builds `Nanocast.app` (`com.nanocast.app`) on the `xcode-27` runner image with the newest released Xcode 27 and publishes a GitHub Release tagged `v<version>` with a versioned DMG and zip asset. A second job then points the Homebrew cask at that release, below.
 
-A stable run then fans out to a second job, `universal`, which rebuilds the same commit with
-`ARCHS="arm64 x86_64"` and attaches `Nanocast-Universal-<version>.dmg` / `.zip` to the release the
-first job created, then bumps `nanocast-universal`. macOS 26 is the last release that boots on Intel,
-and those Macs need both slices. Both jobs pin `ARCHS` explicitly and assert the slices on _every_
-shipping binary — the app, `ClipboardTextHelper`, `FileIndexHelper` and `Nanocast Dictation`:
-trusting `ARCHS_STANDARD` is what shipped a thin arm64 build to Intel users once already, and it
-also keeps the Apple silicon download from silently gaining a slice it never needs. A thin helper
-inside a universal app is the quiet form of the same bug: the app boots on Intel and only clipboard
-OCR or dictation stops working.
-
-Both jobs run in the `release` environment, which holds the signing and notary secrets and deploys
-from `main` only ([signing.md](signing.md#2-the-release-secrets)). After `verify-signature.sh`,
-`Scripts/package-release.sh` packs and signs the DMG, submits it once with `notarytool --wait`, and
-staples the ticket to the DMG and to the app before zipping it, so the updater's zip is stapled too.
-Any status but `Accepted` prints Apple's log and stops the run before anything is published.
-`Scripts/sign-update.swift` then signs the zip, and fails the run if the built app trusts a different
-update key. `Scripts/check-update-path.sh` runs just before notarizing, and fails the run unless the
-last release on the channel would install this build ([signing.md](signing.md#update-trust)).
-
-Channel builds override `NANOCAST_BUNDLE_IDENTIFIER`, not the target-wide `PRODUCT_BUNDLE_IDENTIFIER`.
-The Dictation helper derives its own identifier with a `.dictation` suffix; signature verification
-checks that its bundle and signing identifiers agree and remain distinct from the main app.
+The floor is macOS 27, which boots only on Apple silicon, so `ARCHS_STANDARD` is `arm64` alone and no Intel build exists. The job asserts `arm64` alone and a `27.0` floor on every shipping binary: the app, `ClipboardTextHelper`, `FileIndexHelper` and `FileToolHelper`. A helper built with a different floor or slice fails only when clipboard OCR, file indexing or a File Tools job runs, so the check covers all four.
 
 ### Release notes
 
@@ -101,43 +64,39 @@ checks that its bundle and signing identifiers agree and remain distinct from th
 It is safe to run by hand against any tag — it only reads:
 
 ```sh
-CHANNEL=beta TAG=v0.9.13-beta.61 ./Scripts/release-notes.sh /tmp/body.md /tmp/discord.md
+TAG=v0.9.13 ./Scripts/release-notes.sh /tmp/body.md
 ```
 
-The changelog itself comes from GitHub's own release-notes API, which lists every merged PR with its
-author and number — so contributors are credited without anyone maintaining a `CHANGELOG.md`, and
-without Conventional Commits. **Nothing is ever committed to this repo**: the tag is created
-server-side by `gh release create`, and no release, bot or version-bump commit exists.
+The changelog itself comes from GitHub's own release-notes API, which lists every merged PR with its author and number since the previous non-draft release — so contributors are credited without anyone maintaining a `CHANGELOG.md`, and without Conventional Commits. The tag is created server-side by `gh release create`.
 
-Two details the script exists for:
+**The body is split by `<!-- nanocast:install -->`.** Everything above it is the changelog; everything below is the Homebrew and quarantine text, which only a download page needs. Full PR URLs are shortened to `#304`, which still autolinks on the web.
 
-- **The previous tag is picked per channel.** Beta and stable tags interleave on `main` — the same
-  commit can carry both — so "the previous release" is only ever right within one channel. A stable
-  release therefore spans every beta since the last stable.
-- **The body is split by `<!-- nanocast:install -->`.** Everything above it is the changelog;
-  everything below is the install text, which only a download page needs. The website's changelog
-  cuts at that marker in `website/src/lib/changelog.ts`. Full PR URLs are shortened to `#304`, which
-  still autolinks on the web.
+### Homebrew cask
 
-The Discord announcement carries the same changelog, truncated to fit Discord's component limit, and
-pings `@everyone`.
+This repository is its own Homebrew tap. `Casks/nanocast.rb` installs the DMG of the release that its `version` and `sha256` name. Because the repository is not named `homebrew-nanocast`, users tap it by URL:
 
-### Homebrew casks
+```sh
+brew tap polo871209/nanocast https://github.com/polo871209/nanocast
+brew trust --tap polo871209/nanocast
+brew install --cask polo871209/nanocast/nanocast
+```
 
-`nanocast` and `nanocast@beta` are in [homebrew/cask](https://github.com/Homebrew/homebrew-cask),
-where Homebrew's autobump bot bumps each one after a release.
+The `cask` job in `release.yml` runs on `macos-latest` after the release is published. It does these steps in order:
 
-`nanocast-universal` is the only cask left in the
-[`homebrew-nanocast`](https://github.com/abue-ammar/homebrew-tinycast) tap, and the `universal` job
-is the only job that touches it: its last step rewrites the cask's `version` + `sha256` and pushes.
-The tap's `tap_migrations.json` hands anyone who installed `nanocast` or `nanocast@beta` from the tap
-to homebrew/cask on `brew update`.
+1. Checks out the default branch and writes the new `version` and the DMG `sha256` into `Casks/nanocast.rb`. The `sed` is anchored to `^  version` and `^  sha256`, so the two-space indent on those lines is load-bearing.
+2. Links the checkout as the tap with `Scripts/link-tap.sh`, then runs `brew style`, `brew audit --cask --strict --online` and `brew fetch --cask`. The fetch downloads the published DMG and fails if its checksum differs.
+3. Commits `nanocast <version>` as `github-actions[bot]` and pushes to the default branch with `GITHUB_TOKEN`. If the push is rejected because the branch moved, it rebases and tries again, three times at most.
 
-The step needs a `HOMEBREW_TAP_TOKEN` repo secret — a fine-grained PAT with **Contents: read/write**
-on the tap repo. Without the secret the step logs a warning and skips; the release still publishes.
-The `sed` is anchored to `^  version` / `^  sha256`, so a cask's two-space indent on those lines is
-load-bearing.
+That bump commit is the only commit CI makes. It needs no extra secret, but a branch rule that blocks direct pushes from `github-actions[bot]` makes step 3 fail. The release itself stays published.
 
-Both stable casks install `Nanocast.app` under `com.nanocast.app`, so `nanocast-universal` declares
-`conflicts_with cask: "nanocast"`. `nanocast` requires `arch: :arm64`; `nanocast-universal` installs
-on any Mac.
+The cask removes the quarantine flag in `postflight_steps`, because the app is self-signed and Gatekeeper refuses a quarantined copy. Homebrew 7 runs those steps in a sandbox that can write to the Applications folder.
+
+To check a cask change locally, link this checkout as the tap and run the same commands as CI:
+
+```sh
+./Scripts/link-tap.sh
+brew style Casks/
+brew audit --cask --strict polo871209/nanocast/nanocast
+```
+
+`Scripts/link-tap.sh` refuses to run if `polo871209/nanocast` is already tapped from GitHub. Remove that tap with `brew untap polo871209/nanocast` first.

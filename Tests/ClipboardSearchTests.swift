@@ -84,7 +84,6 @@ struct ClipboardSearchTests {
             store.search("invoice", filter: .all).isEmpty, "hidden palette cannot restart OCR search")
         store.setTextSearchActive(true)
         store.clearAll()
-        // Pins outlive Clear History, and so does the OCR text recorded against them.
         let survivors = Set(store.items.map(\.id))
         metadata = metadata.filter { survivors.contains($0.key) }
         try await compare(store, phase: "cleared")
