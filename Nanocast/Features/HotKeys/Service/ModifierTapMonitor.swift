@@ -1,7 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// C entry point: reduce to Sendable scalars, then cross in. Listen-only, so nothing changes.
 private func modifierTapEventTapCallback(
     proxy: CGEventTapProxy, type: CGEventType, event: CGEvent,
     userInfo: UnsafeMutableRawPointer?
@@ -29,20 +28,16 @@ private func modifierTapEventTapCallback(
     return Unmanaged.passUnretained(event)
 }
 
-/// The listen-only modifier tap. See docs/features/hotkeys.md#modifier-only-shortcuts.
 @MainActor
 @Observable
 final class ModifierTapMonitor: HealthCheckable {
-    /// True while something is bound and the tap can't be created; the recorder surfaces it.
     private(set) var needsAccessibility = false
 
-    /// Fired on the tap's final release, so the key is up by the time the action runs.
     @ObservationIgnored var onTrigger: ((HotKeyBinding) -> Void)?
     @ObservationIgnored var onHoldPressed: (() -> Void)?
     @ObservationIgnored var onHoldReleased: (() -> Void)?
     @ObservationIgnored var onHoldCancelled: (() -> Void)?
 
-    /// Set while a recorder captures, so editing a binding can't trigger it.
     var isPaused = false {
         didSet {
             guard isPaused != oldValue else { return }
@@ -67,7 +62,6 @@ final class ModifierTapMonitor: HealthCheckable {
 
     @ObservationIgnored weak var healthTicker: HealthTicker?
 
-    // The tap holds an unretained `self`, so it must not outlive it.
     isolated deinit {
         tearDownTap()
     }
@@ -77,7 +71,6 @@ final class ModifierTapMonitor: HealthCheckable {
         syncTapPresence()
     }
 
-    /// Modifier-only bindings currently assigned; an empty set tears the tap down entirely.
     func update(bound: Set<HotKeyBinding>, holdKey: ModifierKey? = nil) {
         guard bound != self.bound || holdKey != self.holdKey else { return }
         self.bound = bound
@@ -86,11 +79,8 @@ final class ModifierTapMonitor: HealthCheckable {
         syncTapPresence()
     }
 
-    // MARK: - Detection
-
     fileprivate func process(isFlagsChanged: Bool, flagsRaw: UInt64, keyCode: Int) {
         guard !isPaused else { return }
-        // `systemUptime` is monotonic, so a wall-clock adjustment can't turn a tap into a hold.
         let now = ProcessInfo.processInfo.systemUptime
         let input: DoubleTapDetector.Input
         if isFlagsChanged {
@@ -103,7 +93,6 @@ final class ModifierTapMonitor: HealthCheckable {
             }
             input = .modifiers(modifiers, hasOtherModifiers: Self.hasOtherModifiers(in: flags))
         } else {
-            // Return and Escape belong to the dictation panel while a hold is active.
             if holding,
                 keyCode == kVK_Return || keyCode == kVK_ANSI_KeypadEnter
                     || keyCode == kVK_Escape
@@ -211,11 +200,8 @@ final class ModifierTapMonitor: HealthCheckable {
         flags.contains(.maskSecondaryFn)
     }
 
-    // MARK: - Tap lifecycle
-
     private func installObserversIfNeeded() {
         guard sessionTokens.isEmpty else { return }
-        // Fast user switching: another session owns the keyboard, so stop watching.
         let center = NSWorkspace.shared.notificationCenter
         sessionTokens = [
             NotificationToken(
@@ -263,7 +249,6 @@ final class ModifierTapMonitor: HealthCheckable {
         guard
             let port = CGEvent.tapCreate(
                 tap: .cgSessionEventTap,
-                // Appended, so `HyperKeyTap`'s rewrite lands first. See docs/features/hotkeys.md.
                 place: .tailAppendEventTap,
                 options: .listenOnly,
                 eventsOfInterest: mask,
@@ -300,13 +285,11 @@ final class ModifierTapMonitor: HealthCheckable {
         }
     }
 
-    /// Called when the system disables the tap; any half-tracked press is stale by then.
     fileprivate func tapWasDisabled() {
         resetDetectors()
         if let tapPort { CGEvent.tapEnable(tap: tapPort, enable: true) }
     }
 
-    /// One-second watchdog while something is bound. See docs/features/hotkeys.md#lifecycle.
     func healthCheck() {
         guard !bound.isEmpty, sessionActive else { return }
         if tapPort == nil {

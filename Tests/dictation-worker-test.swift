@@ -222,7 +222,6 @@ struct DictationWorkerTest {
     }
 }
 
-// URL loading owns each instance; shared fixture state is protected by its mutex.
 private final class DownloadFixture: URLProtocol, @unchecked Sendable {
     struct State {
         var hold = false

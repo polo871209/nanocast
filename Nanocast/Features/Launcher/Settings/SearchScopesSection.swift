@@ -1,10 +1,8 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The editable list of folders (and individual `.app` bundles) the launcher indexes.
 struct SearchScopesSection: View {
     @Environment(AppSettings.self) private var settings
-    /// Recomputed only on change: a `fileExists` per row is too much per body render.
     @State private var missing: Set<String> = []
 
     private var isDefault: Bool { settings.searchScopes == SearchScopes.defaults }
@@ -45,11 +43,10 @@ struct SearchScopesSection: View {
         panel.canChooseDirectories = true
         panel.canChooseFiles = true
         panel.allowedContentTypes = [.applicationBundle]
-        // Otherwise an .app is navigated into rather than selected.
         panel.treatsFilePackagesAsDirectories = false
         panel.allowsMultipleSelection = true
-        panel.prompt = String(localized: "Add")
-        panel.message = String(localized: "Choose folders or applications to include in the launcher.")
+        panel.prompt = "Add"
+        panel.message = "Choose folders or applications to include in the launcher."
         // Nanocast is an accessory app, so the panel opens behind the frontmost app without this.
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK else { return }

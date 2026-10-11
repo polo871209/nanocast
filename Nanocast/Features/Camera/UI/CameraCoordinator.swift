@@ -1,28 +1,23 @@
 import AppKit
 import SwiftUI
 
-/// Owns the standalone camera surface: one panel at a time, and the camera stops with it.
 @MainActor
 @Observable
 final class CameraCoordinator {
     private(set) var feed: CameraSession.Feed = .noCamera
     private(set) var canSwitchCamera = false
-    /// Remembered for the launch, so reopening the command keeps the framing you were happy with.
     var mirrored = true
 
-    @ObservationIgnored private let session = CameraSession(.capture)
+    @ObservationIgnored private let session = CameraSession()
     @ObservationIgnored private unowned let core: AppCore
     @ObservationIgnored private var panel: CameraPanel?
-    /// Held across the camera warm-up too, so a chord repeating into it cannot stack panels.
     @ObservationIgnored private var opening = false
 
     init(core: AppCore) {
         self.core = core
     }
 
-    /// The camera settles first: a panel over a starting session shows a black stage.
     func show() async {
-        // A panel system UI left without key takes it back, so ↵ and Esc reach it again.
         if let panel {
             panel.makeKey()
             return
@@ -39,9 +34,7 @@ final class CameraCoordinator {
         guard let closing = panel else { return }
         panel = nil
         closing.onAction = nil
-        // The camera goes with the panel, not before it: tearing it down mid-close blanks the feed.
         closing.orderOutAnimated { [weak self] in
-            // Unless a panel raised inside the close already owns the camera.
             guard let self, !opening else { return }
             session.stop()
         }
@@ -51,7 +44,6 @@ final class CameraCoordinator {
         Task { await session.switchToNextDevice() }
     }
 
-    /// The panel goes with the shot: the command is done, and the camera light goes out with it.
     func takePhoto() {
         guard case .live = feed else { return }
         let mirrored = mirrored
@@ -59,12 +51,12 @@ final class CameraCoordinator {
             let png = await session.capturePhoto(mirrored: mirrored)
             close()
             guard let png else {
-                core.showMessage(String(localized: "Couldn't take the photo"), tone: .danger)
+                core.showMessage("Couldn't take the photo", tone: .danger)
                 return
             }
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setData(png, forType: .png)
-            core.showMessage(String(localized: "Photo copied"))
+            core.showMessage("Photo copied")
         }
     }
 
@@ -78,7 +70,6 @@ final class CameraCoordinator {
         }
         self.panel = panel
         panel.centerOnCursorScreen()
-        // Non-activating like the palette: key focus without pulling the user out of their app.
         panel.makeKeyAndOrderFront(nil)
         panel.orderFrontRegardless()
     }

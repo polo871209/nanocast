@@ -1,6 +1,5 @@
 import Foundation
 
-/// Follows Language & Region's number format, so a change there applies without a relaunch.
 @MainActor
 @Observable
 final class RegionNumberFormatMonitor {
@@ -8,8 +7,7 @@ final class RegionNumberFormatMonitor {
     @ObservationIgnored private var token: NotificationCenter.ObservationToken?
 
     init() {
-        token = NotificationCenter.default.addObserver(of: Locale.self, for: .currentLocaleDidChange) {
-            [weak self] _ in
+        token = NotificationCenter.default.addObserver(of: Locale.self, for: .currentLocaleDidChange) { [weak self] _ in
             self?.system = Self.read()
         }
     }
@@ -22,7 +20,6 @@ final class RegionNumberFormatMonitor {
         style == .system ? system : .english
     }
 
-    /// Separators the parser can't take, such as the Arabic `٫`, fall back to English.
     private static func read() -> CalcNumberFormat {
         let locale = Locale.autoupdatingCurrent
         return CalcNumberFormat(

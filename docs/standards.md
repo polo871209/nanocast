@@ -10,15 +10,14 @@ When this document and the code disagree, the code is probably right and this fi
 
 ## Posture
 
-Nanocast supports macOS 26 and later, with macOS 27 strongly preferred. Swift 6+ with complete strict
+Nanocast supports macOS 27 and later, on Apple silicon only. Swift 6+ with complete strict
 concurrency is required. Prefer the latest Swift patterns and modern Apple APIs, following
 [`AGENTS.md`](../AGENTS.md#posture-modern-first-always).
 
 Verify API and language-feature availability against the SDK and compiler used by the build and CI.
-Use direct availability checks where macOS 27+ APIs require them to preserve macOS 26 support. Do not
-introduce compatibility layers, legacy workarounds, support below macOS 26 or speculative fallbacks.
-Migration code lives only in `Migrations/` and is deleted after one stable release; see
-[migrations.md](migrations.md).
+Every macOS 27 API is available unconditionally, so no `#available` check or runtime OS-version
+branch exists. Do not introduce compatibility layers, legacy workarounds, support below macOS 27,
+migration scaffolding or speculative fallbacks.
 
 In practice that means Observation and never `ObservableObject` or `@Published`; `SMAppService` and
 never an `LSSharedFileList` shim. Adopt successors directly and delete obsolete call sites rather
@@ -85,10 +84,8 @@ fit the table.
 | `Catalog`     | Pure static namespace over a built-in list                                    |
 | `Index`       | A searchable collection, rebuilt as its inputs change                         |
 | `Engine`      | A pure evaluator: input → output                                              |
-| `Lexer`       | Splits text into classified token ranges in one pass; never rejects input     |
 | `Policy`      | A pure decision — no state, no effects                                        |
 | `Remapper`    | Keeps one HID key mapping on every matching device, including later arrivals  |
-| `Migration`   | Repairs state an older release left behind; deleted after one stable release  |
 | `Lock`        | Holds a cross-process exclusive claim that the kernel frees on exit           |
 
 `Manager` is the one worth thinking twice about. It means _lifecycle plus policy_, which is a lot for one
@@ -236,48 +233,15 @@ comment is written buys a second edit; these are cheap to get right on the first
 ## Accessibility
 
 Every custom control carries a label and the traits that describe it. The palette is an entirely custom
-control surface, so nothing comes for free — a row, a keycap chip, a footer pill and a dialog button all
+control surface, so nothing comes for free — a row, a keycap chip, a menu row and a dialog button all
 need saying explicitly. Adding it as the view is written costs a line; retrofitting it costs a rewrite.
 
-## Localization
+## Language
 
-Nanocast ships English plus German, Spanish, French, Japanese, Korean, Portuguese, Russian and
-Simplified Chinese. Every string lives in `Nanocast/Resources/Localizable.xcstrings`, keyed by its
-English source text; the compiler extracts the keys, and `./Scripts/sync-strings.sh` writes them into
-the catalog (Xcode's own build does the same in the IDE). The six privacy prompts live in
-`InfoPlist.xcstrings`, keyed by their `Info.plist` key.
+Nanocast is English only. It ships no string catalog and no translations.
 
-- **SwiftUI's own initializers localize literals already** — `Text("…")`, `Button("…")`, `.help("…")`
-  and the rest take a `LocalizedStringKey`. A `String` *variable* passed to them is shown verbatim, so
-  the place that wrote the English is the place that localizes it.
-- **A view that only ever labels takes `LocalizedStringResource`**, so its callers pass plain literals
-  and the compiler still extracts them: `SettingsRowTitle`, `SettingsAnchor`, `SettingsSearchEntry`,
-  `FormRow`, `FeatureSwitchSection`, `SettingsEditorHeader`, `SettingsFilterField`.
-- **A `LocalizedStringResource` becomes a `String` through `resolved()`**, never `String(localized:)`:
-  that overload can skip the bundle's string-table cache and reparse the whole table on every call.
-- **Everything that also carries runtime text keeps `String`**, and its literal callers write
-  `String(localized: "…")` — dialogs, HUD messages, `PopoverMenuItem`, AppKit menus and windows,
-  `LocalizedError`, and every model `title`. `Model/` files use it too; it is Foundation.
-- **One sentence is one literal.** Never assemble one with `+` or from localized fragments: the
-  translation has to be free to reorder it. A long one is a `"""` literal with `\` continuations.
-  Interpolate data — a name, a count — never a phrase.
-- **A count is one interpolated string** (`"\(count) items"`) with plural variations in the catalog, never
-  a `== 1 ?` branch.
-- **Not language, not in the catalog**: glyphs, separators and samples are `Text(verbatim:)`.
-- **Never localized**: anything from macOS, the user or an extension — app and pane names, user
-  content, everything a Raycast extension supplies or receives — and persisted formats, identifiers,
-  log text, prompts sent to a model, and what the calculator parses.
-- **Nanocast's own command names are translated and stay findable in English**: `CommandID`,
-  `SystemAction` and `WindowCommand` keep their English source as `englishName`, which the launcher
-  indexes as an alternate title.
-
-On a fresh installation, Nanocast selects the Mac's primary language if supported, otherwise English,
-and saves that choice before any localization lookup. It does not keep following the Mac's language.
-Settings › General › Language writes the same per-app `AppleLanguages` key as System Settings ›
-Language & Region › Applications, and it applies on relaunch. An empty or unshipped stored list still
-launches in English. Because that key also changes
-`Locale.preferredLanguages` for this process, anything that indexes what the user *types* — app
-names, emoji keywords — reads macOS's own list through `SystemLanguages.preferred` instead.
+- Write UI text as a plain string literal. Do not add `String(localized:)`, `LocalizedStringResource` or a `.xcstrings` catalog.
+- A count picks its form in place: `count == 1 ? "1 item" : "\(count) items"`.
 
 ## What is actually checked
 

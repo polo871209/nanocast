@@ -1,3 +1,5 @@
+import Foundation
+
 enum CalcNumberBase: Int, Sendable {
     case binary = 2
     case octal = 8
@@ -16,10 +18,10 @@ enum CalcNumberBase: Int, Sendable {
 
     var name: String {
         switch self {
-        case .binary: String(localized: "Binary")
-        case .octal: String(localized: "Octal")
-        case .decimal: String(localized: "Decimal")
-        case .hexadecimal: String(localized: "Hexadecimal")
+        case .binary: "Binary"
+        case .octal: "Octal"
+        case .decimal: "Decimal"
+        case .hexadecimal: "Hexadecimal"
         }
     }
 

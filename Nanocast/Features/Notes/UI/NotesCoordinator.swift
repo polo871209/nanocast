@@ -34,9 +34,7 @@ final class NotesCoordinator {
     private(set) var formatting = NoteFormatting.plain
     private(set) var isFormattingBarExpanded: Bool
     private(set) var isHeadingMenuPresented = false
-    /// A press closes the menu before its button fires, so the button must not reopen it.
     @ObservationIgnored private var headingMenuWasOpenAtPress = false
-    /// The heading button in the panel's flipped content space, reported by the bar as it lays out.
     @ObservationIgnored var headingButtonFrame: CGRect = .zero
     private var switcherRename = NoteSwitcherRenameState()
     private var presentationGeneration = 0
@@ -70,7 +68,7 @@ final class NotesCoordinator {
     var hasActiveNote: Bool { store.activeID != nil }
     /// UTF-16 units, straight off the text storage: the only length TextKit hands back in O(1).
     var characterCountLabel: String {
-        String(localized: "\(characterCount) characters")
+        characterCount == 1 ? "1 character" : "\(characterCount) characters"
     }
 
     var searchQueryBinding: Binding<String> {
@@ -124,7 +122,6 @@ final class NotesCoordinator {
         menuBarController = shows ? NotesMenuBarController(coordinator: self) : nil
     }
 
-    /// Quit waits on this so the 300 ms autosave debounce cannot swallow the last edit.
     func prepareForTermination() async {
         await store.flush()
     }
@@ -222,7 +219,6 @@ final class NotesCoordinator {
         select(id)
     }
 
-    /// Renaming edits the filename, so the field starts from that and never from a derived line.
     func beginSwitcherRename(_ summary: NoteSummary) {
         switcherRename.begin(id: summary.id, title: summary.title)
     }
@@ -286,10 +282,10 @@ final class NotesCoordinator {
         runOperation { [weak self] generation in
             guard let self else { return }
             let confirmed = await core.confirm(
-                title: String(localized: "Move “\(title)” to Trash?"),
-                message: String(localized: "You can recover it from the Trash in Finder."),
+                title: "Move “\(title)” to Trash?",
+                message: "You can recover it from the Trash in Finder.",
                 symbol: nil,
-                confirmTitle: String(localized: "Move to Trash"))
+                confirmTitle: "Move to Trash")
             guard confirmed, settings.notesEnabled, !Task.isCancelled else { return }
             let switcherOrder = visibleNotes.map(\.id)
             let removed = await store.trash(id)
@@ -301,18 +297,16 @@ final class NotesCoordinator {
                 afterRemoving: id,
                 from: switcherOrder,
                 fallback: store.activeID ?? store.summaries.first?.id)
-            // Nothing left to browse, so the empty state owns the window rather than a bare list.
             if store.summaries.isEmpty { closeSwitcher(focusEditor: false) }
             guard permitsCompletion(generation) else { return }
             windowController.show(focusEditor: !isSwitcherPresented)
         }
     }
 
-    /// Points Notes at a folder as it is; nothing is moved out of the old one.
     func chooseNotesFolder() {
         guard
             let url = FolderPicker.choose(
-                message: String(localized: "Choose the folder your notes are kept in."),
+                message: "Choose the folder your notes are kept in.",
                 startingAt: store.notesDirectory)
         else { return }
         settings.notesFolder = AppPaths.contentFolderSetting(for: url, named: "Notes")
@@ -344,7 +338,6 @@ final class NotesCoordinator {
         characterCount = count
     }
 
-    /// Id and epoch, not the whole input: comparing a long source on every caret move is not free.
     func updateFormatting(_ input: NoteEditorInput, _ formatting: NoteFormatting) {
         let current = editorInput
         guard input.id == current.id, input.epoch == current.epoch, formatting != self.formatting else {
@@ -357,11 +350,9 @@ final class NotesCoordinator {
         windowController.format(action)
     }
 
-    /// Collapsing takes the heading button with it, so its menu cannot outlive it.
     func toggleFormattingBar() {
         guard showsFormattingBar else { return }
         closeHeadingMenu()
-        // Explicit, because the chord changes this from outside any view's transaction.
         withAnimation(Self.barMotion) { isFormattingBarExpanded.toggle() }
         saveFormattingBarExpanded(isFormattingBarExpanded)
     }
@@ -409,7 +400,6 @@ final class NotesCoordinator {
         let generation = enablementGeneration
         loadTask = Task { [weak self] in
             guard let self else { return }
-            // Create is its own load: the collection it would wait for is the one it adds to.
             let loaded = presentation == .create ? await store.create() : await store.start()
             guard generation == enablementGeneration else {
                 if !settings.notesEnabled { store.stop() }
@@ -417,7 +407,6 @@ final class NotesCoordinator {
             }
             loadTask = nil
             guard loaded, settings.notesEnabled, !Task.isCancelled else { return }
-            // The note this task just made satisfies a create still pending; never make a second.
             if presentation == .create, pendingPresentation == .create {
                 pendingPresentation = .editor
             }
@@ -440,18 +429,15 @@ final class NotesCoordinator {
             closeSwitcher()
             windowController.show(focusEditor: true)
         case .search:
-            // The switcher hangs off the note window, so that window has to exist first.
             windowController.show(focusEditor: false)
             openSwitcher()
         }
     }
 
-    /// A newer show or hide retires an older operation's right to put what it loaded on screen.
     private func permitsCompletion(_ generation: Int) -> Bool {
         windowController.isVisible && generation == presentationGeneration
     }
 
-    /// One collection operation at a time: a newer request cancels and supersedes an in-flight one.
     private func runOperation(_ body: @escaping @MainActor (Int) async -> Void) {
         operationTask?.cancel()
         operationID &+= 1
@@ -474,21 +460,21 @@ final class NotesCoordinator {
             switch issue {
             case .load(let failure):
                 let retry = await core.reportFailure(
-                    title: String(localized: "Couldn't Open Note"),
+                    title: "Couldn't Open Note",
                     message: failure.localizedDescription,
                     symbol: "text.page",
-                    recovery: String(localized: "Retry"))
+                    recovery: "Retry")
                 if retry { _ = await store.reload() }
             case .save(let failure):
                 let retry = await core.reportFailure(
-                    title: String(localized: "Couldn't Save Note"),
+                    title: "Couldn't Save Note",
                     message: failure.localizedDescription,
                     symbol: "text.page",
-                    recovery: String(localized: "Retry"))
+                    recovery: "Retry")
                 if retry { await store.retrySave() }
             case .operation(let failure):
                 _ = await core.reportFailure(
-                    title: String(localized: "Couldn't Update Note"),
+                    title: "Couldn't Update Note",
                     message: failure.localizedDescription,
                     symbol: "text.page",
                     recovery: nil)

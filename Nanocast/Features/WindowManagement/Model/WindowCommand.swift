@@ -39,18 +39,13 @@ struct WindowCommand: Identifiable, Hashable, Sendable {
         case nextSpace = "next-space"
     }
 
-    /// What the mover has to do, so its dispatch stays exhaustive over the catalog.
     enum Kind: String, Sendable {
         case geometry
-        /// Geometry too, but sourced from the recorded pre-action frame rather than computed.
         case restore
-        /// No geometry at all — the native `AXFullScreen` toggle.
         case fullscreen
-        /// No window at all — a synthetic Dock gesture that moves between Spaces.
         case space
     }
 
-    /// The launcher section a command belongs to, and the order the Settings panel lists them in.
     enum Group: String, CaseIterable, Sendable {
         case halves
         case quarters
@@ -63,26 +58,24 @@ struct WindowCommand: Identifiable, Hashable, Sendable {
 
         var title: String {
             switch self {
-            case .halves: return String(localized: "Halves")
-            case .quarters: return String(localized: "Quarters")
-            case .fourths: return String(localized: "Fourths")
-            case .thirds: return String(localized: "Thirds")
-            case .sizing: return String(localized: "Sizing")
-            case .moving: return String(localized: "Moving")
-            case .fullscreen: return String(localized: "Fullscreen")
-            case .spaces: return String(localized: "Spaces")
+            case .halves: return "Halves"
+            case .quarters: return "Quarters"
+            case .fourths: return "Fourths"
+            case .thirds: return "Thirds"
+            case .sizing: return "Sizing"
+            case .moving: return "Moving"
+            case .fullscreen: return "Fullscreen"
+            case .spaces: return "Spaces"
             }
         }
     }
 
     let id: ID
     let name: String
-    let englishName: String
     let sfSymbol: String
     let kind: Kind
     let group: Group
     let cyclesOnRepeat: Bool
-    /// False for the nudges, so the mover never writes `kAXSizeAttribute` for them.
     let resizes: Bool
 
     var entryID: String { "window-command:" + id.rawValue }
@@ -90,9 +83,8 @@ struct WindowCommand: Identifiable, Hashable, Sendable {
 
 enum WindowCommandCatalog {
     static let all: [WindowCommand] = WindowCommand.ID.allCases.map { id in
-        let name = name(for: id)
-        return WindowCommand(
-            id: id, name: name.resolved(), englishName: name.key, sfSymbol: symbol(for: id),
+        WindowCommand(
+            id: id, name: name(for: id), sfSymbol: symbol(for: id),
             kind: kind(for: id), group: group(for: id), cyclesOnRepeat: cyclesOnRepeat.contains(id),
             resizes: !movesOnly.contains(id))
     }
@@ -104,7 +96,6 @@ enum WindowCommandCatalog {
 
     static func command(forEntryID entryID: String) -> WindowCommand? { byEntryID[entryID] }
 
-    /// Catalog order grouped for Settings; `ID.allCases` is in group order, so this partitions.
     static func grouped() -> [(group: WindowCommand.Group, commands: [WindowCommand])] {
         WindowCommand.Group.allCases.compactMap { group in
             let commands = all.filter { $0.group == group }
@@ -118,7 +109,7 @@ enum WindowCommandCatalog {
 
     static let movesOnly: Set<WindowCommand.ID> = [.moveLeft, .moveRight, .moveUp, .moveDown]
 
-    private static func name(for id: WindowCommand.ID) -> LocalizedStringResource {
+    private static func name(for id: WindowCommand.ID) -> String {
         switch id {
         case .leftHalf: return "Left Half"
         case .rightHalf: return "Right Half"

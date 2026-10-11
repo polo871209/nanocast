@@ -10,14 +10,13 @@ struct UpdateInstaller: Sendable {
         var message: String {
             switch self {
             case .downloading(let received, let expected):
-                return String(localized: "Downloading… \(Self.size(received)) of \(Self.size(expected))")
-            case .extracting: return String(localized: "Expanding…")
-            case .verifying: return String(localized: "Verifying…")
-            case .replacing: return String(localized: "Replacing Nanocast…")
+                return "Downloading… \(Self.size(received)) of \(Self.size(expected))"
+            case .extracting: return "Expanding…"
+            case .verifying: return "Verifying…"
+            case .replacing: return "Replacing Nanocast…"
             }
         }
 
-        /// Only the download knows how far along it is; the rest are short, opaque steps.
         var fraction: Double? {
             guard case .downloading(let received, let expected) = self, expected > 0 else {
                 return nil
@@ -73,7 +72,6 @@ struct UpdateInstaller: Sendable {
         guard result.succeeded else { throw UpdateFailure.extractFailed(result.tail) }
         let contents = try? FileManager.default.contentsOfDirectory(
             at: directory, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
-        // Named for its channel — "Nanocast Beta.app", not "Nanocast.app".
         guard let app = contents?.first(where: { $0.pathExtension == "app" }) else {
             throw UpdateFailure.noAppInArchive
         }
@@ -82,7 +80,6 @@ struct UpdateInstaller: Sendable {
 
     private func verify(_ staged: URL, is release: AvailableRelease) throws {
         if Quarantine.isSet(on: staged) { Quarantine.clear(from: staged) }
-        // Refuse rather than install something the user would then have to unquarantine by hand.
         guard !Quarantine.isSet(on: staged) else { throw UpdateFailure.quarantined }
 
         let info = Self.info(at: staged)
@@ -92,7 +89,7 @@ struct UpdateInstaller: Sendable {
         let found = info?["CFBundleShortVersionString"] as? String
         guard found == release.version.description else {
             throw UpdateFailure.versionMismatch(
-                expected: release.version.description, found: found ?? String(localized: "unknown"))
+                expected: release.version.description, found: found ?? "unknown")
         }
         guard BundleSignature.isTrusted(staged) else { throw UpdateFailure.identityMismatch }
     }

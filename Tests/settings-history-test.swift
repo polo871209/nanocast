@@ -1,6 +1,5 @@
 import Foundation
 
-/// Compiles the shipped `SettingsHistory`, so a new pane can't change navigation.
 @main
 @MainActor
 struct SettingsHistoryTests {
@@ -51,7 +50,6 @@ struct SettingsHistoryTests {
         expect(!history.canGoForward, "with nothing ahead")
     }
 
-    /// Reselecting must not stack entries, or Back walks the same pane repeatedly.
     static func reselectingIsNotANavigation() {
         var history = SettingsHistory(current: .general)
         history.select(.general)
@@ -65,11 +63,11 @@ struct SettingsHistoryTests {
 
     static func roundTrips() {
         var history = SettingsHistory(current: .general)
-        history.select(.snippets)
+        history.select(.notes)
         history.select(.emoji)
 
         history.goBack()
-        expect(history.current == .snippets, "Back walks one entry at a time")
+        expect(history.current == .notes, "Back walks one entry at a time")
         expect(history.canGoForward, "and what we left becomes reachable again")
 
         history.goBack()
@@ -83,7 +81,7 @@ struct SettingsHistoryTests {
 
     static func aNewBranchDiscardsTheOldOne() {
         var history = SettingsHistory(current: .general)
-        history.select(.snippets)
+        history.select(.notes)
         history.select(.emoji)
         history.goBack()
         history.goBack()
@@ -108,9 +106,6 @@ struct SettingsHistoryTests {
         expect(history.current == .about, "Forward at the tip is a no-op too")
     }
 
-    // MARK: - Sidebar taxonomy
-    // The sidebar renders groups, so a pane in none is unreachable but still compiles.
-
     static func sidebarCoversEveryPane() {
         let grouped = SettingsSection.allCases.flatMap(\.tabs)
         expect(
@@ -119,7 +114,6 @@ struct SettingsHistoryTests {
         expect(grouped.count == SettingsTab.allCases.count, "and none appears twice")
     }
 
-    /// A selectable `List` flattens section and row IDs into one namespace.
     static func sidebarIdentityNamespacesAreDisjoint() {
         let sections = Set(SettingsSection.allCases.map { AnyHashable($0.id) })
         let tabs = Set(SettingsTab.allCases.map { AnyHashable($0.id) })
@@ -129,9 +123,6 @@ struct SettingsHistoryTests {
         expect(tabs.count == SettingsTab.allCases.count, "and every pane's identity is its own")
     }
 
-    // MARK: - Search catalog
-    // A `Form` can't be asked what rows it holds, so the catalog is hand-written and can drift.
-
     static func catalogCoversEveryPane() {
         let covered = Set(SettingsSearchCatalog.entries.map(\.tab))
         expect(
@@ -139,7 +130,6 @@ struct SettingsHistoryTests {
             "every pane is reachable from Settings search")
     }
 
-    /// The results `List` is keyed by `id`; a duplicate would make two rows select as one.
     static func catalogIdentitiesAreUnique() {
         let ids = SettingsSearchCatalog.entries.map(\.id)
         expect(Set(ids).count == ids.count, "no two catalog entries share an identity")
@@ -154,8 +144,7 @@ struct SettingsHistoryTests {
             ("popup", .general),
             ("paste history", .clipboard),
             ("window manage", .windowManagement),
-            ("skin tone", .emoji),
-            ("mcp", .ai)
+            ("skin tone", .emoji)
         ]
         for (query, tab) in cases {
             let found = SettingsSearchCatalog.results(for: query).first
@@ -163,7 +152,6 @@ struct SettingsHistoryTests {
         }
     }
 
-    /// The anchor carries the pane, so a row filed under the wrong one cannot be written.
     static func catalogAnchorsMatchTheirPane() {
         for entry in SettingsSearchCatalog.entries {
             guard let anchor = entry.anchor else { continue }
@@ -173,18 +161,14 @@ struct SettingsHistoryTests {
         expect(Set(panes).count == panes.count, "and each pane is listed as a result exactly once")
     }
 
-    /// A term found in the title has to beat the same term found only in a breadcrumb.
     static func catalogRanksTitlesFirst() {
-        let results = SettingsSearchCatalog.results(for: "extensions")
-        expect(results.first?.tab == .extensions, "“extensions” opens on its own pane")
+        let results = SettingsSearchCatalog.results(for: "notes")
+        expect(results.first?.tab == .notes, "“notes” opens on its own pane")
         expect(
             SettingsSearchCatalog.results(for: "nothing here matches at all").isEmpty,
             "and an unmatched query returns nothing")
     }
 
-    // MARK: - Revealing a section
-
-    /// Picking the same result twice has to scroll and pulse again, not compare equal and do nothing.
     static func revealingRecordsANewRequestEachTime() {
         let navigation = SettingsNavigationState(tab: .general)
         expect(navigation.scrollRequest == nil, "a fresh window has nothing to reveal")
@@ -200,14 +184,12 @@ struct SettingsHistoryTests {
         navigation.select(.general, revealing: .section(.generalHyperKey))
         expect(navigation.scrollRequest != first, "asking twice is two distinct requests")
 
-        // A stale request must not clear the one that replaced it.
         if let first { navigation.clear(first) }
         expect(navigation.scrollRequest != nil, "clearing a superseded request is a no-op")
         if let live = navigation.scrollRequest { navigation.clear(live) }
         expect(navigation.scrollRequest == nil, "clearing the live one releases it")
     }
 
-    /// The pulse outlives the pane that started it, and only its own owner may put it out.
     static func flashOutlivesThePaneThatLitIt() {
         let navigation = SettingsNavigationState(tab: .general)
         navigation.select(.clipboard, revealing: .row(.clipboardHistory, "Keep history for"))
@@ -219,7 +201,6 @@ struct SettingsHistoryTests {
         navigation.endFlash(.row(.clipboardHistory, "Keep history for"))
         expect(navigation.flashing == nil, "its own owner can")
 
-        // A jump that lands elsewhere must not leave the old light burning behind it.
         navigation.beginFlash(.row(.clipboardHistory, "Keep history for"))
         navigation.select(.general)
         expect(navigation.flashing == nil, "navigating away clears a stale pulse")

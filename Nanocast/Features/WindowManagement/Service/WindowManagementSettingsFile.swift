@@ -1,6 +1,5 @@
 import Foundation
 
-/// Window management's shortcuts, aliases and lists in settings.json, each kept with its record.
 @MainActor
 struct WindowManagementSettingsFile {
     let sizes: CustomWindowSizeStore
@@ -81,13 +80,15 @@ struct WindowManagementSettingsFile {
                 return report(
                     decoded, kept: kept, key: key,
                     skippedMessage: {
-                        String(localized: "\($0) custom sizes were skipped: a name is empty or used twice")
+                        $0 == 1
+                            ? "1 custom size was skipped: a name is empty or used twice"
+                            : "\($0) custom sizes were skipped: a name is empty or used twice"
                     })
                     + follow(
                         decoded,
                         records: sizes.sizes.map { Record(id: $0.id, name: $0.name, entryID: $0.entryID) },
                         previous: previous, bound: hotKeys.boundCustomWindowSizeIDs,
-                        label: { String(localized: "custom size “\($0)”") },
+                        label: { "custom size “\($0)”" },
                         action: HotKeyAction.customWindowSize, key: key)
             })
     }
@@ -114,10 +115,9 @@ struct WindowManagementSettingsFile {
                 return report(
                     decoded, kept: kept, key: key,
                     skippedMessage: {
-                        String(
-                            localized: """
-                                \($0) layouts were skipped: a name is empty or used twice, or it has no apps
-                                """)
+                        $0 == 1
+                            ? "1 layout was skipped: a name is empty or used twice, or it has no apps"
+                            : "\($0) layouts were skipped: a name is empty or used twice, or it has no apps"
                     })
                     + follow(
                         decoded,
@@ -125,7 +125,7 @@ struct WindowManagementSettingsFile {
                             Record(id: $0.id, name: $0.name, entryID: $0.entryID)
                         },
                         previous: previous, bound: hotKeys.boundWindowLayoutIDs,
-                        label: { String(localized: "layout “\($0)”") },
+                        label: { "layout “\($0)”" },
                         action: HotKeyAction.windowLayout, key: key)
             })
     }
@@ -154,21 +154,18 @@ struct WindowManagementSettingsFile {
                 return report(
                     decoded, kept: kept, key: key,
                     skippedMessage: {
-                        String(
-                            localized: """
-                                \($0) rooms were skipped: a name is empty or used twice, or it has no windows
-                                """)
+                        $0 == 1
+                            ? "1 room was skipped: a name is empty or used twice, or it has no windows"
+                            : "\($0) rooms were skipped: a name is empty or used twice, or it has no windows"
                     })
                     + follow(
                         decoded,
                         records: rooms.rooms.map { Record(id: $0.id, name: $0.name, entryID: $0.entryID) },
                         previous: previous, bound: hotKeys.boundWindowRoomIDs,
-                        label: { String(localized: "room “\($0)”") },
+                        label: { "room “\($0)”" },
                         action: HotKeyAction.windowRoom, key: key)
             })
     }
-
-    // MARK: - Records
 
     private struct Record {
         let id: UUID
@@ -188,7 +185,6 @@ struct WindowManagementSettingsFile {
         return issues
     }
 
-    /// A record the file dropped takes its shortcut and alias with it; the rest take what it set.
     private func follow<Value>(
         _ decoded: WindowManagementFileFormat.Decoded<Value>, records: [Record],
         previous: Set<String>, bound: [UUID], label: (String) -> String,

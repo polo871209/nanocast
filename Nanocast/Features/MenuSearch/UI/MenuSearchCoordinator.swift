@@ -8,9 +8,7 @@ final class MenuSearchCoordinator {
     private let palette: PaletteState
     private let paletteCoordinator: PaletteCoordinator
     private unowned let core: AppCore
-    /// The app the open snapshot belongs to; activation re-resolves against this, never a retarget.
     private var frozenApp: NSRunningApplication?
-    /// One decode shared by every row; resolved once per show so the list never re-hits icons.
     private(set) var frozenIconURL: URL?
     private(set) var frozenIconStamp: Int = 0
 
@@ -42,7 +40,6 @@ final class MenuSearchCoordinator {
         paletteCoordinator.togglePalette(mode: .menuSearch)
     }
 
-    /// Every open walks anew, a restore included: hiding dropped the last snapshot.
     func load() {
         guard Permissions.ensureAccessibility() else {
             Task { await self.reportPermissionFailure() }
@@ -100,28 +97,26 @@ final class MenuSearchCoordinator {
         }
     }
 
-    // MARK: - Reporting
-
     private func reportPermissionFailure() async {
         let openSettings = await core.reportFailure(
-            title: String(localized: "Nanocast Needs Accessibility Access"),
-            message: String(localized: "Searching menus reads the front app's menu bar."),
-            symbol: "menubar.rectangle", recovery: String(localized: "Open Settings"))
+            title: "Nanocast Needs Accessibility Access",
+            message: "Searching menus reads the front app's menu bar.",
+            symbol: "menubar.rectangle", recovery: "Open Settings")
         if openSettings { Permissions.openAccessibilitySettings() }
     }
 
     private func reportGone(targetName: String?) async {
         await core.showNotice(
-            title: String(localized: "Couldn't Activate Menu Item"),
-            message: targetName.map { String(localized: "\($0) is no longer running.") }
-                ?? String(localized: "The application is no longer running."),
+            title: "Couldn't Activate Menu Item",
+            message: targetName.map { "\($0) is no longer running." }
+                ?? "The application is no longer running.",
             symbol: "menubar.rectangle", tone: .danger)
     }
 
     private func reportPressFailure(item: MenuSearchItem) async {
         await core.showNotice(
-            title: String(localized: "Couldn't Activate “\(item.title)”"),
-            message: String(localized: "Its menu changed before the press landed. Search again and retry."),
+            title: "Couldn't Activate “\(item.title)”",
+            message: "Its menu changed before the press landed. Search again and retry.",
             symbol: "menubar.rectangle", tone: .danger)
     }
 }

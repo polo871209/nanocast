@@ -27,17 +27,13 @@ struct AppInstallationTest {
             .appendingPathComponent("nanocast-installations-\(UUID())").resolvingSymlinksInPath()
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
-        if let argument = CommandLine.arguments.firstIndex(of: "--localized-index") {
-            try await testLocalizedIndex(root, language: CommandLine.arguments[argument + 1])
-        } else {
-            try await testIndex(root)
-            testFileFavorites(root)
-            try await testLanguageOverride(root)
-            if ProcessInfo.processInfo.environment["NANOCAST_TEST_APP_LAUNCH"] == "1"
-                || CommandLine.arguments.contains("--launch")
-            {
-                try await testLaunch(root)
-            }
+        try await testIndex(root)
+        testFileFavorites(root)
+        try await testEnglishIndex(root)
+        if ProcessInfo.processInfo.environment["NANOCAST_TEST_APP_LAUNCH"] == "1"
+            || CommandLine.arguments.contains("--launch")
+        {
+            try await testLaunch(root)
         }
         print(failures == 0 ? "ALL PASSED" : "\(failures) FAILED")
     }
@@ -214,38 +210,7 @@ struct AppInstallationTest {
         check("file favorites support removal by key", !restored.isFavorite(file))
     }
 
-    private static func testLanguageOverride(_ root: URL) async throws {
-        let system = Set(
-            SystemLanguages.preferred.compactMap { $0.split(separator: "-").first.map(String.init) })
-        guard
-            let language = ["ru", "ja", "ko", "de", "fr", "es", "pt", "it", "nl", "sv"]
-                .first(where: { !system.contains($0) }),
-            let executable = Bundle.main.executableURL
-        else { throw CocoaError(.fileReadCorruptFile) }
-        let app = root.appendingPathComponent("LanguageProbe.app", isDirectory: true)
-        try makeApp(app, id: "com.nanocast.language-probe.\(UUID())", version: "1.0")
-        let infoURL = app.appendingPathComponent("Contents/Info.plist")
-        guard
-            var info = try PropertyListSerialization.propertyList(
-                from: Data(contentsOf: infoURL), format: nil) as? [String: Any]
-        else { throw CocoaError(.fileReadCorruptFile) }
-        info["CFBundleDevelopmentRegion"] = "en"
-        info["CFBundleLocalizations"] = ["en", language]
-        try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0).write(
-            to: infoURL)
-        let macOS = app.appendingPathComponent("Contents/MacOS", isDirectory: true)
-        try FileManager.default.createDirectory(at: macOS, withIntermediateDirectories: true)
-        let probe = macOS.appendingPathComponent("Fixture")
-        try FileManager.default.copyItem(at: executable, to: probe)
-        check(
-            "app language does not change installed-app names or search terms",
-            try await runProgram(
-                probe.path, ["--localized-index", language, "-AppleLanguages", "(\(language))"]) == 0)
-    }
-
-    private static func testLocalizedIndex(_ root: URL, language: String) async throws {
-        check(
-            "the probe runs in its requested language", Bundle.main.preferredLocalizations.first == language)
+    private static func testEnglishIndex(_ root: URL) async throws {
         let app = root.appendingPathComponent("Localized.app", isDirectory: true)
         let id = "com.nanocast.localized-fixture.\(UUID())"
         try makeApp(app, id: id, version: "1.0")
@@ -258,18 +223,13 @@ struct AppInstallationTest {
         info["CFBundleDisplayName"] = "DeclaredFixtureName"
         try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0).write(
             to: infoURL)
-        for (code, name) in [("en", "SystemLanguageFixture"), (language, "InterfaceOnlyFixture")] {
-            let folder = app.appendingPathComponent("Contents/Resources/\(code).lproj", isDirectory: true)
-            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            try PropertyListSerialization.data(
-                fromPropertyList: ["CFBundleDisplayName": name], format: .xml, options: 0
-            )
-            .write(to: folder.appendingPathComponent("InfoPlist.strings"))
-        }
-        check(
-            "the fixture exposes an interface-localized declaration",
-            Bundle(url: app)?.installedAppName == "InterfaceOnlyFixture")
-        let domain = "nanocast.language-index-test.\(UUID())"
+        let folder = app.appendingPathComponent("Contents/Resources/en.lproj", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try PropertyListSerialization.data(
+            fromPropertyList: ["CFBundleDisplayName": "EnglishFixtureName"], format: .xml, options: 0
+        )
+        .write(to: folder.appendingPathComponent("InfoPlist.strings"))
+        let domain = "nanocast.english-index-test.\(UUID())"
         let defaults = UserDefaults(suiteName: domain)!
         defer { defaults.removePersistentDomain(forName: domain) }
         let aliases = AliasStore(defaults: defaults)
@@ -280,7 +240,7 @@ struct AppInstallationTest {
         let index = AppIndex(ranking: ranking, aliases: aliases)
         index.start(settings: settings)
         await index.refresh()
-        check("app names follow macOS languages", index.apps.first?.name == "SystemLanguageFixture")
+        check("app names read the English localization", index.apps.first?.name == "EnglishFixtureName")
         check(
             "the original declaration remains indexed", index.apps.first?.keywords == ["DeclaredFixtureName"])
         let favorites = FavoritesStore()
@@ -294,11 +254,8 @@ struct AppInstallationTest {
             "the original declaration remains searchable",
             results("DeclaredFixtureName").contains { $0.bundleID == id })
         check(
-            "system-language names remain searchable",
-            results("SystemLanguageFixture").contains { $0.bundleID == id })
-        check(
-            "interface-only names stay out of search",
-            !results("InterfaceOnlyFixture").contains { $0.bundleID == id })
+            "English names remain searchable",
+            results("EnglishFixtureName").contains { $0.bundleID == id })
         await ranking.flush()
     }
 
@@ -530,7 +487,6 @@ struct AppInstallationTest {
 
 // Empty feature catalogs keep this harness focused on the shipped launcher.
 enum SettingsTab: Sendable { case ai }
-enum ExtensionRefreshState: Hashable, Sendable { case idle }
 enum EntryIcon: Hashable, Sendable { case file(stamp: Int), symbol(String) }
 enum IconCache {
     static func observeStyle() {}
@@ -551,10 +507,9 @@ enum CommandCatalog {
 }
 enum HotKeyAction: Hashable, Sendable {
     case togglePalette, dictation, command(CommandID)
-    case app(bundleID: String), settingsPane(bundleID: String), quickAction(id: UUID)
+    case app(bundleID: String), settingsPane(bundleID: String)
     case customCommand(id: UUID), systemAction(id: SystemAction.ID), windowCommand(id: WindowCommand.ID)
-    case customWindowSize(id: UUID), windowLayout(id: UUID), windowRoom(id: UUID), quicklink(id: UUID)
-    case appleShortcut(id: UUID), snippet(id: UUID), extensionCommand(entryID: String)
+    case customWindowSize(id: UUID), windowLayout(id: UUID), windowRoom(id: UUID)
 }
 struct OtherEntry<Tag: Sendable>: Sendable {
     var id = UUID()
@@ -571,17 +526,11 @@ struct OtherEntry<Tag: Sendable>: Sendable {
 enum LayoutTag: Sendable {}
 enum RoomTag: Sendable {}
 enum SizeTag: Sendable {}
-enum QuickActionTag: Sendable {}
 enum CommandTag: Sendable {}
-enum QuicklinkTag: Sendable {}
-enum ShortcutTag: Sendable {}
 typealias WindowLayout = OtherEntry<LayoutTag>
 typealias Room = OtherEntry<RoomTag>
 typealias CustomWindowSize = OtherEntry<SizeTag>
-typealias CustomQuickAction = OtherEntry<QuickActionTag>
 typealias CustomCommand = OtherEntry<CommandTag>
-typealias Quicklink = OtherEntry<QuicklinkTag>
-typealias AppleShortcut = OtherEntry<ShortcutTag>
 struct SystemAction: Sendable {
     enum ID: String, Sendable { case fixture }
     var id = ID.fixture
@@ -606,21 +555,9 @@ enum WindowCommandCatalog {
     static let all: [WindowCommand] = []
     static func command(forEntryID id: String) -> WindowCommand? { nil }
 }
-enum QuicklinkDestination {
-    static func detect(_ link: String) -> Self? { nil }
-    var defaultSymbol: String { "" }
-}
-struct StoredSnippet {
-    struct Snippet { var isEnabled = true; var name = ""; var keyword: String? }
-    var snippet = Snippet()
-    var entryID = ""
-    var fileURL = URL(fileURLWithPath: "/")
-    static let sfSymbol = ""
-    static func id(fromEntryID id: String) -> UUID? { nil }
-}
 enum SettingsPaneScanner {
     struct Cache: Sendable {}
-    static func scan(languages: [String], cache: Cache?) -> ([AppEntry], Cache?) { ([], nil) }
+    static func scan(cache: Cache?) -> ([AppEntry], Cache?) { ([], nil) }
 }
 @Observable
 final class AppSettings {

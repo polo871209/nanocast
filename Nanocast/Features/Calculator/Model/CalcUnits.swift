@@ -29,7 +29,6 @@ enum CalcUnits {
         case mismatch(from: UnitDef, to: UnitDef)
     }
 
-    /// A keyword-less conversion to a curated counterpart; `compound` asks for feet+inches.
     struct BareConversion: Equatable {
         let input: Double
         let from: UnitDef
@@ -38,7 +37,6 @@ enum CalcUnits {
         let compound: Bool
     }
 
-    /// `expr unit (to|in|->) unit`. Matching the last position lets "in" double as inches.
     static func parseConversion(_ tokens: [CalcToken]) -> ConversionParse? {
         guard tokens.count >= 3, isConnector(tokens[tokens.count - 2]),
             case .ident(let toName) = tokens[tokens.count - 1],
@@ -63,7 +61,6 @@ enum CalcUnits {
         return .value(input: input, from: from, to: to, output: output)
     }
 
-    /// `day s` → `1 day` in `s`. Same category only, so two-word searches don't produce a card.
     static func parseUnitPairConversion(_ tokens: [CalcToken]) -> ConversionParse? {
         guard tokens.count == 2,
             case .ident(let fromName) = tokens[0], let from = byName[fromName],
@@ -76,7 +73,6 @@ enum CalcUnits {
         return .value(input: 1, from: from, to: to, output: output)
     }
 
-    /// `expr unit` with no connector. c/f/k are excluded, so `5k` stays an app search.
     static func parseBareConversion(_ tokens: [CalcToken]) -> BareConversion? {
         guard tokens.count >= 2, case .ident(let fromName) = tokens[tokens.count - 1],
             !["c", "f", "k"].contains(fromName),
@@ -100,13 +96,11 @@ enum CalcUnits {
         }
     }
 
-    /// Keyword-less counterpart per unit; only `m→ft` is compound.
     static let autoTargets: [String: (to: String, compound: Bool)] = [
         "mm": ("in", false), "cm": ("in", false), "m": ("ft", true), "km": ("mi", false),
         "dm": ("cm", false), "in": ("cm", false), "ft": ("m", false), "yd": ("m", false), "mi": ("km", false),
         "mg": ("g", false), "g": ("oz", false), "kg": ("lb", false), "oz": ("g", false),
         "lb": ("kg", false),
-        // Temperature (bare form requires a spelled/°-prefixed alias — see parseBareConversion)
         "°C": ("f", false), "°F": ("c", false), "K": ("c", false),
         "ms": ("s", false), "s": ("ms", false), "min": ("s", false), "hr": ("min", false),
         "day": ("hr", false), "week": ("day", false),

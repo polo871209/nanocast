@@ -1,19 +1,16 @@
 import AppKit
 import SwiftUI
 
-/// An `NSTextView`, not `Text`: only the text system appends without re-laying out.
 struct TerminalLogView: NSViewRepresentable {
     let run: CommandRun
 
     private static let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
     private static let inset = CGSize(width: Theme.Spacing.xxl, height: Theme.Spacing.xs)
-    /// Within this of the bottom counts as following along, matching the chat transcript's band.
-    private static let tailSlack = Theme.Spacing.chatFollowTailSlack
+    private static let tailSlack = Theme.Spacing.followTailSlack
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     final class Coordinator {
-        /// A new run and a trimmed log both make the drawn text wrong, invisibly to the revision.
         var runID: UUID?
         var generation = -1
         var revision = 0
@@ -29,7 +26,6 @@ struct TerminalLogView: NSViewRepresentable {
         textView.isEditable = false
         textView.drawsBackground = false
         textView.textContainerInset = Self.inset
-        // Zeroed so the inset alone sets the left edge, lining the log up with the header text.
         textView.textContainer?.lineFragmentPadding = 0
         return scrollView
     }
@@ -44,7 +40,6 @@ struct TerminalLogView: NSViewRepresentable {
         let isSameRun = coordinator.runID == run.id && coordinator.generation == run.generation
         guard !isSameRun || run.revision != coordinator.revision else { return }
 
-        // One step on is streaming and costs only the new text; anything else is drawn whole.
         let isAppend = isSameRun && run.revision == coordinator.revision + 1
         if !isAppend {
             coordinator.interpreter = ANSIInterpreter()
@@ -64,12 +59,10 @@ struct TerminalLogView: NSViewRepresentable {
     }
 }
 
-/// SGR colour carried across chunks, a CR rewinding its line, everything else dropped.
 struct ANSIInterpreter {
     private var colour: NSColor = .labelColor
     private var isBold = false
     private var isDim = false
-    /// A control sequence can be split across reads, so a partial one waits for the rest.
     private var partial = ""
 
     mutating func render(_ text: String, into storage: NSTextStorage, font: NSFont) {
@@ -88,7 +81,6 @@ struct ANSIInterpreter {
             switch character {
             case "\u{1B}":
                 guard let sequence = Self.take(&characters) else {
-                    // Truncated mid-sequence: hold it back rather than printing the escape.
                     partial = "\u{1B}" + String(characters)
                     characters = characters.prefix(0)
                     continue
@@ -96,7 +88,6 @@ struct ANSIInterpreter {
                 flush()
                 apply(sequence)
             case "\r":
-                // A progress bar redraws its line in place; appending the frames would stack them.
                 flush()
                 rewindLine(in: storage)
             default:
@@ -111,12 +102,10 @@ struct ANSIInterpreter {
         return [.font: face, .foregroundColor: isDim ? colour.withAlphaComponent(0.6) : colour]
     }
 
-    /// Reads one CSI/OSC body; nil when the sequence has not all arrived yet.
     private static func take(_ characters: inout ArraySlice<Character>) -> String? {
         guard let introducer = characters.first else { return nil }
         characters = characters.dropFirst()
         guard introducer == "[" else {
-            // OSC and the rest carry no meaning here; swallow to their terminator.
             while let character = characters.first, character != "\u{07}", character != "\u{1B}" {
                 characters = characters.dropFirst()
             }
@@ -132,7 +121,6 @@ struct ANSIInterpreter {
     }
 
     private mutating func apply(_ sequence: String) {
-        // Only SGR is drawn; cursor moves and erases have no meaning in a document.
         guard sequence.hasSuffix("m") else { return }
         let codes = sequence.dropLast().split(separator: ";", omittingEmptySubsequences: false)
             .map { Int($0) ?? 0 }
@@ -147,7 +135,6 @@ struct ANSIInterpreter {
             case 30...37: colour = Self.palette[code - 30]
             case 90...97: colour = Self.palette[code - 90]
             case 39: colour = .labelColor
-            // Extended colour carries its own parameters; skipping them keeps the rest in step.
             case 38, 48: index += codes.count > index + 1 && codes[index + 1] == 5 ? 2 : 4
             default: break
             }
@@ -155,7 +142,6 @@ struct ANSIInterpreter {
         }
     }
 
-    /// Deletes back to the start of the last line, which is what a bare carriage return means.
     private func rewindLine(in storage: NSTextStorage) {
         let text = storage.string as NSString
         guard text.length > 0 else { return }
@@ -166,7 +152,6 @@ struct ANSIInterpreter {
         storage.deleteCharacters(in: NSRange(location: start, length: text.length - start))
     }
 
-    /// System colours, so the log reads in both appearances; orange stands in for yellow.
     private static let palette: [NSColor] = [
         .secondaryLabelColor, .systemRed, .systemGreen, .systemOrange,
         .systemBlue, .systemPurple, .systemTeal, .labelColor

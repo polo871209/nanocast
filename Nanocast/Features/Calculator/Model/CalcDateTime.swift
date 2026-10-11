@@ -12,7 +12,6 @@ enum CalcDateTime {
         let lowered = echo.lowercased()
         guard !lowered.isEmpty else { return nil }
 
-        // One pass over the words, since an app search pays this on every keystroke.
         let signals = keywordSignals(lowered)
         let hasDigit = signals.contains(.digit)
         let hasUntil = signals.contains(.until)
@@ -21,7 +20,6 @@ enum CalcDateTime {
         let hasFromAgo = signals.contains(.fromAgo)
         let hasIn = signals.contains(.inWord)
         let hasTimestamp = signals.contains(.timestamp)
-        // A named moment needs a qualifier: a lone `tomorrow` is an app search.
         let isBareMoment =
             signals.contains(.at) || signals.contains(.nextOrLast)
             || (hasDigit && signals.contains(.dayName) && namesADay(lowered))
@@ -57,7 +55,6 @@ enum CalcDateTime {
         return nil
     }
 
-    /// The only lone words that answer: each names one moment, where `monday` or `july` recurs.
     static func namedMoment(_ word: String, now: Date, calendar: Calendar) -> CalcResult? {
         let lowered = word.lowercased()
         switch lowered {
@@ -133,7 +130,6 @@ enum CalcDateTime {
         return signals
     }
 
-    /// A day number beside a month, which no app search looks like — `25. aug`, `aug 25`.
     private static func namesADay(_ query: String) -> Bool {
         let atoms = atomize(query)
         guard atoms.count == 2 || atoms.count == 3 else { return atoms.count == 1 && isDottedDate(atoms) }
@@ -142,7 +138,6 @@ enum CalcDateTime {
         return months == 1 && days == atoms.count - 1
     }
 
-    /// `25.8.27` on its own: three dotted parts, which cannot be read as one number.
     private static func isDottedDate(_ atoms: [String]) -> Bool {
         guard let only = atoms.first else { return false }
         let parts = only.split(separator: ".", omittingEmptySubsequences: false)
@@ -150,7 +145,6 @@ enum CalcDateTime {
         return parts.allSatisfy { Int($0) != nil }
     }
 
-    /// `next monday`, `tomorrow`, `tomorrow at 9am` — a moment named without any arithmetic.
     private static func bareMoment(
         _ query: String, echo: String, now: Date, calendar: Calendar
     ) -> CalcResult? {
@@ -166,7 +160,6 @@ enum CalcDateTime {
             payload: .value(display: text, copyText: text))
     }
 
-    /// `9am`, `5:30pm`, `14:00` as a wall clock, with no bias applied.
     private static func parseMeridiemClock(_ text: String) -> (hour: Int, minute: Int)? {
         if text == "noon" { return (12, 0) }
         if text == "midnight" { return (0, 0) }
@@ -185,7 +178,6 @@ enum CalcDateTime {
         return (meridiem == "pm" ? (hour % 12) + 12 : hour % 12, minute)
     }
 
-    /// `monday in 3 weeks` — that weekday, in the week the duration lands in.
     private static func parseWeekdayIn(
         _ query: String, echo: String, now: Date, calendar: Calendar
     ) -> CalcResult? {
@@ -200,7 +192,6 @@ enum CalcDateTime {
                 to: calendar.startOfDay(for: now))
         else { return nil }
 
-        // The weekday inside the landing week, so `monday in 3 weeks` is that week's Monday.
         guard let week = calendar.dateInterval(of: .weekOfYear, for: landing),
             let result = shift(
                 week.start, days: (weekday - calendar.firstWeekday + 7) % 7, calendar: calendar)
@@ -214,7 +205,6 @@ enum CalcDateTime {
             payload: .value(display: text, copyText: text))
     }
 
-    /// `5 weekdays from now`, `3 days from today`, `2 weeks ago` — the duration leads.
     private static func parseOffset(
         _ query: String, echo: String, now: Date, calendar: Calendar
     ) -> CalcResult? {
@@ -294,8 +284,6 @@ enum CalcDateTime {
             payload: .number(value, suffix: " \(word)"))
     }
 
-    // MARK: - Grammars C & D: moment ± duration / moment − moment
-
     private static func parseArithmetic(
         _ query: String, echo: String, now: Date, calendar: Calendar
     ) -> CalcResult? {
@@ -324,7 +312,6 @@ enum CalcDateTime {
             base = local
         }
 
-        // C: moment ± duration, chained left to right — every term after the first shifts again.
         if targetUnit == nil, let shifted = applyShifts(op, right, to: base, calendar: calendar) {
             let display = answerString(
                 shifted.date, hasTime: shifted.hasTime, now: now, calendar: calendar)
@@ -336,7 +323,6 @@ enum CalcDateTime {
                 payload: .value(display: display, copyText: display))
         }
 
-        // D: moment − moment. Two letter-free operands (`5/2 - 1/2`) belong to the calculator.
         guard op == "-",
             targetUnit != nil || base.hasTime || left.contains(where: \.isLetter)
                 || right.contains(where: \.isLetter) || left.contains("-") || isDottedDate(atomize(left)),
@@ -370,7 +356,6 @@ enum CalcDateTime {
             payload: payload)
     }
 
-    /// Nil unless every term is a duration, so grammar D still sees a trailing moment.
     private static func applyShifts(
         _ firstOperator: Character, _ tail: String, to base: Moment, calendar: Calendar
     ) -> Moment? {
@@ -390,7 +375,6 @@ enum CalcDateTime {
         }
     }
 
-    /// The text up to the next spaced `+` / `-`, that operator, and whatever follows it.
     private static func splitTerm(
         _ text: Substring
     ) -> (term: String, nextOperator: Character?, remainder: Substring) {
@@ -407,7 +391,6 @@ enum CalcDateTime {
         return (String(text[..<range.lowerBound]), op, text[range.upperBound...])
     }
 
-    /// One term against a moment: a spelled duration, or a bare number in the moment's own unit.
     private static func shift(
         _ moment: Moment, by term: String, op: Character, calendar: Calendar
     ) -> Moment? {
@@ -427,11 +410,8 @@ enum CalcDateTime {
         return result
     }
 
-    // MARK: - Moment parsing
-
     private struct Moment {
         let date: Date
-        /// True when the phrase named a clock time ("9am", "now") — drives the time badge.
         let hasTime: Bool
     }
 
@@ -460,9 +440,9 @@ enum CalcDateTime {
             else { return nil }
             let text = String(value)
             return CalcResult(
-                expression: echo, sourceBadge: String(localized: "Date"),
+                expression: echo, sourceBadge: "Date",
                 targetBadge: scale == 1
-                    ? String(localized: "Unix Seconds") : String(localized: "Unix Milliseconds"),
+                    ? "Unix Seconds" : "Unix Milliseconds",
                 payload: .value(display: CalcFormatter.grouped(text), copyText: text))
         }
         let source = query.hasSuffix(" to date") ? String(query.dropLast(8)) : query
@@ -523,7 +503,6 @@ enum CalcDateTime {
         }
     }
 
-    /// `august 26 2026` / `26 august 2026` — a month name with both a day and a year.
     private static func parseTriple(
         _ a: String, _ b: String, _ c: String, calendar: Calendar
     ) -> Moment? {
@@ -597,7 +576,6 @@ enum CalcDateTime {
         return nil
     }
 
-    /// A lone numeric atom carrying its own separators: `14:00`, `2027-04-09`, `9/4`, `9/4/2027`.
     private static func parseDateAtom(
         _ atom: String, now: Date, calendar: Calendar, bias: MomentBias
     ) -> Moment? {
@@ -631,8 +609,6 @@ enum CalcDateTime {
         return Moment(date: date, hasTime: false)
     }
 
-    // MARK: - Moment builders
-
     private static func clockMoment(
         hour: Int, minute: Int, now: Date, calendar: Calendar, bias: MomentBias = .future
     ) -> Moment? {
@@ -651,7 +627,6 @@ enum CalcDateTime {
         return Moment(date: date, hasTime: true)
     }
 
-    /// The given day of `month`, resolved to the upcoming, most recent, or nearest year by `bias`.
     private static func monthDayMoment(
         month: Int, day: Int, now: Date, calendar: Calendar, bias: MomentBias = .future
     ) -> Moment? {
@@ -667,7 +642,6 @@ enum CalcDateTime {
             if thisYear <= sod { return Moment(date: thisYear, hasTime: false) }
             guard let lastYear = makeDate(year - 1, month, day, calendar) else { return nil }
             return Moment(date: lastYear, hasTime: false)
-        // A date days behind is likelier the one meant than the same date a year out.
         case .nearest:
             return Moment(date: thisYear, hasTime: false)
         }
@@ -689,8 +663,6 @@ enum CalcDateTime {
         if ahead == 0 && offsetToFuture { ahead = 7 }
         return shift(sod, days: ahead, calendar: calendar).map { Moment(date: $0, hasTime: false) }
     }
-
-    // MARK: - Durations
 
     private enum DurKind { case subSecond, day, week }
 
@@ -724,7 +696,6 @@ enum CalcDateTime {
         let count: Int
         let component: Calendar.Component
         let subDay: Bool
-        /// Weekend days are skipped rather than counted, so the result lands Mon–Fri.
         var businessDays = false
     }
 
@@ -768,18 +739,15 @@ enum CalcDateTime {
         return index == atoms.count && !durations.isEmpty ? durations : nil
     }
 
-    // MARK: - Formatting
-
     private static func momentString(
         _ date: Date, hasTime: Bool, now: Date, calendar: Calendar
     )
         -> String
     {
         let day = dateString(date, now: now, calendar: calendar)
-        return hasTime ? String(localized: "\(day) at \(timeString(date, calendar: calendar))") : day
+        return hasTime ? "\(day) at \(timeString(date, calendar: calendar))" : day
     }
 
-    /// The weekday moves to the badge, so an answered moment leads with the date itself.
     private static func answerString(
         _ date: Date, hasTime: Bool, now: Date, calendar: Calendar
     ) -> String {
@@ -787,7 +755,7 @@ enum CalcDateTime {
             calendar.component(.year, from: date) == calendar.component(.year, from: now)
         let day = format(
             date, calendar: calendar, pattern: sameYear ? "d MMMM" : "d MMMM, yyyy")
-        return hasTime ? String(localized: "\(day) at \(timeString(date, calendar: calendar))") : day
+        return hasTime ? "\(day) at \(timeString(date, calendar: calendar))" : day
     }
 
     private static func dateString(_ date: Date, now: Date, calendar: Calendar) -> String {
@@ -803,7 +771,6 @@ enum CalcDateTime {
             from: date, calendar: calendar, zone: calendar.timeZone, template: template)
     }
 
-    /// The answer's own weekday, which the date itself never spells out.
     private static func weekdayName(_ date: Date, calendar: Calendar) -> String {
         format(date, calendar: calendar, pattern: "EEEE")
     }
@@ -812,9 +779,6 @@ enum CalcDateTime {
         CalcDateFormatters.string(from: date, calendar: calendar, zone: calendar.timeZone, pattern: pattern)
     }
 
-    // MARK: - Low-level helpers
-
-    /// Split into letter-runs and number-runs; ":", "/", "-", "." stay inside a number-run.
     private static func atomize(_ text: String) -> [String] {
         var atoms: [String] = []
         var current = ""
@@ -849,7 +813,6 @@ enum CalcDateTime {
         return atoms
     }
 
-    /// A day number, with the ordinal dot German and Austrian dates write: `28. aug`.
     private static func ordinalDay(_ atom: String) -> Int? {
         Int(atom.hasSuffix(".") ? String(atom.dropLast()) : atom)
     }
@@ -889,7 +852,6 @@ enum CalcDateTime {
         calendar.date(byAdding: .day, value: days, to: date)
     }
 
-    /// Whole weeks jump at once; only the weekend alignment and remainder walk individual days.
     private static func addBusinessDays(_ count: Int, to date: Date, calendar: Calendar) -> Date? {
         guard (-10_000...10_000).contains(count) else { return nil }
         let step = count < 0 ? -1 : 1
@@ -918,7 +880,6 @@ enum CalcDateTime {
         return weekday == 1 || weekday == 7
     }
 
-    /// Expand a 2-digit year the way date pickers do; 4-digit years pass through.
     private static func fullYear(_ year: Int) -> Int {
         if year >= 100 { return year }
         return year <= 68 ? 2000 + year : 1900 + year

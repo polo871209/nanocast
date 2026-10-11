@@ -1,23 +1,20 @@
 import Foundation
 
-/// Where each settings.json key lives; exhaustive, so a new key fails to build until it is bound.
 @MainActor
 enum SettingsFileSchema {
     static func bindings(
-        settings: AppSettings, ai: AISettingsStore, quickActions: QuickActionSettingsStore,
-        shortcuts: HotKeySettingsFile, launcher: LauncherSettingsFile,
+        settings: AppSettings, shortcuts: HotKeySettingsFile, launcher: LauncherSettingsFile,
         windowManagement: WindowManagementSettingsFile
     ) -> [SettingsFileBinding] {
         SettingsFileKey.allCases.map { key in
             binding(
-                for: key, settings: settings, ai: ai, quickActions: quickActions,
-                shortcuts: shortcuts, launcher: launcher, windowManagement: windowManagement)
+                for: key, settings: settings, shortcuts: shortcuts, launcher: launcher,
+                windowManagement: windowManagement)
         }
     }
 
     private static func binding(
-        for key: SettingsFileKey, settings: AppSettings, ai: AISettingsStore,
-        quickActions: QuickActionSettingsStore, shortcuts: HotKeySettingsFile,
+        for key: SettingsFileKey, settings: AppSettings, shortcuts: HotKeySettingsFile,
         launcher: LauncherSettingsFile, windowManagement: WindowManagementSettingsFile
     ) -> SettingsFileBinding {
         func bind<Root: AnyObject, Value: SettingsFileValue>(
@@ -30,14 +27,12 @@ enum SettingsFileSchema {
         switch key {
         case .launcherShortcut:
             return shortcuts.binding(
-                for: key, action: .togglePalette, name: String(localized: "App Launcher"))
+                for: key, action: .togglePalette, name: "App Launcher")
         case .showInMenuBar: return bind(settings, \.showInMenuBar)
         case .automaticallyCheckForUpdates: return bind(settings, \.automaticallyCheckForUpdates)
         case .popToRootTimeout: return bind(settings, \.popToRootTimeout)
         case .escapeKeyBehavior: return bind(settings, \.escapeKeyBehavior)
         case .autoSwitchInputSource: return bind(settings, \.autoSwitchInputSourceID)
-        case .supportReminders: return bind(settings, \.supportRemindersEnabled)
-        case .language: return bind(settings, \.language)
         case .appearance: return bind(settings, \.appearance)
         case .animationsEnabled: return bind(settings, \.animationsEnabled)
         case .interfaceSize: return bind(settings, \.interfaceSize)
@@ -67,25 +62,6 @@ enum SettingsFileSchema {
         case .builtInCommands: return launcher.commandsBinding(for: key, owner: nil)
         case .customCommandsEnabled: return bind(settings, \.customCommandsEnabled)
         case .customCommandsShowInLauncher: return bind(settings, \.customCommandsShowInLauncher)
-        case .quicklinksEnabled: return bind(settings, \.quicklinksEnabled)
-        case .quicklinksShowInLauncher: return bind(settings, \.quicklinksShowInLauncher)
-        case .quicklinkOpensNewWindow: return bind(settings, \.quicklinkOpensNewWindow)
-        case .quicklinkPassesSelectedText: return bind(settings, \.quicklinkPassesSelectedText)
-        case .quicklinkConfirmsBeforeDelete: return bind(settings, \.quicklinkConfirmsBeforeDelete)
-        case .quicklinkCommands: return launcher.commandsBinding(for: key, owner: .quicklinks)
-        case .appleShortcutsEnabled: return bind(settings, \.appleShortcutsEnabled)
-        case .aiEnabled: return bind(settings, \.aiEnabled)
-        case .aiWebSearch: return bind(ai, \.webSearchEnabled)
-        case .aiChoices: return bind(ai, \.choicesEnabled)
-        case .aiSystemPrompt: return bind(ai, \.systemPrompt)
-        case .aiSystemPromptEnabled: return bind(ai, \.systemPromptEnabled)
-        case .aiRetention: return bind(ai, \.retention)
-        case .aiOpensTo: return bind(ai, \.opensTo)
-        case .aiNewChatAfter: return bind(ai, \.newChatAfter)
-        case .aiToolRounds: return bind(ai, \.toolRounds)
-        case .aiCommands: return launcher.commandsBinding(for: key, owner: .ai)
-        case .quickActionLanguage: return bind(quickActions, \.settings.targetLanguage)
-        case .quickActionCommands: return launcher.commandsBinding(for: key, owner: .quickActions)
         case .fileSearchEnabled: return bind(settings, \.fileSearchEnabled)
         case .fileSearchScopes: return bind(settings, \.fileSearchScopes)
         case .fileSearchIgnorePatterns: return bind(settings, \.fileSearchIgnorePatterns)
@@ -101,7 +77,7 @@ enum SettingsFileSchema {
         case .notesCommands: return launcher.commandsBinding(for: key, owner: .notes)
         case .dictationMode: return bind(settings, \.dictationMode)
         case .dictationShortcut:
-            return shortcuts.binding(for: key, action: .dictation, name: String(localized: "Dictation"))
+            return shortcuts.binding(for: key, action: .dictation, name: "Dictation")
         case .dictationPlaysSounds: return bind(settings, \.dictationPlaysSounds)
         case .dictationModel: return bind(settings, \.dictationModel)
         case .dictationMicrophone: return bind(settings, \.dictationMicrophone)
@@ -114,9 +90,6 @@ enum SettingsFileSchema {
                 guard let language else { return .some(nil) }
                 return DictationLanguage(rawValue: language) == nil ? nil : .some(language)
             }
-        case .snippetsShowInLauncher: return bind(settings, \.snippetsShowInLauncher)
-        case .snippetsFolder: return bind(settings, \.snippetsFolder, accept: folder)
-        case .snippetsCommands: return launcher.commandsBinding(for: key, owner: .snippets)
         case .navigationEnabled: return bind(settings, \.navigationEnabled)
         case .menuSearchShowsAppleMenu: return bind(settings, \.menuSearchShowsAppleMenu)
         case .menuSearchDisabledApps: return bind(settings, \.menuSearchDisabledApps)
@@ -146,24 +119,9 @@ enum SettingsFileSchema {
         case .emojiSkinTone: return bind(settings, \.emojiSkinTone)
         case .emojiGridColumns: return bind(settings, \.emojiGridColumns)
         case .emojiCommands: return launcher.commandsBinding(for: key, owner: .emoji)
-        case .calendarShowInLauncher: return bind(settings, \.calendarShowInLauncher)
-        case .calendarLauncherLimit: return bind(settings, \.calendarLauncherLimit)
-        case .calendarSpan: return bind(settings, \.calendarSpan)
-        case .joinWindowMinutes: return bind(settings, \.joinWindowMinutes)
-        case .autoJoinConfirms: return bind(settings, \.autoJoinConfirms)
-        case .autoJoinNamedProvidersOnly: return bind(settings, \.autoJoinNamedProvidersOnly)
-        case .meetingBrowser: return bind(settings, \.meetingBrowserBundleID)
-        case .calendarMenuBarDisplay: return bind(settings, \.calendarMenuBarDisplay)
-        case .menuBarEvents: return bind(settings, \.menuBarEvents)
-        case .menuBarLinkedEventsOnly: return bind(settings, \.menuBarLinkedEventsOnly)
-        case .calendarMenuBarHidesWhenEmpty: return bind(settings, \.calendarMenuBarHidesWhenEmpty)
-        case .hideCurrentEvent: return bind(settings, \.hideCurrentEvent)
-        case .calendarCommands: return launcher.commandsBinding(for: key, owner: .calendar)
-        case .extensionsShowInLauncher: return bind(settings, \.extensionsShowInLauncher)
         }
     }
 
-    /// A folder is absolute or under `~/`; null puts it back in Application Support.
     private static func folder(_ path: String?) -> String?? {
         guard let path else { return .some(nil) }
         return AppPaths.isFolderPath(path) ? path : nil
@@ -174,7 +132,6 @@ extension PopToRootTimeout: SettingsFileRawValue {}
 extension EscapeKeyBehavior: SettingsFileRawValue {}
 extension CommandID: SettingsFileRawValue {}
 extension AppAppearance: SettingsFileRawValue {}
-extension AppLanguage: SettingsFileRawValue {}
 extension InterfaceSize: SettingsFileRawValue {}
 extension HyperKeyPhysicalKey: SettingsFileRawValue {}
 extension HyperKeyQuickPress: SettingsFileRawValue {}
@@ -188,7 +145,6 @@ extension DictationModel: SettingsFileRawValue {}
 extension DictationMode: SettingsFileRawValue {}
 extension DictationDestination: SettingsFileRawValue {}
 extension DictationIdleRelease: SettingsFileRawValue {}
-extension JoinWindow: SettingsFileRawValue {}
 
 extension ClipboardRetention: SettingsFileToken {
     var settingsToken: SettingsFileJSON {
@@ -200,105 +156,6 @@ extension ClipboardRetention: SettingsFileToken {
         case .sixMonths: 180
         case .year: 365
         case .forever: "forever"
-        }
-    }
-}
-
-extension AIRetention: SettingsFileToken {
-    var settingsToken: SettingsFileJSON {
-        switch self {
-        case .week: 7
-        case .month: 30
-        case .threeMonths: 90
-        case .forever: "forever"
-        }
-    }
-}
-
-extension AIOpensTo: SettingsFileToken {
-    var settingsToken: SettingsFileJSON {
-        switch self {
-        case .recent: "recent"
-        case .newConversation: "newConversation"
-        }
-    }
-}
-
-extension AINewChatAfter: SettingsFileToken {
-    var settingsToken: SettingsFileJSON {
-        switch self {
-        case .twoMinutes: 2
-        case .fiveMinutes: 5
-        case .tenMinutes: 10
-        case .thirtyMinutes: 30
-        case .never: "never"
-        }
-    }
-}
-
-extension AIToolRounds: SettingsFileToken {
-    var settingsToken: SettingsFileJSON {
-        switch self {
-        case .ten: 10
-        case .twentyFive: 25
-        case .fifty: 50
-        case .hundred: 100
-        case .unlimited: "unlimited"
-        }
-    }
-}
-
-extension CalendarLauncherLimit: SettingsFileToken {
-    var settingsToken: SettingsFileJSON {
-        switch self {
-        case .one: 1
-        case .three: 3
-        case .five: 5
-        case .all: "all"
-        }
-    }
-}
-
-extension MeetingSpan: SettingsFileToken {
-    var settingsToken: SettingsFileJSON {
-        switch self {
-        case .today: "today"
-        case .todayAndTomorrow: "todayAndTomorrow"
-        case .nextSevenDays: "nextSevenDays"
-        }
-    }
-}
-
-extension CalendarMenuBarDisplay: SettingsFileToken {
-    var settingsToken: SettingsFileJSON {
-        switch self {
-        case .disabled: "disabled"
-        case .meetingIcon: "meetingIcon"
-        case .meetingTitle: "meetingTitle"
-        }
-    }
-}
-
-extension MenuBarEvents: SettingsFileToken {
-    var settingsToken: SettingsFileJSON {
-        switch self {
-        case .today: "today"
-        case .two: 2
-        case .five: 5
-        case .ten: 10
-        case .thirty: 30
-        }
-    }
-}
-
-extension HideCurrentEvent: SettingsFileToken {
-    var settingsToken: SettingsFileJSON {
-        switch self {
-        case .dontHide: "never"
-        case .automatically: 0
-        case .afterFive: 5
-        case .afterTen: 10
-        case .afterThirty: 30
         }
     }
 }

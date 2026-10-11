@@ -1,5 +1,4 @@
 // Adapted from Rooms (MIT): https://github.com/saragordic/rooms/blob/main/LICENSE
-// Standalone contract tests for the pure room model, its plan and its three stores.
 import CoreGraphics
 import Foundation
 
@@ -42,10 +41,7 @@ struct WindowRoomTests {
         }
     }
 
-    // MARK: - Fixtures
-
     static let gap: CGFloat = 16
-    /// A 1728 × 1080 visible frame under a 37-pt menu bar.
     static let area = CGRect(x: 0, y: 37, width: 1728, height: 1080)
     static let laptop = CGRect(x: 0, y: 33, width: 1728, height: 1000)
     static let monitor = CGRect(x: 0, y: 25, width: 2560, height: 1390)
@@ -93,7 +89,6 @@ struct WindowRoomTests {
         RoomWindow(bundleID: bundleID, appName: bundleID, title: title, windowID: id)
     }
 
-    /// A deterministic sample of rooms: 1…6 windows mixing real apps' minimum sizes.
     static func everyRoom(_ check: (CGRect, [CGSize]) -> Void) {
         let sizes = [
             CGSize(width: 900, height: 600), CGSize(width: 606, height: 454),
@@ -134,8 +129,6 @@ struct WindowRoomTests {
         print("\(passes)/\(passes + failures) passed")
         if failures > 0 { exit(1) }
     }
-
-    // MARK: - Tiling
 
     static func tilingBasics() {
         let box = canvas(area)
@@ -353,9 +346,6 @@ struct WindowRoomTests {
         expect(invalid == zero, "a non-finite gap reads as none")
     }
 
-    // MARK: - Grid
-
-    /// Dragged by hand: three thirds on top, ⅔ + ⅓ below, gaps a little uneven.
     static func roomByHand(_ visible: CGRect) -> [CGRect] {
         let x = visible.minX, y = visible.minY, w = visible.width, h = visible.height
         return [
@@ -454,8 +444,6 @@ struct WindowRoomTests {
             "a far-off frame is no cell")
     }
 
-    // MARK: - Arrangement
-
     static func arrangementReading() {
         let exact = RoomLayoutEngine.frames(count: 3, kind: .columns, in: monitor, gap: gap)
         let rough = exact.map { $0.offsetBy(dx: 12, dy: -9).insetBy(dx: 6, dy: 4) }
@@ -546,8 +534,6 @@ struct WindowRoomTests {
             "a unit frame resolves back to the window (unit \(unit))")
     }
 
-    // MARK: - Matching
-
     static func windowMatching() {
         let byID = RoomWindowMatcher.assign(
             [window("chrome", title: "Old title", id: 42)],
@@ -592,8 +578,6 @@ struct WindowRoomTests {
         expect(!RoomWindowMatcher.isSimilar("Inbox", "Calendar"), "different titles are not similar")
     }
 
-    // MARK: - Parking
-
     static func parking() {
         let screen = CGRect(x: 0, y: 25, width: 1728, height: 1092)
         let size = CGSize(width: 800, height: 600)
@@ -636,8 +620,6 @@ struct WindowRoomTests {
             RoomParking.returnFrame(for: onLaptop, screens: [laptop]), onLaptop,
             "a way back on screen is kept")
     }
-
-    // MARK: - Plan
 
     static func planning() {
         let display = screen(area)
@@ -751,8 +733,6 @@ struct WindowRoomTests {
             RoomPlan.nextLayout(after: .auto, in: [.auto], backwards: false) == nil,
             "one choice leaves Tab nothing to do")
     }
-
-    // MARK: - Records and stores
 
     static func roomRecord() {
         let json = #"{"name":"Research","windows":[{"bundleID":"com.example.notes"}]}"#
