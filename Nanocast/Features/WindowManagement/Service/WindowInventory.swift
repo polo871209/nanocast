@@ -57,17 +57,37 @@ enum WindowInventory {
 
     static func candidates() -> [NSRunningApplication] {
         let ownPID = NSRunningApplication.current.processIdentifier
-        return NSWorkspace.shared.runningApplications.filter {
+        let listed = NSWorkspace.shared.runningApplications.filter { $0.processIdentifier > 0 }
+        let unlisted = windowOwnerPIDs().subtracting(listed.map(\.processIdentifier))
+            .compactMap(NSRunningApplication.init(processIdentifier:))
+        return (listed + unlisted).filter {
             $0.activationPolicy == .regular && !$0.isTerminated
                 && $0.processIdentifier != ownPID
         }
     }
 
+    /// Xcode's Device Hub respawns at launch, so the workspace lists it with pid -1.
+    static func owningProcess(of app: NSRunningApplication) -> NSRunningApplication {
+        guard app.processIdentifier <= 0, let bundleID = app.bundleIdentifier else { return app }
+        return windowOwnerPIDs().lazy.compactMap(NSRunningApplication.init(processIdentifier:))
+            .first { $0.bundleIdentifier == bundleID } ?? app
+    }
+
+    private static func windowOwnerPIDs() -> Set<pid_t> {
+        let options: CGWindowListOption = [.optionAll, .excludeDesktopElements]
+        guard let listing = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]]
+        else { return [] }
+        return Set(
+            listing.lazy.filter { $0[kCGWindowLayer as String] as? Int == 0 }
+                .compactMap { $0[kCGWindowOwnerPID as String] as? pid_t })
+    }
+
     static func application(for bundleID: String) -> (AXUIElement, NSRunningApplication)? {
         guard
-            let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+            let listed = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
                 .first(where: { !$0.isTerminated })
         else { return nil }
+        let app = owningProcess(of: listed)
         return (AXWindowAccess.application(for: app.processIdentifier), app)
     }
 
