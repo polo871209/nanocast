@@ -43,7 +43,6 @@ struct EmojiTests {
         expect(EmojiCategory.symbols.itemTitle == "Symbol", "symbol categories use Symbol actions")
         expect(EmojiCategory.flags.itemTitle == "Emoji", "emoji categories use Emoji actions")
 
-        // Density is bounded to the five user-facing choices, with eight as the default.
         expect(
             EmojiGridColumns.allCases.map(\.rawValue) == [6, 7, 8, 9, 10],
             "grid densities cover six through ten columns")
@@ -59,7 +58,6 @@ struct EmojiTests {
             EmojiGridColumns.nine.applying(.actualSize, default: .nine) == nil,
             "actual size at the default changes nothing")
 
-        // Keyword packs join after English, in preference order, and skip blank keyword fields.
         let merged = EmojiCatalog.parse(
             "A|alpha|ob|0|red\nB|beta|ob|0|", localized: ["A|rouge,vif\nbad line\nB|bleu", "A|rot"])
         expect(merged.map(\.keywords) == ["red,rouge,vif,rot", "bleu"], "packs append keywords")
@@ -131,7 +129,6 @@ struct EmojiTests {
         expect(g.up(from: 16 + 2) == 10, "up from section 1 row 0 keeps the column into section 0")
         expect(g.up(from: 16 + 7) == 15, "up from section 1 col 7 clamps to section 0's last cell")
 
-        // Single-section grid (search results) never escapes its bounds.
         let single = EmojiGridGeometry(counts: [5], columns: 8)
         expect(single.down(from: 2) == 2, "single row: down is a no-op")
         expect(single.up(from: 2) == 2, "single row: up is a no-op")

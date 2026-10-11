@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// What both HUDs agree on: one at a time, replace, fade, dwell, fade away.
 @MainActor
 final class HUDPresenter {
     enum Anchor {
@@ -21,10 +20,8 @@ final class HUDPresenter {
         self.screen = screen
     }
 
-    /// A nil `size` lets SwiftUI measure; progress has no dwell, so it waits to be replaced.
-    func show(_ view: some View, size: CGSize? = nil, dwells: Bool = true, interactive: Bool = false) {
-        let panel = panel ?? make(acceptsMouseEvents: interactive)
-        panel.ignoresMouseEvents = !interactive
+    func show(_ view: some View, size: CGSize? = nil, dwells: Bool = true) {
+        let panel = panel ?? make()
         let host = NSHostingView(rootView: view)
         // Never size from `host.frame` after attaching: AppKit resets it to the content rect.
         let content = size ?? host.fittingSize
@@ -32,7 +29,6 @@ final class HUDPresenter {
         panel.setContentSize(content)
         panel.contentView = host
         place(panel)
-        // A panel on screen may be mid-fade, so bring it back rather than start another.
         if panel.isVisible {
             panel.cancelFade()
         } else {
@@ -41,13 +37,6 @@ final class HUDPresenter {
         if dwells { scheduleDismissal() } else { dismissal?.cancel() }
     }
 
-    func dismiss() {
-        dismissal?.cancel()
-        guard let panel, panel.isVisible else { return }
-        panel.fadeOut(duration: Theme.Duration.exit)
-    }
-
-    /// Re-arms the dismissal, so a repeat extends the dwell rather than replaying it.
     func extend() {
         guard let panel, panel.isVisible else { return }
         panel.cancelFade()
@@ -65,8 +54,8 @@ final class HUDPresenter {
         }
     }
 
-    private func make(acceptsMouseEvents: Bool) -> HUDPanel {
-        let panel = HUDPanel(acceptsMouseEvents: acceptsMouseEvents)
+    private func make() -> HUDPanel {
+        let panel = HUDPanel()
         self.panel = panel
         return panel
     }

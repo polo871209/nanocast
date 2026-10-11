@@ -18,7 +18,6 @@ struct DictionaryEntryTests {
         }
     }
 
-    /// Trimmed from the New Oxford American record for `mango`, classes and whitespace intact.
     static let mango = """
         <html xmlns:d="http://www.apple.com/DTDs/DictionaryService-1.0.rng"><head/><body>\
         <d:entry id="m" d:title="mango" class="entry"><span class="hg x_xh0">\

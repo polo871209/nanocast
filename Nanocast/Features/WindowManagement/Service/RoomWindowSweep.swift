@@ -2,19 +2,15 @@
 import AppKit
 @preconcurrency import ApplicationServices
 
-/// Reads every window a room can hold, once: minimized ones and hidden apps' windows included.
 @MainActor
 enum RoomWindowSweep {
-    /// A sweep walks every app, so one hung process must not cost the full messaging timeout.
     private static let sweepTimeout: Float = 0.2
-    /// Anything smaller is a palette or a strip, never a room's window.
     private static let smallest = CGSize(width: 100, height: 60)
     /// Layer 0 is the normal window band; above it sit the menu bar, the Dock and overlays.
     private static let normalLayer = 0
 
     struct Snapshot {
         var screens: [WindowLayoutScreen]
-        /// `handle` is the index into this array, and the key into `elements`.
         var windows: [RoomLiveWindow]
         var elements: [Int: WindowInventory.Element]
 
@@ -22,7 +18,6 @@ enum RoomWindowSweep {
             windows.indices.contains(handle) ? windows[handle] : nil
         }
 
-        /// The display a room lands on; the first one when that display is gone.
         func screen(uuid: String?) -> WindowLayoutScreen? {
             let uuid = uuid?.lowercased()
             return screens.first { $0.display.uuid == uuid } ?? screens.first

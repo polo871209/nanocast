@@ -12,7 +12,6 @@ final class UninstallCoordinator {
     private let visibility: VisibilityStore
     private let ranking: LauncherRankingStore
     private let aliases: AliasStore
-    /// Dialog and message-HUD presentation only — never for state this type owns.
     private unowned let core: AppCore
 
     init(
@@ -41,10 +40,8 @@ final class UninstallCoordinator {
         self.core = core
     }
 
-    /// The palette is already up, so this swaps the sub-screen rather than re-showing it.
     func beginUninstall(_ app: AppEntry) {
         guard app.kind == .application else { return }
-        // What stops a name or a shared bundle-ID namespace being misattributed.
         let others = appIndex.apps.filter { $0.kind == .application && $0.id != app.id }
         session.begin(
             app: app, otherAppNames: others.map(\.name),
@@ -52,7 +49,6 @@ final class UninstallCoordinator {
         paletteCoordinator.navigate(to: .uninstall)
     }
 
-    /// The one funnel for the screen's ↵ and Actions row, so neither skips the confirmation.
     func performUninstall() {
         guard let app = session.app, let plan = session.plan, session.canConfirm else { return }
         let items = session.selectedCandidates
@@ -96,7 +92,6 @@ final class UninstallCoordinator {
         }
     }
 
-    /// Stays on the screen: losing a whole scan to copy one path is a poor trade.
     func copyUninstallPath(_ candidate: UninstallCandidate) {
         Paster.copyPlainText(candidate.path)
         core.showMessage(String(localized: "Copied path"))

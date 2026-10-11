@@ -10,14 +10,14 @@ When this document and the code disagree, the code is probably right and this fi
 
 ## Posture
 
-Nanocast supports macOS 26 and later, with macOS 27 strongly preferred. Swift 6+ with complete strict
+Nanocast supports macOS 27 and later, on Apple silicon only. Swift 6+ with complete strict
 concurrency is required. Prefer the latest Swift patterns and modern Apple APIs, following
 [`AGENTS.md`](../AGENTS.md#posture-modern-first-always).
 
 Verify API and language-feature availability against the SDK and compiler used by the build and CI.
-Use direct availability checks where macOS 27+ APIs require them to preserve macOS 26 support. Do not
-introduce compatibility layers, legacy workarounds, support below macOS 26, migration scaffolding or
-speculative fallbacks.
+Every macOS 27 API is available unconditionally, so no `#available` check or runtime OS-version
+branch exists. Do not introduce compatibility layers, legacy workarounds, support below macOS 27,
+migration scaffolding or speculative fallbacks.
 
 In practice that means Observation and never `ObservableObject` or `@Published`; `SMAppService` and
 never an `LSSharedFileList` shim. Adopt successors directly and delete obsolete call sites rather
@@ -84,7 +84,6 @@ fit the table.
 | `Catalog`     | Pure static namespace over a built-in list                                    |
 | `Index`       | A searchable collection, rebuilt as its inputs change                         |
 | `Engine`      | A pure evaluator: input → output                                              |
-| `Lexer`       | Splits text into classified token ranges in one pass; never rejects input     |
 | `Policy`      | A pure decision — no state, no effects                                        |
 | `Remapper`    | Keeps one HID key mapping on every matching device, including later arrivals  |
 
@@ -241,7 +240,7 @@ need saying explicitly. Adding it as the view is written costs a line; retrofitt
 Nanocast ships English plus German, Spanish, French, Japanese, Korean, Portuguese, Russian and
 Simplified Chinese. Every string lives in `Nanocast/Resources/Localizable.xcstrings`, keyed by its
 English source text; the compiler extracts the keys, and `./Scripts/sync-strings.sh` writes them into
-the catalog (Xcode's own build does the same in the IDE). The six privacy prompts live in
+the catalog (Xcode's own build does the same in the IDE). The four privacy prompts live in
 `InfoPlist.xcstrings`, keyed by their `Info.plist` key.
 
 - **SwiftUI's own initializers localize literals already** — `Text("…")`, `Button("…")`, `.help("…")`
@@ -259,9 +258,8 @@ the catalog (Xcode's own build does the same in the IDE). The six privacy prompt
 - **A count is one interpolated string** (`"\(count) items"`) with plural variations in the catalog, never
   a `== 1 ?` branch.
 - **Not language, not in the catalog**: glyphs, separators and samples are `Text(verbatim:)`.
-- **Never localized**: anything from macOS, the user or an extension — app and pane names, user
-  content, everything a Raycast extension supplies or receives — and persisted formats, identifiers,
-  log text, prompts sent to a model, and what the calculator parses.
+- **Never localized**: anything from macOS or the user — app and pane names, user content — and
+  persisted formats, identifiers, log text, and what the calculator parses.
 - **Nanocast's own command names are translated and stay findable in English**: `CommandID`,
   `SystemAction` and `WindowCommand` keep their English source as `englishName`, which the launcher
   indexes as an alternate title.

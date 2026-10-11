@@ -1,27 +1,20 @@
 import SwiftUI
 
-/// One inline field. `id` keys its focus and value, so two fields may share a title.
 struct InlineArgument: Equatable {
     let id: String
     let title: String
-    /// Non-empty makes the field chosen from the palette's menu rather than typed.
     var options: [String] = []
-    /// Never marked as owed: leaving it empty is an answer.
     var isOptional = false
 }
 
 struct InlineArgumentFields: View {
     @Environment(\.metrics) private var metrics
     let arguments: [InlineArgument]
-    /// The row's glyph, anchoring the strip to it; nil where that row is already listed.
     let symbol: String?
-    /// Binding factory keyed by argument id — the values live in `PaletteState.commandArguments`.
     let value: (String) -> Binding<String>
     @FocusState.Binding var focused: String?
-    /// A field with options is chosen, not typed, so it hands the palette its menu instead.
     let openOptions: (String) -> Void
     let onSubmit: () -> Void
-    /// Fields the caret has left behind. Nothing is owed until one was visited and not answered.
     @State private var visited: Set<String> = []
 
     var body: some View {
@@ -49,7 +42,6 @@ struct InlineArgumentFields: View {
                 }
             }
         }
-        // Only a field the caret has been in and left may say it is still owed a value.
         .onChange(of: focused) { previous, _ in
             if let previous, arguments.contains(where: { $0.id == previous }) {
                 visited.insert(previous)
@@ -59,7 +51,6 @@ struct InlineArgumentFields: View {
 
     static func height(_ metrics: InterfaceMetrics) -> CGFloat { metrics.scaled(26) }
 
-    /// The header shrinks the search field to exactly the room left over.
     static func totalWidth(
         for arguments: [InlineArgument], hasIcon: Bool, metrics: InterfaceMetrics
     ) -> CGFloat {
@@ -74,12 +65,10 @@ struct InlineArgumentFields: View {
     }
 }
 
-/// Shared chrome, so a typed field and a chosen one read as the same control.
 private struct ArgumentFieldChrome: ViewModifier {
     @Environment(\.metrics) private var metrics
     let argument: InlineArgument
     let isFocused: Bool
-    /// Visited, left, and still empty — the only state that earns a warning edge.
     let isOwed: Bool
     @Binding var hovered: Bool
 
@@ -110,7 +99,6 @@ private struct ArgumentFieldChrome: ViewModifier {
         return Theme.Colors.cardFill
     }
 
-    /// Focus reads as a brighter edge; only a field left behind unanswered turns red.
     private var stroke: Color {
         if isFocused { return Color.accentColor }
         if isOwed { return Theme.Colors.destructive.opacity(0.55) }
@@ -144,7 +132,6 @@ private struct ArgumentField: View {
     }
 }
 
-/// A field with options: the value is picked from the palette's own menu, never typed.
 private struct ArgumentChoiceField: View {
     @Environment(\.metrics) private var metrics
     let argument: InlineArgument
@@ -174,7 +161,6 @@ private struct ArgumentChoiceField: View {
         )
         .contentShape(Rectangle())
         .focusable()
-        // The chrome draws the focused edge, so AppKit's blue ring would be a second one.
         .focusEffectDisabled()
         .onTapGesture(perform: onOpen)
         .onKeyPress(keys: [.return, KeyEquivalent("\u{3}")]) { _ in

@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// `PopoverMenuRow`'s look, copied: `PopoverMenu` reads palette state that Notes does not have.
 struct NoteHeadingMenuView: View {
     @Environment(NotesCoordinator.self) private var notes
 

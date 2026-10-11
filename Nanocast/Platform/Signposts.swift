@@ -1,6 +1,5 @@
 import os
 
-/// Coarse permanent intervals; free at runtime unless an Instruments session is attached.
 enum Signposts {
     private static let signposter = OSSignposter(
         subsystem: "com.nanocast.perf", category: "Performance")

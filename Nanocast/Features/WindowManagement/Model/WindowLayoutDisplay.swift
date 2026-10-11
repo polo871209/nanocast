@@ -1,10 +1,7 @@
 import Foundation
 
-/// Which screen an entry targets, identified so it survives a reboot and a reconnect.
 struct WindowLayoutDisplay: Codable, Hashable, Sendable {
-    /// `CGDisplayCreateUUIDFromDisplayID`, stringified by the service layer, never read here.
     var uuid: String
-    /// `NSScreen.localizedName` at authoring time, so an absent display can still name itself.
     var name: String
 
     init(uuid: String, name: String) {

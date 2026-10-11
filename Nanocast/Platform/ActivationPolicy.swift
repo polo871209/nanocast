@@ -1,6 +1,5 @@
 import AppKit
 
-/// Keyed by window identity, not a count: a repeated open or close can't strand the Dock icon.
 @MainActor
 final class ActivationPolicy {
     private var openWindows: Set<ObjectIdentifier> = []
@@ -17,7 +16,6 @@ final class ActivationPolicy {
         if openWindows.isEmpty { NSApp.setActivationPolicy(.accessory) }
     }
 
-    /// Each close reports back through `windowDidClose`, which drops the Dock icon after the last.
     func closeAll() {
         for window in NSApp.windows where openWindows.contains(ObjectIdentifier(window)) {
             window.close()

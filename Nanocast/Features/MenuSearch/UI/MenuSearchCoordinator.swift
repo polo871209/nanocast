@@ -8,9 +8,7 @@ final class MenuSearchCoordinator {
     private let palette: PaletteState
     private let paletteCoordinator: PaletteCoordinator
     private unowned let core: AppCore
-    /// The app the open snapshot belongs to; activation re-resolves against this, never a retarget.
     private var frozenApp: NSRunningApplication?
-    /// One decode shared by every row; resolved once per show so the list never re-hits icons.
     private(set) var frozenIconURL: URL?
     private(set) var frozenIconStamp: Int = 0
 
@@ -42,7 +40,6 @@ final class MenuSearchCoordinator {
         paletteCoordinator.togglePalette(mode: .menuSearch)
     }
 
-    /// Every open walks anew, a restore included: hiding dropped the last snapshot.
     func load() {
         guard Permissions.ensureAccessibility() else {
             Task { await self.reportPermissionFailure() }
@@ -99,8 +96,6 @@ final class MenuSearchCoordinator {
             return
         }
     }
-
-    // MARK: - Reporting
 
     private func reportPermissionFailure() async {
         let openSettings = await core.reportFailure(

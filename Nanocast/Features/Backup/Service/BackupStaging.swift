@@ -1,6 +1,5 @@
 import Foundation
 
-/// One run's scratch tree, in Caches so PNGs hardlink and a crashed run's orphan ages out.
 struct BackupStaging: Sendable {
     let root: URL
 
@@ -11,7 +10,6 @@ struct BackupStaging: Sendable {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     }
 
-    /// A run killed mid-flight leaves its tree behind, and nothing else ever reclaims it.
     private static func sweep(_ container: URL) {
         let cutoff = Date().addingTimeInterval(-86_400)
         let keys: Set<URLResourceKey> = [.contentModificationDateKey]

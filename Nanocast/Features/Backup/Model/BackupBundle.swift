@@ -1,6 +1,5 @@
 import Foundation
 
-/// The payload a `.nanocast` seals; pure, so the harness drives the real layout.
 struct BackupBundle: Sendable {
     enum LearningPart: String, CaseIterable, Sendable {
         case ranking
@@ -13,8 +12,6 @@ struct BackupBundle: Sendable {
     init(root: URL) {
         self.root = root
     }
-
-    // MARK: - Layout
 
     var manifestURL: URL { root.appendingPathComponent("manifest.json") }
     var settingsURL: URL { root.appendingPathComponent("settings.json") }
@@ -29,20 +26,15 @@ struct BackupBundle: Sendable {
     var clipboardImagesDirectory: URL {
         directory(for: .clipboard).appendingPathComponent("images", isDirectory: true)
     }
-    var snippetsDirectory: URL { directory(for: .snippets) }
     var notesDirectory: URL { directory(for: .notes) }
 
     func learningURL(_ part: LearningPart) -> URL {
         directory(for: .learning).appendingPathComponent("\(part.rawValue).json")
     }
 
-    // MARK: - Writing
-
-    /// Called once before composing; the archive carries no directory a category didn't ask for.
     func prepare(_ categories: Set<BackupCategory>) throws {
         try create(root)
         if categories.contains(.clipboard) { try create(clipboardImagesDirectory) }
-        if categories.contains(.snippets) { try create(snippetsDirectory) }
         if categories.contains(.notes) { try create(notesDirectory) }
         if categories.contains(.learning) { try create(directory(for: .learning)) }
     }
@@ -55,11 +47,6 @@ struct BackupBundle: Sendable {
         try write(try Self.encoder.encode(manifest), to: manifestURL)
     }
 
-    func encode<Value: Encodable>(_ value: Value, to url: URL) throws {
-        try write(try Self.encoder.encode(value), to: url)
-    }
-
-    /// Returns the name actually used; a duplicate or unsafe title is disambiguated, never dropped.
     @discardableResult
     func writeDocument(
         title: String, extension ext: String, contents: String, in directory: URL
@@ -71,12 +58,8 @@ struct BackupBundle: Sendable {
         return name
     }
 
-    // MARK: - Clipboard, a line at a time
-
-    /// One clip per line; a newline inside a clip is escaped, so `\n` only ever separates.
     struct ClipboardWriter: ~Copyable {
         private let handle: FileHandle
-        /// Compact, not pretty-printed: a pretty object spans lines and breaks the separator.
         private let encoder: JSONEncoder
 
         init(url: URL) throws {
@@ -100,15 +83,12 @@ struct BackupBundle: Sendable {
         try ClipboardWriter(url: clipboardItemsURL)
     }
 
-    /// Mapped and decoded lazily, so a gigabyte of history costs one clip of resident memory.
     func clipboardItems() -> some Sequence<BackupClipboardItem> {
         let data = (try? Data(contentsOf: clipboardItemsURL, options: .mappedIfSafe)) ?? Data()
         return data.split(separator: 0x0A, omittingEmptySubsequences: true)
             .lazy
             .compactMap { try? Self.decoder.decode(BackupClipboardItem.self, from: Data($0)) }
     }
-
-    // MARK: - Reading
 
     func readManifest() throws(BackupFormatError) -> BackupManifest {
         guard let data = try? Data(contentsOf: manifestURL),
@@ -120,7 +100,6 @@ struct BackupBundle: Sendable {
         return manifest
     }
 
-    /// nil rather than a throw: a clip whose image the archive lost is skipped and counted.
     func clipboardImageURL(named name: String) -> URL? {
         guard Self.isSafeName(name) else { return nil }
         let url = clipboardImagesDirectory.appendingPathComponent(name)
@@ -143,9 +122,6 @@ struct BackupBundle: Sendable {
         return try? Self.decoder.decode(Value.self, from: data)
     }
 
-    // MARK: - Coding
-
-    /// ISO-8601 dates, so a backup stays readable by eye and by anything but this decoder.
     static let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -159,13 +135,9 @@ struct BackupBundle: Sendable {
         return decoder
     }()
 
-    // MARK: - Names
-
-    /// A note or snippet title becomes a filename here, so path separators cannot survive it.
     static func sanitized(_ title: String) -> String {
         let cleaned = title.components(separatedBy: Self.forbidden).joined(separator: "-")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        // Leading dots hide the file and spell `..`; an empty result still needs a name.
         let trimmed = String(cleaned.drop { $0 == "." }.prefix(120))
         return trimmed.isEmpty ? "Untitled" : trimmed
     }

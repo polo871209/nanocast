@@ -1,6 +1,5 @@
 import Foundation
 
-/// Grid sections in display order; raw values are the compact codes used by the generated dataset.
 enum EmojiCategory: String, CaseIterable, Sendable {
     case smileysAndPeople = "sp"
     case animalsAndNature = "an"
@@ -55,7 +54,6 @@ enum EmojiCategory: String, CaseIterable, Sendable {
         }
     }
 
-    /// Names the selected character in Actions; Unicode's latter categories are symbol collections.
     var itemTitle: String {
         switch self {
         case .symbols, .arrows, .currency, .math, .shapesAndPunctuation, .cjk,
@@ -67,7 +65,6 @@ enum EmojiCategory: String, CaseIterable, Sendable {
     }
 }
 
-/// Which section the picker shows; `.all` keeps the catalog's complete ordered overview.
 enum EmojiCategoryFilter: Hashable, Sendable {
     case all
     case pinned
@@ -96,14 +93,12 @@ enum EmojiCategoryFilter: Hashable, Sendable {
     }
 }
 
-/// ⌘0 / ⌘+ / ⌘-: zooming in shows fewer, larger cells.
 enum EmojiGridZoom: Sendable {
     case actualSize
     case zoomIn
     case zoomOut
 }
 
-/// User-selectable grid density. Zoom changes this for the current picker session only.
 enum EmojiGridColumns: Int, CaseIterable, Identifiable, Sendable {
     case six = 6
     case seven = 7
@@ -115,7 +110,6 @@ enum EmojiGridColumns: Int, CaseIterable, Identifiable, Sendable {
 
     var id: Int { rawValue }
 
-    /// Nil when the zoom would change nothing: already at the default, or at six or ten columns.
     func applying(_ zoom: EmojiGridZoom, default defaultColumns: Self) -> Self? {
         let next: Self? =
             switch zoom {
@@ -127,7 +121,6 @@ enum EmojiGridColumns: Int, CaseIterable, Identifiable, Sendable {
     }
 }
 
-/// Fitzpatrick skin tone preference; `modifier` is the scalar appended to tone-capable emoji.
 enum EmojiSkinTone: String, CaseIterable, Identifiable, Sendable {
     case none, light, mediumLight, medium, mediumDark, dark
 
@@ -158,13 +151,12 @@ enum EmojiSkinTone: String, CaseIterable, Identifiable, Sendable {
     var sample: String { EmojiCatalog.applyTone(self, to: "👋") }
 }
 
-/// One emoji or symbol; `glyph` is the base (untoned) form and doubles as the ID.
 struct EmojiEntry: Identifiable, Hashable, Sendable {
     let glyph: String
     let name: String
     let category: EmojiCategory
     let supportsSkinTone: Bool
-    let keywords: String  // comma-joined search terms; empty for most symbols
+    let keywords: String
 
     var id: String { glyph }
     var displayName: String { name.capitalized }
@@ -176,7 +168,6 @@ struct EmojiEntry: Identifiable, Hashable, Sendable {
 }
 
 enum EmojiCatalog {
-    /// Base scalar + tone modifier; VS16 is stripped, the modifier already forcing emoji (UTS #51).
     static func applyTone(_ tone: EmojiSkinTone, to glyph: String) -> String {
         guard let modifier = tone.modifier else { return glyph }
         var scalars = String.UnicodeScalarView(glyph.unicodeScalars.filter { $0.value != 0xFE0F })
@@ -184,7 +175,6 @@ enum EmojiCatalog {
         return String(scalars)
     }
 
-    /// Parse the generated `glyph|name|category|tone|keywords` records, dropping malformed lines.
     nonisolated static func parse(_ raw: String, localized: [String] = []) -> [EmojiEntry] {
         let localizedTerms = terms(in: localized)
         var result: [EmojiEntry] = []
@@ -219,7 +209,6 @@ enum EmojiCatalog {
         return result
     }
 
-    /// A pack per language the Mac reads; "en" is the catalog and the matcher's answer to no match.
     nonisolated static func keywordLanguages(available: [String], preferred: [String]) -> [String] {
         let candidates = ["en"] + available
         var result: [String] = []

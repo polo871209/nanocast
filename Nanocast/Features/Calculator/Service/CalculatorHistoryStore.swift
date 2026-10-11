@@ -1,6 +1,5 @@
 import Foundation
 
-/// One past calculation, recorded when the user copies an answer.
 struct CalcHistoryEntry: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
     let expression: String
@@ -10,7 +9,6 @@ struct CalcHistoryEntry: Identifiable, Codable, Hashable, Sendable {
     var copyText: String { result.replacingOccurrences(of: ",", with: "") }
 }
 
-/// A capped JSON file beside `ClipboardStore` so `brew uninstall --zap` gets it too.
 @MainActor
 @Observable
 final class CalculatorHistoryStore {
@@ -18,16 +16,14 @@ final class CalculatorHistoryStore {
 
     private let fileURL: URL
 
-    private(set) var entries: [CalcHistoryEntry]  // newest first
+    private(set) var entries: [CalcHistoryEntry]
 
     private struct SearchKey: Equatable {
         let query: String
         let revision: Int
     }
 
-    /// Repeated renders (arrow-key nav) reuse the filter instead of re-scanning every entry.
     @ObservationIgnored private var searchMemo = Memo<SearchKey, [CalcHistoryEntry]>()
-    /// Bumped on every persisted mutation, so the key above names the entries it filtered.
     private var revision = 0
 
     init() {
@@ -43,7 +39,6 @@ final class CalculatorHistoryStore {
     }
 
     func record(expression: String, result: String) {
-        // Re-copying the same answer (Enter twice, or from history) shouldn't stack duplicates.
         if let latest = entries.first, latest.expression == expression, latest.result == result {
             return
         }

@@ -1,7 +1,6 @@
 import Foundation
 import IOKit.hid
 
-/// The private HID SPI behind `hidutil`. See docs/features/hotkeys.md#per-keyboard-remapping.
 @MainActor
 final class HIDEventSystem {
     struct Keyboard {
@@ -18,7 +17,6 @@ final class HIDEventSystem {
     private let client: AnyObject
     private var isWatchingConnections = false
 
-    /// Nil when this macOS lacks the SPI, so the caller reports it rather than crashing.
     init?() {
         guard let functions = Functions(), let client = functions.createSimpleClient(kCFAllocatorDefault)
         else { return nil }
@@ -26,7 +24,6 @@ final class HIDEventSystem {
         self.client = Unmanaged<AnyObject>.fromOpaque(client).takeRetainedValue()
     }
 
-    // Isolated so teardown can unschedule the main-queue delivery it registered.
     isolated deinit {
         guard isWatchingConnections else { return }
         functions.unscheduleFromDispatchQueue(opaque(client), opaque(DispatchQueue.main))

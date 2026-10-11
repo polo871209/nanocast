@@ -12,30 +12,7 @@ struct MessageHUDView: View {
 
     let message: String
     let accessory: Accessory
-    var onCancel: (() -> Void)? = nil
-    @State private var hovered = false
     @Environment(\.metrics) private var metrics
-
-    var body: some View {
-        Group {
-            if let onCancel {
-                Button(action: onCancel) {
-                    content
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Cancel \(message)")
-            } else {
-                content
-            }
-        }
-        .onHover { isHovered in
-            if onCancel != nil {
-                withAnimation(.easeOut(duration: Theme.Duration.hover)) {
-                    hovered = isHovered
-                }
-            }
-        }
-    }
 
     private var tint: Color {
         switch accessory {
@@ -44,7 +21,7 @@ struct MessageHUDView: View {
         }
     }
 
-    private var content: some View {
+    var body: some View {
         HStack(spacing: metrics.spacing.md) {
             mark
             Text(message)
@@ -57,8 +34,7 @@ struct MessageHUDView: View {
         .frame(maxWidth: metrics.size.hudMaxWidth, alignment: .leading)
         .fixedSize()
         .background { glow }
-        // Not glass: with nothing to lens it falls back to an opaque backing and shows.
-        .background(hovered ? Theme.Colors.controlHover : Theme.Colors.panelScrim)
+        .background(Theme.Colors.panelScrim)
         .background(GlassEffectView())
         .clipShape(Capsule())
         .overlay { rim }
@@ -78,31 +54,16 @@ struct MessageHUDView: View {
 
     private var rim: some View {
         Capsule().strokeBorder(
-            hovered
-                ? AnyShapeStyle(Theme.Colors.border)
-                : AnyShapeStyle(
-                    LinearGradient(
-                        colors: [tint.opacity(Self.rimOpacity), tint.opacity(0.06), .clear],
-                        startPoint: .leading, endPoint: .trailing)),
+            LinearGradient(
+                colors: [tint.opacity(Self.rimOpacity), tint.opacity(0.06), .clear],
+                startPoint: .leading, endPoint: .trailing),
             lineWidth: Theme.Size.hairline)
     }
 
-    /// One box for both marks, so swapping a spinner for its outcome cannot resize the pill.
     private var mark: some View {
-        Group {
-            if hovered, onCancel != nil {
-                Image(systemName: "xmark")
-                    .font(metrics.typography.menuIcon.weight(.semibold))
-                    .foregroundStyle(Theme.Colors.textSecondary)
-                    .frame(width: metrics.size.menuIcon, height: metrics.size.menuIcon)
-                    .transition(.opacity)
-            } else {
-                symbol
-                    .font(metrics.typography.menuIcon)
-                    .frame(width: metrics.size.menuIcon, height: metrics.size.menuIcon)
-                    .transition(.opacity)
-            }
-        }
+        symbol
+            .font(metrics.typography.menuIcon)
+            .frame(width: metrics.size.menuIcon, height: metrics.size.menuIcon)
     }
 
     @ViewBuilder
@@ -120,7 +81,6 @@ struct MessageHUDView: View {
     }
 }
 
-/// File-scoped on purpose, so nothing can reach for it when building a dialog.
 extension DialogTone {
     fileprivate var hudSymbol: String {
         switch self {

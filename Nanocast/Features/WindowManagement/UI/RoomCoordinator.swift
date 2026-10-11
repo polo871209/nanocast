@@ -1,7 +1,6 @@
 // Adapted from Rooms (MIT): https://github.com/saragordic/rooms/blob/main/LICENSE
 import AppKit
 
-/// Owns rooms: presence, the one enter funnel with its gate, the preview, the picker, cleanup.
 @MainActor
 @Observable
 final class RoomCoordinator {
@@ -18,21 +17,14 @@ final class RoomCoordinator {
     @ObservationIgnored private let aliases: AliasStore
     @ObservationIgnored private let palette: PaletteState
     @ObservationIgnored private let paletteCoordinator: PaletteCoordinator
-    /// Dialog and message-HUD presentation. Never state this type owns.
     @ObservationIgnored private unowned let core: AppCore
     @ObservationIgnored private let preview = RoomPreviewController()
-    /// Window work runs one at a time, in order: two passes at once would undo each other.
     @ObservationIgnored private var work: Task<Void, Never>?
-    /// Set while ↵ has handed the preview to the windows moving in under it.
     @ObservationIgnored private var isEntering = false
-    /// The room whose windows the picker starts with, held until the desk has been read.
     @ObservationIgnored private var pendingPreselection: Room?
-    /// Apps rooms hid since the feature was last switched off; a ⌘H of the user's is never here.
     @ObservationIgnored private var hiddenByRooms = Set<pid_t>()
-    /// The desk read in flight, so two openings in one turn sweep once.
     @ObservationIgnored private var loading: Task<Void, Never>?
 
-    /// The room last entered and not yet left, which the Rooms screen marks.
     private(set) var currentRoomID: UUID?
 
     init(
@@ -60,8 +52,6 @@ final class RoomCoordinator {
 
     private static let commands: Set<CommandID> = [.switchRoom, .createRoom]
 
-    // MARK: - Feature presence
-
     func applyRoomsPresence() {
         let enabled = settings.windowManagementEnabled
         appIndex.setWindowRooms(enabled && settings.windowRoomsShowInLauncher ? store.rooms : [])
@@ -69,7 +59,6 @@ final class RoomCoordinator {
         appIndex.setCommandsListed(Self.commands, settings.windowRoomsShowInLauncher)
     }
 
-    /// Switching the feature off brings every parked window home, and the room's hidden apps.
     func applyEnabled() {
         applyRoomsPresence()
         guard !settings.windowManagementEnabled else { return }
@@ -80,21 +69,17 @@ final class RoomCoordinator {
         inTurn { [ledger] in await RoomRunner.restoreEverything(hiddenApps: hidden, ledger: ledger) }
     }
 
-    /// Windows a crash left parked come home at launch; nothing is unhidden, nothing else moves.
     func recoverParkedWindows() {
         guard !ledger.isEmpty, Permissions.isAccessibilityTrusted() else { return }
         inTurn { [ledger] in RoomRunner.returnParkedWindows(ledger: ledger) }
     }
 
-    /// Synchronous, so no window is left off-screen once Nanocast is gone.
     func prepareForTermination() {
         work?.cancel()
         work = nil
         preview.hide()
         RoomRunner.returnParkedWindows(ledger: ledger)
     }
-
-    // MARK: - The Rooms screen
 
     func showRooms() {
         guard settings.windowManagementEnabled else { return }
@@ -105,7 +90,6 @@ final class RoomCoordinator {
         paletteCoordinator.togglePalette(mode: .rooms)
     }
 
-    /// Every open reads the desk anew, one turn after the screen appears so it never waits on AX.
     func load() {
         guard settings.windowManagementEnabled, Permissions.isAccessibilityTrusted() else { return }
         guard !session.isLoaded, loading == nil else { return }
@@ -120,7 +104,6 @@ final class RoomCoordinator {
         }
     }
 
-    /// Leaving both Rooms screens drops the desk and the preview, unless a room is moving in.
     func screensDidClose() {
         pendingPreselection = nil
         loading?.cancel()
@@ -170,7 +153,6 @@ final class RoomCoordinator {
         room.layout(onDisplay: targetDisplayUUID)
     }
 
-    /// Tab: the next layout that fits here, and the preview glides to it.
     func cycleLayout(of room: Room, backwards: Bool) {
         guard let snapshot = session.snapshot, let screen = snapshot.screen(uuid: targetDisplayUUID)
         else { return }
@@ -185,11 +167,9 @@ final class RoomCoordinator {
             core.showMessage(String(localized: "Only one layout fits these windows here"), tone: .neutral)
             return
         }
-        // The screen previews the selected room as it changes, so the cards glide from here.
         store.setLayout(next, for: room.id, onDisplay: screen.display.uuid)
     }
 
-    /// What the room looks like on this display, drawn from the desk the screen read.
     func preview(_ room: Room?) {
         guard let room, let snapshot = session.snapshot,
             let screen = snapshot.screen(uuid: targetDisplayUUID)
@@ -201,15 +181,11 @@ final class RoomCoordinator {
             snapshot.window(placement.handle).map { card(for: $0, at: placement.frame) }
         }
         guard !cards.isEmpty else { return preview.hide() }
-        // Back to front, so the main window's card ends on top, as the window itself will.
         preview.show(cards.reversed(), avoiding: paletteCoordinator.panelFrame)
     }
 
-    // MARK: - Entering
-
     func enterRoom(id: UUID) {
         guard settings.windowManagementEnabled, let room = store.room(id: id) else { return }
-        // The preview holds while the windows move in under it, then fades.
         isEntering = preview.isShowing
         if paletteCoordinator.isVisible { paletteCoordinator.hidePalette(restoreFocus: false) }
         let context = RoomRunner.Context(
@@ -239,9 +215,6 @@ final class RoomCoordinator {
         }
     }
 
-    // MARK: - Making and editing rooms
-
-    /// The picker for a room named on the Rooms screen; with no name yet, that screen first.
     func createRoom(named name: String = "") {
         guard settings.windowManagementEnabled else { return }
         guard !name.isEmpty else {
@@ -266,24 +239,20 @@ final class RoomCoordinator {
             paletteCoordinator.showPalette(mode: .roomWindows)
         }
         session.beginPicking(named: name, editing: room?.id, picked: [])
-        // A push opens no screen through the coordinator, so the desk is read from here.
         load()
         preselect(room)
     }
 
-    /// An edited room's windows start picked, in its order; a new room starts with none.
     private func preselect(_ room: Room?) {
         pendingPreselection = room
         applyPreselection()
     }
 
-    /// Runs once the desk is read: before then there are no windows to match against.
     private func applyPreselection() {
         guard let room = pendingPreselection, let snapshot = session.snapshot else { return }
         pendingPreselection = nil
         let assignment = RoomWindowMatcher.assign(
             room.windows, to: snapshot.windows, claimed: store.claimedWindowIDs(excluding: room.id))
-        // A member with no open window stays in the room as its app, not dropped.
         let picks = room.windows.indices.map { index -> RoomSession.Pick in
             if let live = assignment[index] { return .window(handle: snapshot.windows[live].handle) }
             let window = room.windows[index]
@@ -292,7 +261,6 @@ final class RoomCoordinator {
                     bundleID: window.bundleID, name: window.appName,
                     url: NSWorkspace.shared.urlForApplication(withBundleIdentifier: window.bundleID)))
         }
-        // Two closed windows of one app collapse into the one app they now stand for.
         var seen = Set<RoomSession.Pick>()
         session.beginPicking(
             named: room.name, editing: room.id, picked: picks.filter { seen.insert($0).inserted })
@@ -304,7 +272,6 @@ final class RoomCoordinator {
         previewPicked()
     }
 
-    /// Open windows matching `query`, then apps that are not open: those join as their app.
     func pickerRows(for query: String) -> [RoomPickerRow] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let windows =
@@ -319,7 +286,6 @@ final class RoomCoordinator {
             guard case .app(let app) = pick else { return nil }
             return app
         }
-        // Without a query only the picked apps show: the whole Applications folder is noise.
         let apps =
             trimmed.isEmpty
             ? pickedApps
@@ -335,7 +301,6 @@ final class RoomCoordinator {
 
     private static let appResultLimit = 30
 
-    /// The picked members as the room they would make here: Auto, in the order picked.
     func previewPicked() {
         guard let snapshot = session.snapshot, let screen = snapshot.screen(uuid: targetDisplayUUID)
         else { return }
@@ -378,7 +343,6 @@ final class RoomCoordinator {
         core.showMessage(String(localized: "Type a name for the room first"), tone: .neutral)
     }
 
-    /// ⌘↵ in the picker: the picked windows and apps become the room, in the order picked.
     func savePicked() {
         guard let snapshot = session.snapshot else { return }
         let picks = session.picked
@@ -399,7 +363,6 @@ final class RoomCoordinator {
             else { return }
             room = learned
         }
-        // `learn` keeps the picked order, so its windows slot back between the apps one by one.
         var learnedWindows = room.windows.makeIterator()
         room.windows = picks.compactMap { pick in
             switch pick {
@@ -419,7 +382,6 @@ final class RoomCoordinator {
         enterRoom(id: room.id)
     }
 
-    /// Remembers how the room's open windows sit now: the closest layout, or exactly as is.
     func rememberArrangement(of room: Room) {
         guard let snapshot = session.snapshot else { return }
         let assignment = RoomWindowMatcher.assign(
@@ -429,7 +391,6 @@ final class RoomCoordinator {
                 ?? false
         }
         let windows = arranged.compactMap { assignment[$0].map { snapshot.windows[$0] } }
-        // A member filled by title or by app has a new ID, so only the matcher knows it is here.
         let kept = room.windows.indices.filter { !arranged.contains($0) }.map { room.windows[$0] }
         guard !windows.isEmpty else {
             core.showMessage(String(localized: "None of \(room.name)’s windows are open"), tone: .neutral)
@@ -450,7 +411,6 @@ final class RoomCoordinator {
             String(localized: "\(room.name) — remembered as \(reading.kind.title)"), tone: .success)
     }
 
-    /// Read on the display most of the windows share, which is where their arrangement is.
     private func learn(
         _ room: Room, from windows: [RoomLiveWindow], keeping kept: [RoomWindow] = [],
         in snapshot: RoomWindowSweep.Snapshot, keepsOrder: Bool
@@ -503,11 +463,8 @@ final class RoomCoordinator {
         for entryID in entryIDs { ranking.reset(itemKey: entryID) }
     }
 
-    // MARK: - Helpers
-
     private var gap: CGFloat { CGFloat(settings.windowGap) }
 
-    /// The display the palette opens on, so the room lands where the preview is drawn.
     private var targetDisplayUUID: String? {
         (settings.openOnCursorScreen ? NSScreen.underCursor : NSScreen.primary).flatMap(AXScreens.uuid)
     }
@@ -517,8 +474,6 @@ final class RoomCoordinator {
             id: window.windowID.map(String.init) ?? "\(window.bundleID)|\(window.handle)",
             frame: frame, appName: window.appName, title: window.title, appURL: window.appURL)
     }
-
-    // MARK: - Reporting
 
     private func report(_ outcome: RoomRunner.Outcome, for room: Room) async {
         if outcome.isBlockedOnPermission { return await reportPermissionFailure() }
@@ -545,10 +500,8 @@ final class RoomCoordinator {
     }
 }
 
-/// One row of the Rooms screen: a room, or the one typed name offered as a new room.
 enum RoomRow: Identifiable, Hashable {
     case room(Room)
-    /// The typed name is an existing room's: choose its windows again.
     case edit(Room)
     case create(name: String)
 

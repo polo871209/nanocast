@@ -1,15 +1,12 @@
 # Camera
 
-One camera, two surfaces. `Open Camera` is a launcher command that puts a live preview on screen,
-mirrors it, switches between the Mac's cameras and copies a photo to the clipboard. Calendar's
-pre-meeting preview is the other, and it rides the same session, panel and stage — the join-specific
-controller and footer are all that stay in [calendar.md](calendar.md).
+`Open Camera` is a launcher command that puts a live preview on screen, mirrors it, switches between
+the Mac's cameras and copies a photo to the clipboard.
 
 ## Invariants
 
 - **Nothing runs until the command is run.** `CameraCoordinator` is `lazy` on `AppCore`, and
-  `CameraSession.init` stores a `Purpose` and touches nothing else — no device, no discovery session,
-  no TCC read. The camera permission prompt is raised by `start()`, from the gesture that asked for
+  `CameraSession.init` touches nothing — no device, no discovery session, no TCC read. The camera permission prompt is raised by `start()`, from the gesture that asked for
   it, and never on launch.
 - **The camera settles before the panel opens, and stops after it closes.** `start()` resolves access
   and blocks on `startRunning` first, then hands a settled `Feed` up — so the first frame is live
@@ -21,7 +18,7 @@ controller and footer are all that stay in [calendar.md](calendar.md).
 - **Escape, click-away and the shot all end the same way.** Every route goes through
   `CameraCoordinator.close()`, which drops the panel and stops the session. Taking a photo closes
   too — the command is done, so the camera goes out with it rather than idling for a second shot.
-- **System UI is not a click away.** `CameraPanel` owns click-away for both surfaces and reports it
+- **System UI is not a click away.** `CameraPanel` owns click-away and reports it
   as the same `.cancel` as Esc. Losing key counts, unless the window under the pointer sits at the
   Dock's level or above — the menu bar, what it drops down, the Dock — so reframing from Control
   Center keeps the feed live. No further `resignKey` follows that, so a mouse-down monitor waits for
@@ -41,15 +38,13 @@ controller and footer are all that stay in [calendar.md](calendar.md).
 | Piece | Holds |
 | --- | --- |
 | `Service/CameraSession.swift` | access, start/stop, device cycling, the photo, and the box |
-| `UI/CameraCoordinator.swift` | the standalone panel's lifecycle, mirror state, the clipboard write |
-| `UI/CameraView.swift` | the standalone surface: stage over a footer of controls |
-| `UI/CameraStage.swift` | the shared stage — the hosted preview layer, or why there is no video |
-| `UI/CameraPanel.swift` | the shared borderless panel: ↵, Esc, click-away, cursor-screen centring |
-| `UI/CameraButton.swift` | both footers' button: `ModalActionButtonStyle` plus a key-cap tooltip |
+| `UI/CameraCoordinator.swift` | the panel's lifecycle, mirror state, the clipboard write |
+| `UI/CameraView.swift` | the surface: stage over a footer of controls |
+| `UI/CameraStage.swift` | the stage — the hosted preview layer, or why there is no video |
+| `UI/CameraPanel.swift` | the borderless panel: ↵, Esc, click-away, cursor-screen centring |
+| `UI/CameraButton.swift` | the footer's button: `ModalActionButtonStyle` plus a key-cap tooltip |
 
-`Purpose` is the session's one knob. `.preview` is the cheap one Calendar takes — a `.medium` preset
-and no output. `.capture` raises the preset to `.photo` and adds an `AVCapturePhotoOutput`, which is
-the whole cost of being able to take a photo, and it is paid only by the command that does.
+The session runs the `.photo` preset with one `AVCapturePhotoOutput`.
 
 `CameraCoordinator` is `@Observable` and the view reads it directly, so toggling Mirror re-renders
 through Observation rather than through a hand-reassigned `rootView`. `mirrored` lives on the

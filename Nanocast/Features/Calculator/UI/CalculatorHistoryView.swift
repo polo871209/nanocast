@@ -1,13 +1,10 @@
 import SwiftUI
 
-/// Past calculations, shaped like `ClipboardList`; both sides per row, so no preview pane.
 struct CalculatorHistoryList: View {
     @Environment(\.metrics) private var metrics
     let results: [CalcHistoryEntry]
     let selectedID: CalcHistoryEntry.ID?
-    /// Changes only when the list should scroll, so mouse selection never yanks the position.
     let scroll: ScrollIntent
-    /// Live answer typed into the history search; same flat-index-0 contract as the launcher.
     var calc: CalcResult?
     var calcSelected = false
     var onActivateCalc: () -> Void = {}
@@ -39,7 +36,6 @@ struct CalculatorHistoryList: View {
         calc != nil ? calcSelected : selectedID != nil && selectedID == results.first?.id
     }
 
-    /// Newest-first, so a date header is emitted whenever the bucket changes.
     private var rows: [Row] {
         var rows: [Row] = []
         if let calc { rows = [.header(String(localized: "Calculator")), .calc(calc)] }
@@ -94,7 +90,6 @@ struct CalculatorHistoryList: View {
             }
             .edgeDissolve()
             .thinScrollbar()
-            // Snap to the origin on the first row so its section header shows too.
             .scrollFollowsSelection(
                 scroll, row: selectedRowID, atOrigin: firstRowSelected, proxy: proxy)
         }

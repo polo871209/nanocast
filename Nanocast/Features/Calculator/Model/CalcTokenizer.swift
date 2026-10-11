@@ -1,7 +1,6 @@
 import Foundation
 
 enum CalcTokenizer {
-    /// nil on any character that can't be calculator input — "not a calculation", not an error.
     static func tokenize(_ input: String) -> [CalcToken]? {
         let chars = Array(input.unicodeScalars)
         var tokens: [CalcToken] = []
@@ -19,7 +18,6 @@ enum CalcTokenizer {
                 continue
             }
 
-            // Radix literals need ≥1 digit after the prefix, else "0" is a plain number.
             if ch == "0", i + 2 < chars.count, let base = literalBase(chars[i + 1]) {
                 let start = i + 2
                 var end = start
@@ -41,8 +39,7 @@ enum CalcTokenizer {
                     let c = chars[i]
                     if isDigit(c) {
                         text.unicodeScalars.append(c)
-                    } else if c == "," && functionDepth == nil && i + 1 < chars.count && isDigit(chars[i + 1])
-                    {
+                    } else if c == "," && functionDepth == nil && i + 1 < chars.count && isDigit(chars[i + 1]) {
                     } else if c == "." && !seenDot {
                         seenDot = true
                         text.unicodeScalars.append(c)
@@ -51,7 +48,6 @@ enum CalcTokenizer {
                     }
                     i += 1
                 }
-                // Only while the exponent hugs the mantissa — a spaced `2 e` stays 2 × e.
                 var isShorthand = false
                 if i < chars.count, chars[i] == "e" || chars[i] == "E" {
                     var digits = i + 1
@@ -66,9 +62,7 @@ enum CalcTokenizer {
                         isShorthand = true
                     }
                 }
-                // An overflowing literal ("1e400") isn't calculator input, so no card.
                 guard let value = Double(text), value.isFinite else { return nil }
-                // Attached `k` is ×1,000; whitespace keeps Kelvin, and `10kg` stays a unit.
                 if i < chars.count, chars[i] == "k" || chars[i] == "K", isCompactSuffix(chars, i) {
                     let scaled = value * 1_000
                     guard scaled.isFinite else { return nil }
@@ -126,7 +120,6 @@ enum CalcTokenizer {
                 continue
             }
 
-            // Signs are punctuation, so fold to ISO: `€20 to gbp` tokenizes as `20 eur to gbp`.
             if let code = CurrencyData.signs[Character(ch)] {
                 tokens.append(.ident(code))
                 i += 1
@@ -187,7 +180,6 @@ enum CalcTokenizer {
             case "→":
                 tokens.append(.arrow)
             case "=":
-                // Tolerate a trailing "=" ("2+2="); anywhere else it's not calculator input.
                 guard i == chars.count - 1 else { return nil }
             default:
                 return nil
@@ -243,7 +235,6 @@ enum CalcTokenizer {
         }
     }
 
-    /// Only a spelling the table resolves, so `6/2(1+2)` keeps dividing.
     private static func compoundUnit(
         _ chars: [Unicode.Scalar], after index: Int, prefix: String
     ) -> (name: String, end: Int)? {
@@ -262,10 +253,8 @@ enum CalcTokenizer {
         return (name, end)
     }
 
-    /// Short scale only: the engine reads canonical English, where a billion is 10⁹.
     private static let magnitudes: [String: Double] = ["thousand": 1e3, "million": 1e6, "billion": 1e9]
 
-    /// The scale of a whole magnitude word following a literal (`13 million`), and where it ends.
     private static func magnitudeWord(
         _ chars: [Unicode.Scalar], after index: Int
     ) -> (scale: Double, end: Int)? {
@@ -280,7 +269,6 @@ enum CalcTokenizer {
         return (scale, end)
     }
 
-    /// Whether the `k` at `index` is a thousands suffix rather than Kelvin or a unit's head.
     private static func isCompactSuffix(_ chars: [Unicode.Scalar], _ index: Int) -> Bool {
         let next = index + 1
         guard next < chars.count else { return true }
@@ -292,7 +280,6 @@ enum CalcTokenizer {
         return CalcCurrency.byName[String(String.UnicodeScalarView(chars[next..<end])).lowercased()] != nil
     }
 
-    /// True when the rest reads as a conversion into a temperature unit, keeping `k` as Kelvin.
     private static func isTemperatureConversion(_ chars: [Unicode.Scalar], from index: Int) -> Bool {
         let remainder = String(String.UnicodeScalarView(chars[index...]))
             .trimmingCharacters(in: .whitespacesAndNewlines)

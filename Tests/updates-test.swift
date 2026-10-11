@@ -22,7 +22,6 @@ struct UpdatesTests {
         roundTripsVersionsThroughJSON()
         derivesChannels()
         picksNewestForChannel()
-        picksTheZipThisMacCanRun()
         rejectsUnusableFeeds()
         offersOnlyWhatIsWorthInstalling()
         pinsTheDeveloperIDRequirement()
@@ -35,24 +34,20 @@ struct UpdatesTests {
         if failures > 0 { exit(1) }
     }
 
-    // MARK: - AppVersion
-
     static func parsesVersions() {
         expect(AppVersion("0.2.1")?.description == "0.2.1", "parses a plain triple")
         expect(AppVersion("v0.2.1")?.description == "0.2.1", "strips the tag's leading v")
         expect(AppVersion(" 0.2.1 ")?.description == "0.2.1", "tolerates surrounding whitespace")
-        expect(AppVersion("0.2.0-beta.42")?.beta == 42, "reads the beta counter")
-        expect(AppVersion("0.2.0-beta.42")?.description == "0.2.0-beta.42", "round-trips a beta")
-        expect(AppVersion("0.2.1")?.isPrerelease == false, "a plain triple is not a prerelease")
-        expect(AppVersion("0.2.0-beta.1")?.isPrerelease == true, "a beta is a prerelease")
+        expect(AppVersion("v0.11.21-3")?.description == "0.11.21-3", "parses the Nanocast revision")
 
         expect(AppVersion("0.2") == nil, "rejects a two-part version")
         expect(AppVersion("0.2.1.3") == nil, "rejects a four-part version")
         expect(AppVersion("0.2.x") == nil, "rejects a non-numeric field")
         expect(AppVersion("0.2.-1") == nil, "rejects a signed field")
-        expect(AppVersion("0.2.0-alpha.1") == nil, "rejects a channel that never ships")
-        expect(AppVersion("0.2.0-beta") == nil, "rejects a beta with no counter")
-        expect(AppVersion("0.2.0-beta.x") == nil, "rejects a non-numeric beta counter")
+        expect(AppVersion("0.2.0-beta.1") == nil, "rejects a prerelease suffix")
+        expect(AppVersion("0.2.0-rc") == nil, "rejects any suffix")
+        expect(AppVersion("0.2.0-") == nil, "rejects an empty revision")
+        expect(AppVersion("0.2.0-1-2") == nil, "rejects a second revision")
         expect(AppVersion("") == nil, "rejects an empty string")
         expect(AppVersion("nightly") == nil, "rejects a name")
     }
@@ -68,19 +63,16 @@ struct UpdatesTests {
         expect(version("1.10.0") > version("1.9.0"), "compares minor numerically, not lexically")
         expect(version("2.0.0") > version("1.99.99"), "major outranks everything below it")
         expect(version("0.2.1") > version("0.2.0"), "patch breaks a tie")
-        expect(version("1.0.0") > version("1.0.0-beta.5"), "a release outranks its own prerelease")
-        expect(
-            version("0.2.0-beta.10") > version("0.2.0-beta.9"),
-            "beta counters compare numerically, not lexically")
-        expect(version("0.3.0-beta.1") > version("0.2.9"), "a newer triple wins despite being beta")
+        expect(version("0.2.10") > version("0.2.9"), "compares patch numerically, not lexically")
         expect(version("0.2.1") == version("0.2.1"), "equal triples are equal")
-        expect(
-            version("0.2.0-beta.1") != version("0.2.0"),
-            "a prerelease is never equal to its release")
+        expect(version("0.11.21-2") > version("0.11.21-1"), "the revision breaks a tie")
+        expect(version("0.11.21-10") > version("0.11.21-9"), "compares the revision numerically")
+        expect(version("0.11.22-1") > version("0.11.21-9"), "a newer Tinycast base outranks any revision")
+        expect(version("0.11.21-1") > version("0.11.21"), "a revision outranks its bare base")
     }
 
     static func roundTripsVersionsThroughJSON() {
-        guard let original = AppVersion("0.2.0-beta.7"),
+        guard let original = AppVersion("0.2.7"),
             let encoded = try? JSONEncoder().encode(original),
             let decoded = try? JSONDecoder().decode(AppVersion.self, from: encoded)
         else {
@@ -90,38 +82,33 @@ struct UpdatesTests {
         }
         expect(decoded == original, "a version survives the cache file")
         expect(
-            String(bytes: encoded, encoding: .utf8) == "\"0.2.0-beta.7\"",
+            String(bytes: encoded, encoding: .utf8) == "\"0.2.7\"",
             "and is stored as a readable string rather than a field bag")
         expect(
             (try? JSONDecoder().decode(AppVersion.self, from: Data("\"junk\"".utf8))) == nil,
             "a corrupt cached version fails to decode instead of defaulting")
     }
 
-    // MARK: - ReleaseChannel
-
     static func derivesChannels() {
         let stable = ReleaseChannel(bundleID: "com.nanocast.app")
-        let beta = ReleaseChannel(bundleID: "com.nanocast.app.beta")
         let dev = ReleaseChannel(bundleID: "com.nanocast.app.dev")
 
-        expect(stable == .stable, "the stable bundle id is the stable channel")
-        expect(beta == .beta, "the beta bundle id is the beta channel")
+        expect(stable == .stable, "the shipped bundle id is the stable channel")
         expect(dev == .development, "the dev bundle id is a local build")
+        expect(
+            ReleaseChannel(bundleID: "com.nanocast.app.beta") == .development,
+            "a retired beta bundle id never updates")
         expect(ReleaseChannel(bundleID: nil) == .development, "a missing bundle id never updates")
 
-        expect(stable.updatesItself && beta.updatesItself, "both shipped channels update")
+        expect(stable.updatesItself, "the shipped app updates itself")
         expect(!dev.updatesItself, "a local build does not update itself")
 
         expect(stable.accepts(prerelease: false), "stable takes releases")
-        expect(!stable.accepts(prerelease: true), "stable never crosses to a prerelease")
-        expect(beta.accepts(prerelease: true), "beta takes prereleases")
-        expect(!beta.accepts(prerelease: false), "beta never crosses to a stable release")
+        expect(!stable.accepts(prerelease: true), "stable never takes a prerelease")
         expect(
             !dev.accepts(prerelease: true) && !dev.accepts(prerelease: false),
             "a local build accepts nothing at all")
     }
-
-    // MARK: - ReleaseFeed
 
     /// Shaped like GitHub's `/releases` payload, down to the snake-cased keys.
     static func feed(_ entries: String...) -> Data {
@@ -149,10 +136,9 @@ struct UpdatesTests {
         let body = feed(
             entry(tag: "v0.2.0", prerelease: false),
             entry(tag: "v0.3.0", prerelease: false),
-            entry(tag: "v0.4.0-beta.1", prerelease: true),
-            entry(tag: "v0.4.0-beta.2", prerelease: true))
+            entry(tag: "v0.4.0", prerelease: true))
 
-        let stable = ReleaseFeed.newest(from: body, channel: .stable, architecture: .appleSilicon)
+        let stable = ReleaseFeed.newest(from: body, channel: .stable)
         expect(stable?.version == AppVersion("0.3.0"), "stable takes the newest release")
         expect(stable?.tag == "v0.3.0", "and keeps the tag as published")
         expect(stable?.notes == "Notes.", "and carries the release notes")
@@ -162,86 +148,51 @@ struct UpdatesTests {
             "and selects the zip asset")
         expect(stable?.publishedAt != nil, "and parses the ISO-8601 timestamp")
 
-        let beta = ReleaseFeed.newest(from: body, channel: .beta, architecture: .appleSilicon)
-        expect(beta?.version == AppVersion("0.4.0-beta.2"), "beta takes the newest prerelease")
-
         expect(
-            ReleaseFeed.newest(from: body, channel: .development, architecture: .appleSilicon) == nil,
+            ReleaseFeed.newest(from: body, channel: .development) == nil,
             "a local build is offered nothing, however new the feed is")
     }
 
     static func rejectsUnusableFeeds() {
         expect(
-            ReleaseFeed.newest(from: Data(), channel: .stable, architecture: .appleSilicon) == nil,
+            ReleaseFeed.newest(from: Data(), channel: .stable) == nil,
             "an empty body yields nil")
         expect(
             ReleaseFeed.newest(
-                from: Data("not json".utf8), channel: .stable, architecture: .appleSilicon) == nil,
+                from: Data("not json".utf8), channel: .stable) == nil,
             "a malformed body yields nil rather than throwing")
         expect(
-            ReleaseFeed.newest(from: feed(), channel: .stable, architecture: .appleSilicon) == nil,
+            ReleaseFeed.newest(from: feed(), channel: .stable) == nil,
             "an empty feed yields nil")
 
         expect(
             ReleaseFeed.newest(
-                from: feed(entry(tag: "v0.3.0", prerelease: false, draft: true)), channel: .stable,
-                architecture: .appleSilicon) == nil,
+                from: feed(entry(tag: "v0.3.0", prerelease: false, draft: true)), channel: .stable) == nil,
             "a draft is not installable")
         expect(
             ReleaseFeed.newest(
-                from: feed(entry(tag: "v0.3.0", prerelease: false, assets: [])), channel: .stable,
-                architecture: .appleSilicon) == nil,
+                from: feed(entry(tag: "v0.3.0", prerelease: false, assets: [])), channel: .stable) == nil,
             "a release with no assets is skipped")
         expect(
             ReleaseFeed.newest(
                 from: feed(entry(tag: "v0.3.0", prerelease: false, assets: ["Nanocast-x.dmg"])),
-                channel: .stable, architecture: .appleSilicon) == nil,
+                channel: .stable) == nil,
             "a DMG-only release is not installable, so it is not offered")
         expect(
             ReleaseFeed.newest(
-                from: feed(entry(tag: "nightly", prerelease: false)), channel: .stable,
-                architecture: .appleSilicon) == nil,
+                from: feed(entry(tag: "nightly", prerelease: false)), channel: .stable) == nil,
             "an unparseable tag is skipped")
         expect(
             ReleaseFeed.newest(
-                from: feed(entry(tag: "v0.3.0-beta.1", prerelease: false)), channel: .stable,
-                architecture: .appleSilicon) == nil,
-            "a beta tag flagged as a release is mis-published, not an update")
+                from: feed(entry(tag: "v0.3.0-beta.1", prerelease: false)), channel: .stable) == nil,
+            "a prerelease-shaped tag is skipped even when flagged as a release")
 
         let mixed = feed(
             entry(tag: "v0.3.0", prerelease: false), entry(tag: "junk", prerelease: false))
         expect(
-            ReleaseFeed.newest(from: mixed, channel: .stable, architecture: .appleSilicon)?.version
+            ReleaseFeed.newest(from: mixed, channel: .stable)?.version
                 == AppVersion("0.3.0"),
             "one bad entry does not discard the whole feed")
-    }
-
-    /// Stable carries a thin arm64 zip and a universal one; each Mac gets what it runs.
-    static func picksTheZipThisMacCanRun() {
-        let both = feed(
-            entry(
-                tag: "v0.3.0", prerelease: false,
-                assets: ["Nanocast-0.3.0.zip", "Nanocast-Universal-0.3.0.zip"]))
-        expect(
-            ReleaseFeed.newest(from: both, channel: .stable, architecture: .intel)?
-                .assetURL.absoluteString.contains("-Universal-") == true,
-            "Intel takes the universal zip, the only one with an x86_64 slice")
-        expect(
-            ReleaseFeed.newest(from: both, channel: .stable, architecture: .appleSilicon)?
-                .assetURL.absoluteString.contains("-Universal-") == false,
-            "Apple silicon prefers the thin zip, and never pays for the Intel slice")
-
-        let thinOnly = feed(entry(tag: "v0.3.0", prerelease: false, assets: ["Nanocast-0.3.0.zip"]))
-        expect(
-            ReleaseFeed.newest(from: thinOnly, channel: .stable, architecture: .intel) == nil,
-            "Intel is offered nothing rather than an arm64 build it cannot launch")
-
-        let universalOnly = feed(
-            entry(tag: "v0.3.0", prerelease: false, assets: ["Nanocast-Universal-0.3.0.zip"]))
-        expect(
-            ReleaseFeed.newest(from: universalOnly, channel: .stable, architecture: .appleSilicon)?
-                .version == AppVersion("0.3.0"),
-            "Apple silicon falls back to the universal zip when it is the only one published")
     }
 
     static func offersOnlyWhatIsWorthInstalling() {
@@ -275,9 +226,6 @@ struct UpdatesTests {
             "skipping one version does not skip the next one")
     }
 
-    // MARK: - ReleaseNotes
-
-    /// A body as `Scripts/release-notes.sh` composes it.
     static let composedBody = """
         ## What's Changed
         * Adjust top padding in **UpdateWindowView** by @abue-ammar in #304
@@ -288,11 +236,10 @@ struct UpdatesTests {
 
         \(ReleaseNotes.installMarker)
 
-        **Channel:** beta · **Version:** 0.9.13-beta.61
+        **Version:** 0.9.13
         Built from 419a5b4. [Full changelog](https://example.invalid/compare)
         """
 
-    /// A malformed string makes `satisfiesDeveloperID` answer false for every build, silently.
     static func pinsTheDeveloperIDRequirement() {
         var requirement: SecRequirement?
         let status = SecRequirementCreateWithString(
@@ -301,7 +248,6 @@ struct UpdatesTests {
             status == errSecSuccess && requirement != nil,
             "the pinned Developer ID requirement still compiles")
 
-        // Without the anchor, any self-signed certificate claiming the same OU would satisfy it.
         expect(
             BundleSignature.developerID.hasPrefix("anchor apple generic and "),
             "the requirement is anchored to Apple's chain, not just to a team string")
@@ -328,9 +274,10 @@ struct UpdatesTests {
         let feedNotes = ReleaseFeed.newest(
             from: feed(
                 entry(
-                    tag: "v0.3.0", prerelease: false, body: "Changes.\\n\\n<!-- nanocast:install -->\\nBrew.")
+                    tag: "v0.3.0", prerelease: false, body: "Changes.\\n\\n<!-- nanocast:install -->\\nBrew."
+                )
             ),
-            channel: .stable, architecture: .appleSilicon)?.notes
+            channel: .stable)?.notes
         expect(feedNotes == "Changes.", "the feed stores the cut summary, so the cache holds it too")
     }
 
@@ -409,8 +356,6 @@ struct UpdatesTests {
             "a heading is not linkified")
     }
 
-    // MARK: - UpdateReadiness
-
     static func blocksWhileBusy() {
         expect(UpdateReadiness.evaluate(UpdateActivity()) == nil, "an idle app is ready to update")
 
@@ -431,28 +376,21 @@ struct UpdatesTests {
         expect(UpdateReadiness.evaluate(busy) == .uninstalling, "a running uninstall holds the update")
 
         busy = UpdateActivity()
-        busy.isRunningExtension = true
+        busy.isInsertingText = true
         expect(
-            UpdateReadiness.evaluate(busy) == .runningExtension,
-            "a running extension command holds the update")
+            UpdateReadiness.evaluate(busy) == .insertingText,
+            "text mid-insertion holds the update")
 
-        busy = UpdateActivity()
-        busy.isExpandingSnippet = true
-        expect(
-            UpdateReadiness.evaluate(busy) == .expandingSnippet,
-            "a snippet mid-expansion holds the update")
-
-        // Everything at once: the report names the one that would lose work, not the topmost panel.
         busy = UpdateActivity()
         busy.isPaletteVisible = true
         busy.isShowingDialog = true
-        busy.isExpandingSnippet = true
+        busy.isInsertingText = true
         expect(
-            UpdateReadiness.evaluate(busy) == .expandingSnippet,
+            UpdateReadiness.evaluate(busy) == .insertingText,
             "the costliest interruption is the one reported")
 
         expect(
-            UpdateReadiness.Blocker.expandingSnippet.message.hasSuffix("."),
+            UpdateReadiness.Blocker.insertingText.message.hasSuffix("."),
             "every blocker reads as a sentence the window can show")
     }
 }

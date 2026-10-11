@@ -36,13 +36,10 @@ struct SystemAction: Identifiable, Hashable, Sendable {
         case toggleBluetooth = "toggle-bluetooth"
     }
 
-    /// Whether it confirms first, and the copy; every such action is destructive.
     enum Confirmation: Hashable, Sendable {
         case none
         case required(title: String, message: String)
-        /// Asks only while Finder's own "Show warning before emptying the Trash" is on.
         case followsFinder(title: String, message: String)
-        /// Quit All alone counts its targets before asking, so its copy is built at call time.
         case computed
     }
 
@@ -52,7 +49,6 @@ struct SystemAction: Identifiable, Hashable, Sendable {
     let sfSymbol: String
     let confirmation: Confirmation
 
-    /// Stable identity for the entry, and with it every persisted key it owns.
     var entryID: String { "system-action:" + id.rawValue }
 }
 
@@ -72,7 +68,6 @@ enum SystemActionCatalog {
     }
 
     static func action(id: SystemAction.ID) -> SystemAction {
-        // Every ID is in `all` by construction, so a miss is a programmer error.
         byID[id]!
     }
 
@@ -142,7 +137,6 @@ enum SystemActionCatalog {
         case .unhideAllApps: return "eye.circle"
         case .quitAllApps: return "xmark.circle"
         case .dismissNotifications: return "bell.slash"
-        // Not an SF Symbol: the logo is a trademark, so this is a bundled asset.
         case .toggleBluetooth: return "bluetooth"
         }
     }

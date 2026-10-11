@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// A child window of the note panel, so it tracks its host's every move and can still outgrow it.
 @MainActor
 final class NoteSwitcherWindowController: NSObject, NSWindowDelegate {
     private unowned let coordinator: NotesCoordinator
@@ -29,15 +28,10 @@ final class NoteSwitcherWindowController: NSObject, NSWindowDelegate {
         panel.orderOut(nil)
     }
 
-    // MARK: - NSWindowDelegate
-
-    /// Closes like a popover; focus stays where the click landed.
     func windowDidResignKey(_ notification: Notification) {
         guard coordinator.isSwitcherPresented else { return }
         coordinator.closeSwitcher(focusEditor: false)
     }
-
-    // MARK: - Private
 
     private func ensurePanel() -> NotesPanel {
         if let panel { return panel }
@@ -54,7 +48,6 @@ final class NoteSwitcherWindowController: NSObject, NSWindowDelegate {
         let dismiss: () -> Void = { [weak coordinator] in coordinator?.closeSwitcher() }
         panel.onEscape = dismiss
         panel.onDeleteChord = { [weak coordinator] in coordinator?.handleDeleteShortcut() ?? false }
-        // The note window is not key while this is up, so its dismissal chords have to work here.
         panel.commandChords = [
             "n": { [weak coordinator] in coordinator?.createNote() },
             "w": dismiss,

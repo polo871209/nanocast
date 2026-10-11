@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// The ⌘K menu's own window, so glass renders against the desktop and nothing clips it.
 final class MenuPanel: NSPanel {
     weak var paletteState: PaletteState?
     var onKeyDown: ((NSEvent) -> Bool)?
@@ -23,7 +22,6 @@ final class MenuPanel: NSPanel {
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
     }
 
-    /// Mirrors `PalettePanel`: rows light on real pointer movement, never on a scroll under it.
     override func sendEvent(_ event: NSEvent) {
         switch event.type {
         case .mouseMoved: paletteState?.notePointerMoved(to: NSEvent.mouseLocation)
@@ -55,10 +53,8 @@ final class MenuPanel: NSPanel {
 
 }
 
-/// Presents one menu at a time in a `MenuPanel` hung off a corner of the palette.
 @MainActor
 final class MenuPanelController {
-    /// The geometry `layout` last applied, as requested rather than as AppKit rounded it.
     private struct Placement: Equatable {
         let frame: CGRect
         let corner: MenuPanelCorner
@@ -84,7 +80,6 @@ final class MenuPanelController {
         setContent(root, clipPath: clipPath, in: panel)
         self.parent = parent
         (parent as? PalettePanel)?.onDismissMenu = onDismiss
-        // Open disarmed: a menu opened by click lands under the pointer, which chose no row of it.
         core.palette.disarmHoverHighlight(pointerAt: NSEvent.mouseLocation)
         layout(
             corner: corner, parent: parent, metrics: core.settings.interfaceSize.metrics,
@@ -94,7 +89,6 @@ final class MenuPanelController {
         refreshShadow(panel)
     }
 
-    /// Rebuilds the hosted tree in place: the panel keeps its window, so nothing flickers.
     func update(
         _ content: AnyView, corner: MenuPanelCorner, core: AppCore,
         clipPath: @escaping MenuPanelClipPath
@@ -182,7 +176,6 @@ final class MenuPanelController {
         guard let panel, let hosting else { return }
         let size = hosting.intrinsicContentSize
         guard size.width > 0, size.height > 0 else { return }
-        // `bottomBar`'s own padding: a menu's edge must line up with the button it hangs off.
         let inset = metrics.spacing.md
         let frame = corner.frame(
             contentSize: size, parentFrame: parent.frame,

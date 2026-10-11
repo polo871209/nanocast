@@ -1,6 +1,5 @@
 import AppKit
 
-/// The open panel a Settings row uses to pick the one folder a feature keeps its files in.
 @MainActor
 enum FolderPicker {
     static func choose(message: String, startingAt directory: URL) -> URL? {

@@ -12,25 +12,19 @@ final class PalettePanel: NSPanel {
     var onBareBackspace: (() -> Bool)?
     /// Escape, which a focused form field answers before `onKeyPress` could see it.
     var onEscape: (() -> Bool)?
-    /// Command chords the field editor swallows, plus the ones no main menu handles.
     var onCommandShortcut: ((NSEvent) -> Bool)?
-    /// The palette's typing context, handed over each time a field takes focus.
     var onFieldEditorFocused: ((NSTextInputContext) -> Void)?
-    /// Inline argument fields use arrows at their text boundaries to continue their focus ring.
     var onHeaderFieldBoundaryArrow: ((HeaderFieldBoundary) -> Bool)?
     var onDismissMenu: (() -> Void)?
     private var dismissingMouseButton: Int?
-    /// Arms hover from `sendEvent`, the one place both event streams pass through.
     weak var paletteState: PaletteState? {
         didSet {
             paletteState?.onMenuOpenChanged = { [weak self] open in self?.setSearchCaretHidden(open) }
         }
     }
 
-    /// Nil until a field takes focus; a non-activating panel can only scope input to this.
     var fieldEditorContext: NSTextInputContext? { fieldEditor?.inputContext }
 
-    /// SwiftUI's text fields all edit through the window's one shared field editor.
     private var fieldEditor: NSTextView? { firstResponder as? NSTextView }
 
     func selectAllFieldEditorText() {
@@ -41,7 +35,6 @@ final class PalettePanel: NSPanel {
         fieldEditor?.moveToEndOfDocument(nil)
     }
 
-    /// Nil while a selection can still collapse normally, or when the caret is not at an edge.
     private func headerFieldBoundary(for event: NSEvent) -> HeaderFieldBoundary? {
         guard event.modifierFlags.isDisjoint(with: [.command, .option, .control, .shift]),
             let editor = fieldEditor, editor.selectedRange().length == 0
@@ -54,11 +47,9 @@ final class PalettePanel: NSPanel {
         }
     }
 
-    /// Mirrors the field editor's marked text. docs/features/palette.md#ime-composition
     private var compositionObserver: NotificationToken?
 
     override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
-        // A transport's button is a first responder like any other; the search field outranks it.
         if let view = responder as? NSView, view.refusesKeyboardFocus { return false }
         guard super.makeFirstResponder(responder) else { return false }
         fieldEditor?.insertionPointColor = Self.caretColor
@@ -67,7 +58,6 @@ final class PalettePanel: NSPanel {
         return true
     }
 
-    /// Selection is the only notification a marked-text change posts; `didChange` waits for commit.
     func trackComposition() {
         guard let editor = fieldEditor else {
             compositionObserver = nil
@@ -86,18 +76,15 @@ final class PalettePanel: NSPanel {
         compositionObserver = NotificationToken(token, center: center)
     }
 
-    /// Keys driving an open menu; they reach `onKeyPress` even while editing is frozen.
     private static let menuNavKeys: Set<Int> = [
         kVK_UpArrow, kVK_DownArrow, kVK_LeftArrow, kVK_RightArrow,
         kVK_Return, kVK_ANSI_KeypadEnter, kVK_Escape, kVK_Tab
     ]
 
-    /// ⌃N/⌃P/⌃F/⌃B respelled as their arrow, so the arrow handlers serve both spellings.
     private static func emacsArrow(for event: NSEvent) -> NSEvent? {
         guard event.modifierFlags.intersection([.command, .option, .control, .shift]) == .control
         else { return nil }
         let arrow: (key: KeyEquivalent, code: Int)
-        // Through the ASCII-capable layout: an IME must not move ⌃N off its physical key.
         switch ASCIIKeyboardLayout.character(for: event)?.lowercased()
             ?? event.charactersIgnoringModifiers?.lowercased()
         {
@@ -123,21 +110,17 @@ final class PalettePanel: NSPanel {
 
     private static let caretColor = NSColor(Theme.Colors.textPrimary)
 
-    /// Caret hiding on SwiftUI's own field editor. docs/features/palette.md#menu-open-input-freeze
     private func setSearchCaretHidden(_ hidden: Bool) {
         guard let editor = fieldEditor else { return }
         editor.insertionPointColor = hidden ? .clear : Self.caretColor
-        // Force a redraw so the caret flips at once rather than waiting out the blink timer.
         editor.updateInsertionPointStateAndRestartTimer(!hidden)
     }
 
-    /// Every event either mechanism sets a cursor on, so neither gets the last word.
     private static let cursorEvents: Set<NSEvent.EventType> = [
         .mouseMoved, .mouseEntered, .mouseExited, .cursorUpdate,
         .leftMouseDown, .leftMouseUp, .leftMouseDragged
     ]
 
-    /// Clip view and field editor both claim a cursor, so the panel settles it after `super`.
     private func applyCursorPolicy(for event: NSEvent) {
         guard Self.cursorEvents.contains(event.type) else { return }
         let point = convertPoint(fromScreen: NSEvent.mouseLocation)
@@ -164,10 +147,8 @@ final class PalettePanel: NSPanel {
         return view.subviews.contains { isEditableText(in: $0, at: point) }
     }
 
-    /// docs/features/palette.md: a 24pt editor in a 23pt field, so its I-beam overhangs.
     private static let fieldEditorSlack: CGFloat = 2
 
-    /// SwiftUI reports the field top-left down; AppKit reads the window bottom-left up.
     private var searchFieldRect: CGRect {
         guard let frame = paletteState?.searchFieldFrame, !frame.isEmpty,
             let height = contentView?.bounds.height
@@ -183,7 +164,6 @@ final class PalettePanel: NSPanel {
         }
         switch event.type {
         case .mouseMoved: paletteState?.notePointerMoved(to: NSEvent.mouseLocation)
-        // Keys and scrolling both slide rows under the pointer without it choosing any of them.
         case .keyDown, .scrollWheel:
             paletteState?.disarmHoverHighlight(pointerAt: NSEvent.mouseLocation)
         case .flagsChanged:
@@ -191,12 +171,10 @@ final class PalettePanel: NSPanel {
         default: break
         }
         defer { applyCursorPolicy(for: event) }
-        // Before every other rule, so the arrows' own policies apply to the chords too.
         if event.type == .keyDown, let arrow = Self.emacsArrow(for: event) {
             sendEvent(arrow)
             return
         }
-        // A palette menu owns the keyboard. See docs/features/palette.md#menu-open-input-freeze.
         if event.type == .keyDown,
             paletteState?.menuOpen == true,
             event.modifierFlags.isDisjoint(with: [.command, .control]),
@@ -224,7 +202,6 @@ final class PalettePanel: NSPanel {
         {
             return
         }
-        // The controller owns the chords the field editor or a missing main menu would eat.
         if event.type == .keyDown,
             event.modifierFlags.contains(.command),
             onCommandShortcut?(event) == true
@@ -276,12 +253,10 @@ final class PalettePanel: NSPanel {
 
         let hosting = NSHostingView(rootView: rootView)
         hosting.wantsLayer = true
-        // The controller owns the frame; without this the top edge drifts on the swap.
         hosting.sizingOptions = []
         contentView = hosting
     }
 
-    /// Losing the keyboard is the last modifier news the panel gets; a re-show may skip `prepare`.
     override func resignKey() {
         super.resignKey()
         paletteState?.noteCommandHeld(false)

@@ -1,11 +1,9 @@
 import AppKit
 import SwiftUI
 
-/// Identifies the editor to present; nil is "new", and the UUID keeps two opens distinct.
 struct WindowLayoutEditRequest: Identifiable {
     let id = UUID()
     var layout: WindowLayout?
-    /// Set by capture, so the panel says what it is showing.
     var isCapture = false
 }
 
@@ -25,8 +23,7 @@ struct WindowLayoutEditorPanel: View {
         _screens = State(initialValue: connected)
         _draft = State(
             initialValue: WindowLayoutDraft(
-                layout: request.layout, isCapture: request.isCapture,
-                displays: connected.map(\.display)))
+                layout: request.layout, displays: connected.map(\.display)))
     }
 
     var body: some View {
@@ -37,7 +34,6 @@ struct WindowLayoutEditorPanel: View {
                 WindowLayoutInspector(draft: draft, displays: screens.map(\.display))
                     .frame(width: Theme.Size.layoutInspectorColumn)
             }
-            // Stated, never intrinsic: a panel that grew as fields appeared would jump.
             .frame(height: Theme.Size.layoutEditorSheet.height)
             Divider()
             footer
@@ -45,7 +41,6 @@ struct WindowLayoutEditorPanel: View {
         .frame(width: Theme.Size.layoutEditorSheet.width)
         .settingsEditorPanelSurface()
         .task {
-            // A display can be unplugged mid-edit; the canvas must not draw geometry that is gone.
             for await _ in NotificationCenter.default.notifications(
                 named: NSApplication.didChangeScreenParametersNotification)
             {
@@ -78,7 +73,6 @@ struct WindowLayoutEditorPanel: View {
         draft.usesPreferredGap ? CGFloat(settings.windowGap) : 0
     }
 
-    /// The error sits here rather than above the footer, so reporting one cannot resize the panel.
     private var footer: some View {
         HStack(spacing: Theme.Spacing.xl) {
             if let errorMessage {
@@ -101,7 +95,6 @@ struct WindowLayoutEditorPanel: View {
                 }
             }
             .buttonStyle(.modalAction(.primary, fillsWidth: false))
-            // Not `.defaultAction`: plain ↵ belongs to whichever field has focus.
             .keyboardShortcut(.return, modifiers: .command)
             .disabled(!draft.canSave)
         }

@@ -1,7 +1,6 @@
 import AppKit
 import Observation
 
-/// Owns custom commands: the library, the one run funnel with its gates, and a deletion's cleanup.
 @MainActor
 @Observable
 final class CustomCommandCoordinator {
@@ -16,19 +15,14 @@ final class CustomCommandCoordinator {
     private let visibility: VisibilityStore
     private let ranking: LauncherRankingStore
     private let aliases: AliasStore
-    /// Dialog and message-HUD presentation only — never for state this type owns.
     private unowned let core: AppCore
-    /// Built on first use; the window inside it waits for a run that actually shows output.
     @ObservationIgnored private lazy var outputPresenter = CommandOutputPresenter(
         activation: activationPolicy,
-        rerun: { [unowned self] in self.rerunOutput(id: $0) },
+        rerun: { [unowned self] in self.runCustomCommand(id: $0) },
         stop: { [unowned self] in self.stopOutputRun(id: $0) },
         openSettings: { [unowned self] in self.settingsCoordinator.showSettings(tab: .commands) })
     private let activationPolicy: ActivationPolicy
-    /// Superseding never touches it — only the button ends a command.
     private var liveRun: (id: UUID, stop: @Sendable () -> Void)?
-    /// The last fallback shell line, which has no library entry for the window's Rerun to find.
-    private var lastShellCommand: (id: UUID, text: String)?
 
     init(
         store: CustomCommandStore,
@@ -58,8 +52,6 @@ final class CustomCommandCoordinator {
         self.core = core
     }
 
-    // MARK: - Feature presence
-
     func applyCustomCommandsPresence() {
         if !settings.customCommandsEnabled {
             if core.palette.mode == .customCommandEditor { cancelCustomCommandEditing() }
@@ -73,8 +65,6 @@ final class CustomCommandCoordinator {
         appIndex.setCommandsVisible(commands, settings.customCommandsEnabled)
         appIndex.setCommandsListed(commands, settings.customCommandsShowInLauncher)
     }
-
-    // MARK: - Library
 
     func showCustomCommands() {
         guard settings.customCommandsEnabled else { return }
@@ -147,7 +137,6 @@ final class CustomCommandCoordinator {
         try store.update(draft)
     }
 
-    /// Keeps the command and its shortcut, but takes it out of every surface that could run it.
     func setCustomCommandEnabled(_ enabled: Bool, id: UUID) {
         store.setEnabled(enabled, id: id)
     }
@@ -180,9 +169,6 @@ final class CustomCommandCoordinator {
         return count
     }
 
-    // MARK: - Importing
-
-    /// Adds a folder of Raycast script commands, skipping any name already in the library.
     func importScriptDirectory() async {
         guard let directory = chooseScriptDirectory() else { return }
         let drafts = await Task.detached(priority: .userInitiated) {
@@ -197,7 +183,6 @@ final class CustomCommandCoordinator {
         }
         guard await confirmScriptImport(count: drafts.count) else { return }
         let added = store.add(contentsOf: drafts)
-        // Everything offered was already here, so say so rather than "0 imported".
         guard added > 0 else {
             await core.showNotice(
                 title: String(localized: "Nothing to Import"),
@@ -224,7 +209,6 @@ final class CustomCommandCoordinator {
         return panel.url
     }
 
-    /// Scripts run arbitrary code, so this warns the way a backup of custom commands does.
     private func confirmScriptImport(count: Int) async -> Bool {
         await core.confirm(
             title: String(localized: "Import \(count) scripts?"),
@@ -245,11 +229,7 @@ final class CustomCommandCoordinator {
                 """)
     }
 
-    // MARK: - Running
-
-    /// The one funnel, so no entry point skips a required value or the confirmation.
     func runCustomCommand(id: UUID, values: [String: String] = [:]) {
-        // Also the feature switch: with it off a registered hotkey must run nothing.
         guard settings.customCommandsEnabled else { return }
         guard let command = store.command(id: id), command.isEnabled else { return }
         guard let arguments = command.positionalValues(from: values) else {
@@ -259,27 +239,6 @@ final class CustomCommandCoordinator {
         perform(command, arguments: arguments)
     }
 
-    /// The launcher fallback: a one-off shell line, streamed into the window every run uses.
-    func runShellCommand(_ text: String) {
-        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
-        if paletteCoordinator.isVisible { paletteCoordinator.hidePalette(restoreFocus: false) }
-        // Its shell config is sourced: someone typing `ll` in the launcher means their own alias.
-        // No working directory, which the runner reads as home — the only sane cwd for a launcher.
-        let command = CustomCommand(
-            name: CommandID.runShellCommand.name, command: text, loadsShellEnvironment: true,
-            showsOutput: true)
-        lastShellCommand = (command.id, text)
-        Task { await streamOutput(of: command, arguments: []) }
-    }
-
-    /// The window's Rerun. An ad-hoc shell line is not in the store, so it is repeated from here.
-    private func rerunOutput(id: UUID) {
-        guard let last = lastShellCommand, last.id == id else { return runCustomCommand(id: id) }
-        runShellCommand(last.text)
-    }
-
-    /// A Dock click while a command is running belongs to its window, not to a fresh launcher.
     func focusOutputWindow() -> Bool {
         outputPresenter.focusExisting()
     }
@@ -290,7 +249,6 @@ final class CustomCommandCoordinator {
         Task {
             if command.requiresConfirmation {
                 guard
-                    // Neutral, not destructive: their own command just wants a second tap.
                     await core.confirm(
                         title: command.name,
                         message: String(
@@ -311,7 +269,6 @@ final class CustomCommandCoordinator {
         }
     }
 
-    /// Opens the window before the first byte, so a long command is visible while it works.
     private func streamOutput(of command: CustomCommand, arguments: [String]) async {
         let session = ShellCommandRunner.stream(
             command.command, arguments: arguments,
@@ -357,12 +314,8 @@ final class CustomCommandCoordinator {
         }
     }
 
-    // MARK: - Reporting
-
-    /// A window that already says how the run ended must not raise a dialog saying it again.
     private func report(_ command: CustomCommand, result: ShellCommandResult) async {
         guard !result.succeeded else {
-            // What the command said beats a bare "it ran"; on finish, so a slow one reports late.
             if command.showsConfirmation {
                 core.showMessage(result.lastOutputLine ?? String(localized: "Ran \(command.name)"))
             }
@@ -397,7 +350,6 @@ final class CustomCommandCoordinator {
         return parts.joined(separator: "\n\n")
     }
 
-    /// `127` is also a plain typo, so this is gated on the status rather than on stderr.
     private func shellEnvironmentHint(
         command: CustomCommand, result: ShellCommandResult
     ) -> String? {

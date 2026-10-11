@@ -48,7 +48,6 @@ struct NotesRepository: Sendable {
                 includingPropertiesForKeys: Array(keys),
                 options: [.skipsHiddenFiles]
             )
-            // An unreadable entry is skipped: one bad file must not hide the rest.
             .compactMap { candidate -> NoteSummary? in
                 guard candidate.pathExtension.caseInsensitiveCompare("md") == .orderedSame,
                     let values = try? candidate.resourceValues(forKeys: keys),
@@ -67,7 +66,6 @@ struct NotesRepository: Sendable {
         }
     }
 
-    /// A `nil` document is an empty collection, not a failure: creating is always the user's move.
     func load(preferredID: NoteID?) throws(Failure) -> ([NoteSummary], NoteDocument?) {
         let summaries = try list()
         if let preferredID, summaries.contains(where: { $0.id == preferredID }) {
@@ -98,13 +96,11 @@ struct NotesRepository: Sendable {
         }
     }
 
-    /// One note as a backup carries it, before it has a file to live in.
     struct Incoming: Sendable, Equatable {
         let title: String
         let source: String
     }
 
-    /// Beside the existing notes, never over them; an unusable title is skipped, not fatal.
     func importNotes(_ notes: [Incoming]) throws(Failure) -> Int {
         try mappedError(at: notesDirectory) {
             var imported = 0
@@ -135,7 +131,6 @@ struct NotesRepository: Sendable {
         return try mappedError(at: candidate) {
             let sourceURL = try validatedFileURL(candidate)
             let base = try validatedTitle(title)
-            // Exact, not folded: a change of case or accents alone is a rename the user asked for.
             guard base + ".md" != id.rawValue else { return id }
             let destination = try claimUniqueURL(base: base, renaming: id) { destination in
                 try coordinatedWrite(at: sourceURL, options: .forMoving) { coordinatedURL in
@@ -178,13 +173,11 @@ struct NotesRepository: Sendable {
         notesDirectory.appendingPathComponent(id.rawValue)
     }
 
-    /// Only an unnamed note pays for this, and only for the head of its file.
     private func firstLine(of url: URL) -> String? {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         guard let head = try? handle.read(upToCount: NoteTitle.headByteCount), !head.isEmpty
         else { return nil }
-        // A fixed-size read can land mid-character, so back off to the last complete one.
         for dropped in 0...3 where head.count > dropped {
             if let text = String(bytes: head.dropLast(dropped), encoding: .utf8) {
                 return NoteTitle.firstLine(of: text)
@@ -198,7 +191,6 @@ struct NotesRepository: Sendable {
             at: notesDirectory, withIntermediateDirectories: true)
     }
 
-    /// Claims the first free `<base>.md`, `<base> 2.md`, …; a lost race only advances the suffix.
     private func claimUniqueURL(
         base: String,
         renaming id: NoteID? = nil,
