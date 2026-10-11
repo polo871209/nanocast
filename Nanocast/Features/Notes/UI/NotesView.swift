@@ -12,14 +12,12 @@ struct NotesView: View {
         .background(Theme.Colors.panelScrim)
         .background(GlassEffectView())
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.panel, style: .continuous))
-        // The band above is the title bar; AppKit must not inset the content a second time.
         .ignoresSafeArea()
         .onChange(of: notes.showsFormattingBar && notes.hasActiveNote) { _, shown in
             if !shown { notes.closeHeadingMenu() }
         }
     }
 
-    /// The hosting view hides the real title bar, so this band drags the window itself.
     private var titleBar: some View {
         HStack(spacing: 0) {
             Color.clear
@@ -67,7 +65,6 @@ struct NotesView: View {
         }
     }
 
-    /// The count hides first, and the band keeps the offered width so the bar never widens a note.
     private var formattingBand: some View {
         HStack(spacing: Theme.Spacing.md) {
             ViewThatFits(in: .horizontal) {
@@ -141,7 +138,6 @@ private final class NoteTitlebarDragView: NSView {
     }
 }
 
-/// The title bar's trailing controls: the launcher's footer capsule, with glyphs instead of pills.
 private struct NoteTitlebarActions: View {
     @Environment(NotesCoordinator.self) private var notes
 

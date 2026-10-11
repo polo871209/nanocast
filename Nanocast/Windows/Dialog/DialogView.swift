@@ -1,7 +1,6 @@
 import SwiftUI
 
 extension DialogTone {
-    /// Tints the subject glyph only; buttons take their color from `DialogAction.Role`.
     var tint: Color {
         switch self {
         case .neutral: return .secondary
@@ -18,7 +17,6 @@ extension DialogTone {
     }
 }
 
-/// Nanocast's Liquid Glass dialog, compact unless a native control needs more room.
 struct DialogView: View {
     @Environment(\.metrics) private var metrics
     let request: DialogRequest
@@ -46,7 +44,6 @@ struct DialogView: View {
 
                 switch request.accessory {
                 case .volume(let volume): VolumeSlider(state: volume)
-                case .snippetArguments(let arguments): SnippetArgumentFields(state: arguments)
                 case nil: EmptyView()
                 }
             }
@@ -91,7 +88,6 @@ struct DialogView: View {
         }
     }
 
-    /// Cancel leads a horizontal pair; a vertical choice keeps the caller's semantic order.
     private var visualOrder: [Int] {
         guard request.actions.count < 3 else { return Array(request.actions.indices) }
         return request.actions.indices.sorted { rank(of: $0) < rank(of: $1) }
@@ -101,7 +97,6 @@ struct DialogView: View {
         request.actions[index].role == .cancel ? 0 : 1
     }
 
-    /// Only the two keys the panel handles are advertised, so a tooltip can't drift.
     private func keyCap(for index: Int) -> String? {
         if index == request.defaultIndex { return "↵" }
         if index == request.cancelIndex { return "⎋" }
@@ -126,7 +121,6 @@ private struct DialogSymbol: View {
                     .fill(tone.tileFill))
     }
 
-    /// Neutral glyphs need the same legibility as a key-cap symbol; semantic colours stay intact.
     private var symbolTint: Color {
         tone == .neutral ? Theme.Colors.textSecondary : tone.tint
     }

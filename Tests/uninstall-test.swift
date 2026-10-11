@@ -22,8 +22,6 @@ struct UninstallTests {
         }
     }
 
-    // MARK: - Fixtures
-
     static func identity(
         bundleID: String?, name: String = "Test App", bundleName: String? = nil,
         otherAppNames: [String] = [], otherBundleIDs: [String] = [],
@@ -59,8 +57,6 @@ struct UninstallTests {
         UninstallRules.evidence(for: name, in: root(relativePath), identity: identity)
     }
 
-    // MARK: - Bundle ID matching
-
     static func testBundleIDMatching() {
         let books = identity(bundleID: "com.apple.iBooksX", name: "Books")
         expect(
@@ -87,7 +83,6 @@ struct UninstallTests {
             !UninstallRules.matchesBundleID("com.apple.Safari2", identity: safari),
             "a digit-suffixed ID does not match")
 
-        // Sibling release channels share a namespace but are separate products.
         let channels = ["com.example.app", "com.example.app.beta", "com.example.app.dev"]
         let stable = identity(
             bundleID: "com.example.app", name: "Example", otherBundleIDs: channels)
@@ -121,8 +116,6 @@ struct UninstallTests {
             "a two-component ID names a vendor, so it never prefix-matches its products")
     }
 
-    // MARK: - Extension stripping
-
     static func testExtensionStripping() {
         let app = identity(bundleID: "com.foo.Bar")
         expect(evidence("com.foo.Bar.plist", "Preferences", app) == .bundleID, "a .plist strips")
@@ -150,8 +143,6 @@ struct UninstallTests {
             ".app is not a stripped extension")
     }
 
-    // MARK: - Group containers
-
     static func testGroupContainers() {
         let app = identity(bundleID: "com.foo.Bar")
         expect(
@@ -176,8 +167,6 @@ struct UninstallTests {
         expect(!UninstallRules.isTeamID("abcde12345"), "lowercase is not a Team ID")
         expect(!UninstallRules.isTeamID("ABCDE1234"), "9 characters is not a Team ID")
     }
-
-    // MARK: - Display names
 
     static func testDisplayNames() {
         let cleaner = identity(
@@ -278,7 +267,6 @@ struct UninstallTests {
             "every bin directory is absolute or home-relative")
     }
 
-    /// Nothing in home is ever a candidate; asserting it guards a future root.
     static func testHomeIsOutOfScope() {
         expect(
             !UninstallSearchRoot.all.contains { $0.path(home: home) == home },
@@ -289,7 +277,6 @@ struct UninstallTests {
                 return path.hasPrefix(home + "/Library/") || path.hasPrefix("/Library/")
             },
             "every root lives under a Library directory — never ~/Documents, ~/Dev or ~/Code")
-        // VS Code's bundle name is "Code", so only the root table saves `~/Code`.
         let code = identity(
             bundleID: "com.microsoft.VSCode", name: "Visual Studio Code", bundleName: "Code")
         expect(
@@ -299,8 +286,6 @@ struct UninstallTests {
             !UninstallSearchRoot.all.contains { $0.path(home: home) + "/Code" == home + "/Code" },
             "so it matters that no root ever puts ~/Code in reach")
     }
-
-    // MARK: - Identity refusal
 
     static func testIdentityRefusal() {
         let byID = UninstallTarget(
@@ -345,8 +330,6 @@ struct UninstallTests {
             "no bundle ID and no safe name means nothing can be attributed")
     }
 
-    // MARK: - Path safety
-
     static func testPathSafety() {
         let support = home + "/Library/Application Support"
         let bundle = "/Applications/Test App.app"
@@ -381,8 +364,6 @@ struct UninstallTests {
             UninstallRules.abbreviate("/Library/Caches", home: home) == "/Library/Caches",
             "a path outside home is left alone")
     }
-
-    // MARK: - Protection
 
     static func testProtection() {
         let environment = UninstallEnvironment(home: home, hasFullDiskAccess: false)
@@ -479,9 +460,6 @@ struct UninstallTests {
             "so those rows are checkable while the containers beside them stay locked")
     }
 
-    // MARK: - Plan and selection
-
-    /// A nil `bytes` is the unmeasured row a directory shows until its walk lands.
     static func candidate(
         _ path: String, evidence: UninstallEvidence = .bundleID,
         protection: UninstallProtection = .removable, bytes: Int64? = 100
@@ -542,9 +520,6 @@ struct UninstallTests {
             "an empty selection resolves to no candidates")
     }
 
-    // MARK: - Streamed sizes
-
-    /// The list paints before any directory is walked, so a landing size must disturb nothing else.
     static func testStreamedSizes() {
         let target = UninstallTarget(
             bundleURL: URL(fileURLWithPath: "/Applications/Test App.app"),
@@ -582,9 +557,6 @@ struct UninstallTests {
             "and a plan rebuilt after every size still locks out exactly what it did before")
     }
 
-    // MARK: - Cross-identity sweep
-
-    /// No artifact of one app may be produced for another, even if a rule regresses.
     static func testCrossIdentitySweep() {
         let apps: [(id: String, name: String)] = [
             ("com.apple.iBooksX", "Books"),
@@ -599,7 +571,6 @@ struct UninstallTests {
         let identities = apps.map { app in
             (app, identity(bundleID: app.id, name: app.name, path: "/Applications/\(app.name).app"))
         }
-        // Every artifact shape the roots actually contain, instantiated for each app.
         let shapes: [(String) -> String] = [
             { $0 }, { $0 + ".plist" }, { $0 + ".savedState" }, { $0 + ".binarycookies" },
             { $0 + ".helper" }, { $0 + ".Renderer.plist" }, { "group." + $0 },
@@ -627,8 +598,6 @@ struct UninstallTests {
         for leak in leaks.prefix(10) { print("  leak: \(leak)") }
     }
 
-    // MARK: - Table sanity
-
     static func testRootTable() {
         let roots = UninstallSearchRoot.all
         expect(!roots.isEmpty, "the root table is populated")
@@ -651,7 +620,6 @@ struct UninstallTests {
             roots.first { $0.base == .systemLibrary && $0.relativePath == "Caches" }?.path(home: home)
                 == "/Library/Caches",
             "a system root ignores the home directory")
-        // A child of these is a bundle ID, so a name match there is a false positive.
         let bundleIDOnly: Set<String> = [
             "Preferences", "Preferences/ByHost", "Containers", "Group Containers",
             "Application Scripts", "Saved Application State", "HTTPStorages", "WebKit", "Cookies",

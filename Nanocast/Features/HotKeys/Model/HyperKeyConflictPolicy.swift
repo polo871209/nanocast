@@ -1,10 +1,8 @@
 import Foundation
 
-/// What counts as fighting the Hyper Key. Pure, so the app and `hyper-key-test` read one rule.
 enum HyperKeyConflictPolicy {
     enum Severity: String, Sendable {
         case blocking
-        /// The app may remap the same keys; reported, never acted on.
         case warning
     }
 
@@ -54,7 +52,6 @@ enum HyperKeyConflictPolicy {
         .sorted { ($0.vendorID, $0.productID) < ($1.vendorID, $1.productID) }
     }
 
-    /// `key` is a `HyperKeyPhysicalKey` raw value, matched against the selected profile.
     static func karabinerRemaps(_ key: String, config: Data) -> Bool {
         guard let root = try? JSONSerialization.jsonObject(with: config) as? [String: Any],
             let profiles = root["profiles"] as? [[String: Any]]

@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import Synchronization
 
 @main
 @MainActor
@@ -1138,7 +1139,6 @@ struct NotesTests {
                 == IndexSet([1, 2, 3]))
     }
 
-    /// Applies an action to a source whose selection is marked `|` or `«…»`; marks the result.
     private static func edit(_ action: NoteEditAction, _ marked: String) -> String? {
         let (source, selection) = unmark(marked)
         guard case let (result, after)? = apply(action, source, selection: selection) else { return nil }
@@ -1176,7 +1176,6 @@ struct NotesTests {
             source: source, selection: selection, markdown: NoteMarkdownParser.parse(source))
     }
 
-    /// The toggles a formatting's lit flags promise to undo.
     private static func litActions(_ formatting: NoteFormatting) -> [NoteEditAction] {
         var actions = NoteEditAction.InlineStyle.allCases
             .filter(formatting.inlineStyles.contains)
@@ -1237,7 +1236,6 @@ struct NotesTests {
         range.map { (source as NSString).substring(with: $0) }
     }
 
-    /// Deleting trashes for real, so every harness repository redirects that inside the root.
     private static func repository(in root: URL, support: URL? = nil) throws -> NotesRepository {
         let trash = trashDirectory(in: root)
         try FileManager.default.createDirectory(at: trash, withIntermediateDirectories: true)
@@ -1289,8 +1287,13 @@ struct NotesTests {
     }
 }
 
-private final class SelectionBox: @unchecked Sendable {
-    var id: NoteID?
+private final class SelectionBox: Sendable {
+    private let stored = Mutex<NoteID?>(nil)
+
+    var id: NoteID? {
+        get { stored.withLock { $0 } }
+        set { stored.withLock { $0 = newValue } }
+    }
 }
 
 private enum TestFailure: Error {

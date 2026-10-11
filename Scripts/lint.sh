@@ -1,5 +1,4 @@
 #!/bin/bash
-# Lint the whole project. `--fix` auto-corrects the mechanical subset first.
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 
@@ -8,14 +7,19 @@ command -v swiftlint >/dev/null || {
     exit 2
 }
 
-[ "${1:-}" = "--fix" ] && swiftlint --fix --quiet
+if [ "${1:-}" = "--fix" ]; then
+    swiftlint --fix --quiet
+    ./Scripts/format.sh || exit 1
+fi
 
-if ! swiftlint lint --quiet; then
+if ! swiftlint lint --strict --quiet; then
     echo
-    echo "Lint errors above. Warnings do not block; errors do." >&2
+    echo "Lint violations above. Every violation blocks." >&2
     exit 1
 fi
-# An unclaimed settings anchor or unmarked row fails silently, and nothing else catches it.
+if ! ./Scripts/format.sh --check; then
+    exit 1
+fi
 if ! node Scripts/check-settings-search.js; then
     exit 1
 fi

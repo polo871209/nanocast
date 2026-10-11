@@ -18,7 +18,6 @@ final class NoteBlockLayoutFragment: NSTextLayoutFragment {
         nil
     }
 
-    /// Drawing is clipped to this; it starts a slot left of the container so wide numbers show.
     override var renderingSurfaceBounds: CGRect {
         let bounds = super.renderingSurfaceBounds
         let frame = layoutFragmentFrame
@@ -54,15 +53,12 @@ final class NoteBlockLayoutFragment: NSTextLayoutFragment {
         }
     }
 
-    // MARK: - Shapes
-
     private var slot: CGFloat { NoteCheckboxGeometry.slot(bodyPointSize: decoration.bodyPointSize) }
 
     private var containerWidth: CGFloat {
         textLayoutManager?.textContainer?.size.width ?? super.renderingSurfaceBounds.width
     }
 
-    /// The first line of text, which markers align with when an item wraps.
     var firstLine: CGRect {
         firstTextLine?.typographicBounds ?? CGRect(origin: .zero, size: layoutFragmentFrame.size)
     }
@@ -72,7 +68,6 @@ final class NoteBlockLayoutFragment: NSTextLayoutFragment {
         return line.typographicBounds.minY + line.glyphOrigin.y
     }
 
-    /// A word too wide for the first line wraps, leaving the hidden marker alone on a hairline.
     private var firstTextLine: NSTextLineFragment? {
         textLineFragments.first { $0.typographicBounds.height > decoration.bodyPointSize / 2 }
     }
@@ -159,9 +154,6 @@ final class NoteBlockLayoutFragment: NSTextLayoutFragment {
         context.strokePath()
     }
 
-    // MARK: - Geometry and text
-
-    /// Rounds only the requested ends, so stacked rows of one band meet without a gap at the seams.
     private static func bandPath(_ rect: CGRect, topRadius: CGFloat, bottomRadius: CGFloat) -> CGPath {
         let path = CGMutablePath()
         let corners = [

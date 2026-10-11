@@ -1,15 +1,12 @@
 import SwiftUI
 
-/// The launcher's colour card, built from the calculator card's parts so it reads as one answer.
 struct ColorCard: View {
     @Environment(\.metrics) private var metrics
     let color: ColorValue
     let selected: Bool
 
-    /// Wide enough to read as a sample, narrow enough not to read as the card's background.
     private static let swatchWidth: CGFloat = 108
 
-    /// Stated and copied as one notation, so ↵ never yields a colour the card didn't show.
     private var primary: ColorFormat { ColorFormat.primary(for: color) }
 
     var body: some View {
@@ -19,7 +16,6 @@ struct ColorCard: View {
             Image(systemName: "arrow.right")
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(.tertiary)
-            // Stretched to the value column rather than sized: no notation is a fixed height.
             ColorSwatch(color: color, cornerRadius: metrics.radius.card)
                 .frame(width: Self.swatchWidth)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -32,7 +28,6 @@ struct ColorCard: View {
     }
 }
 
-/// Actions for the colour card: the header carries the verb, so each row is just its notation.
 @MainActor
 enum ColorActionsMenu {
     static func content(color: ColorValue, core: AppCore) -> PopoverMenuContent {

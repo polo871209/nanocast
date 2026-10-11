@@ -1,16 +1,12 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// Editor and switcher differ only in style mask and chords, so one panel serves both.
 final class NotesPanel: NSPanel {
     var onEscape: (() -> Void)?
     /// ⌘⌫ is keyed separately: only its key code survives every keyboard layout.
     var onDeleteChord: (() -> Bool)?
-    /// The ⌘-letter chords this window claims, by lowercased character.
     var commandChords: [String: () -> Void] = [:]
-    /// The same, for ⌥⌘-letter chords.
     var optionCommandChords: [String: () -> Void] = [:]
-    /// False for the heading menu, so the editor keeps its caret, reveal and chords beneath it.
     var acceptsKey = true
     var onMouseDown: (() -> Void)?
 
@@ -38,7 +34,6 @@ final class NotesPanel: NSPanel {
         contentView = content
     }
 
-    /// The main menu is offered chords first, so this is the fallback for a non-activating panel.
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         if super.performKeyEquivalent(with: event) { return true }
         guard !event.isARepeat else { return false }
@@ -58,7 +53,6 @@ final class NotesPanel: NSPanel {
 
     override func sendEvent(_ event: NSEvent) {
         if event.type == .leftMouseDown || event.type == .rightMouseDown { onMouseDown?() }
-        // The search and rename fields own Escape while they are editing.
         guard event.type == .keyDown, Int(event.keyCode) == kVK_Escape, !event.isARepeat,
             (firstResponder as? NSTextView)?.isFieldEditor != true
         else {

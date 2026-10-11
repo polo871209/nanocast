@@ -37,7 +37,6 @@ enum EmojiSearchBenchmark {
         var output: [String: Any] = [
             "loaded": memory(), "load_ms": milliseconds(loadStart), "languages": languages
         ]
-        // Alternating queries miss the one-entry memo; repeated queries measure view re-renders.
         let workloads: [(String, [String], Int)] = [
             (
                 "review",

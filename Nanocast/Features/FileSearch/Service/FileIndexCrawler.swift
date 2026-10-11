@@ -1,7 +1,6 @@
 import Darwin
 import Foundation
 
-/// One `getattrlistbulk` call lists hundreds of entries with their mtime, so nothing is stat'd.
 nonisolated enum FileIndexCrawler {
     static let none = UInt32.max
 
@@ -30,7 +29,6 @@ nonisolated enum FileIndexCrawler {
         let mtime: UInt32
         let prior: Int8
 
-        /// A folder's prior comes from its path; a file's was set by its listing.
         init(_ entry: Entry, name: String, parent: String, policy: FileSearchPolicy) {
             self.name = name
             isDirectory = entry.isDirectory
@@ -41,7 +39,6 @@ nonisolated enum FileIndexCrawler {
 
     private static let bufferSize = 256 * 1024
 
-    /// Real paths, since that is how FSEvents reports them.
     static func roots(of policy: FileSearchPolicy) -> [(path: String, prior: Int8)] {
         policy.roots.compactMap { root in
             guard let resolved = realpath(root, nil) else { return nil }
@@ -64,7 +61,6 @@ nonisolated enum FileIndexCrawler {
         return a.count - b.count
     }
 
-    /// Kept across live updates, so relisting a folder that did not change allocates nothing.
     final class Lister {
         private let buffer = UnsafeMutableRawBufferPointer.allocate(byteCount: 64 * 1024, alignment: 8)
         private var listing = Listing()
@@ -74,7 +70,6 @@ nonisolated enum FileIndexCrawler {
             buffer.deallocate()
         }
 
-        /// Hands `body` the entries sorted by name bytes, or returns nil when the folder won't open.
         func list<T>(
             _ path: String, prior: Int8, policy: FileSearchPolicy,
             _ body: (_ entries: [Entry], _ order: [Int], _ name: (Entry) -> UnsafeBufferPointer<UInt8>) -> T
@@ -85,7 +80,6 @@ nonisolated enum FileIndexCrawler {
                 FileIndexCrawler.list(path, prior: prior, policy: policy, buffer: buffer, into: &listing)
             }
             guard listed else { return nil }
-            // A huge folder's storage is not kept for the small ones that follow.
             defer {
                 if listing.entries.capacity > 4_096 {
                     listing = Listing()
@@ -231,7 +225,6 @@ nonisolated enum FileIndexCrawler {
         private var nextID: UInt32
         private var listedCount = 0
 
-        /// Listing `i` for `i < roots.count` is root `i`.
         init(roots: [(path: String, prior: Int8)], policy: FileSearchPolicy) {
             self.policy = policy
             pending = roots.enumerated().reversed().map { index, root in

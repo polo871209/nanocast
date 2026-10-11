@@ -4,7 +4,6 @@ import Darwin
 
 struct SystemActionFeedback: Sendable {
     let title: String
-    /// Set when there was nothing to do, so it reads as information, not a change.
     let isNoOp: Bool
 
     init(_ title: String, isNoOp: Bool = false) {
@@ -15,7 +14,6 @@ struct SystemActionFeedback: Sendable {
 
 @MainActor
 enum SystemActionRunner {
-    /// Failures raised after `run` returned; the runner owns effects, never UI. Set in `start()`.
     static var onAsyncFailure: ((SystemAction.ID, SystemActionFailure) -> Void)?
 
     private struct ProcessOutput: Sendable {
@@ -24,7 +22,6 @@ enum SystemActionRunner {
         let stderr: String
     }
 
-    /// What an action reports on success; only the ones whose effect is invisible do.
     static func run(
         _ id: SystemAction.ID, previousApp: NSRunningApplication?
     ) async throws
@@ -78,7 +75,7 @@ enum SystemActionRunner {
         case .volumeDown:
             try stepVolume(up: false)
         case .setVolume:
-            break  // AppCore owns the value-picking dialog and calls setVolume directly.
+            break
         case .volume0:
             try setVolume(0)
         case .volume25:
@@ -97,7 +94,6 @@ enum SystemActionRunner {
                 at: URL(fileURLWithPath: "/System/Applications/Mission Control.app"),
                 configuration: configuration)
         case .toggleAppearance:
-            // The script returns the resulting state, so the confirmation can name it.
             let result = try await runAppleScript(
                 "tell application \"System Events\" to tell appearance preferences to set dark mode to not dark mode"
             )
@@ -176,7 +172,6 @@ enum SystemActionRunner {
     static func currentVolume() throws -> Float32 {
         let device = try defaultOutputDevice()
         let elements = try volumeElements(on: device)
-        // Averaged across channels without a master, so a pair reads as one level.
         var total: Float32 = 0
         for element in elements {
             var address = volumeAddress(element: element)
@@ -191,7 +186,6 @@ enum SystemActionRunner {
         return total / Float32(elements.count)
     }
 
-    /// What the HUD renders; without a mute control, zero level reads as muted.
     static func outputState() throws -> (level: Float32, muted: Bool) {
         let level = try currentVolume()
         let device = try defaultOutputDevice()
@@ -230,7 +224,6 @@ enum SystemActionRunner {
         if value > 0 { try? setMuted(false, on: device) }
     }
 
-    /// The master element where there is one, else the preferred stereo channels.
     private static func volumeElements(on device: AudioDeviceID) throws -> [AudioObjectPropertyElement] {
         var main = volumeAddress(element: kAudioObjectPropertyElementMain)
         if AudioObjectHasProperty(device, &main) { return [kAudioObjectPropertyElementMain] }
@@ -303,7 +296,6 @@ enum SystemActionRunner {
             try setMuted(muted == 0, on: device)
             return
         }
-        // No mute control: park the volume at zero and restore it afterwards.
         let current = try currentVolume()
         guard current > 0 else {
             try setVolume(lastNonZeroVolume)
@@ -313,7 +305,6 @@ enum SystemActionRunner {
         try setVolume(0)
     }
 
-    /// Restore level for the mute fallback, written only when a mute drops it to zero.
     private static var lastNonZeroVolume: Float32 = 0.5
 
     private static func setMuted(_ muted: Bool, on device: AudioDeviceID) throws {
@@ -357,7 +348,6 @@ enum SystemActionRunner {
                         """),
                 settings: .accessibility)
         }
-        // The same route as the keyboard's media keys; 0xA/0xB are down and up.
         for state in [0xA, 0xB] {
             let data1 = Int((key << 16) | (Int32(state) << 8))
             let event = NSEvent.otherEvent(
@@ -396,19 +386,16 @@ enum SystemActionRunner {
                 values.volumeIsInternal != true,
                 values.volumeIsRootFileSystem != true
             else { return false }
-            // A dock's fixed-media HDD is external but not ejectable, so external alone qualifies.
             return values.volumeIsEjectable == true || values.volumeIsInternal == false
         }
         var failures: [String] = []
         var ejected = 0
         for url in ejectable {
-            // Ejecting one volume takes the device, so a vanished sibling is done.
             guard mountedVolumeExists(url) else { continue }
             do {
                 try NSWorkspace.shared.unmountAndEjectDevice(at: url)
                 ejected += 1
             } catch {
-                // An eject that errors yet leaves no mount behind still took the volume offline.
                 guard mountedVolumeExists(url) else {
                     ejected += 1
                     continue
@@ -430,7 +417,6 @@ enum SystemActionRunner {
         return mounted.contains { $0.standardizedFileURL == url.standardizedFileURL }
     }
 
-    /// Returns the state it landed in, so the caller needn't re-read the preference.
     @discardableResult
     private static func toggleDefault(domain: String, key: String) async throws -> Bool {
         let read = try await process("/usr/bin/defaults", arguments: ["read", domain, key])
@@ -443,7 +429,6 @@ enum SystemActionRunner {
             }
             current = parsed
         } else if read.stderr.contains("does not exist") {
-            // Unset is genuinely off; any other failure is unknown and stays untouched.
             current = false
         } else {
             throw processFailure(read, executable: "defaults")
@@ -468,7 +453,6 @@ enum SystemActionRunner {
         }
     }
 
-    /// Returns how many were dismissed, so an empty screen reads as information.
     private static func dismissNotifications() async throws -> Int {
         guard Permissions.ensureAccessibility() else {
             throw SystemActionFailure(
@@ -486,7 +470,6 @@ enum SystemActionRunner {
         let root = AXUIElementCreateApplication(app.processIdentifier)
         var dismissed = 0
         for _ in 0..<100 {
-            // The tree is rebuilt every pass: dismissing one notification invalidates its siblings.
             guard let notification = firstNotification(in: root, depth: 0) else { return dismissed }
             guard let action = dismissAction(of: notification) else {
                 throw SystemActionFailure(
@@ -507,7 +490,6 @@ enum SystemActionRunner {
             String(localized: "Some notifications remain after the safety limit was reached."))
     }
 
-    /// Matched on AX subrole, so the search never depends on the UI language.
     private static func firstNotification(in element: AXUIElement, depth: Int) -> AXUIElement? {
         guard depth < 20 else { return nil }
         let subrole = axString(element, attribute: kAXSubroleAttribute as CFString)?.lowercased()
@@ -543,7 +525,6 @@ enum SystemActionRunner {
         return value as? String
     }
 
-    /// Returns the state it settled into; the setter is void, so polling is the only way.
     private static func toggleBluetooth() async throws -> Bool {
         let path = "/System/Library/Frameworks/IOBluetooth.framework/IOBluetooth"
         guard let handle = dlopen(path, RTLD_NOW) else {
@@ -584,7 +565,6 @@ enum SystemActionRunner {
         let flag: Bool
     }
 
-    /// A cold Finder answers in seconds, so the send never happens on the main actor.
     @discardableResult
     private static func runAppleScript(_ source: String) async throws -> AppleScriptResult {
         try await Task.detached(priority: .userInitiated) {

@@ -1,14 +1,10 @@
 import AppKit
 @preconcurrency import ApplicationServices
 
-/// Reads every switchable window over AX, once. Shallow enough to stay synchronous: unlike the
-/// menu walk it visits apps and their windows, never a tree.
 @MainActor
 enum WindowSwitchSweep {
-    /// A sweep walks every app, so one hung process must not cost the full messaging timeout.
     private static let sweepTimeout: Float = 0.2
 
-    /// Live AX handles for one window. Never `Sendable`: these do not leave the main actor.
     struct Element {
         let app: NSRunningApplication
         let application: AXUIElement
@@ -47,8 +43,6 @@ enum WindowSwitchSweep {
         return Snapshot(entries: entries, elements: elements)
     }
 
-    /// Looser than the layout inventory's rule: a minimized window is exactly what a switcher is
-    /// for, and a window on another Space reports no frame until it is raised.
     private static func isSwitchable(_ window: AXUIElement) -> Bool {
         AXWindowAccess.string(window, kAXSubroleAttribute) == (kAXStandardWindowSubrole as String)
     }

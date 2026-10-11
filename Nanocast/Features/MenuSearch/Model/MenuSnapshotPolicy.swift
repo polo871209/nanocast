@@ -2,12 +2,9 @@ import Foundation
 
 enum MenuSnapshotPolicy {
     static let maxDepth = 20
-    // Sized from live menus: Safari holds ~2,800 leaves, so this keeps giant bars whole.
     static let itemLimit = 4_000
-    // One History-like submenu must not eat the snapshot: each submenu contributes this many at most.
     static let perSubmenuLimit = 200
 
-    // The Apple menu is always the bar's first item, which beats matching a title that localises.
     static func excludingAppleMenu(_ roots: [MenuTreeNode]) -> [MenuTreeNode] {
         Array(roots.dropFirst())
     }
@@ -32,7 +29,6 @@ enum MenuSnapshotPolicy {
         for node in nodes {
             guard !isCancelled(), items.count < itemLimit else { return }
             guard !node.children.isEmpty else {
-                // Caps direct leaves only, never recursion, and the bar itself is no submenu.
                 guard depth == 0 || directLeaves < perSubmenuLimit else { continue }
                 // A collapsed submenu exposes no children, so no visible leaf exists to emit.
                 if !node.hasSubmenu,
@@ -43,7 +39,6 @@ enum MenuSnapshotPolicy {
                     let item = MenuSearchItem(
                         title: node.title, parentComponents: trail,
                         shortcut: node.shortcut)
-                    // Real menus repeat an exact path; the palette needs one row per id.
                     if seen.insert(item.id).inserted {
                         items.append(item)
                         directLeaves += 1
@@ -51,7 +46,6 @@ enum MenuSnapshotPolicy {
                 }
                 continue
             }
-            // A parent opens its submenu; it never counts as an activatable leaf.
             var subtrail = trail
             if !node.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 subtrail.append(node.title)

@@ -2,12 +2,10 @@ import Foundation
 
 struct SettingsSearchEntry: Identifiable, Hashable, Sendable {
     let tab: SettingsTab
-    /// Where picking this result lands; nil for the pane itself, which is its own result.
     let target: SettingsTarget?
     let title: String
     let keywords: [String]
 
-    /// Taking the pane from the target is what makes a row filed under the wrong pane unwritable.
     private init(_ target: SettingsTarget, _ title: String, _ keywords: [String]) {
         self.tab = target.tab
         self.target = target
@@ -15,13 +13,11 @@ struct SettingsSearchEntry: Identifiable, Hashable, Sendable {
         self.keywords = keywords
     }
 
-    /// One setting, which its pane marks with a matching `SettingsRowTitle`.
     init(_ anchor: SettingsAnchor, _ title: LocalizedStringResource, keywords: [String] = []) {
         let localized = String(localized: title)
         self.init(.row(anchor, localized), localized, keywords + [title.key])
     }
 
-    /// A whole group, for a result no single row answers — a list, or a section's master switch.
     init(group anchor: SettingsAnchor, _ title: LocalizedStringResource, keywords: [String] = []) {
         self.init(.section(anchor), String(localized: title), keywords + [title.key])
     }
@@ -43,8 +39,6 @@ struct SettingsSearchEntry: Identifiable, Hashable, Sendable {
     }
 }
 
-/// What Settings offers to search. Hand-written: a `Form` can't be asked what rows it holds, so a
-/// new row is searchable only once it is listed here.
 enum SettingsSearchCatalog {
     struct Query: Sendable {
         let terms: [FuzzyMatch.Query]
@@ -61,7 +55,6 @@ enum SettingsSearchCatalog {
     static func results(for raw: String, limit: Int = 50) -> [SettingsSearchEntry] {
         let query = Query(raw)
         guard !query.isEmpty else { return [] }
-        // Catalog order is the tie-break, so results don't reshuffle between equal-scoring rows.
         return
             entries
             .enumerated()
@@ -74,7 +67,6 @@ enum SettingsSearchCatalog {
             .map(\.entry)
     }
 
-    /// Every term must land somewhere; a term matched in the title outranks one found off it.
     private static func score(_ query: Query, _ entry: SettingsSearchEntry) -> Int? {
         var titleScore = 0
         var titleMatches = 0
@@ -98,17 +90,12 @@ enum SettingsSearchCatalog {
         } else {
             band = 0
         }
-        // A pane outranks its own rows, so a bare "clipboard" lands on the pane rather than a row.
         return band + titleScore + (entry.anchor == nil ? 500_000 : 0)
     }
 
-    // MARK: - The index
-    // Pane order, then section order within a pane, so this reads as a table of contents.
-
     static let entries: [SettingsSearchEntry] =
-        general + applications + systemSettings + systemActions + commands + quicklinks
-        + appleShortcuts + fallbacks + clipboard + snippets + fileSearch + windowManagement
-        + navigation + notes + calendar + emoji + ai + quickActions + dictation + extensions + permissions
+        general + applications + systemSettings + systemActions + commands + clipboard
+        + fileSearch + windowManagement + navigation + notes + emoji + dictation + permissions
         + backup + about
 
     private static let general: [SettingsSearchEntry] = [
@@ -230,110 +217,6 @@ enum SettingsSearchCatalog {
             keywords: ["raycast", "script", "folder", "directory", "migrate"])
     ]
 
-    private static let quicklinks: [SettingsSearchEntry] = [
-        .init(pane: .quicklinks, keywords: ["url", "bookmark", "link"]),
-        .init(
-            .quicklinksQuicklinks, "Enable quicklinks",
-            keywords: ["url", "bookmark"]),
-        .init(
-            .quicklinksQuicklinks, "Add Quicklink",
-            keywords: ["new", "url", "bookmark", "alias"]),
-        .init(
-            group: .quicklinksCommands, "Quicklink commands",
-            keywords: ["shortcut", "launcher", "search", "import", "export"]),
-        .init(
-            .quicklinksBehaviour, "Open in a new window",
-            keywords: ["browser", "tab"]),
-        .init(
-            .quicklinksBehaviour, "Pass selected text as argument",
-            keywords: ["selection", "hotkey", "shortcut", "argument"]),
-        .init(
-            .quicklinksBehaviour, "Confirm before deleting",
-            keywords: ["ask", "delete", "prompt"]),
-        .init(
-            .quicklinksImportExport, "Import quicklinks",
-            keywords: ["json", "restore"]),
-        .init(
-            .quicklinksImportExport, "Export quicklinks",
-            keywords: ["json", "backup"])
-    ]
-
-    private static let appleShortcuts: [SettingsSearchEntry] = [
-        .init(pane: .appleShortcuts, keywords: ["shortcuts app", "automation", "workflow"]),
-        .init(
-            .appleShortcutsAppleShortcuts, "Enable Apple Shortcuts",
-            keywords: ["shortcuts app", "automation", "workflow"]),
-        .init(
-            group: .appleShortcutsShortcuts, "Aliases and shortcuts",
-            keywords: ["alias", "hotkey", "hide"])
-    ]
-
-    private static let fallbacks: [SettingsSearchEntry] = [
-        .init(
-            pane: .fallbacks,
-            keywords: ["no results", "empty", "search web", "order"])
-    ]
-
-    private static let ai: [SettingsSearchEntry] = [
-        .init(
-            pane: .ai, keywords: ["chat", "quick ai", "llm", "model", "openai", "anthropic"]),
-        .init(.aiAI, "Enable AI", keywords: ["chat", "llm"]),
-        .init(
-            .aiProviders, "Providers",
-            keywords: [
-                "sign in", "connect", "codex", "claude", "grok", "xai", "opencode", "cursor", "agent",
-                "api key", "connection", "base url", "openai", "anthropic", "ollama", "models",
-                "hide models"
-            ]),
-        .init(.aiDefault, "Default model", keywords: ["llm", "gpt", "claude", "grok"]),
-        .init(.aiDefault, "Reasoning effort", keywords: ["thinking", "effort", "deepseek"]),
-        .init(.aiChat, "Web search", keywords: ["browse", "internet"]),
-        .init(.aiChat, "Suggested replies", keywords: ["choices", "chips", "follow-up", "buttons"]),
-        .init(.aiChat, "Tool call rounds", keywords: ["mcp", "tools", "limit", "loop", "agent", "unlimited"]),
-        .init(
-            .aiConversations, "Opens to",
-            keywords: ["new chat", "last", "summon", "resume", "window", "quick ai"]),
-        .init(
-            .aiConversations, "Start a new conversation after",
-            keywords: ["idle", "timeout", "fresh"]),
-        .init(
-            .aiConversations, "Keep conversations",
-            keywords: ["retention", "delete", "history", "privacy"]),
-        .init(
-            .aiSystemPrompt, "Send a system prompt",
-            keywords: ["instructions", "persona"]),
-        .init(
-            .aiMCPServers, "Enable MCP servers",
-            keywords: ["tools", "model context protocol"]),
-        .init(
-            .aiMCPServers, "Add MCP Server",
-            keywords: ["tools", "model context protocol", "stdio"]),
-        .init(
-            group: .aiCommands, "AI commands",
-            keywords: ["shortcut", "launcher", "chat"])
-    ]
-
-    private static let quickActions: [SettingsSearchEntry] = [
-        .init(
-            pane: .quickActions,
-            keywords: ["selected text", "rewrite", "translate", "summarize"]),
-        .init(
-            .quickActionsQuickActions, "Enable Quick Actions",
-            keywords: ["selected text", "accessibility"]),
-        .init(
-            group: .quickActionsActions, "Actions",
-            keywords: ["shortcut", "replace", "preview", "customize"]),
-        .init(
-            .quickActionsActions, "Add Quick Action",
-            keywords: ["new", "custom", "prompt", "instructions", "alias"]),
-        .init(
-            .quickActionsModel, "Model",
-            keywords: ["llm", "ai", "default"]),
-        .init(
-            .quickActionsTranslate, "Translate to",
-            keywords: ["language", "locale"])
-    ]
-
     private static let dictation: [SettingsSearchEntry] = [
         .init(pane: .dictation, keywords: ["speech", "voice", "transcription", "microphone"]),
         .init(.dictationDictation, "Enable Dictation"),
@@ -390,24 +273,6 @@ enum SettingsSearchCatalog {
         .init(
             group: .notesCommands, "Notes commands",
             keywords: ["shortcut", "new note", "search notes"])
-    ]
-
-    private static let snippets: [SettingsSearchEntry] = [
-        .init(
-            pane: .snippets,
-            keywords: ["expansion", "keyword", "text replacement", "template"]),
-        .init(
-            .snippetsSnippets, "Enable snippets",
-            keywords: ["expansion", "keystrokes", "accessibility"]),
-        .init(
-            group: .snippetsCommands, "Snippet commands",
-            keywords: ["shortcut", "hotkey", "launcher", "browser"]),
-        .init(
-            .snippetsLibrary, "New Snippet",
-            keywords: ["add", "keyword", "expansion"]),
-        .init(
-            .snippetsLibrary, "Snippets Folder",
-            keywords: ["reveal", "finder", "markdown", "files", "location", "path", "dotfiles"])
     ]
 
     private static let navigation: [SettingsSearchEntry] = [
@@ -529,92 +394,6 @@ enum SettingsSearchCatalog {
             keywords: ["columns", "density", "zoom", "six", "eight", "ten"])
     ]
 
-    private static let calendar: [SettingsSearchEntry] = [
-        .init(
-            pane: .calendar,
-            keywords: ["meetings", "events", "zoom", "join", "schedule"]),
-        .init(
-            .calendarCalendar, "Join meetings from Nanocast",
-            keywords: ["zoom", "meet", "teams", "permission"]),
-        .init(
-            .calendarCalendar, "Upcoming meetings in launcher",
-            keywords: ["count", "limit", "events"]),
-        .init(
-            .calendarJoining, "Show the join card",
-            keywords: ["hud", "timing", "early", "reminder"]),
-        .init(
-            .calendarJoining, "Auto Join Meetings",
-            keywords: ["automatic", "start"]),
-        .init(
-            .calendarJoining, "Only join known meeting services",
-            keywords: ["zoom", "meet", "teams", "links", "placeholder", "skip"]),
-        .init(
-            .calendarJoining, "Confirm before joining",
-            keywords: ["ask", "prompt"]),
-        .init(
-            .calendarJoining, "Camera Preview",
-            keywords: ["webcam", "mirror", "video", "check"]),
-        .init(
-            .calendarJoining, "Open Meeting Links In",
-            keywords: ["browser", "chrome", "safari", "firefox", "meet", "web"]),
-        .init(
-            .calendarMenuBar, "Calendar in Menu Bar",
-            keywords: ["status item", "menubar", "date"]),
-        .init(
-            .calendarMenuBar, "Days to Show",
-            keywords: ["tomorrow", "week", "next 7 days", "range", "agenda", "schedule"]),
-        .init(
-            .calendarMenuBar, "Show Upcoming Events",
-            keywords: ["menubar", "next event", "title"]),
-        .init(
-            .calendarMenuBar, "Only show events with meetings",
-            keywords: ["links", "filter", "menubar"]),
-        .init(
-            .calendarMenuBar, "Hide when there are no upcoming events",
-            keywords: ["empty", "idle", "menubar", "space"]),
-        .init(
-            .calendarMenuBar, "Hide Current Event",
-            keywords: ["started", "time left", "menubar"]),
-        .init(
-            group: .calendarCommands, "Calendar commands",
-            keywords: ["shortcut", "launcher", "join", "schedule", "create event"]),
-        .init(
-            group: .calendarCalendars, "Calendars",
-            keywords: ["accounts", "sources", "choose", "icloud", "google"])
-    ]
-
-    private static let extensions: [SettingsSearchEntry] = [
-        .init(
-            pane: .extensions,
-            keywords: ["raycast", "plugins", "store", "javascript"]),
-        .init(
-            .extensionsExtensions, "Enable extensions",
-            keywords: ["raycast", "third party", "javascript"]),
-        .init(
-            .extensionsInstall, "Search extensions",
-            keywords: ["store", "browse", "install"]),
-        .init(
-            .extensionsInstall, "Install from GitHub",
-            keywords: ["source", "build", "repository", "package manager", "pnpm", "npm", "yarn", "bun"]),
-        .init(
-            .extensionsInstall, "Import from Raycast",
-            keywords: ["migrate", "existing"]),
-        .init(
-            .extensionsInstall, "Add from folder",
-            keywords: ["local", "develop", "sideload"]),
-        .init(
-            group: .extensionsInstalled, "Installed extensions",
-            keywords: [
-                "library", "uninstall", "update", "preferences", "appearance", "alias", "shortcut"
-            ]),
-        .init(
-            group: .extensionsCompatibility, "Compatibility",
-            keywords: ["supported", "unsupported", "raycast api"]),
-        .init(
-            .extensionsStorage, "Leftover files",
-            keywords: ["clean up", "disk", "reclaim", "cache"])
-    ]
-
     private static let permissions: [SettingsSearchEntry] = [
         .init(
             pane: .permissions,
@@ -625,9 +404,6 @@ enum SettingsSearchCatalog {
         .init(
             .permissionsFullDiskAccess, "Full Disk Access",
             keywords: ["files", "folders", "uninstall", "leftovers", "privacy", "grant", "fda"]),
-        .init(
-            .permissionsCalendars, "Calendars",
-            keywords: ["events", "privacy", "grant", "eventkit"]),
         .init(
             .permissionsMicrophone, "Microphone",
             keywords: ["dictation", "recording", "privacy", "grant"])
@@ -660,9 +436,6 @@ enum SettingsSearchCatalog {
             keywords: ["version", "upgrade", "release"]),
         .init(
             group: .aboutLinks, "Links",
-            keywords: ["github", "source", "issues", "website"]),
-        .init(
-            .aboutLinks, "Support",
-            keywords: ["donate", "sponsor", "funding"])
+            keywords: ["github", "source", "issues"])
     ]
 }

@@ -1,10 +1,8 @@
 import Foundation
 
-/// Fills in a preset, asking first only when that replaces shortcuts the user set.
 @MainActor
 final class WindowShortcutPresetCoordinator {
     private let hotKeys: HotKeyManager
-    /// Dialog and HUD presentation only. Never state this type owns.
     private unowned let core: AppCore
 
     init(hotKeys: HotKeyManager, core: AppCore) {
@@ -12,7 +10,6 @@ final class WindowShortcutPresetCoordinator {
         self.core = core
     }
 
-    /// Read from the live bindings, so any edit that breaks the match clears it.
     var matchingPreset: WindowShortcutPreset? {
         WindowShortcutPreset.matching(currentBindings())
     }
@@ -32,12 +29,10 @@ final class WindowShortcutPresetCoordinator {
                     message: replacementMessage(plan.overwritten, preset: preset),
                     symbol: "keyboard", confirmTitle: String(localized: "Replace"))
             else { return }
-            // A settings.json reload can rebind while the dialog waits; never replace an unseen key.
             current = currentBindings()
             plan = WindowShortcutPresetPlan(preset: preset, current: current)
             guard Set(plan.overwritten).isSubset(of: confirmed) else { return await apply(preset) }
         }
-        // Cleared before any is set, so a key moving between two commands never blocks itself.
         for id in plan.displaced + plan.assignments.keys where current[id] != nil {
             hotKeys.setBinding(nil, for: .windowCommand(id: id))
         }
@@ -51,7 +46,6 @@ final class WindowShortcutPresetCoordinator {
             }
             hotKeys.setBinding(binding, for: action)
         }
-        // The old binding returns when it is still free, so a clash never costs a working one.
         for id in skipped {
             let action = HotKeyAction.windowCommand(id: id)
             if let previous = current[id],

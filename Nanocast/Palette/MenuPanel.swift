@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// The ⌘K menu's own window, so glass renders against the desktop and nothing clips it.
 final class MenuPanel: NSPanel {
     weak var paletteState: PaletteState?
     var onKeyDown: ((NSEvent) -> Bool)?
@@ -23,7 +22,6 @@ final class MenuPanel: NSPanel {
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
     }
 
-    /// Mirrors `PalettePanel`: rows light on real pointer movement, never on a scroll under it.
     override func sendEvent(_ event: NSEvent) {
         switch event.type {
         case .mouseMoved: paletteState?.notePointerMoved(to: NSEvent.mouseLocation)
@@ -55,10 +53,8 @@ final class MenuPanel: NSPanel {
 
 }
 
-/// Presents one menu at a time in a `MenuPanel` hung off a corner of the palette.
 @MainActor
 final class MenuPanelController {
-    /// The geometry `layout` last applied, as requested rather than as AppKit rounded it.
     private struct Placement: Equatable {
         let canvas: CGRect
         let corner: MenuPanelCorner
@@ -74,7 +70,6 @@ final class MenuPanelController {
     private var motion: MenuPanelMotion?
     private var transition: UInt64 = 0
 
-    var isOpen: Bool { panel?.isVisible ?? false }
     private(set) var isClosing = false
 
     func show(
@@ -97,7 +92,6 @@ final class MenuPanelController {
         self.parent = parent
         (parent as? PalettePanel)?.onDismissMenu = onDismiss
         panel.ignoresMouseEvents = false
-        // Open disarmed: a menu opened by click lands under the pointer, which chose no row of it.
         core.palette.disarmHoverHighlight(pointerAt: NSEvent.mouseLocation)
         layout(
             corner: corner, parent: parent, metrics: core.settings.interfaceSize.metrics,
@@ -108,7 +102,6 @@ final class MenuPanelController {
         refreshShadow(panel)
     }
 
-    /// Rebuilds the hosted tree in place: the panel keeps its window, so nothing flickers.
     func update(
         _ content: AnyView, corner: MenuPanelCorner, core: AppCore,
         clipPath: @escaping MenuPanelClipPath, motion: MenuPanelMotion
@@ -215,7 +208,6 @@ final class MenuPanelController {
         let transition = beginTransition(closing: true)
         panel.ignoresMouseEvents = true
         Task { @MainActor [weak self, weak panel] in
-            // Defer until Escape's SwiftUI transaction settles, or it can absorb the animation.
             await Task.yield()
             guard let self, let panel, isCurrent(transition, closing: true)
             else { return }
@@ -270,7 +262,6 @@ final class MenuPanelController {
         guard let panel, let hosting, let motion else { return }
         let size = hosting.intrinsicContentSize
         guard size.width > 0, size.height > 0 else { return }
-        // `bottomBar`'s own padding: a menu's edge must line up with the button it hangs off.
         let inset = metrics.spacing.md
         let frame = corner.frame(
             contentSize: size, parentFrame: parent.frame,
@@ -279,7 +270,6 @@ final class MenuPanelController {
         let anchor = corner.layerAnchor(for: frame, parentFrame: parent.frame)
         let canvas = corner.scaledFrame(frame, by: motion.maximumScale, parentFrame: parent.frame)
         let next = Placement(canvas: canvas, corner: corner)
-        // Every arrow key re-pushes the tree; reconfiguring would cut the reveal short.
         guard resetMotion || next != placement else { return }
         placement = next
         panel.setFrame(canvas, display: true)

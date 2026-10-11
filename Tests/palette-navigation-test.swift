@@ -1,7 +1,6 @@
 import CoreGraphics
 import Foundation
 
-/// Going back has to look like never having left: same screen, same query, same row.
 @main
 @MainActor
 struct PaletteNavigationTests {
@@ -62,7 +61,6 @@ struct PaletteNavigationTests {
             freshEmoji.emojiCategoryFilter == .all && freshEmoji.emojiGridColumnsOverride == nil,
             "a fresh emoji screen restores all categories and the configured grid default")
 
-        // A list snapped to the top would throw away the very selection being restored.
         let tokens = searchingLauncher()
         tokens.push(mode: .emoji)
         let reset = tokens.resetToken
@@ -70,78 +68,6 @@ struct PaletteNavigationTests {
         expect(tokens.pop(), "the emoji screen goes back to the launcher")
         expect(tokens.resetToken == reset, "a back step does not snap the restored list to the top")
         expect(tokens.followToken != follow, "it scrolls the restored row into view instead")
-
-        let nested = searchingLauncher()
-        nested.push(mode: .ai)
-        nested.query = "why is the sky blue"
-        nested.push(mode: .aiHistory)
-        expect(
-            nested.pop() && nested.mode == .ai && nested.query == "why is the sky blue",
-            "history returns to the chat draft it was opened over")
-        expect(
-            nested.pop() && nested.mode == .launcher && nested.query == "clipboard",
-            "and chat returns to the search that found it")
-
-        // `replace` is for a screen swapping its own contents, which is not a step of its own.
-        let replaced = searchingLauncher()
-        replaced.push(mode: .ai)
-        replaced.replace(mode: .ai)
-        expect(replaced.canGoBack, "starting a new chat keeps whatever chat was opened over")
-        expect(
-            replaced.pop() && replaced.mode == .launcher,
-            "so one back step still lands on the launcher")
-
-        let editing = searchingLauncher()
-        editing.push(mode: .snippets)
-        editing.query = "sign-off"
-        editing.selection = 2
-        editing.push(mode: .snippetEditor)
-        expect(editing.query.isEmpty, "the snippet editor does not inherit the browser query")
-        editing.noteEditingField(true)
-        expect(
-            editing.pop(preservingSelection: true) && editing.mode == .snippets && editing.query == "sign-off"
-                && editing.selection == 2 && editing.restoredSelection == 2 && !editing.isEditingField,
-            "leaving a snippet editor restores its browser and releases the form keyboard")
-        editing.query = "new search"
-        expect(editing.restoredSelection == nil, "typing a new query releases the restored selection")
-        expect(
-            editing.pop() && editing.mode == .launcher && editing.query == "clipboard",
-            "the snippet browser still returns to the launcher search")
-        editing.prepare(mode: .snippets)
-        expect(editing.restoredSelection == nil, "a fresh summon releases the restored selection")
-        expect(vm.restoredSelection == nil, "other screens keep their existing navigation behaviour")
-
-        let quicklink = searchingLauncher()
-        quicklink.push(mode: .quicklinks)
-        quicklink.query = "GitHub"
-        quicklink.selection = 1
-        quicklink.push(mode: .quicklinkEditor)
-        expect(
-            quicklink.mode.isNativeEditor && quicklink.query.isEmpty,
-            "the quicklink editor owns its keyboard without inheriting the browser query")
-        expect(
-            quicklink.pop(preservingSelection: true) && quicklink.mode == .quicklinks
-                && quicklink.query == "GitHub" && quicklink.restoredSelection == 1,
-            "leaving a quicklink editor restores its browser query and row")
-        quicklink.pushCarryingQuery(mode: .launcher)
-        expect(quicklink.restoredSelection == nil, "a ring hop does not carry the restored row along")
-        expect(
-            !PaletteMode.extensionCommand.isNativeEditor && !PaletteMode.quicklinks.isNativeEditor,
-            "native editor keyboard routing excludes extensions and browsers")
-
-        let event = searchingLauncher()
-        event.query = "Create Event"
-        event.push(mode: .eventEditor)
-        event.noteEditingField(true)
-        expect(
-            event.mode.isNativeEditor && event.query.isEmpty,
-            "the event editor owns its keyboard without inheriting the launcher query")
-        expect(
-            event.pop(preservingSelection: true) && event.mode == .launcher
-                && event.query == "Create Event" && event.restoredSelection == 3 && !event.isEditingField,
-            "leaving an event editor restores the launcher query and selected row")
-        event.prepare(mode: .eventEditor)
-        expect(!event.canGoBack, "an event editor summoned by a hotkey starts without a previous screen")
 
         let command = searchingLauncher()
         command.query = "Create Custom Command"
@@ -169,25 +95,25 @@ struct PaletteNavigationTests {
                 && commands.query == "Screens" && commands.restoredSelection == 2
                 && !commands.isEditingField,
             "closing a command editor restores its browser query and selection")
+        commands.query = "new search"
+        expect(commands.restoredSelection == nil, "typing a new query releases the restored selection")
         expect(commands.pop() && commands.mode == .launcher, "the command browser returns to root search")
+        commands.prepare(mode: .customCommands)
+        expect(commands.restoredSelection == nil, "a fresh summon releases the restored selection")
+        expect(
+            !PaletteMode.customCommands.isNativeEditor,
+            "native editor keyboard routing excludes browsers")
 
-        for mode: PaletteMode in [.snippetEditor, .quicklinkEditor, .eventEditor, .customCommandEditor] {
-            let switched = searchingLauncher()
-            switched.push(mode: mode)
-            switched.push(mode: .clipboard)
-            expect(
-                switched.pop() && switched.mode == .launcher && switched.query == "clipboard"
-                    && !switched.canGoBack,
-                "switching away from \(mode) never restores an editor without its session")
-            switched.push(mode: mode)
-            switched.push(mode: .quicklinkEditor)
-            expect(
-                switched.pop() && switched.mode == .launcher && !switched.canGoBack,
-                "switching between editors preserves only the original browser")
-            switched.prepare(mode: mode)
-            switched.push(mode: .clipboard)
-            expect(!switched.canGoBack, "a directly summoned editor leaves no dead back frame")
-        }
+        let switched = searchingLauncher()
+        switched.push(mode: .customCommandEditor)
+        switched.push(mode: .clipboard)
+        expect(
+            switched.pop() && switched.mode == .launcher && switched.query == "clipboard"
+                && !switched.canGoBack,
+            "switching away from an editor never restores it without its session")
+        switched.prepare(mode: .customCommandEditor)
+        switched.push(mode: .clipboard)
+        expect(!switched.canGoBack, "a directly summoned editor leaves no dead back frame")
 
         let summoned = searchingLauncher()
         summoned.push(mode: .clipboard)
@@ -210,17 +136,6 @@ struct PaletteNavigationTests {
             hopped.pop() && hopped.mode == .launcher && hopped.query == "clipboard",
             "and the screen it crossed from is the step back")
 
-        let chatted = searchingLauncher()
-        chatted.push(mode: .ai)
-        chatted.query = "why is the sky blue"
-        chatted.push(mode: .clipboard)
-        expect(
-            chatted.pop() && chatted.mode == .ai && chatted.query == "why is the sky blue",
-            "Tab out of chat leaves the draft to come back to")
-        expect(
-            chatted.pop() && chatted.mode == .launcher,
-            "and a second step back reaches the launcher the ring started on")
-
         let pasted = searchingLauncher()
         pasted.query = "\nfirst pasted row,\r\nsecond pasted row\u{2028}third\n"
         expect(
@@ -236,7 +151,6 @@ struct PaletteNavigationTests {
 
     static let rest = CGPoint(x: 400, y: 300)
 
-    /// A palette shown with the pointer already resting over a row: disarmed, anchored there.
     static func shown() -> PaletteState {
         let state = PaletteState()
         state.disarmHoverHighlight(pointerAt: rest)
@@ -279,7 +193,6 @@ struct PaletteNavigationTests {
         expect(!scrolled.hoverHighlightArmed, "a scroll drops the highlight")
 
         let stillScrolling = armed()
-        // Re-anchor each scroll event so pointer drift cannot accumulate into a deliberate move.
         for step in 1...20 {
             stillScrolling.disarmHoverHighlight(
                 pointerAt: CGPoint(x: rest.x + CGFloat(step), y: rest.y))

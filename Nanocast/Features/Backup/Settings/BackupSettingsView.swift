@@ -17,7 +17,6 @@ struct BackupSettingsView: View {
     @State private var backupStatus: Status?
     @State private var backupFile: URL?
     @State private var openedManifest: BackupManifest?
-    /// Held between opening the file and applying it, so the extracted tree survives the picker.
     @State private var openedStaging: BackupStaging?
 
     private enum Status {
@@ -29,7 +28,6 @@ struct BackupSettingsView: View {
         runningApps.runningBundleIDs.contains(where: BackupActions.isRaycastBundleID)
     }
 
-    /// Turning it on may ask first, so the switch follows the setting rather than the click.
     private var settingsFileSync: Binding<Bool> {
         Binding(
             get: { core.settings.settingsFileEnabled },
@@ -208,7 +206,6 @@ struct BackupSettingsView: View {
                     core: core, categories: categories)
                 backupStatus = .success(BackupActions.exportText(result))
             } catch is CancellationError {
-                // The user closed the save panel; nothing to report.
             } catch {
                 backupStatus = .failure(error.localizedDescription)
             }
@@ -242,14 +239,12 @@ struct BackupSettingsView: View {
             defer { importingBackup = false }
             let summary = await BackupActions.applyBackup(
                 categories, from: staging, to: core)
-            // Staged files are adopted by the stores during apply, so the tree goes either way.
             discardStagedBackup()
             backupFile = nil
             if let summary { backupStatus = .success(BackupActions.summaryText(summary)) }
         }
     }
 
-    /// The extracted tree can run to gigabytes, so leaving the pane must not strand it.
     private func discardStagedBackup() {
         openedStaging?.discard()
         openedStaging = nil

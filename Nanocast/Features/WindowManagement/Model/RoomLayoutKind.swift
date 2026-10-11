@@ -1,9 +1,7 @@
 // Adapted from Rooms (MIT): https://github.com/saragordic/rooms/blob/main/LICENSE
 import Foundation
 
-/// How a room arranges its windows on the display it lands on. `allCases` is Tab's order.
 enum RoomLayoutKind: String, Codable, CaseIterable, Sendable {
-    /// Focus, Columns or Grid, whichever gives every window a comfortable size; Stack otherwise.
     case auto
     case focus
     case stack

@@ -1,16 +1,13 @@
 import Foundation
 
-/// One currency: the ISO 4217 code shown by the amount, plus the long label used as a card badge.
 struct CurrencyDef: Equatable, Sendable {
     let code: String
     let name: String
 }
 
-/// A rate snapshot in units per 1 `base`. `CurrencyRateStore` fetches; the engine never does.
 struct CurrencyRates: Codable, Equatable, Sendable {
     let base: String
     let rates: [String: Double]
-    /// When this was downloaded: drives staleness, and doubles as the memo key in `CalcMemo`.
     let fetchedAt: Date
 
     func rate(for code: String) -> Double? {
@@ -18,7 +15,6 @@ struct CurrencyRates: Codable, Equatable, Sendable {
         return code == base ? 1 : nil
     }
 
-    /// Cross-rate through the base currency.
     func convert(_ amount: Double, from: String, to: String) -> Double? {
         guard let source = rate(for: from), let target = rate(for: to) else { return nil }
         let output = amount / source * target
@@ -29,17 +25,13 @@ struct CurrencyRates: Codable, Equatable, Sendable {
 enum CalcCurrency {
     enum ConversionParse: Equatable {
         case value(input: Double, from: CurrencyDef, to: CurrencyDef, output: Double)
-        /// One side is a currency, the other a measurement unit — `10 usd to kg`.
         case mismatch(from: String, to: String)
-        /// Both sides are currencies but the snapshot doesn't quote one of them.
         case noRate(code: String)
-        /// No snapshot has ever been downloaded (first run, still offline).
         case unavailable
     }
 
     static let categoryName = String(localized: "Currency")
 
-    /// `expr currency (to|in|->) currency`, shaped like `CalcUnits.parseConversion`, run after it.
     static func parseConversion(_ tokens: [CalcToken], rates: CurrencyRates?) -> ConversionParse? {
         let tokens = amountFirst(tokens)
         guard tokens.count >= 3, CalcUnits.isConnector(tokens[tokens.count - 2]),
@@ -47,7 +39,6 @@ enum CalcCurrency {
             case .ident(let fromName) = tokens[tokens.count - 3]
         else { return nil }
 
-        // A side that is neither currency nor unit is just a typo, and gets no card.
         switch (byName[fromName], byName[toName]) {
         case (nil, nil):
             return nil
@@ -78,7 +69,6 @@ enum CalcCurrency {
         }
     }
 
-    /// Money is written sign-first (`€20`), so swap it back into the `amount currency` order.
     private static func amountFirst(_ tokens: [CalcToken]) -> [CalcToken] {
         guard tokens.count >= 2, case .ident(let name) = tokens[0], byName[name] != nil,
             numberToken(tokens[1])
@@ -114,15 +104,14 @@ enum CalcCurrency {
 
     /// ISO 4217's own names where CLDR differs; the standard is the source of truth.
     private static let isoNames: [String: [String]] = [
-        "CNY": ["rmb", "renminbi"]  // ISO 4217 names CNY "Yuan Renminbi"; CLDR says "Chinese Yuan"
+        "CNY": ["rmb", "renminbi"]
     ]
 
     /// Codes daily use spells from CLDR's sign, not ISO 4217. docs/features/calculator.md
     private static let signCodes: [String: [String]] = [
-        "TWD": ["ntd"]  // CLDR writes TWD "NT$", so Taiwan types the sign's code, not TWD
+        "TWD": ["ntd"]
     ]
 
-    /// Hand-written because no standards body names a coin. docs/features/calculator.md
     static let crypto: [(code: String, name: String, aliases: [String])] = [
         ("ADA", "Cardano", ["cardano"]),
         ("AVAX", "Avalanche", ["avalanche"]),
@@ -149,10 +138,8 @@ enum CalcCurrency {
         ("XRP", "XRP", ["ripple"])
     ]
 
-    /// `CurrencyRateStore` builds its request from this, so the two lists cannot drift apart.
     static let cryptoCodes: [String] = crypto.map(\.code)
 
-    /// Lookup by lowercased ident, generated data first so the hand-written tables above win.
     static let byName: [String: CurrencyDef] = {
         var defs: [String: CurrencyDef] = [:]
         var table: [String: CurrencyDef] = [:]
@@ -164,7 +151,6 @@ enum CalcCurrency {
             table[entry.code.lowercased()] = def
         }
         for (word, code) in CurrencyData.aliases { table[word] = defs[code] }
-        // After the generated nouns, so a ticker beats one: `sol` is Solana, `soles` stays PEN.
         for entry in crypto {
             let def = CurrencyDef(code: entry.code, name: entry.name)
             defs[entry.code] = def

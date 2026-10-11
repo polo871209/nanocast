@@ -1,9 +1,7 @@
 // Adapted from Rooms (MIT): https://github.com/saragordic/rooms/blob/main/LICENSE
 import Foundation
 
-/// Which open window fills which of a room's windows. Each open window is used at most once.
 enum RoomWindowMatcher {
-    /// Room window index → open window index. `claimed` windows go last: other rooms hold them.
     static func assign(
         _ windows: [RoomWindow], to live: [RoomLiveWindow], claimed: Set<UInt32> = []
     ) -> [Int: Int] {
@@ -23,17 +21,14 @@ enum RoomWindowMatcher {
         }
         pass { saved, open in saved.windowID != nil && saved.windowID == open.windowID }
         pass { saved, open in !saved.title.isEmpty && saved.title == open.title }
-        // A title that only looks alike never takes another room's window.
         pass { saved, open in
             isSimilar(saved.title, open.title) && !isClaimed(open, by: claimed)
         }
-        // Titles follow the current tab, so last comes any window of the app, a free one first.
         pass { _, open in !isClaimed(open, by: claimed) }
         pass { _, _ in true }
         return result
     }
 
-    /// Titles sharing a meaningful part: "Report — draft 3" and "Report — draft 4".
     static func isSimilar(_ lhs: String, _ rhs: String) -> Bool {
         let left = folded(lhs)
         let right = folded(rhs)

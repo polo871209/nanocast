@@ -1,10 +1,8 @@
 import CoreGraphics
 
-/// Pure, with every screen fact injected, so this stays testable off a display.
 enum PalettePlacement {
     static let maxSnapEntrySpeedPointsPerSecond: CGFloat = 600
 
-    /// The untouched placement: centred, top edge a fraction of the way down, growing downward.
     static func defaultAnchor(
         in visibleFrame: CGRect, width: CGFloat, topMarginFraction: CGFloat
     )
@@ -15,7 +13,6 @@ enum PalettePlacement {
             y: visibleFrame.maxY - visibleFrame.height * topMarginFraction)
     }
 
-    /// Kept against its display: right of its left edge, down from its top.
     static func offset(of anchor: CGPoint, on visibleFrame: CGRect) -> CGPoint {
         CGPoint(x: anchor.x - visibleFrame.minX, y: visibleFrame.maxY - anchor.y)
     }
@@ -28,7 +25,6 @@ enum PalettePlacement {
         visibleFrame.midY + expandedHeight / 2
     }
 
-    /// Nil once the display shows too little of the compact bar to grab it back.
     static func restored(
         _ stored: CGPoint, graspable: CGSize, visibleFrame: CGRect, minimumVisible: CGFloat
     ) -> CGPoint? {
@@ -51,7 +47,6 @@ enum PalettePlacement {
         let height: HeightSnap?
     }
 
-    /// Height detents exist only on the invisible vertical centre line.
     static func snapped(
         _ anchor: CGPoint, home: CGPoint, visibleFrame: CGRect,
         expandedHeight: CGFloat, within distance: CGFloat, previous: Snap?, speed: CGFloat
@@ -91,7 +86,6 @@ enum MenuPanelCorner: Equatable {
     case belowHeaderTrailing
     case belowControl(CGRect, trailing: Bool = true)
 
-    /// The edge a menu grows from: an input menu flipped above its control grows up from it.
     func layerAnchor(for frame: CGRect, parentFrame: CGRect) -> CGPoint {
         switch self {
         case .bottomLeading: CGPoint(x: 0, y: 0)

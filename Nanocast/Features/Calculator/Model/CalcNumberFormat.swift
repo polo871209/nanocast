@@ -1,6 +1,5 @@
 import Foundation
 
-/// Whether the calculator follows the Mac's number format or always reads and writes English.
 enum CalcNumberStyle: String, CaseIterable, Identifiable, Sendable {
     case system
     case english
@@ -15,15 +14,12 @@ enum CalcNumberStyle: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-/// Separators the user writes; the engine only reads English. See docs/features/calculator.md.
 struct CalcNumberFormat: Equatable, Sendable {
     let decimalSeparator: Unicode.Scalar
-    /// nil when numbers are written without grouping.
     let groupingSeparator: Unicode.Scalar?
 
     static let english = CalcNumberFormat(decimal: ".", grouping: ",")
 
-    /// Separators macOS offers that can never be mistaken for calculator syntax.
     private static let groupingScalars: Set<Unicode.Scalar> = [
         ".", ",", "'", "\u{2019}", "\u{00A0}", "\u{202F}", "\u{2009}"
     ]
@@ -33,7 +29,6 @@ struct CalcNumberFormat: Equatable, Sendable {
         groupingSeparator = grouping
     }
 
-    /// nil for a decimal separator canonical syntax can't express, such as the Arabic `٫`.
     init?(decimalSeparator: String, groupingSeparator: String?) {
         guard let decimal = Self.single(decimalSeparator), decimal == "." || decimal == "," else {
             return nil
@@ -49,14 +44,10 @@ struct CalcNumberFormat: Equatable, Sendable {
         return scalars.count == 1 ? scalars.first : nil
     }
 
-    /// A decimal comma can't also split arguments, so `;` does, as in spreadsheets.
     var argumentSeparator: Character { decimalSeparator == "," ? ";" : "," }
 
     private var usesDecimalComma: Bool { decimalSeparator == "," }
 
-    // MARK: - Input
-
-    /// The query in canonical syntax, or nil when a number in it has no single reading.
     func canonical(_ query: String) -> String? {
         guard self != .english else { return query }
         let scalars = Array(query.unicodeScalars)
@@ -65,7 +56,6 @@ struct CalcNumberFormat: Equatable, Sendable {
         while index < scalars.count {
             let scalar = scalars[index]
             if usesDecimalComma, scalar == ";" {
-                // Spaced, so the canonical comma can never be read as grouping between two digits.
                 output.append(contentsOf: ", ".unicodeScalars)
                 index += 1
                 continue
@@ -91,7 +81,6 @@ struct CalcNumberFormat: Equatable, Sendable {
 
     private func canonicalNumber(_ run: ArraySlice<Unicode.Scalar>) -> [Unicode.Scalar]? {
         let parts = run.split(separator: decimalSeparator, omittingEmptySubsequences: false)
-        // Where the dot is the decimal, `19.2.27` is a date exactly as English reads it.
         if parts.count > 2 {
             return !usesDecimalComma && !run.contains(where: isGrouping) ? Array(run) : nil
         }
@@ -99,7 +88,6 @@ struct CalcNumberFormat: Equatable, Sendable {
         let groups = parts[0].split(
             omittingEmptySubsequences: false, whereSeparator: isGrouping)
         if groups.count > 1, !Self.isValidGrouping(groups) {
-            // A dotted date's dots are grouping dots here, and no valid grouping has short groups.
             let isDottedDate = groupingSeparator == "." && parts.count == 1 && groups.count > 2
             return isDottedDate ? Array(run) : nil
         }
@@ -113,14 +101,10 @@ struct CalcNumberFormat: Equatable, Sendable {
 
     private func isGrouping(_ scalar: Unicode.Scalar) -> Bool { scalar == groupingSeparator }
 
-    // MARK: - Output
-
-    /// An answer's numbers in this format; any other text, commas included, is left as written.
     func localized(_ text: String) -> String {
         rewrite(text, separatingArguments: false)
     }
 
-    /// An echoed expression, whose canonical argument commas also take this format's separator.
     func localizedExpression(_ text: String) -> String {
         rewrite(text, separatingArguments: true)
     }
@@ -144,7 +128,6 @@ struct CalcNumberFormat: Equatable, Sendable {
         let scalars = Array(text.unicodeScalars)
         var output = String.UnicodeScalarView()
         var depth = 0
-        // Inside a call every comma separates arguments, exactly as `CalcTokenizer` reads it.
         var functionDepth: Int?
         var index = 0
         while index < scalars.count {
@@ -180,7 +163,6 @@ struct CalcNumberFormat: Equatable, Sendable {
         return String(output)
     }
 
-    /// nil for a run that isn't one canonical number, so a dotted date stays as written.
     private func localizedNumber(_ run: ArraySlice<Unicode.Scalar>) -> [Unicode.Scalar]? {
         let parts = run.split(separator: ".", omittingEmptySubsequences: false)
         guard parts.count <= 2, parts.count == 1 || !parts[1].contains(",") else { return nil }
@@ -198,9 +180,6 @@ struct CalcNumberFormat: Equatable, Sendable {
         return number
     }
 
-    // MARK: - Scanning
-
-    /// A digit, or a decimal separator leading one (`,5`) that no digit precedes.
     private func startsNumber(
         _ scalars: [Unicode.Scalar], at index: Int, decimal: Unicode.Scalar
     ) -> Bool {
@@ -212,7 +191,6 @@ struct CalcNumberFormat: Equatable, Sendable {
         return index == 0 || !Self.isDigit(scalars[index - 1])
     }
 
-    /// Digits and the separators between them; a trailing decimal stays, so `2,` still answers.
     private func numberEnd(
         _ scalars: [Unicode.Scalar], from start: Int, decimal: Unicode.Scalar,
         grouping: Unicode.Scalar?
@@ -236,13 +214,11 @@ struct CalcNumberFormat: Equatable, Sendable {
         return end
     }
 
-    /// `00:18:00.123` belongs to a clock, whose fractional seconds are always written with a dot.
     private static func isClockFragment(_ scalars: [Unicode.Scalar], run: Range<Int>) -> Bool {
         (run.lowerBound > 0 && scalars[run.lowerBound - 1] == ":")
             || (run.upperBound < scalars.count && scalars[run.upperBound] == ":")
     }
 
-    /// Whether the word before `index`, spaces allowed, is a function; `2max(` is `2 × max(`.
     private static func namesFunction(_ scalars: [Unicode.Scalar], before index: Int) -> Bool {
         var end = index
         while end > 0, scalars[end - 1].properties.isWhitespace { end -= 1 }

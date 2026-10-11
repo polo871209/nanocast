@@ -1,7 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// A camera surface's panel; keys go through `sendEvent`, so ↵ and Esc need no focused subview.
 final class CameraPanel: NSPanel {
     enum Action {
         case primary
@@ -19,7 +18,6 @@ final class CameraPanel: NSPanel {
             defer: false
         )
         isFloatingPanel = true
-        // Above the palette, below a dialog: a confirmation must still land on top of it.
         level = .floating
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         isMovableByWindowBackground = true
@@ -54,7 +52,6 @@ final class CameraPanel: NSPanel {
         stopWatchingClicks()
     }
 
-    /// Losing key is a click away, unless system UI took it: a menu-bar reframe keeps the feed.
     override func resignKey() {
         super.resignKey()
         guard let onAction else { return }
@@ -92,7 +89,6 @@ final class CameraPanel: NSPanel {
         clickMonitors = []
     }
 
-    /// The menu bar, everything it drops down and the Dock all sit at or above the Dock's level.
     private static var systemUIIsUnderPointer: Bool {
         let pointer = NSEvent.mouseLocation
         let number = NSWindow.windowNumber(at: pointer, belowWindowWithWindowNumber: 0)
@@ -106,7 +102,6 @@ final class CameraPanel: NSPanel {
         return layer >= Int(CGWindowLevelForKey(.dockWindow))
     }
 
-    /// Optically centred on the screen under the cursor, the same lift a dialog takes.
     func centerOnCursorScreen() {
         guard let visible = NSScreen.underCursor?.visibleFrame else { return }
         let size = frame.size

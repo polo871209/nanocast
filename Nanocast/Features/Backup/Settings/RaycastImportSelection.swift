@@ -26,9 +26,6 @@ struct RaycastImportSelection: View {
         .init(
             option: .clipboardHistory, symbol: "doc.on.clipboard",
             label: String(localized: "Clipboard history")),
-        .init(option: .snippets, symbol: "curlybraces", label: String(localized: "Snippets")),
-        .init(
-            option: .quicklinks, symbol: Quicklink.sfSymbol, label: String(localized: "Quicklinks")),
         .init(
             option: .popToRoot, symbol: "arrow.uturn.backward",
             label: String(localized: "Pop to root")),

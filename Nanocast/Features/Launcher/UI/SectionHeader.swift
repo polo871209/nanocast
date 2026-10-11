@@ -3,7 +3,6 @@ import SwiftUI
 struct SectionHeader: View {
     @Environment(\.metrics) private var metrics
     let title: String
-    /// The first header hugs the top; later ones get spacing above, reading as below.
     var isFirst = false
     var configure: (() -> Void)?
     var configureHelp = String(localized: "Configure…")

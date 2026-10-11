@@ -1,7 +1,6 @@
 import Darwin
 import Foundation
 
-/// Reports edits to settings.json, an editor's save-by-rename included, once the writes settle.
 @MainActor
 final class SettingsFileMonitor {
     var onChange: (() -> Void)?
@@ -77,7 +76,6 @@ final class SettingsFileMonitor {
         }
     }
 
-    /// Polls only while the folder is missing; the next save or the user brings it back.
     private func scheduleRetry() {
         guard retryTask == nil else { return }
         retryTask = Task { [weak self] in

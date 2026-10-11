@@ -18,7 +18,6 @@ struct AppNameTest {
             }
         }
 
-        /// A real bundle on disk: `installedAppName` reads the plist the way the scan does.
         func makeApp(_ fileName: String, info: [String: Any]) -> Bundle? {
             let url = root.appendingPathComponent(fileName)
             let contents = url.appendingPathComponent("Contents")
@@ -127,7 +126,6 @@ struct AppNameTest {
             "Nynorsk does not acquire the Bokmål resource alias",
             codes(["nn-NO"]) == ["nn-NO", "nn_NO", "nn", "en"])
 
-        /// The whole path: a bundle translated only in its loctable, read as the scan reads it.
         func makeLocalizedApp(_ fileName: String, table: [String: Any]) -> URL {
             let url = root.appendingPathComponent(fileName)
             let resources = url.appendingPathComponent("Contents/Resources")
@@ -138,7 +136,6 @@ struct AppNameTest {
             return url
         }
 
-        /// The scan's own call: an app's untranslated name is the file name it sits under on disk.
         func names(_ url: URL, _ preferred: [String], region: String? = "en") -> [String] {
             BundleLocalization.names(
                 for: url, base: url.deletingPathExtension().lastPathComponent,

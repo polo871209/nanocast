@@ -14,7 +14,6 @@ enum CalcTimeZone {
         else {
             return nil
         }
-        // The last word decides: `10 km to mi` carries a connector too.
         guard endsInZoneOrDuration(inputWords[inputWords.count - 1].lowercased()) else { return nil }
 
         let query = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -22,7 +21,6 @@ enum CalcTimeZone {
 
         if let difference = offsetBetween(query, now: now, calendar: calendar) { return difference }
 
-        // A trailing `± <n> <unit>` shifts the answer, so `5pm ldn in sf + 2h` is still one query.
         let (zoneQuery, offset) = splitOffset(query)
         let words = zoneQuery.split(whereSeparator: \.isWhitespace).map(String.init)
         guard words.count >= 2 else { return nil }
@@ -33,7 +31,6 @@ enum CalcTimeZone {
         if let connector = words.lastIndex(where: { $0 == "in" || $0 == "to" || $0 == "at" }) {
             let targetWords = Array(words[(connector + 1)...])
             guard !targetWords.isEmpty else { return nil }
-            // `time in 4 hours` names a duration where a zone would go, so the home zone answers.
             if let zone = zone(named: targetWords) {
                 target = zone
             } else if let duration = parseDuration(targetWords.joined(separator: " ")) {
@@ -105,7 +102,6 @@ enum CalcTimeZone {
         return "time \(place.joined(separator: " ")) to \(target.joined(separator: " "))"
     }
 
-    /// Splits a trailing `+ 2h` / `- 30 min` off the zone phrase it shifts.
     private static func splitOffset(
         _ query: String
     ) -> (String, (count: Int, component: Calendar.Component)?) {
@@ -119,7 +115,6 @@ enum CalcTimeZone {
         return (query, nil)
     }
 
-    /// `2h`, `90 min`, `2 hours` — sub-day only, since a zone answer is a clock time.
     private static func parseDuration(
         _ text: String, impliesHours: Bool = false
     ) -> (count: Int, component: Calendar.Component)? {
@@ -130,7 +125,6 @@ enum CalcTimeZone {
         case "h", "hr", "hrs", "hour", "hours": return (count, .hour)
         case "m", "min", "mins", "minute", "minutes": return (count, .minute)
         case "s", "sec", "secs", "second", "seconds": return (count, .second)
-        // A clock answer makes hours the only sensible unit for a bare `+ 5`.
         case "" where impliesHours: return (count, .hour)
         default: return nil
         }
@@ -142,14 +136,11 @@ enum CalcTimeZone {
     }
 
     private static func endsInZoneOrDuration(_ tail: String) -> Bool {
-        // Folded, because the identifiers carry no accents while `zürich` and `são paulo` do.
         let folded = tail.folding(options: [.diacriticInsensitive], locale: nil)
         if zoneIdentifier(named: folded) != nil { return true }
-        // `time in 4 hours` ends in the unit alone, so a bare unit word counts as a duration tail.
         if durationUnits.contains(folded) || parseDuration(folded, impliesHours: true) != nil {
             return true
         }
-        // A multi-word city ("new york") only shows its last word here, so allow a known suffix.
         return citySuffixes.contains(folded)
     }
 
@@ -158,7 +149,6 @@ enum CalcTimeZone {
         "s", "sec", "secs", "second", "seconds"
     ]
 
-    /// The final word of every multi-word name in any table, so `in new york` still reaches it.
     private static let citySuffixes: Set<String> = {
         var tails: Set<String> = []
         for names in [cities.keys, aliases.keys, CountryZoneData.zones.keys] {
@@ -171,7 +161,6 @@ enum CalcTimeZone {
 
     private static let connectors: Set<String> = ["in", "to", "at", "diff", "difference"]
 
-    /// `diff paris`, `time diff paris` — how far a zone runs from the Mac's own.
     private static func offsetBetween(
         _ query: String, now: Date, calendar: Calendar
     ) -> CalcResult? {
@@ -203,7 +192,6 @@ enum CalcTimeZone {
     ) -> SourceMoment? {
         var words = words.filter { !["what", "whats", "the", "is", "it", "current"].contains($0) }
 
-        // `time in 4 hours in sf`: the leading half carries its own `in <duration>`.
         var ahead: (count: Int, component: Calendar.Component)?
         if let connector = words.lastIndex(where: { $0 == "in" || $0 == "at" }),
             connector + 1 < words.count,
@@ -268,13 +256,11 @@ enum CalcTimeZone {
         guard !text.isEmpty else { return nil }
 
         let parts = text.split(separator: ":", maxSplits: 1).map(String.init)
-        // A lone ":" splits to nothing, so the first part is not guaranteed to exist.
         guard let first = parts.first, let hour = Int(first) else { return nil }
         let minute = parts.count > 1 ? Int(parts[1]) : 0
         guard let minute, (0...59).contains(minute) else { return nil }
 
         guard let meridiem else {
-            // A bare number is a search ("time in 5"), so only a written clock qualifies.
             guard text.contains(":"), (0...23).contains(hour) else { return nil }
             return (hour, minute)
         }
@@ -283,18 +269,15 @@ enum CalcTimeZone {
     }
 
     private static func zone(named words: [String]) -> TimeZone? {
-        // `são paulo` and `zürich` are how the cities are spelled; the identifiers are not.
         let phrase = words.joined(separator: " ")
             .folding(options: [.diacriticInsensitive], locale: nil)
         return zoneIdentifier(named: phrase).flatMap(TimeZone.init(identifier:))
     }
 
-    /// A curated alias outranks a city, and a city outranks a country sharing its spelling.
     private static func zoneIdentifier(named phrase: String) -> String? {
         aliases[phrase] ?? cities[phrase] ?? CountryZoneData.zones[phrase]
     }
 
-    /// Foundation already carries the IANA database, so nothing here is generated.
     private static let cities: [String: String] = {
         var table: [String: String] = [:]
         for identifier in TimeZone.knownTimeZoneIdentifiers {
@@ -439,7 +422,6 @@ enum CalcTimeZone {
         return table
     }()
 
-    /// Not `localizedName`, which needs a `Locale` — banned in `Model/`.
     static func label(for zone: TimeZone) -> String {
         if zone.identifier == "GMT" || zone.identifier == "UTC" { return "UTC" }
         guard let city = zone.identifier.split(separator: "/").last else { return zone.identifier }
@@ -457,7 +439,6 @@ enum CalcTimeZone {
         here.timeZone = source.zone
         var there = calendar
         there.timeZone = target
-        // Compare civil dates in one zone so offsets and DST cannot shorten the day count.
         var dates = calendar
         dates.timeZone = .gmt
         guard

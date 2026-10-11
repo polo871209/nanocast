@@ -1,24 +1,20 @@
 import CoreGraphics
 import Foundation
 
-/// Drives `CalloutPlacement` against the real `Theme`, so a retuned token fails here.
 @main
 @MainActor
 struct CalloutPlacementTests {
     static var failures = 0
     static var passes = 0
 
-    // Exactly what `ShortcutRecorderPopoverHost` passes.
     static let size = Theme.Size.shortcutPopover
     static let gap = Theme.Spacing.sm
     static let inset = Theme.Spacing.xs
     static let cornerRadius = Theme.Radius.menuPanel
     static let caretWidth = Theme.Size.calloutCaretWidth
 
-    /// Pane `xxl` padding, row `xl` padding, then half the field.
     static let fieldInsetFromPaneEdge =
         Theme.Spacing.xxl + Theme.Spacing.xl + Theme.Size.shortcutRecorder / 2
-    /// The nearest the tip may sit to an edge before it would grow out of a corner arc.
     static var caretLimit: CGFloat { cornerRadius + caretWidth / 2 }
 
     static func resolve(field: CGRect, container: CGSize) -> CalloutPlacement {
@@ -52,9 +48,6 @@ struct CalloutPlacementTests {
         if failures > 0 { exit(1) }
     }
 
-    // MARK: - The case that actually ships
-
-    /// Only holds while the callout stays narrow enough to fit beside the field.
     static func centredOnARealRow() {
         for paneWidth in [Theme.Size.settingsSidebar + 320, 720, 1100] as [CGFloat] {
             let field = CGRect(
@@ -76,8 +69,6 @@ struct CalloutPlacementTests {
         )
     }
 
-    // MARK: - Above vs below
-
     static func flipping() {
         let container = CGSize(width: 600, height: 800)
         let roomy = CGRect(x: 400, y: 400, width: 80, height: 24)
@@ -87,7 +78,6 @@ struct CalloutPlacementTests {
             above.center.y, roomy.minY - gap - size.height / 2,
             "the callout's bottom edge sits one gap above the field")
 
-        // The callout's bottom edge must clear the field, never overlap it.
         expect(
             above.center.y + size.height / 2 <= roomy.minY,
             "the callout never overlaps the field it points at")
@@ -99,7 +89,6 @@ struct CalloutPlacementTests {
             below.center.y, tight.maxY + gap + size.height / 2,
             "the flipped callout's top edge sits one gap below the field")
 
-        // Exactly enough room is still room: the boundary case must not flip.
         let exact = CGRect(x: 400, y: size.height + gap, width: 80, height: 24)
         expect(
             resolve(field: exact, container: container).caretEdge == .bottom,
@@ -110,8 +99,6 @@ struct CalloutPlacementTests {
             "one point short of the room it needs does flip")
     }
 
-    // MARK: - Staying inside the pane
-
     static func horizontalClamping() {
         let container = CGSize(width: 600, height: 800)
 
@@ -119,7 +106,6 @@ struct CalloutPlacementTests {
             field: CGRect(x: 260, y: 400, width: 80, height: 24), container: container)
         expect(centered.center.x, 300, "a field mid-pane centres the callout on it")
 
-        // A recorder sits at a settings row's trailing edge, the case that happens.
         let trailing = resolve(
             field: CGRect(x: 500, y: 400, width: 80, height: 24), container: container)
         expect(
@@ -137,8 +123,6 @@ struct CalloutPlacementTests {
             "the clamped callout keeps its inset from the leading edge")
     }
 
-    // MARK: - Where the pointer lands
-
     static func caretTracking() {
         let container = CGSize(width: 600, height: 800)
 
@@ -146,7 +130,6 @@ struct CalloutPlacementTests {
             field: CGRect(x: 260, y: 400, width: 80, height: 24), container: container)
         expect(centered.caretX, size.width / 2, "an unclamped callout points from its middle")
 
-        // Once the body is clamped, the tip walks toward the edge to keep aiming.
         let trailing = CGRect(x: 500, y: 400, width: 80, height: 24)
         let clamped = resolve(field: trailing, container: container)
         expect(
@@ -154,7 +137,6 @@ struct CalloutPlacementTests {
             "the pointer still lands on the field's centre after the body is clamped")
         expect(clamped.caretX > size.width / 2, "and it does that by sitting past the middle")
 
-        // A field far outside the callout drags the tip only as far as the corner arc allows.
         let extreme = resolve(
             field: CGRect(x: 596, y: 400, width: 80, height: 24), container: container)
         expect(
@@ -167,9 +149,6 @@ struct CalloutPlacementTests {
             "the pointer stops clear of the leading corner arc")
     }
 
-    // MARK: - Shared row grammar
-    // Here because this is the only harness compiling `Theme.swift`: one `rowIcon` slot.
-
     static func rowGrammar() {
         expect(
             Theme.Size.checkbox <= Theme.Size.rowIcon,
@@ -177,10 +156,7 @@ struct CalloutPlacementTests {
         expect(Theme.Size.checkbox > 0, "and is a real size")
     }
 
-    // MARK: - Containers smaller than the callout
-
     static func degenerateContainers() {
-        // A pane narrower than the callout has no valid inset range; `max` must win.
         let narrow = resolve(
             field: CGRect(x: 10, y: 400, width: 80, height: 24),
             container: CGSize(width: 200, height: 800))

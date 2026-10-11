@@ -61,27 +61,15 @@ keeps a dropped search scope from deleting a working shortcut, and running on un
 covers LaunchServices still resolving an app for a few seconds after it is trashed.
 
 Shortcuts are also spelled as typeable chords (`ctrl+option+left`) in the opt-in
-[settings file](settings-file.md) — all but those of content, extensions and Apple Shortcuts.
+[settings file](settings-file.md) — all but those of content.
 `HotKeySpelling` is that grammar; `HotKeySettingsFile` applies through `setBinding`, so `UserDefaults`
 stays the one store either way.
 
-System Settings panes use `boundPaneBundleIDs`; custom commands, quicklinks, window layouts, rooms
-and custom window sizes use their stable UUIDs in `boundCustomCommandIDs`, `boundQuicklinkIDs`,
-`boundWindowLayoutIDs`, `boundWindowRoomIDs` and `boundCustomWindowSizeIDs`. Those five are the per-item case — unlike a fixed catalog, there is no `allCases` to walk — so each needs an index for `start()`
-to re-register from
-and to prune bindings whose record was deleted while Nanocast wasn't running. That prune is why
-`QuicklinkStore` loads at launch even when the feature is off
-(see [quicklinks.md](quicklinks.md#hotkeys)).
-Apple Shortcuts keep the same kind of index in `boundAppleShortcutIDs`, pruned not at launch but after
-the first successful read of the library, since a failed read looks exactly like deletion
-(see [apple-shortcuts.md](apple-shortcuts.md#sweeping-deleted-shortcuts)).
-
-Snippets index `StoredSnippet.ID`, the file's path, in `boundSnippetIDs`. The store runs only while
-the feature is on, so they are swept not at launch but on every snapshot, by
-`removeSnippetBindings`; a file that fails to parse still counts, since it is mid-edit rather than
-gone. A rename outside Nanocast or a new Snippets Folder therefore drops the shortcut, and none
-travels in a backup, where an imported snippet lands at a new path
-(see [snippets.md](snippets.md#shortcuts)).
+System Settings panes use `boundPaneBundleIDs`; custom commands, window layouts, rooms and custom
+window sizes use their stable UUIDs in `boundCustomCommandIDs`, `boundWindowLayoutIDs`,
+`boundWindowRoomIDs` and `boundCustomWindowSizeIDs`. Those four are the per-item case — unlike a fixed
+catalog, there is no `allCases` to walk — so each needs an index for `start()` to re-register from and
+to prune bindings whose record was deleted while Nanocast wasn't running.
 
 `HotKeyBinding` takes the synthesised `Codable`, so a `.combo` writes
 `{"combo":{"_0":{"carbonKeyCode":N,"carbonModifiers":N}}}` and a `.doubleTap` writes
@@ -91,8 +79,8 @@ but the guarantee that every decode runs through the initializer that masks devi
 export → import within one build is guaranteed to round-trip.
 
 Every built-in command is bindable: `CommandID.hotKeyAction` answers `.command(self)` by default, and
-names the three exceptions. Open in Browser and Run Shell Command are query-driven — their input is the
-typed text a chord has none of — and Quit is withheld so no chord can terminate the app outright. The
+names the two exceptions. Open in Browser is query-driven — its input is the typed text a chord has
+none of — and Quit is withheld so no chord can terminate the app outright. The
 list is a deny-list rather than an allow-list, so a new command still arrives bindable without an edit
 there. A binding therefore persists under `hotkey.<command raw value>`, as in
 `hotkey.command:clipboard-history`, which is also what puts a recorder on the command's row and a

@@ -2,15 +2,11 @@
 import CoreGraphics
 import Foundation
 
-/// One window a room holds, and what finds it again.
 struct RoomWindow: Codable, Hashable, Sendable {
     var bundleID: String
     var appName: String
-    /// What finds the window again once its ID is gone, after its app relaunches.
     var title: String
-    /// The window server's number; it lasts only while the window stays open.
     var windowID: UInt32?
-    /// Where it sits under `.saved`, as a fraction of the display's visible frame.
     var unitFrame: CGRect
     var cell: RoomGrid.Cell?
 
@@ -26,7 +22,6 @@ struct RoomWindow: Codable, Hashable, Sendable {
         self.cell = cell
     }
 
-    /// Four decimal places, so a stored fraction reads cleanly and resolves to the same point.
     static func unitFrame(of frame: CGRect, in visible: CGRect) -> CGRect {
         guard visible.width > 0, visible.height > 0 else {
             return CGRect(x: 0, y: 0, width: 1, height: 1)
@@ -48,7 +43,6 @@ struct RoomWindow: Codable, Hashable, Sendable {
                 height: unitFrame.height * visible.height))
     }
 
-    // Hand-written, so an added field keeps stored rooms and older backups readable.
     private enum CodingKeys: String, CodingKey {
         case bundleID, appName, title, windowID, unitFrame, cell
     }

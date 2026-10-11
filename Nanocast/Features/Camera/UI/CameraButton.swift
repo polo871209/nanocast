@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct CameraButton: View {
-    /// Secondary also reads as "off": the mirror toggle dims rather than growing a second style.
     enum Emphasis {
         case primary
         case secondary

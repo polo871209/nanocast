@@ -1,10 +1,7 @@
 import AppKit
 import SwiftUI
 
-// How every borderless surface arrives and leaves, so a dialog and a HUD read alike.
-
 extension NSWindow {
-    /// Fades the whole window, shadow included; `order` runs while still invisible.
     func fadeIn(duration: TimeInterval, order: () -> Void) {
         alphaValue = 0
         order()
@@ -21,7 +18,6 @@ extension NSWindow {
         }
     }
 
-    /// Safe to interrupt — the handler checks opacity — and `done` runs once it is off screen.
     func fadeOut(duration: TimeInterval, done: (@MainActor () -> Void)? = nil) {
         NSAnimationContext.runAnimationGroup { context in
             context.duration = duration
@@ -45,7 +41,6 @@ extension NSWindow {
 }
 
 extension View {
-    /// Scales up as the window fades in, inside the measured frame, so nothing clips.
     func panelEntrance() -> some View {
         modifier(PanelEntrance())
     }

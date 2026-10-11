@@ -1,16 +1,12 @@
 import Foundation
 
-/// Folded once per index change, never per keystroke.
 struct SearchText: Sendable, Hashable {
-    /// UTF-16, because the scorer walks it by index on every keystroke.
     let units: [UInt16]
-    /// Word starts no separator marks, such as a capital after a lowercase letter.
     let humps: [Int]
 
     var isEmpty: Bool { units.isEmpty }
     var string: String { String(decoding: units, as: UTF16.self) }
 
-    /// `transliterated` reads another script the way it is typed: `微信` as `wei xin`.
     init(_ raw: String, transliterated: Bool) {
         let latin = transliterated ? ScriptRomanization.latin(raw) : nil
         units = Array((latin ?? FuzzyMatch.normalized(raw)).utf16)
@@ -22,7 +18,6 @@ struct SearchText: Sendable, Hashable {
         self.humps = humps
     }
 
-    /// Two texts as one phrase, so `brew search` reaches `Search` under `Brew`.
     func joined(with other: SearchText) -> SearchText {
         SearchText(
             units: units + [LauncherMatch.space] + other.units,
@@ -33,7 +28,6 @@ struct SearchText: Sendable, Hashable {
     private static let uppercase = UInt8(ascii: "A")...UInt8(ascii: "Z")
     private static let digit = UInt8(ascii: "0")...UInt8(ascii: "9")
 
-    /// ASCII only: its fold keeps every index, where a non-ASCII fold can shift them.
     private static func humps(in raw: String) -> [Int] {
         var humps: [Int] = []
         var (beforePrevious, previous): (UInt8, UInt8) = (0, 0)
@@ -42,7 +36,6 @@ struct SearchText: Sendable, Hashable {
             switch (beforePrevious, previous, byte) {
             case (_, lowercase, uppercase), (_, digit, lowercase), (_, digit, uppercase):
                 humps.append(offset)
-            // The capital before this lowercase letter ends an acronym and starts a word.
             case (uppercase, uppercase, lowercase):
                 humps.append(offset - 1)
             default:
@@ -54,11 +47,9 @@ struct SearchText: Sendable, Hashable {
     }
 }
 
-/// The best alignment of a query over a text, where a word start outscores any other letter.
 enum LauncherMatch {
     enum Outcome: Sendable, Equatable {
         case exact
-        /// `skipped` counts query separators with nothing to land on.
         case scored(score: Int, skipped: Int)
 
         var value: Int {
@@ -71,7 +62,6 @@ enum LauncherMatch {
 
     static let space: UInt16 = 0x20
 
-    /// Below this many letters the pre-check costs more than the alignment it would skip.
     private static let precheckThreshold = 2
 
     static func match(_ query: SearchText, in target: SearchText) -> Outcome? {
@@ -92,7 +82,6 @@ enum LauncherMatch {
         }
     }
 
-    /// A query separator may skip ahead, so this only rules out a letter the text lacks.
     private static func isRoughSubsequence(_ q: [UInt16], of t: [UInt16]) -> Bool {
         var position = 0
         for unit in q {
@@ -106,12 +95,10 @@ enum LauncherMatch {
         return true
     }
 
-    /// One row per query character; a running maximum keeps a row linear in the text.
     private static func align(_ q: [UInt16], _ t: [UInt16], humps: [Int], letters: Int) -> Outcome? {
         let width = t.count
         var previous = [Int](repeating: .min, count: width)
         var current = [Int](repeating: .min, count: width)
-        // The first column the last kept row matched at; the next row starts after it.
         var anchor = -1
         var rowStart = 0
         var rowEnd = 0
@@ -121,7 +108,6 @@ enum LauncherMatch {
         for unit in q {
             let unitIsSeparator = isSeparator(unit)
             let lower = anchor + 1
-            // Matched separators count against letters still owed, so the bound can pass the end.
             let upper = min(width, width - (letters - 1 - matched))
             var first = -1
             var gapBest = Int.min
@@ -172,7 +158,6 @@ enum LauncherMatch {
     }
 }
 
-/// How loose a fuzzy hit may be and still show.
 enum SearchSensitivity: String, CaseIterable, Identifiable, Sendable {
     case low
     case medium
@@ -190,7 +175,6 @@ enum SearchSensitivity: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// `queryLength` is in the units the outcome was scored against.
     func accepts(_ outcome: LauncherMatch.Outcome, queryLength: Int) -> Bool {
         guard case .scored(let score, let skipped) = outcome else { return true }
         let length = queryLength - skipped

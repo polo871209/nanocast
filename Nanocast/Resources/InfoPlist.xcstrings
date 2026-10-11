@@ -119,65 +119,6 @@
         }
       }
     },
-    "NSCalendarsFullAccessUsageDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast liest die Termine von heute und morgen, damit du direkt aus dem Launcher an Besprechungen teilnehmen kannst."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast reads today's and tomorrow's events so you can join a meeting from the palette."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast lee los eventos de hoy y mañana para que puedas unirte a una reunión desde el lanzador."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast lit les événements d’aujourd’hui et de demain pour vous permettre de rejoindre une réunion depuis le lanceur."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocastは今日と明日のイベントを読み取り、ランチャーから会議に参加できるようにします。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast는 런처에서 회의에 참여할 수 있도록 오늘과 내일의 이벤트를 읽습니다."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O Nanocast lê os eventos de hoje e de amanhã para você entrar em uma reunião pelo iniciador."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast читает события на сегодня и завтра, чтобы вы могли присоединиться к встрече из лаунчера."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast 读取今天和明天的日程，方便你从启动器加入会议。"
-          }
-        }
-      }
-    },
     "NSCameraUsageDescription": {
       "extractionState": "manual",
       "localizations": {
@@ -292,65 +233,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nanocast 仅在你使用听写时录制音频，并在你的 Mac 上将其转为文字。"
-          }
-        }
-      }
-    },
-    "NSRemindersFullAccessUsageDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast erlaubt Erweiterungen, die du ausführst, deine Erinnerungen zu lesen und zu bearbeiten."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast lets extensions you run read and edit your reminders."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast permite que las extensiones que ejecutas lean y editen tus recordatorios."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast permet aux extensions que vous lancez de lire et de modifier vos rappels."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocastは、あなたが実行する拡張機能にリマインダーの読み取りと編集を許可します。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast는 사용자가 실행하는 확장 프로그램이 미리 알림을 읽고 편집할 수 있게 합니다."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O Nanocast permite que as extensões que você executa leiam e editem seus lembretes."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast позволяет запускаемым вами расширениям читать и редактировать ваши напоминания."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nanocast 允许你运行的扩展读取和编辑你的提醒事项。"
           }
         }
       }

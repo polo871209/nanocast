@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// A child window, so the menu can outgrow a short note window; it never takes key from the editor.
 @MainActor
 final class NoteHeadingMenuWindowController {
     private unowned let coordinator: NotesCoordinator

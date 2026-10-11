@@ -5,7 +5,6 @@ import Carbon.HIToolbox
 // Snapshot the mutable C global `mach_task_self_`, so actor code never reads it raw.
 private let machTaskSelf = mach_task_self_
 
-/// C entry point: decode, cross in for a Sendable `Decision`, then apply it out here.
 private func hyperKeyEventTapCallback(
     proxy: CGEventTapProxy, type: CGEventType, event: CGEvent,
     userInfo: UnsafeMutableRawPointer?
@@ -45,14 +44,12 @@ private func hyperKeyEventTapCallback(
 
 @MainActor
 final class HyperKeyTap {
-    /// What the callback should do, decided on the actor; `asFlagsChanged` converts in place.
     enum Decision: Sendable {
         case pass
         case suppress
         case rewrite(flags: UInt64, keyCode: Int64? = nil, asFlagsChanged: Bool = false)
     }
 
-    /// Marker on events this tap posts, so it never reacts to its own synthetics.
     nonisolated static let syntheticTag: Int64 = 0x5459_4354
 
     /// Device-level modifier bits from IOLLEvent.h. See docs/features/hotkeys.md#the-hyper-key.
@@ -88,7 +85,6 @@ final class HyperKeyTap {
         self.settings = settings
     }
 
-    // Isolated so teardown can release the main-actor IOKit connection.
     isolated deinit {
         if hidConnect != IO_OBJECT_NULL { IOServiceClose(hidConnect) }
     }
@@ -97,9 +93,6 @@ final class HyperKeyTap {
     var isEnabled: Bool? { tapPort.map { CGEvent.tapIsEnabled(tap: $0) } }
     var runLoopSourceIsValid: Bool? { runLoopSource.map(CFRunLoopSourceIsValid) }
 
-    // MARK: - Hyper chord flags
-
-    /// The flags OR'd in while Hyper is held: the generic masks plus left-side device bits.
     private var hyperFlagsRaw: UInt64 {
         var raw =
             CGEventFlags([.maskControl, .maskAlternate, .maskCommand]).rawValue
@@ -110,7 +103,6 @@ final class HyperKeyTap {
         return raw
     }
 
-    /// The Hyper key's own flag residue, scrubbed from every rewritten event.
     private var strippedFlagsRaw: UInt64 {
         guard let key = route?.key else { return 0 }
         if key == .capsLock { return CGEventFlags.maskAlphaShift.rawValue }
@@ -135,8 +127,6 @@ final class HyperKeyTap {
         (flagsRaw & ~strippedFlagsRaw) | hyperFlagsRaw
     }
 
-    // MARK: - Event decisions
-
     func decide(
         type: CGEventType, keyCode: Int, flagsRaw: UInt64, isAutorepeat: Bool, isSynthetic: Bool
     ) -> Decision {
@@ -152,12 +142,10 @@ final class HyperKeyTap {
             return .pass
         }
         guard hyperActive else { return .pass }
-        // Any other key or modifier going down while Hyper is held makes this a combo, not a tap.
         if type == .keyDown || type == .flagsChanged { otherKeyPressed = true }
         return .rewrite(flags: hyperized(flagsRaw))
     }
 
-    /// docs/features/hotkeys.md#press-tracking-reads-the-event
     private func decideHyperKeyEvent(
         route: HyperKeyRoute, type: CGEventType, flagsRaw: UInt64, isAutorepeat: Bool
     ) -> Decision {
@@ -196,8 +184,6 @@ final class HyperKeyTap {
         return flagsRaw & ~strippedFlagsRaw
     }
 
-    // MARK: - Hold state machine
-
     private func beginHold() {
         hyperActive = true
         hyperDownAt = clock.now
@@ -233,8 +219,6 @@ final class HyperKeyTap {
         hyperDownAt = nil
         otherKeyPressed = false
     }
-
-    // MARK: - Tap lifecycle
 
     /// False when Accessibility is missing: only a trusted process may modify events.
     @discardableResult
@@ -273,15 +257,11 @@ final class HyperKeyTap {
         }
     }
 
-    /// Called when the system disables the tap; any half-tracked hold is stale by then.
     func reenable() {
         cancelHold()
         if let tapPort { CGEvent.tapEnable(tap: tapPort, enable: true) }
     }
 
-    // MARK: - Synthetics & caps state
-
-    /// Synthesize a bare key press for Quick Press, tagged so `decide` ignores it.
     private func postKey(_ keyCode: CGKeyCode) {
         let source = CGEventSource(stateID: .combinedSessionState)
         let down = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: true)
@@ -299,7 +279,6 @@ final class HyperKeyTap {
         setCapsLockState(false)
     }
 
-    /// The IOHIDSystem connection for the Caps Lock LED and lock state.
     private func hidConnection() -> io_connect_t {
         if hidConnect != IO_OBJECT_NULL { return hidConnect }
         let service = IOServiceGetMatchingService(
