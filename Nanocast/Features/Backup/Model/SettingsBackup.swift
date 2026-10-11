@@ -55,6 +55,7 @@ struct SettingsBackup: Codable {
         var navigationEnabled: Bool?
         var menuSearchDisabledApps: [String]?
         var menuSearchShowsAppleMenu: Bool?
+        var windowSwitcherExcludedApps: [String]?
         var windowManagementEnabled: Bool?
         var windowManagementShowInLauncher: Bool?
         var windowGap: Int?
@@ -136,6 +137,7 @@ extension SettingsBackup {
             navigationEnabled: s.navigationEnabled,
             menuSearchDisabledApps: s.menuSearchDisabledApps,
             menuSearchShowsAppleMenu: s.menuSearchShowsAppleMenu,
+            windowSwitcherExcludedApps: s.windowSwitcherExcludedApps,
             windowManagementEnabled: s.windowManagementEnabled,
             windowManagementShowInLauncher: s.windowManagementShowInLauncher,
             windowGap: s.windowGap,
@@ -397,6 +399,10 @@ extension SettingsBackup {
         }
         if let flag = s.menuSearchShowsAppleMenu {
             settings.menuSearchShowsAppleMenu = flag
+            count += 1
+        }
+        if let apps = s.windowSwitcherExcludedApps {
+            settings.windowSwitcherExcludedApps = apps
             count += 1
         }
         if let flag = s.windowManagementEnabled {

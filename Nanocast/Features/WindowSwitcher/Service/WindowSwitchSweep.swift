@@ -12,42 +12,38 @@ enum WindowSwitchSweep {
     }
 
     struct Snapshot {
-        var entries: [WindowSwitchEntry]
-        var elements: [Int: Element]
-    }
-
-    static func snapshot(ranks: [pid_t: Int]) -> Snapshot {
         var entries: [WindowSwitchEntry] = []
         var elements: [Int: Element] = [:]
+    }
 
-        for app in WindowInventory.candidates() {
-            guard let bundleID = app.bundleIdentifier else { continue }
-            let pid = app.processIdentifier
-            let application = AXWindowAccess.application(for: pid, timeout: sweepTimeout)
+    static func snapshot(excluding excludedBundleIDs: Set<String>) -> Snapshot {
+        var snapshot = Snapshot()
+        for app in WindowInventory.candidates() where !app.isHidden {
+            guard let bundleID = app.bundleIdentifier, !excludedBundleIDs.contains(bundleID)
+            else { continue }
+            let application = AXWindowAccess.application(
+                for: app.processIdentifier, timeout: sweepTimeout)
             let iconURL = app.bundleURL
             let iconStamp = iconURL.map(FileIconStamp.value(for:)) ?? 0
             for window in AXWindowAccess.windows(in: application) {
                 AXUIElementSetMessagingTimeout(window, sweepTimeout)
-                let minimized = AXWindowAccess.bool(window, kAXMinimizedAttribute) == true
-                guard isSwitchable(window, minimized: minimized) else { continue }
-                let handle = entries.count
-                entries.append(
+                guard isSwitchable(window) else { continue }
+                let handle = snapshot.entries.count
+                snapshot.entries.append(
                     WindowSwitchEntry(
-                        handle: handle, appName: app.localizedName ?? bundleID,
-                        bundleID: bundleID, iconURL: iconURL, iconStamp: iconStamp,
-                        title: AXWindowAccess.string(window, kAXTitleAttribute) ?? "",
-                        isMinimized: minimized, appRank: ranks[pid] ?? .max))
-                elements[handle] = Element(app: app, application: application, window: window)
+                        handle: handle, windowID: AXWindowAccess.windowID(of: window),
+                        pid: app.processIdentifier, appName: app.localizedName ?? bundleID,
+                        iconURL: iconURL, iconStamp: iconStamp,
+                        title: AXWindowAccess.string(window, kAXTitleAttribute) ?? ""))
+                snapshot.elements[handle] = Element(
+                    app: app, application: application, window: window)
             }
         }
-        return Snapshot(entries: entries, elements: elements)
+        return snapshot
     }
 
-    private static func isSwitchable(_ window: AXUIElement, minimized: Bool) -> Bool {
-        WindowSwitchPolicy.isSwitchable(
-            isStandardWindow: AXWindowAccess.string(window, kAXSubroleAttribute)
-                == (kAXStandardWindowSubrole as String),
-            isMinimized: minimized,
-            canMinimize: AXWindowAccess.element(window, kAXMinimizeButtonAttribute) != nil)
+    private static func isSwitchable(_ window: AXUIElement) -> Bool {
+        AXWindowAccess.string(window, kAXSubroleAttribute) == (kAXStandardWindowSubrole as String)
+            && AXWindowAccess.bool(window, kAXMinimizedAttribute) != true
     }
 }

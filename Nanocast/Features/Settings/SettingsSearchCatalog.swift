@@ -282,13 +282,16 @@ enum SettingsSearchCatalog {
     private static let navigation: [SettingsSearchEntry] = [
         .init(
             pane: .navigation,
-            keywords: ["window", "switch", "menu bar", "focus", "raise"]),
+            keywords: ["window", "switch", "cmd tab", "menu bar", "focus", "raise"]),
         .init(
             .navigationNavigation, "Enable navigation",
             keywords: ["window switcher", "menu bar", "accessibility"]),
         .init(
-            group: .navigationCommands, "Navigation commands",
-            keywords: ["shortcut", "hotkey", "alias", "launcher"]),
+            .navigationWindowSwitcher, "Shortcut",
+            keywords: ["cmd tab", "command tab", "window switcher", "hotkey", "trigger"]),
+        .init(
+            .navigationWindowSwitcher, "Excluded Applications",
+            keywords: ["cmd tab", "command tab", "window switcher", "hide", "exclude", "ignore"]),
         .init(
             .navigationMenuSearch, "Show Apple menu items",
             keywords: ["apple menu", "about this mac", "recent items", "sleep", "logo"]),
