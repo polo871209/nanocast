@@ -1,11 +1,8 @@
 import Foundation
 
-/// A release body as the window reads it: the block shapes CI actually emits.
 enum ReleaseNotes {
-    /// CI writes install instructions below this for the download page; a window skips them.
     static let installMarker = "<!-- nanocast:install -->"
 
-    /// A body published before the marker existed has none, and comes back whole.
     static func summary(of body: String) -> String {
         let head = body.range(of: installMarker).map { String(body[..<$0.lowerBound]) } ?? body
         return head.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -17,7 +14,6 @@ enum ReleaseNotes {
         case paragraph(String)
     }
 
-    /// A line scanner over what GitHub's release-notes API produces, not a general Markdown parser.
     static func blocks(from summary: String) -> [Block] {
         var blocks: [Block] = []
         var paragraph: [String] = []
@@ -51,7 +47,6 @@ enum ReleaseNotes {
     private static func heading(in line: String) -> Block? {
         let hashes = line.prefix(while: { $0 == "#" })
         guard (1...6).contains(hashes.count), line.dropFirst(hashes.count).first == " " else { return nil }
-        // Markdown lets a heading close with its own run of hashes; trimming both ends covers it.
         let text = line.dropFirst(hashes.count)
             .trimmingCharacters(in: CharacterSet(charactersIn: "# "))
         return .heading(level: hashes.count, text: text)
@@ -65,7 +60,6 @@ enum ReleaseNotes {
 
         while index < text.endIndex {
             let rest = text[index...]
-            // A Markdown destination is already a URL, so nothing inside it is a reference.
             if rest.hasPrefix("]("), let close = rest.firstIndex(of: ")") {
                 output += text[index...close]
                 previous = ")"
@@ -88,7 +82,6 @@ enum ReleaseNotes {
     private static func mention(in rest: Substring, after previous: Character?) -> (String, String.Index)? {
         guard rest.first == "@", previous.map({ !$0.isLetter && !$0.isNumber }) ?? true else { return nil }
         let handle = rest.dropFirst().prefix(while: isHandle)
-        // A scoped package name — `@raycast/api` — is not a person.
         guard !handle.isEmpty, handle.count <= 39, !handle.hasSuffix("-"),
             rest[handle.endIndex...].first != "/"
         else { return nil }

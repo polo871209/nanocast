@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Colour-codes the label beside it; decorative, so hidden from VoiceOver.
 struct ColorDot: View {
     @Environment(\.metrics) private var metrics
     let color: Color

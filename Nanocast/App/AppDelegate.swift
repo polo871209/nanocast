@@ -12,19 +12,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppCore.shared.start()
     }
 
-    func application(_ application: NSApplication, open urls: [URL]) {
-        for url in urls {
-            AppCore.shared.handleOpenURL(url)
-        }
-    }
-
     func applicationWillTerminate(_ notification: Notification) {
-        // The Hyper Key's HID-level caps remap outlives the process; give the key back.
         AppCore.shared.prepareForTermination()
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        // The Dock icon only stands for the open windows, so its Quit closes them, not the agent.
         let activation = AppCore.shared.activationPolicy
         if isQuitFromDock, activation.hasOpenWindows {
             activation.closeAll()
@@ -34,7 +26,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         terminationRequestInFlight = true
         Task { @MainActor [weak self] in
             await AppCore.shared.stopDictationForTermination()
-            // A 300 ms-debounced draft still has to reach disk, but it can no longer veto the quit.
             await AppCore.shared.flushNotesForTermination()
             self?.terminationRequestInFlight = false
             sender.reply(toApplicationShouldTerminate: true)
@@ -47,12 +38,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
-    /// The palette and Settings each close on their own; the agent outlives both.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
     }
 
-    /// ⌘Q and the menu-bar item call `terminate` directly; only an Apple Event names a sender.
     private var isQuitFromDock: Bool {
         guard let event = NSAppleEventManager.shared().currentAppleEvent,
             event.eventClass == kCoreEventClass, event.eventID == kAEQuitApplication,

@@ -8,7 +8,6 @@ struct WindowLayoutInspector: View {
     @State private var showingIconPicker = false
     @FocusState private var nameFocused: Bool
 
-    /// Arrangements and workplaces; never the menu bar's own glyph, which reads as the app.
     private static let iconSymbols = [
         "rectangle.3.group", "square.grid.2x2", "rectangle.split.2x1", "rectangle.split.3x1",
         "rectangle.split.1x2", "sidebar.left", "macwindow", "display", "display.2",
@@ -18,7 +17,6 @@ struct WindowLayoutInspector: View {
     ]
 
     var body: some View {
-        // Insurance only: at any normal text size every group fits the panel's stated height.
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                 nameField
@@ -26,13 +24,13 @@ struct WindowLayoutInspector: View {
                 Divider()
                 sectionLabel("Layout")
                 WindowLayoutEntryPicker(draft: draft, displays: displays)
-                if draft.selectedEntry != nil {
+                if let entry = draft.selectedEntry {
                     WindowLayoutArgumentField(draft: draft)
                     frontmostToggle
                     Divider()
-                    sizeFields
-                    offsetFields
-                    positionField
+                    sizeFields(entry)
+                    offsetFields(entry)
+                    positionField(entry)
                 }
             }
             .padding(Theme.Spacing.xxl)
@@ -41,9 +39,6 @@ struct WindowLayoutInspector: View {
         .scrollBounceBehavior(.basedOnSize)
     }
 
-    // MARK: - Layout-wide
-
-    /// The picker lives inside the field's chrome, so name and icon read as the one control.
     private var nameField: some View {
         @Bindable var draft = draft
         return VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
@@ -89,8 +84,6 @@ struct WindowLayoutInspector: View {
             isOn: $draft.usesPreferredGap)
     }
 
-    // MARK: - The entry being edited
-
     private var frontmostToggle: some View {
         @Bindable var draft = draft
         return switchRow(
@@ -99,7 +92,7 @@ struct WindowLayoutInspector: View {
             isOn: $draft.isSelectedEntryFrontmost)
     }
 
-    private var sizeFields: some View {
+    private func sizeFields(_ entry: WindowLayoutEntry) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
             sectionLabel("Size")
             HStack(spacing: Theme.Spacing.md) {
@@ -117,7 +110,7 @@ struct WindowLayoutInspector: View {
         }
     }
 
-    private var offsetFields: some View {
+    private func offsetFields(_ entry: WindowLayoutEntry) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
             sectionLabel("Offset")
             HStack(spacing: Theme.Spacing.md) {
@@ -133,14 +126,12 @@ struct WindowLayoutInspector: View {
         }
     }
 
-    private var positionField: some View {
+    private func positionField(_ entry: WindowLayoutEntry) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
             sectionLabel("Position")
             WindowLayoutPositionGrid(selection: entry.anchor, onSelect: draft.setAnchor)
         }
     }
-
-    // MARK: - Helpers
 
     private func switchRow(
         _ title: LocalizedStringResource, detail: LocalizedStringResource, isOn: Binding<Bool>
@@ -166,10 +157,5 @@ struct WindowLayoutInspector: View {
     private func sectionLabel(_ title: LocalizedStringResource) -> some View {
         Text(title)
             .font(.callout.weight(.medium))
-    }
-
-    /// Safe: every caller is behind a `draft.selectedEntry != nil` check.
-    private var entry: WindowLayoutEntry {
-        draft.selectedEntry ?? WindowLayoutEntry(bundleID: "", display: .init(uuid: "", name: ""))
     }
 }

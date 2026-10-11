@@ -27,8 +27,6 @@ final class DictationCoordinator {
     @ObservationIgnored private var stopTask: Task<Void, Never>?
     @ObservationIgnored private var finishWhenStarted = false
     @ObservationIgnored private var target: InjectionTarget?
-    /// The field a mic button is dictating into; nil for a shortcut's session.
-    private(set) var field: DictationField?
 
     init(
         settings: AppSettings, hotKeys: HotKeyManager, models: DictationModelStore,
@@ -114,20 +112,6 @@ final class DictationCoordinator {
         begin(target: InjectionTarget.current())
     }
 
-    var isEnabled: Bool { settings.dictationEnabled }
-    var hasModel: Bool { models.isInstalled(settings.dictationModel) }
-
-    /// A field's own mic: click to start and click to finish, whatever the shortcut's mode or focus.
-    func toggle(into editor: any InjectableTextView) {
-        guard settings.dictationEnabled, phase != .stopping else { return }
-        guard phase == .idle else {
-            if field?.editor == ObjectIdentifier(editor) { finish() }
-            return
-        }
-        field = DictationField(editor: ObjectIdentifier(editor))
-        begin(target: .ownEditor(editor))
-    }
-
     private func finish() {
         if phase == .starting {
             finishWhenStarted = true
@@ -138,7 +122,6 @@ final class DictationCoordinator {
 
     private func begin(target: InjectionTarget?) {
         guard models.isInstalled(settings.dictationModel) else {
-            field = nil
             showMessage(String(localized: "Download the dictation model in Settings first"), .danger)
             return
         }
@@ -180,7 +163,6 @@ final class DictationCoordinator {
         guard phase == .listening else { return }
         phase = .transcribing
         panel.state.phase = .transcribing
-        field?.isTranscribing = true
         audioDucker.end()
         // A cancelled chunk keeps its audio: the final pass starts at liveOffset, losing nothing.
         let pendingLive = liveTask
@@ -197,7 +179,7 @@ final class DictationCoordinator {
             if !liveText.isEmpty { await injector.drain() }
             guard token == current else { return }
             let tail = liveOffset < samples.count ? Array(samples[liveOffset...]) : []
-            let destination = field == nil ? settings.dictationDestination : .paste
+            let destination = settings.dictationDestination
             if tail.count < 1_600 {
                 if liveText.isEmpty {
                     reset(cancelTranscription: false)
@@ -212,7 +194,6 @@ final class DictationCoordinator {
                     tail, model: model,
                     language: language)
                 guard token == current else { return }
-                // A mic belongs to its field: the text goes in there, never to the clipboard.
                 let context = destination.pastes ? insertionContext() : nil
                 let text = DictationTextFormatter.format(
                     transcript, context: context,
@@ -223,8 +204,7 @@ final class DictationCoordinator {
                 panel.close()
                 if destination.pastes {
                     injector.deliver(
-                        InjectedText(text), target: target, expectedKeyword: nil,
-                        keywordLength: 0, automaticGeneration: nil,
+                        text, target: target,
                         isValid: { [weak self] in self?.token == current },
                         onDelivered: { [weak self] in
                             guard let self, token == current else { return }
@@ -265,11 +245,6 @@ final class DictationCoordinator {
         }
     }
 
-    /// Chunks already pasted only make sense where text is pasted at all.
-    private var insertionPastes: Bool {
-        field == nil ? settings.dictationDestination.pastes : true
-    }
-
     /// Chunk spacing from the caret, else from pasted text, so chunks never glue without a space.
     private func insertionContext() -> DictationTextFormatter.Context? {
         if let context = DictationInsertionContext.read(in: target) { return context }
@@ -278,7 +253,7 @@ final class DictationCoordinator {
     }
 
     private func startLiveInsertion(token current: UUID) {
-        guard insertionPastes, settings.dictationLiveInsertion else { return }
+        guard settings.dictationDestination.pastes, settings.dictationLiveInsertion else { return }
         liveTask = Task { [weak self] in
             guard let self else { return }
             while !Task.isCancelled {
@@ -318,8 +293,7 @@ final class DictationCoordinator {
             liveText += stripped
             let target = self.target
             injector.deliver(
-                InjectedText(stripped), target: target, expectedKeyword: nil,
-                keywordLength: 0, automaticGeneration: nil,
+                stripped, target: target,
                 isValid: { [weak self] in self?.token == current },
                 onDelivered: {},
                 onFailed: { [weak self] in
@@ -329,11 +303,6 @@ final class DictationCoordinator {
         } catch {
             // The final pass starts at liveOffset, so it covers what this chunk left behind.
         }
-    }
-
-    func cancel(in editor: any InjectableTextView) {
-        guard let target = target?.ownEditor, target === editor else { return }
-        cancel()
     }
 
     func cancel() {
@@ -374,14 +343,7 @@ final class DictationCoordinator {
         transcriptionTask = nil
         phase = .idle
         target = nil
-        field = nil
         panel.close()
         audioDucker.end()
     }
-}
-
-/// Which editor a mic session belongs to, so only that field's button shows it running.
-struct DictationField: Equatable {
-    let editor: ObjectIdentifier
-    var isTranscribing = false
 }

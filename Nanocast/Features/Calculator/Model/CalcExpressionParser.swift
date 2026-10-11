@@ -64,7 +64,6 @@ struct CalcExpressionParser {
         }
     }
 
-    /// A target that ends its scope stays trailing, so `10kg + 500g to lb` converts the whole sum.
     private func peekConversion() -> (name: String, end: Int)? {
         guard position < tokens.count, CalcUnits.isConnector(tokens[position]),
             let target = CalcQuantity.conversionPrefix(tokens, at: position + 1),
@@ -180,7 +179,6 @@ struct CalcExpressionParser {
             if lhs.category == .temperature, lhs.symbol != rhs.symbol {
                 return fail(String(localized: "Cannot combine temperatures with different units."))
             }
-            // Composite ("5 feet 3 inches") answers in its leading unit; `+`/`-` in the last.
             if implicit {
                 guard let converted = convertedMeasurement(right.amount, from: rhs, to: lhs) else {
                     return nil
@@ -212,7 +210,6 @@ struct CalcExpressionParser {
                 op == .add
                     ? String(localized: "Cannot add Currency and \(rhs.category.displayName).")
                     : String(localized: "Cannot subtract Currency and \(rhs.category.displayName)."))
-        // A bare number takes the unit beside it; adjacency stays silent, being a half-typed unit.
         case (.unit, .scalar), (.currency, .scalar):
             guard !implicit else { return nil }
             return CalcValue(
@@ -558,7 +555,6 @@ struct CalcExpressionParser {
         return converted(value, to: target.name)
     }
 
-    /// A lone unit or currency implies an amount of 1, the way `eur to usd` already does.
     private mutating func parseScopedValue(upTo end: Int) -> CalcValue? {
         if end - position == 1, case .ident(let name) = tokens[position],
             let kind = dimension(named: name)

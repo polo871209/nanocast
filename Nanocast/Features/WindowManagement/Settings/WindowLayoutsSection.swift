@@ -9,7 +9,6 @@ struct WindowLayoutsSection: View {
     @Environment(AppSettings.self) private var settings
     @State private var query = ""
 
-    /// Below this a filter row is noise: a layout library is a handful of rows, not four hundred.
     private static let filterThreshold = 6
 
     var body: some View {

@@ -3,8 +3,6 @@ import SwiftUI
 struct MenuSearchScreen: PaletteScreen {
     let session: MenuSearchSession
     let core: AppCore
-    let vm: PaletteState
-    let openActions: () -> Void
 
     var rows: [MenuSearchItem] { session.filtered }
 

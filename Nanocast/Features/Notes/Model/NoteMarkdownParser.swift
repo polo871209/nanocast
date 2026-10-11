@@ -1,6 +1,5 @@
 import Foundation
 
-/// Parses a note's source into ranged lines: the GFM subset Notes renders, everything else literal.
 enum NoteMarkdownParser {
     static func parse(_ source: String) -> NoteMarkdown {
         parse(units: Array(source.utf16))
@@ -37,7 +36,6 @@ enum NoteMarkdownParser {
         if let open = fence {
             fenceBlocks.append(open.lineIndex...lines.count - 1)
         }
-        // A caret after the final terminator has to land on a line, so the empty row is a real one.
         if lines.last.map({ NSMaxRange($0.contentRange) < NSMaxRange($0.range) }) ?? true {
             let end = NSRange(location: units.count, length: 0)
             lines.append(
@@ -95,7 +93,6 @@ enum NoteMarkdownParser {
                 || (0x5B...0x60).contains(unit) || (0x7B...0x7E).contains(unit)
         }
 
-        /// Surrogates count as not alphanumeric; every delimiter test only needs the ASCII answer.
         static func isAlphanumeric(_ unit: UInt16) -> Bool {
             guard let scalar = Unicode.Scalar(unit) else { return false }
             return scalar.properties.isAlphabetic || scalar.properties.numericType != nil
@@ -107,7 +104,6 @@ enum NoteMarkdownParser {
         }
     }
 
-    /// Matches `NSString.lineRange(for:)`, so a line is exactly one TextKit paragraph.
     private static func lineBounds(_ units: [UInt16], from start: Int) -> (contentEnd: Int, end: Int) {
         var index = start
         while index < units.count {
@@ -124,7 +120,6 @@ enum NoteMarkdownParser {
         return (index, index)
     }
 
-    /// A header row, a delimiter row with as many cells, then every following row with a pipe.
     private static func tabled(_ lines: [NoteMarkdown.Line], units: [UInt16]) -> [NoteMarkdown.Line] {
         var result = lines
         var index = 0
@@ -154,7 +149,6 @@ enum NoteMarkdownParser {
         return result
     }
 
-    /// A row's cells split on unescaped pipes, outer pipes dropped; nil for a line with no pipe.
     private static func tableCells(of line: NoteMarkdown.Line, in units: [UInt16]) -> [ArraySlice<UInt16>]? {
         let content = units[line.contentRange.location..<NSMaxRange(line.contentRange)]
         var row = content.drop(while: Unit.isSpaceOrTab)
@@ -190,7 +184,6 @@ enum NoteMarkdownParser {
         return !dashes.isEmpty && dashes.allSatisfy { $0 == Unit.dash }
     }
 
-    /// Assigns list depth with an indent stack, so two-space, four-space and tab nesting all work.
     private static func leveled(_ lines: [NoteMarkdown.Line], indents: [Int]) -> [NoteMarkdown.Line] {
         var stack: [Int] = []
         return lines.enumerated().map { index, line in
@@ -213,14 +206,11 @@ enum NoteMarkdownParser {
         }
     }
 
-    // MARK: - Blocks
-
     fileprivate struct LineScan {
         let units: [UInt16]
         let start: Int
         let end: Int
 
-        /// Where indentation ends and how many columns it spans, a tab counting as four.
         var indentEnd: Int { indentation.end }
         var indentColumns: Int { indentation.columns }
 
@@ -347,7 +337,6 @@ enum NoteMarkdownParser {
                 level: 0)
         }
 
-        /// The marker end when `index` is followed by one space or tab, or by the end of the line.
         private func separated(after index: Int) -> Int? {
             if index == end { return index }
             return Unit.isSpaceOrTab(units[index]) ? index + 1 : nil

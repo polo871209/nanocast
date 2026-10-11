@@ -1,10 +1,7 @@
 import Foundation
 
-/// Something in settings.json Nanocast could not use, said the way the HUD says it.
 enum SettingsFileIssue: Error, Equatable, Sendable {
-    /// `JSONSerialization`'s own account, which names the line and column.
     case invalidJSON(String)
-    /// The path whose value had to be an object; nil is the file itself.
     case notAnObject(String?)
     case unknownSetting(String)
     case invalidValue(SettingsFileKey)

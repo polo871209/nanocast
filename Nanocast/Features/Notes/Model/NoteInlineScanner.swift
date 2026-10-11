@@ -1,18 +1,14 @@
 import Foundation
 
-/// Finds the inline spans of one line's content; the parser never hands it more than one line.
 struct NoteInlineScanner {
     let units: [UInt16]
 
     private typealias Unit = NoteMarkdownParser.Unit
 
-    /// A bare URL is recognised only when it states its scheme, never from a bare domain.
     static let webPrefixes = ["https://", "http://"]
 
-    /// GFM's trailing punctuation that never belongs to a bare URL.
     private static let autolinkTrailing: Set<UInt16> = Set(".,;:!?*_~".utf16)
 
-    /// Sorted by location, outer spans before inner ones.
     func inlines(in content: Range<Int>) -> [NoteMarkdown.Inline] {
         guard units[content].contains(where: Self.mayStartInline) else { return [] }
         return scan(content, inLabel: false).sorted {
@@ -80,9 +76,6 @@ struct NoteInlineScanner {
         return found + emphasis(in: content, blocked: blocked)
     }
 
-    // MARK: - Code, links, bare URLs
-
-    /// An unclosed backtick run is plain text, and its end is still where scanning resumes.
     private func codeSpan(at start: Int, in content: Range<Int>) -> (inline: NoteMarkdown.Inline?, end: Int) {
         let openEnd = runEnd(of: Unit.backtick, from: start, in: content)
         let length = openEnd - start
@@ -190,8 +183,6 @@ struct NoteInlineScanner {
         units[start..<content.upperBound].firstIndex { $0 != unit } ?? content.upperBound
     }
 
-    // MARK: - Emphasis and strikethrough
-
     private struct DelimiterRun {
         let marker: UInt16
         var start: Int
@@ -199,7 +190,6 @@ struct NoteInlineScanner {
         var length: Int { end - start }
     }
 
-    /// Delimiter runs pair with the nearest open run of the same character, as in CommonMark.
     private func emphasis(in content: Range<Int>, blocked: [Bool]) -> [NoteMarkdown.Inline] {
         var found: [NoteMarkdown.Inline] = []
         var openers: [DelimiterRun] = []

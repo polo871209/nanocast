@@ -1,10 +1,10 @@
 import AppKit
+import SwiftUI
 
 @MainActor
 final class NoteTextView: NSTextView, InjectableTextView {
     var editorUndoManager: UndoManager?
     weak var editing: NoteTextViewEditing?
-    /// True during `mouseDown`'s drag loop; revealing mid-drag would shift text under the pointer.
     private(set) var isDragSelecting = false
 
     /// Tracked here because the window still names this view first responder while it resigns.
@@ -19,7 +19,6 @@ final class NoteTextView: NSTextView, InjectableTextView {
 
     private var rendersMarkdown: Bool { editing?.rendersMarkdown == true }
 
-    /// One undoable replacement that reaches `textDidChange`, so autosave and restyling see it.
     @discardableResult
     func performEdit(_ plan: NoteEditPlan) -> Bool {
         breakUndoCoalescing()
@@ -32,18 +31,6 @@ final class NoteTextView: NSTextView, InjectableTextView {
         return true
     }
 
-    func replaceUnchangedSelection(
-        with text: String, source: String, range: NSRange
-    ) -> Bool {
-        guard isEditable, range.length > 0, string == source, selectedRange() == range else {
-            return false
-        }
-        return performEdit(
-            NoteEditPlan(
-                range: range, replacement: text,
-                selection: NSRange(location: range.location + (text as NSString).length, length: 0)))
-    }
-
     func format(_ action: NoteEditAction) {
         perform(action)
     }
@@ -54,11 +41,9 @@ final class NoteTextView: NSTextView, InjectableTextView {
         performTextFinderAction(item)
     }
 
-    /// The frame never gets shorter than the clip view, so only the layout knows the text's height.
     func textHeight(upTo limit: CGFloat) -> CGFloat {
         guard let textLayoutManager else { return frame.height }
         var height: CGFloat = 0
-        // Summed: until the next draw, the lines below an edit keep their old origins.
         textLayoutManager.enumerateTextLayoutFragments(
             from: textLayoutManager.documentRange.location, options: [.ensuresLayout]
         ) { fragment in
@@ -80,8 +65,6 @@ final class NoteTextView: NSTextView, InjectableTextView {
         ).draw(at: textContainerOrigin)
     }
 
-    // MARK: - Keys
-
     override func insertNewline(_ sender: Any?) {
         guard !perform(.newline) else { return }
         super.insertNewline(sender)
@@ -92,7 +75,6 @@ final class NoteTextView: NSTextView, InjectableTextView {
         super.deleteBackward(sender)
     }
 
-    /// The `[] ` input rule; the plan writes the space itself, so the typed one is dropped.
     override func insertText(_ string: Any, replacementRange: NSRange) {
         let caret = selectedRange()
         if string as? String == " ", caret.length == 0,
@@ -143,7 +125,6 @@ final class NoteTextView: NSTextView, InjectableTextView {
         super.paste(sender)
     }
 
-    /// Pasting a lone URL over selected text makes a link; anything else pastes as plain text.
     func pasteLink(from pasteboard: NSPasteboard) -> Bool {
         guard let string = pasteboard.string(forType: .string) else { return false }
         return perform(.pasteURL(string))
@@ -159,7 +140,6 @@ final class NoteTextView: NSTextView, InjectableTextView {
         return true
     }
 
-    /// The digit key codes, stated here so a local chord needs no Carbon.
     private enum DigitKey {
         static let zero: UInt16 = 0x1D
         static let one: UInt16 = 0x12
@@ -170,7 +150,6 @@ final class NoteTextView: NSTextView, InjectableTextView {
         static let nine: UInt16 = 0x19
     }
 
-    /// Digits match by key code, since shifted and optioned digits vary by keyboard layout.
     private static func chord(for event: NSEvent) -> NoteEditAction? {
         let modifiers = event.modifierFlags.intersection([.command, .shift, .option, .control])
         let key = event.charactersIgnoringModifiers?.lowercased()
@@ -206,8 +185,6 @@ final class NoteTextView: NSTextView, InjectableTextView {
         }
     }
 
-    // MARK: - Mouse
-
     override func mouseDown(with event: NSEvent) {
         guard rendersMarkdown else { return super.mouseDown(with: event) }
         guard !toggleTask(atContainerPoint: containerPoint(for: event)) else { return }
@@ -225,13 +202,11 @@ final class NoteTextView: NSTextView, InjectableTextView {
         NSCursor.arrow.set()
     }
 
-    /// Toggles the task whose drawn box is under the point, leaving the caret where it was.
     func toggleTask(atContainerPoint point: CGPoint) -> Bool {
         guard let lineIndex = checkboxLine(atContainerPoint: point) else { return false }
         return perform(.toggleTask(lineIndex: lineIndex))
     }
 
-    /// The source offset of the link edge a click landed on, when it is within a glyph's outer 30%.
     func linkEdge(ofLinkAt characterIndex: Int, clickedAt point: CGPoint) -> Int? {
         guard let storage = textStorage, characterIndex < storage.length else { return nil }
         var link = NSRange()
@@ -286,8 +261,6 @@ final class NoteTextView: NSTextView, InjectableTextView {
         }
         return frame
     }
-
-    // MARK: - Focus and appearance
 
     override func becomeFirstResponder() -> Bool {
         guard super.becomeFirstResponder() else { return false }

@@ -24,12 +24,9 @@ struct RankingTest {
         func near(_ value: Double, _ expected: Double) -> Bool { abs(value - expected) < 0.001 }
         let day: TimeInterval = 86_400
 
-        // MARK: - The query fold
-
         check("a term trims surrounding whitespace", LauncherRankingStore.normalize(" wha \n") == "wha")
         check("a term folds case", LauncherRankingStore.normalize("WhA") == "wha")
         check("a term folds diacritics", LauncherRankingStore.normalize("Café") == "cafe")
-        // Matching folds width, so learning must too, or an IME's picks land in an unread bucket.
         check("a term folds full-width input", LauncherRankingStore.normalize("ｃａｆｅ") == "cafe")
         check("a term is stored as the ranking reads it", LauncherRankingStore.normalize("微信") == "wei xin")
         check(
@@ -38,8 +35,6 @@ struct RankingTest {
                 && LauncherRankingStore.normalize("I")
                     != "I".folding(options: [.caseInsensitive], locale: Locale(identifier: "tr_TR"))
         )
-
-        // MARK: - Frecency
 
         let safari = "com.apple.Safari"
         check("an unvisited entry reads as never used", usage(safari) == .unused)
@@ -64,8 +59,6 @@ struct RankingTest {
         }
         check("a later anchor stays ahead until both floor", order.allSatisfy { $0 })
 
-        // MARK: - Search terms
-
         let slack = "com.tinyspeck.slackmacgap"
         store.visit(itemKey: slack, query: " Sa ")
         check("a visit keeps its folded term", usage(slack).searchTerms == ["sa"])
@@ -81,8 +74,6 @@ struct RankingTest {
         check("…while the score still does", usage(slack).frecency > 1)
         store.visit(itemKey: slack, query: "sl")
         check("a fresh open brings the terms back", usage(slack).searchTerms == ["sa", "s", "sl"])
-
-        // MARK: - Persistence
 
         await store.flush()
         let reloaded = LauncherRankingStore(fileURL: fileURL) { clock }

@@ -10,7 +10,6 @@ extension Process {
     }
 }
 
-/// Blocks without a run loop, and every wait after the exit returns at once.
 struct ProcessExit: Sendable {
     private let semaphore = DispatchSemaphore(value: 0)
 

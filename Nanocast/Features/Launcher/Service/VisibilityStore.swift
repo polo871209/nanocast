@@ -1,6 +1,5 @@
 import Foundation
 
-/// A category that is off runs nothing, so it gates shortcuts as well as the list.
 @MainActor
 @Observable
 final class VisibilityStore {
@@ -10,7 +9,6 @@ final class VisibilityStore {
 
     private(set) var hiddenItemKeys: Set<String>
     private(set) var disabledKinds: Set<String>
-    /// AppIndex includes this in its result key, invalidating a list when the visible set moves.
     private(set) var revision = 0
 
     init(defaults: UserDefaults = .standard) {
@@ -29,12 +27,10 @@ final class VisibilityStore {
 
     func key(for entry: AppEntry) -> String { entry.preferenceKey }
 
-    /// Whether the entry appears in the launcher: its category and the item itself must be on.
     func isVisible(_ entry: AppEntry) -> Bool {
         isCategoryEnabled(entry) && isItemVisible(entry)
     }
 
-    /// An entry a feature pane owns answers to that feature's switch, so no category gates it.
     private func isCategoryEnabled(_ entry: AppEntry) -> Bool {
         entry.settingsOwner != nil || isKindEnabled(entry.kind)
     }
@@ -74,15 +70,14 @@ final class VisibilityStore {
         defaults.set(Array(disabledKinds), forKey: kindsKey)
     }
 
-    /// A feature carrying its own switch is not this store's to gate.
     func allowsHotKey(_ action: HotKeyAction) -> Bool {
         switch action {
         case .app: isKindEnabled(.application)
         case .settingsPane: isKindEnabled(.systemSettings)
         case .systemAction: isKindEnabled(.systemAction)
         case .command(let id): id.owner == nil ? isKindEnabled(.command) : true
-        case .togglePalette, .dictation, .quickAction, .customCommand, .windowCommand, .customWindowSize,
-            .windowLayout, .windowRoom, .quicklink, .appleShortcut, .snippet, .extensionCommand:
+        case .togglePalette, .dictation, .customCommand, .windowCommand, .customWindowSize,
+            .windowLayout, .windowRoom:
             true
         }
     }

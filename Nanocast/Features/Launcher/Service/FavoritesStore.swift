@@ -1,6 +1,5 @@
 import Foundation
 
-/// Favorite apps as an ordered key list, pinned to the top while the search is empty.
 @MainActor
 @Observable
 final class FavoritesStore {
@@ -8,7 +7,6 @@ final class FavoritesStore {
     private let key = "favoriteApps"
 
     private(set) var keys: [String]
-    /// AppIndex includes this in its result key, invalidating a list when the pinning changes.
     private(set) var revision = 0
 
     init() {
@@ -42,7 +40,6 @@ final class FavoritesStore {
         commit()
     }
 
-    /// The pair comes from the visible order, so hidden entries keep their slots.
     func exchange(_ first: String, with second: String) {
         guard let a = keys.firstIndex(of: first), let b = keys.firstIndex(of: second), a != b else {
             return
@@ -56,7 +53,6 @@ final class FavoritesStore {
         defaults.set(keys, forKey: key)
     }
 
-    /// Split `apps` into favorites (in stored order) and the rest (order preserved).
     func ordered(_ apps: [AppEntry]) -> (favorites: [AppEntry], rest: [AppEntry]) {
         guard !keys.isEmpty else { return ([], apps) }
         let byKey = Dictionary(

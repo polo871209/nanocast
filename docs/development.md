@@ -5,8 +5,8 @@ verifying a change is [testing.md](testing.md).
 
 ## Requirements
 
-- macOS 26 or later (Liquid Glass).
-- Xcode 26 — it provides the SwiftUI macro plugin and the SDK.
+- macOS 27 or later, on Apple silicon.
+- Xcode 27 — it provides the SwiftUI macro plugin and the macOS 27 SDK.
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen), and for linting:
   `brew install swiftlint`.
 - Node, for the generators and the local test stub servers `run-tests.sh` drives. It is the only
@@ -41,9 +41,10 @@ Xcode, prefix with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (t
 project settings in `project.yml`, run `xcodegen generate` and commit the result. There is no
 `Package.swift`, and `Bundle.module` must never be used.
 
-The app target builds and embeds `ClipboardTextHelper` under `Contents/Helpers`, signing it on copy.
-Build the app scheme to include it; copying only the main executable omits OCR support. The helper's
-executable name stays fixed even when release builds override the app's product name for a channel.
+The app target builds and embeds `ClipboardTextHelper` and `FileIndexHelper` under `Contents/Helpers`,
+signing each on copy. Build the app scheme to include them; copying only the main executable omits OCR
+support and file indexing. Each helper's executable name is pinned in `project.yml`, so it never follows
+the app's product name.
 
 Dictation similarly embeds its Swift/Core ML helper, named `Nanocast Dev Dictation` in Debug and
 `Nanocast Dictation` in Release, in an accessory `.app` bundle without a bundled icon. Model weights
@@ -53,9 +54,9 @@ download on demand; none are app resources.
 
 Debug builds are a separate channel: **`Nanocast Dev.app`**, bundle id `com.nanocast.app.dev`. Every
 persisted thing is keyed by bundle id — `~/Library/Preferences/<id>.plist` (settings and hotkey
-bindings), `~/Library/Application Support/<id>/` (the onboarding marker, Notes, snippets, quicklinks,
-clipboard history, calculator history, launch ranking and frequent emoji; Notes and snippets unless
-a folder is chosen),
+bindings), `~/Library/Application Support/<id>/` (the onboarding marker, Notes,
+clipboard history, calculator history, launch ranking and frequent emoji; Notes unless a folder is
+chosen),
 `~/Library/Caches/<id>/` (exchange rates, the update check, staged downloads), the opt-in
 `~/.config/nanocast-dev/settings.json` (`nanocast` on stable), the `SMAppService`
 login item, and the Accessibility / Input Monitoring (TCC) grants — so a local build can neither read
@@ -100,15 +101,15 @@ renamed files keep resolving.
 `.compile` entirely — it serves flags from a cache it scrapes out of `.xcactivitylog` instead. That
 cache is only refreshed when `LogStoreManifest.plist` advances, and when the manifest stops updating
 (it does) the editor silently pins itself to the source list from some older build: every reference to a
-file added since reads *cannot find type X in scope*, in every file, until you restart the server. It
+file added since reads _cannot find type X in scope_, in every file, until you restart the server. It
 also mixes Release entries in with Debug and lets them win. `Scripts/sync-lsp.sh` keeps the mode
 `manual`, where `.compile` is the single source of truth.
 
 ### Symbols in `Tests/`
 
 `xcodebuild` never compiles the harnesses — they are not in the Xcode project — so nothing emits a
-compile command for them, and without one an open harness reports every shipped type it uses as *cannot
-find in scope*. Measured on `fuzz-test.swift`: 60 errors with no entry, 0 with one.
+compile command for them, and without one an open harness reports every shipped type it uses as _cannot
+find in scope_. Measured on `fuzz-test.swift`: 60 errors with no entry, 0 with one.
 
 ```sh
 ./Scripts/run-tests.sh --index    # merge the harness compile commands into .compile
@@ -132,13 +133,23 @@ already-running server does not re-read `.compile`.
 ## Linting
 
 ```sh
-./Scripts/lint.sh          # lint the whole project
-./Scripts/lint.sh --fix    # auto-correct the mechanical subset first
+./Scripts/lint.sh          # lint and check formatting for the whole project
+./Scripts/lint.sh --fix    # auto-correct the mechanical subset and format, then lint
 ```
 
-[SwiftLint](https://github.com/realm/SwiftLint) is the only code-quality tool here. `.swiftlint.yml` at
-the repo root excludes the generated files and the two off-limits files in `DesignSystem/Scrolling/`.
-The comment policy in [standards.md](standards.md#comments) is deliberately not among its rules.
+`lint.sh` runs three checks, and any failure blocks:
+
+1. `swiftlint lint --strict`, so every [SwiftLint](https://github.com/realm/SwiftLint) violation is an error and no warning can pile up.
+2. `./Scripts/format.sh --check`.
+3. `node Scripts/check-settings-search.js`.
+
+`.swiftlint.yml` excludes every `*.generated.swift` file and the two off-limits files in `DesignSystem/Scrolling/`. Its rules catch defects and leave layout to swift-format. The comment policy in [standards.md](standards.md#comments) is not among its rules. Three rule decisions are easy to undo by mistake:
+
+- `empty_count` is disabled. `LauncherRankingRecord` and `PaletteRowIndex` have a `count` that is a hit count, not a collection count, so its `count == 0` to `isEmpty` rewrite does not compile on them.
+- `optional_data_string_conversion` is disabled. Every `String(decoding:as:)` call site wants invalid UTF-8 repaired, and the suggested `String(bytes:encoding:)` returns nil instead.
+- `force_try` is an error. An AX value is narrowed with `unsafeDowncast(_:to:)` after a `CFGetTypeID` check, because `as?` to a CF type does not compile and `as!` fails `force_cast`.
+
+No CI runs this script, so run it locally before a change lands.
 
 `lint.sh` also runs `check-localizations.js`, which fails on a string missing from any language, a
 missing plural form, a stale entry, or a translation whose format specifiers differ from the source.
@@ -164,31 +175,13 @@ To see a language without changing the setting, launch the Debug build with
 ./Scripts/format.sh --check    # report what would change, write nothing (exit 1 if any)
 ```
 
-`swift-format` from the Xcode toolchain — the same binary sourcekit-lsp formats with, so ⌘S in VS Code
-and this script cannot disagree. `.swift-format` at the repo root tunes it to this tree; without it the
-stock config defaults to 2-space indent and rewrites all 200 files.
+`swift-format` from the Xcode toolchain is the formatter. It is the same binary sourcekit-lsp formats with, so ⌘S in VS Code and this script cannot disagree. `.swift-format` at the repo root tunes it to this tree. Its `lineLength` of 130 matches SwiftLint's `line_length`, so code the formatter accepts never fails lint. Without the file, the stock configuration uses 2-space indent and rewrites every file.
 
 Every `*.generated.swift` file is excluded: formatting one is hand-editing it, and the next
 `node Scripts/gen-emoji.js` would revert it. swift-format also refuses any file that does not parse, so
 a failure from either command is a syntax error rather than a tooling problem — and it is why ⌘S looks
 like it does nothing while a file is mid-edit with unbalanced braces.
 The two protected scrolling primitives, `EdgeDissolve.swift` and `ThinScrollbar.swift`, are also excluded.
-
-**Think twice before leaning on this.** A formatter was rejected here on measured evidence, and that
-stands: running it over the tree touched 68 files, and 67 of those changed more than whitespace.
-
-The config sticks to rules that catch defects and stays quiet about style, because **there is no
-formatter**, on measured evidence. Formatting is
-Xcode's re-indent (⌃I), as it always has been. Two consequences worth knowing:
-
-- `empty_count` is **disabled**, and `isEmpty`-style rewrites are unsafe here generally:
-  `LauncherRankingRecord` and `PaletteRowIndex` have a `count` that is a hit count, not a collection
-  count. A rule that rewrites `count > 0` to `!isEmpty` on them does not compile.
-- `force_try` is an error; `force_cast` only warns, because the AX and AppKit bridges have four
-  legitimate ones.
-
-Errors block, warnings do not. No CI runs this script; CodeRabbit runs SwiftLint on each PR but not
-the settings-search check, so run it locally before you open one.
 
 ## Generated data
 
@@ -222,3 +215,21 @@ left out and decided by hand in `CalcCurrency.contested`. The crypto tickers are
 they have no external source of truth, so `CalcCurrency.crypto` is hand-written, and that same list is
 the set of symbols the fetch asks for. Re-run the script when a currency is added or retired; nothing
 breaks in the meantime, since an unquoted code just reports "no exchange rate".
+
+## Sync with upstream Tinycast
+
+`main` is an untouched copy of upstream Tinycast. Your work lives on `polo`, on top of a snapshot commit named `Rename upstream <sha> to Nanocast`. That commit is `main` after `Scripts/rename-upstream.sh` renamed every Tinycast name, path and bundle id to Nanocast.
+
+To take new upstream changes:
+
+1. Sync `main` with upstream, for example with **Sync fork** on GitHub. Never commit to `main`.
+2. Run `./Scripts/sync-upstream.sh` on `polo`. It renames the new `main` into a fresh snapshot and rebases your commits from the old snapshot onto it.
+3. Run `./Scripts/run-tests.sh`, then `git push --force-with-lease`.
+
+To have an agent run the sync, resolve the conflicts and drop upstream changes to removed features, run `/skill:syncing-upstream`. It stops before the push so you can review.
+
+The rename runs on both sides, so only real upstream changes can conflict. The script turns on `git rerere`, so a conflict you resolved once resolves itself next time. If `Nanocast.xcodeproj` conflicts, regenerate it with `xcodegen generate` and do not resolve it by hand.
+
+If a rebase step stops on conflicts, run `./Scripts/port-upstream.sh <sha>...` with the upstream commits you keep. It deletes the paths your commits deleted, takes your version of every other conflicted file, and merges each kept commit's renamed change into it. It stages every file that merged cleanly and prints the files that still hold conflict markers.
+
+Links to `abue-ammar/tinycast` keep pointing upstream. Fork identity lives in `.github/workflows/release.yml`, `Scripts/release-notes.sh`, `ReleaseFeed.repository`, the About window links, `README.md`, `LICENSE` and `NOTICE.md`.

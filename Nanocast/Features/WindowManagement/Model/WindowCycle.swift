@@ -1,10 +1,8 @@
 import Foundation
 
-/// What a repeat press of a half does. docs/features/window-management.md#cycling-and-restore
 enum WindowCycle: String, CaseIterable, Identifiable, Sendable {
     case off
     case sizes
-    /// Walk the half one slot along the strip of half-slots every display contributes.
     case displays
 
     var id: String { rawValue }

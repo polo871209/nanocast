@@ -17,7 +17,6 @@ struct UpdateInstaller: Sendable {
             }
         }
 
-        /// Only the download knows how far along it is; the rest are short, opaque steps.
         var fraction: Double? {
             guard case .downloading(let received, let expected) = self, expected > 0 else {
                 return nil
@@ -73,7 +72,6 @@ struct UpdateInstaller: Sendable {
         guard result.succeeded else { throw UpdateFailure.extractFailed(result.tail) }
         let contents = try? FileManager.default.contentsOfDirectory(
             at: directory, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
-        // Named for its channel — "Nanocast Beta.app", not "Nanocast.app".
         guard let app = contents?.first(where: { $0.pathExtension == "app" }) else {
             throw UpdateFailure.noAppInArchive
         }
@@ -82,7 +80,6 @@ struct UpdateInstaller: Sendable {
 
     private func verify(_ staged: URL, is release: AvailableRelease) throws {
         if Quarantine.isSet(on: staged) { Quarantine.clear(from: staged) }
-        // Refuse rather than install something the user would then have to unquarantine by hand.
         guard !Quarantine.isSet(on: staged) else { throw UpdateFailure.quarantined }
 
         let info = Self.info(at: staged)

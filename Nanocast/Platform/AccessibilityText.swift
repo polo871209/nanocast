@@ -2,12 +2,9 @@ import AppKit
 // `@preconcurrency` downgrades AX diagnostics: the attribute keys are constant C globals.
 @preconcurrency import ApplicationServices
 
-/// Always against a named process: the system-wide focus answers with ours.
 enum AccessibilityText {
-    /// Generous for a responsive app, short enough that a wedged one can't stall the main actor.
     private static let timeout: Float = 1
 
-    /// The two have different fixes; collapsing them tells a reader to select what they selected.
     enum Selection: Equatable {
         case text(String)
         case noFocusedElement
@@ -16,7 +13,6 @@ enum AccessibilityText {
 
     static func focusedElement(in app: NSRunningApplication) -> AXUIElement? {
         let application = AXUIElementCreateApplication(app.processIdentifier)
-        // Per element and never inherited, so the focused element needs its own against a hang.
         AXUIElementSetMessagingTimeout(application, timeout)
         activateManualAccessibility(of: application)
         var focusedValue: CFTypeRef?
@@ -29,7 +25,7 @@ enum AccessibilityText {
             CFGetTypeID(focusedValue) == AXUIElementGetTypeID()
         else { return nil }
 
-        let element = focusedValue as! AXUIElement
+        let element = unsafeDowncast(focusedValue, to: AXUIElement.self)
         AXUIElementSetMessagingTimeout(element, timeout)
         return element
     }
@@ -46,7 +42,6 @@ enum AccessibilityText {
         return .text(web)
     }
 
-    /// A narrower question, for callers that can act on the text but not on why there is none.
     static func selection(in app: NSRunningApplication) -> String? {
         guard case .text(let text) = read(in: app) else { return nil }
         return text

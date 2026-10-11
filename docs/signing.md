@@ -66,8 +66,8 @@ Then set the two secrets on the repo (via `gh`, authed as the repo owner, or pas
 UI under **Settings → Secrets and variables → Actions**):
 
 ```sh
-gh secret set SIGNING_P12_BASE64   --repo abue-ammar/tinycast < /tmp/signing.p12.base64
-gh secret set SIGNING_P12_PASSWORD --repo abue-ammar/tinycast --body "$P12_PASSWORD"
+gh secret set SIGNING_P12_BASE64   --repo polo871209/nanocast < /tmp/signing.p12.base64
+gh secret set SIGNING_P12_PASSWORD --repo polo871209/nanocast --body "$P12_PASSWORD"
 rm -f /tmp/signing.p12.base64   # holds your private key — delete it
 ```
 
@@ -86,10 +86,8 @@ Accessibility grant. Each entitlement in `Nanocast/Nanocast.entitlements` earns 
 
 | Entitlement | Without it |
 | --- | --- |
-| `com.apple.security.cs.allow-jit` | JavaScriptCore cannot JIT, and every extension command runs on the interpreter |
-| `com.apple.security.automation.apple-events` | Every Apple event is refused with `-1743` and no prompt — Get Info, the Finder selection an extension reads, and the System Events–driven system actions all die silently |
+| `com.apple.security.automation.apple-events` | Every Apple event is refused with `-1743` and no prompt — Get Info and the System Events–driven system actions all die silently |
 | `com.apple.security.device.camera` | The camera prompt never appears and access resolves as denied |
-| `com.apple.security.personal-information.calendars` | `requestFullAccessToEvents()` returns `false` in milliseconds with no dialog, and Nanocast never appears under System Settings › Calendars |
 
 **A usage string is not enough under the hardened runtime.** `tccd` checks the matching entitlement
 *before* it prompts, and without it logs "requires entitlement … but it is missing" and denies on the
@@ -108,7 +106,7 @@ on, and `node`, `ray` and shell commands are separate processes it never reaches
 hardened-runtime entitlement.
 
 `./Scripts/verify-signature.sh <path-to-.app>` asserts all of this — the runtime flag on the app *and*
-on `Contents/Helpers/ClipboardTextHelper`, an intact nested seal, no `get-task-allow`, and an
+on `Contents/Helpers/ClipboardTextHelper` and `FileIndexHelper`, an intact nested seal, no `get-task-allow`, and an
 entitlement for every usage string `Info.plist` declares. Both release jobs run it before packaging:
 a nested binary missing the runtime flag is the most common notarization rejection, and a usage string
 missing its entitlement ships a permission that can never be granted.
@@ -138,5 +136,5 @@ build that a copy predating the migration could still install.
 
 macOS quarantines anything downloaded from the internet, and Gatekeeper blocks even a correctly
 self-signed app with an "unverified developer" warning. The Homebrew cask runs
-`xattr -dr com.apple.quarantine` in `postflight`, so **brew users never touch it**. People who
+`xattr -dr com.apple.quarantine` in `postflight_steps`, so **brew users never touch it**. People who
 download the DMG directly clear it once by hand.

@@ -19,7 +19,6 @@ struct WindowCommand {
 enum WindowCommandCatalog {
     static func command(id: WindowCommand.ID) -> WindowCommand? { WindowCommand(name: id.rawValue) }
 }
-enum StoredSnippet { typealias ID = String }
 @MainActor
 enum AppLauncher {
     static func toggle(bundleID: String) {}

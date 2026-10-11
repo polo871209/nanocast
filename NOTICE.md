@@ -1,5 +1,8 @@
 # Third-party notices
 
+Nanocast is a modified version of [Tinycast](https://github.com/abue-ammar/tinycast), Copyright (C) 2026
+Abue Ammar, under the same licence.
+
 Nanocast is licensed under the GNU Affero General Public License v3 — see [LICENSE](LICENSE). It
 also redistributes the third-party material recorded below, under the terms stated for each.
 

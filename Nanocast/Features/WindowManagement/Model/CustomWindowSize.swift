@@ -10,7 +10,6 @@ struct CustomWindowSize: Codable, Hashable, Identifiable, Sendable {
             case points
             case percent
 
-            /// Wider than any display for points, so a real size is never clipped at authoring.
             var range: ClosedRange<Int> {
                 switch self {
                 case .points: return 1...16_000
@@ -38,7 +37,6 @@ struct CustomWindowSize: Codable, Hashable, Identifiable, Sendable {
             unit == .points ? "\(value) pt" : "\(value)%"
         }
 
-        /// The length this asks for inside `available`, never zero and never past it.
         func length(in available: CGFloat) -> CGFloat {
             let requested =
                 unit == .points ? CGFloat(value) : available * CGFloat(value) / 100
@@ -53,7 +51,6 @@ struct CustomWindowSize: Codable, Hashable, Identifiable, Sendable {
         }
     }
 
-    /// Points, applied on top of the anchor; +Y is down, as everywhere in AX space.
     struct Offset: Codable, Hashable, Sendable {
         static let range: ClosedRange<Int> = -4000...4000
         static let zero = Offset(x: 0, y: 0)
@@ -87,7 +84,6 @@ struct CustomWindowSize: Codable, Hashable, Identifiable, Sendable {
         self.offset = offset
     }
 
-    // Hand-written, so an added field keeps stored sizes and older backups readable.
     private enum CodingKeys: String, CodingKey {
         case id, name, width, height, anchor, offset
     }
@@ -120,7 +116,6 @@ struct CustomWindowSize: Codable, Hashable, Identifiable, Sendable {
         return lhs.id.uuidString < rhs.id.uuidString
     }
 
-    /// Trimmed and clamped rather than rejected, so a bad import keeps the record.
     var sanitized: CustomWindowSize {
         var cleaned = self
         cleaned.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -130,22 +125,17 @@ struct CustomWindowSize: Codable, Hashable, Identifiable, Sendable {
         return cleaned
     }
 
-    // MARK: - Geometry
-
-    /// The frame this size asks for on a display, in AX space; nil when the display has no room.
     func frame(in visibleFrame: CGRect, gap: CGFloat) -> CGRect? {
         let canvas = WindowPlacementEngine.canvas(
             visibleFrame, gap: WindowPlacementEngine.sanitizedGap(gap, in: visibleFrame))
         guard canvas.width > 0, canvas.height > 0 else { return nil }
         let size = CGSize(
             width: width.length(in: canvas.width), height: height.length(in: canvas.height))
-        // Offset before the clamp: the nudge is the user's intent, the clamp only a safety net.
         let placed = anchor.placement.place(size, in: canvas)
             .offsetBy(dx: CGFloat(offset.x), dy: CGFloat(offset.y))
         return WindowPlacementEngine.rounded(WindowPlacementEngine.clamped(placed, into: canvas))
     }
 
-    /// Where this size puts a window, on the display the window is already on.
     func placement(
         for windowFrame: CGRect, screens: [WindowPlacementEngine.Screen], gap: CGFloat
     ) -> WindowPlacementEngine.Placement? {
@@ -172,7 +162,6 @@ enum CustomWindowSizeValidationError: LocalizedError, Equatable {
 }
 
 extension Int {
-    /// Saturating, so a typed or imported number is corrected rather than rejected.
     fileprivate func clamped(to range: ClosedRange<Int>) -> Int {
         Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
     }

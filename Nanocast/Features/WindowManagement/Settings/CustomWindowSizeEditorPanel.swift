@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-/// Identifies the editor to present; nil is "new", and the UUID keeps two opens distinct.
 struct CustomWindowSizeEditRequest: Identifiable {
     let id = UUID()
     var size: CustomWindowSize?
@@ -9,7 +8,6 @@ struct CustomWindowSizeEditRequest: Identifiable {
 
 struct CustomWindowSizeEditorPanel: View {
     private let isNew: Bool
-    /// What a unit switch converts against; a run measures the window's own display.
     private let reference: CGSize
 
     @Environment(\.settingsEditorDismiss) private var dismiss

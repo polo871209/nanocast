@@ -1,7 +1,6 @@
 // Adapted from Rooms (MIT): https://github.com/saragordic/rooms/blob/main/LICENSE
 import SwiftUI
 
-/// Switch Room: rooms ranked by the search field, the selected one previewed; ⇥ tries a layout.
 struct RoomsScreen: PaletteScreen {
     let coordinator: RoomCoordinator
     let session: RoomSession
@@ -40,7 +39,6 @@ struct RoomsScreen: PaletteScreen {
 
     func secondary(at selection: Int) -> Bool { false }
 
-    /// The screen owns ⇥ outright: on a room it changes the layout, elsewhere it does nothing.
     func tab(at selection: Int, backwards: Bool) -> Bool {
         if let room = room(at: selection) { coordinator.cycleLayout(of: room, backwards: backwards) }
         return true
@@ -107,7 +105,6 @@ struct RoomsScreen: PaletteScreen {
         }
         return AnyView(
             content(rows: rows, selectedID: selected?.id, scroll: scroll)
-                // The room's value carries its layout, so Tab's change glides the preview too.
                 .onChange(of: PreviewKey(room: previewed, revision: session.revision), initial: true) {
                     coordinator.preview(previewed)
                 })

@@ -1,6 +1,5 @@
 import Foundation
 
-/// Enumerates the System Settings panes into launchable entries, off the main actor.
 enum SettingsPaneScanner {
     private static let extensionsDir = URL(
         fileURLWithPath: "/System/Library/ExtensionKit/Extensions")
@@ -18,17 +17,14 @@ enum SettingsPaneScanner {
         "com.apple.HeadphoneSettings": .symbol("headphones")
     ]
 
-    /// Panes that shouldn't appear in the launcher at all (contextual/one-shot panes).
     private static let skippedBundleIDs: Set<String> = []
 
-    /// Panes change only on an OS update, and an unreadable listing or date is never cached.
     struct Cache: Sendable {
         fileprivate let modified: Date
         fileprivate let languages: [String]
         fileprivate let panes: [AppEntry]
     }
 
-    /// All Settings panes, sorted by display name.
     nonisolated static func scan(languages: [String], cache: Cache?) -> ([AppEntry], Cache?) {
         let fm = FileManager.default
         let modified = try? extensionsDir.resourceValues(forKeys: [.contentModificationDateKey])
@@ -60,7 +56,6 @@ enum SettingsPaneScanner {
                 AppEntry(
                     id: url.path, name: names.first ?? base, url: url,
                     bundleID: bundleID, kind: .systemSettings,
-                    // `EntryNaming` drops whatever repeats the name, so the whole list can go in.
                     alternateTitles: names, iconOverride: iconOverrides[bundleID]))
         }
         let panes = result.sorted {

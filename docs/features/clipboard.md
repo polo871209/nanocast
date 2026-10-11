@@ -28,8 +28,7 @@
 - **`Model/ClipboardStore.swift` keeps to Foundation plus SQLite3 and no other app source**, so
   `clipboard-test` can compile it standalone. It uses `isolated deinit` for its SQLite teardown.
 - A database that cannot be opened is deleted and recreated. That is sound because a history is
-  captured rather than authored, and there is no UI for an unavailable clipboard — `QuicklinkStore`
-  deliberately does the opposite. It is **not** a licence to treat the file as disposable: it lives in
+  captured rather than authored, and there is no UI for an unavailable clipboard. It is **not** a licence to treat the file as disposable: it lives in
   Application Support precisely because nothing else can put it back.
 - **A link or an address is derived from the text, never persisted.** `ClipboardItem.Kind` holds
   only what capture can tell apart on the pasteboard — `text`, `image`, `file` — so improving the
@@ -80,11 +79,6 @@ the cap, and even a rejected modern file URL suppresses the legacy filenames fal
 `ClipboardManager` runs a 0.5s `Timer` watching `NSPasteboard.general.changeCount`. To avoid
 re-capturing Nanocast's own writes, every write stamps a private `internalType` marker on the
 pasteboard and the poller skips anything carrying it.
-
-A ⌘C Nanocast sends to read a selection can't carry that marker, since the other app writes it.
-`pauseCapture()` and `resumeCapture()` bracket that borrow instead: the poller skips every tick in
-between, and the restore's baseline keeps the copy from being recorded once it resumes.
-`TextInjector` refuses a second borrow while one is in flight, so the pause is never nested.
 
 `stop()` is the off switch: it drops the timer and the fast-user-switching observers, and clears the
 `isCapturing` flag that `prepareForNanocastPasteboardMutation` reads — so a paste Nanocast performs
@@ -321,8 +315,7 @@ with a card the way the calculator does.
 `ColorValue` (`Model/`, Foundation-only) is that parser. It takes the CSS spellings people copy —
 the four hex lengths, plus `rgb()`/`hsl()`/`oklch()` and their alpha forms in both the comma and
 CSS4 space-and-slash syntax — and stores **sRGB components**, so every notation derives from one
-source rather than a second parser that can drift from it. An extension's tints and grid swatches
-read the same parser, which is how a colour picker's `oklch()` swatch draws as its colour.
+source rather than a second parser that can drift from it.
 
 **A colour is rejected rather than approximated**, because a wrong swatch filed under Colors Only
 is worse than none. An HSL channel must carry its `%`, or `hsl(120, 100, 50)` clamps to white.
@@ -352,7 +345,7 @@ entry's ⌘K stays the actions it always was, since converting a colour is not s
 for while browsing what you copied. **There is no submenu** either, the palette's menu being one
 level deep, so each row states its value through `PopoverMenuItem.detail`, never `shortcut`, which
 renders one keycap per character. The rows carry `PopoverMenuIcon.blank`, a run of rows under one
-repeated eyedropper saying nothing, and the menu keeps the standard `menuWidth`: every notation
+repeated eyedropper saying nothing, and the menu keeps the standard `actionMenuWidth`: every notation
 fits it, and a menu that widened for its content would jump as rows changed.
 
 `ColorSwatch` is the one place a colour is drawn — row thumbnail, preview and card alike — over a
@@ -470,13 +463,12 @@ Carrying file bytes would make a backup unbounded and defeat the point of refere
 
 Every row is a drag source, so reaching another app costs one gesture instead of Reveal in Finder and
 a second drag. The press and the session are `onRowClick`'s `drag:` in
-`DesignSystem/Interaction/RowClick.swift`, shared with [File Search](file-search.md#dragging-out) and
-the launcher's [application rows](launcher.md#dragging-an-application-out); `ClipDrag.swift` is only
+`DesignSystem/Interaction/RowClick.swift`, shared with [File Search](file-search.md#dragging-out) and the launcher's [application rows](launcher.md#dragging-an-application-out); `ClipDrag.swift` is only
 what a clip hands over. `ClipboardItem.dragPayload` says in what flavour: the file URL
 for an image or a referenced file, a URL and its text for a link, plain text for the rest. It is
 derived and never persisted, like `textForm` beside it, and `textForm` stays the one answer to
 whether an entry is a link, so the drag and the type filter cannot disagree.
-`QuicklinkDestination.detect` builds the URL rather than a second parser.
+`LinkDestination.detect` builds the URL rather than a second parser.
 
 **Copy, always. That is why the drag is AppKit and not `onDrag`.** `imagesDir` lives in Application
 Support, on the boot volume, which is the same volume as almost every drop target. A file-URL drag

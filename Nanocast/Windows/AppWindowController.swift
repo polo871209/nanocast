@@ -9,7 +9,6 @@ private final class AppWindow: NSWindow {
     }
 }
 
-/// Built on first show, torn down on close so its SwiftUI tree deallocates. Never quits the app.
 @MainActor
 final class AppWindowController: NSObject, NSWindowDelegate {
     private let title: String
@@ -20,10 +19,8 @@ final class AppWindowController: NSObject, NSWindowDelegate {
     private let activation: ActivationPolicy
     private let closesOnEscape: Bool
     private var window: NSWindow?
-    /// Rebuilt with the window, so a chrome's state never outlives the window it decorated.
     private var chrome: WindowChrome?
 
-    /// The opening size is also the resize floor unless a smaller `minimumSize` is named.
     init(
         title: String, contentSize: CGSize, minimumSize: CGSize? = nil, resizable: Bool = false,
         autosaveName: String? = nil, activation: ActivationPolicy, closesOnEscape: Bool = false
@@ -37,7 +34,6 @@ final class AppWindowController: NSObject, NSWindowDelegate {
         self.closesOnEscape = closesOnEscape
     }
 
-    /// Returns `true` when a window was built, `false` when an already-open one was re-raised.
     @discardableResult
     func show<Content: View>(
         chrome: WindowChrome? = nil, @ViewBuilder content: () -> Content
@@ -45,13 +41,11 @@ final class AppWindowController: NSObject, NSWindowDelegate {
         let root = content()
         return show(chrome: chrome) {
             let hosting = NSHostingController(rootView: root)
-            // Keep the window's size authoritative: an unconstrained fill would drive the frame.
             hosting.sizingOptions = []
             return hosting
         }
     }
 
-    /// A prebuilt controller; Settings needs one to bridge its SwiftUI toolbar into the window.
     @discardableResult
     func show(chrome: WindowChrome? = nil, contentViewController: () -> NSViewController) -> Bool {
         if let window {
@@ -66,7 +60,6 @@ final class AppWindowController: NSObject, NSWindowDelegate {
         return true
     }
 
-    /// Re-raise an open window without rebuilding it; `false` when none is open.
     @discardableResult
     func focus() -> Bool {
         guard let window else { return false }
@@ -92,16 +85,12 @@ final class AppWindowController: NSObject, NSWindowDelegate {
         window.setFrame(frame, display: true, animate: false)
     }
 
-    // MARK: - NSWindowDelegate
-
     func windowWillClose(_ notification: Notification) {
         guard let window else { return }
         self.window = nil
         self.chrome = nil
         activation.windowDidClose(window)
     }
-
-    // MARK: - Private
 
     private func makeWindow(content: NSViewController, chrome: WindowChrome?) -> NSWindow {
         var style: NSWindow.StyleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
@@ -114,7 +103,6 @@ final class AppWindowController: NSObject, NSWindowDelegate {
         )
         window.title = title
         window.closesOnEscape = closesOnEscape
-        // Edge-to-edge under a transparent titlebar, so it reads as one surface.
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
         window.isMovableByWindowBackground = true

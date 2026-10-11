@@ -1,9 +1,7 @@
 import Darwin
 import Foundation
 
-/// gitignore-flavoured: a bare pattern matches a name anywhere, one with `/` the whole path.
 struct FileSearchIgnoreList: Sendable, Equatable {
-    /// Compiled in, not stored, so changing the shipped rules reaches existing installs.
     static let defaults = [
         "node_modules", ".git", ".build", "build", "dist", "target", "DerivedData", "Pods", ".next",
         ".venv", "*.photoslibrary", "~/.Trash", "~/.cache", "~/.npm", "~/Library/Application Support",
@@ -11,7 +9,6 @@ struct FileSearchIgnoreList: Sendable, Equatable {
         "~/Library/Mail", "/Library/Caches", "/private/var/folders"
     ]
 
-    /// A shipped rule is governed by `removedDefaults` alone, even when `added` repeats it.
     static func patterns(added: [String], removedDefaults: [String]) -> [String] {
         var seen = Set(defaults)
         return defaults.filter { !removedDefaults.contains($0) } + added.filter { seen.insert($0).inserted }
@@ -28,7 +25,6 @@ struct FileSearchIgnoreList: Sendable, Equatable {
         let home = homeDirectory.path
         for pattern in patterns {
             let trimmed = pattern.trimmingCharacters(in: .whitespaces)
-            // An interior NUL would silently truncate the pattern once it reaches `fnmatch`.
             guard !trimmed.isEmpty, !trimmed.contains("\0") else { continue }
             if trimmed.hasPrefix("~/") {
                 pathGlobs.append(Glob(home + trimmed.dropFirst()))
@@ -60,7 +56,6 @@ struct FileSearchIgnoreList: Sendable, Equatable {
     }
 }
 
-/// One compiled pattern; `fnmatch` runs without `FNM_PATHNAME`, so `*` spans `/`.
 private struct Glob: Sendable, Equatable {
     private let terminated: ContiguousArray<CChar>
     private let literalPathName: ContiguousArray<CChar>?

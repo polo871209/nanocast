@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// The numbered display tabs: they scope the canvas and target a newly added entry.
 struct WindowLayoutDisplayTabs: View {
     let draft: WindowLayoutDraft
     let displays: [WindowLayoutDisplay]
@@ -36,12 +35,10 @@ struct WindowLayoutDisplayTabs: View {
     }
 }
 
-/// The 3×3 anchor control: nine cells, each drawing the corner of a screen its window would take.
 struct WindowLayoutPositionGrid: View {
     let selection: WindowLayoutAnchor
     let onSelect: (WindowLayoutAnchor) -> Void
 
-    /// Reading order, three by three, so the grid cannot disagree with the enum.
     private static let rows: [[WindowLayoutAnchor]] = [
         [.topLeft, .top, .topRight], [.left, .center, .right],
         [.bottomLeft, .bottom, .bottomRight]
@@ -91,7 +88,6 @@ struct WindowLayoutPositionGrid: View {
             }
             .frame(width: glyph.width, height: glyph.height)
             .foregroundStyle(isSelected ? Theme.Colors.textPrimary : Theme.Colors.textTertiary)
-            // The glyph floats in a wider seat, so a click anywhere in the cell lands on it.
             .frame(maxWidth: .infinity, minHeight: Theme.Size.layoutPositionCell)
             .background(seat.fill(isSelected ? Theme.Colors.selection : Color.clear))
             .contentShape(Rectangle())
@@ -103,9 +99,7 @@ struct WindowLayoutPositionGrid: View {
     }
 }
 
-/// SwiftUI's own alignment, so it stays out of `Model/` and the purity grep.
 extension WindowLayoutAnchor {
-    /// How much of the plate the block covers: a pinned axis takes half, a spanned one all of it.
     fileprivate var coverage: CGSize {
         switch self {
         case .topLeft, .topRight, .bottomLeft, .bottomRight, .center:

@@ -22,7 +22,6 @@ struct EmojiSearchTests {
         let index = EmojiIndex()
         await index.load()
 
-        // Pins are authored order, not usage order: reloads retain it and imports sanitize it.
         let pinnedURL = directory.appendingPathComponent("pinned.json")
         try JSONEncoder().encode(["A", "", "A", "B"]).write(to: pinnedURL)
         let pinned = PinnedEmojiStore(fileURL: pinnedURL)
@@ -64,7 +63,6 @@ struct EmojiSearchTests {
                 "\(query) finds \(glyph) in the first \(maxRank) results")
         }
 
-        // Packs for the Mac's languages join English, which keeps its ranking for every user.
         let resources = Bundle(path: "Nanocast/Resources")!
         let multilingual = EmojiIndex()
         await multilingual.load(languages: ["fr-FR", "ja-JP", "en-US"], bundle: resources)

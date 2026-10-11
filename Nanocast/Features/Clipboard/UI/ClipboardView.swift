@@ -1,17 +1,16 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ClipboardList: View {
 
     @Environment(\.metrics) private var metrics
     let results: [ClipboardItem]
     let selectedID: ClipboardItem.ID?
-    /// Changes only when the list should scroll, so mouse selection never yanks it.
     let scroll: ScrollIntent
     let onSelect: (ClipboardItem) -> Void
     let onActivate: () -> Void
     let onActions: (ClipboardItem) -> Void
-    /// Nil when the entry has nothing left to hand over, which is reported rather than dragged.
     let onDragPayload: (ClipboardItem) -> ClipDragPayload?
     let onDropped: () -> Void
     @Environment(ClipboardStore.self) private var store
@@ -27,12 +26,10 @@ struct ClipboardList: View {
         }
     }
 
-    /// Whether the selection sits on flat index 0, whose section header should stay visible.
     private var firstRowSelected: Bool {
         selectedID != nil && selectedID == results.first?.id
     }
 
-    /// Pins share one header; the rest are newest-first, a header per date bucket.
     private var rows: [Row] {
         var rows: [Row] = []
         var currentTitle: String?
@@ -89,7 +86,6 @@ struct ClipboardList: View {
             }
             .edgeDissolve()
             .thinScrollbar()
-            // Snap to the origin on the first row so its section header shows too.
             .scrollFollowsSelection(
                 scroll, row: selectedID?.uuidString, atOrigin: firstRowSelected, proxy: proxy)
         }
@@ -131,12 +127,10 @@ private struct ClipboardRow: View {
     let selected: Bool
     let imageURL: URL?
     let ownsImage: Bool
-    /// This row's ⌘-digit, or nil when it is not among the first ten visible pins.
     let slot: Character?
     @Environment(PaletteState.self) private var palette
     @State private var hovered = false
 
-    /// Selection wins over hover when a row is both; otherwise hover shows its fainter layer.
     private var fill: Color {
         if selected { return Theme.Colors.selection }
         if hovered { return Theme.Colors.rowHover }
@@ -171,7 +165,6 @@ private struct ClipboardRow: View {
 
     private var previewText: String {
         switch item.kind {
-        // Cap before trimming: never walk a multi-MB clipboard string per row.
         case .text:
             return String((item.text ?? "").prefix(200)).trimmingCharacters(
                 in: .whitespacesAndNewlines)
@@ -187,7 +180,6 @@ private struct ClipboardRow: View {
     private func thumbnail(_ color: ColorValue?) -> some View {
         switch item.kind {
         case .text:
-            // A colour states itself, so it takes the tile a glyph would otherwise fill.
             if let color {
                 ColorSwatch(color: color)
                     .frame(width: artworkSize, height: artworkSize)
@@ -231,7 +223,6 @@ private struct ClipboardRow: View {
     private var artworkSize: CGFloat { metrics.size.resultRowIcon * IconCache.appIconExtent }
 }
 
-/// ImageIO for a blob we hold; QuickLook for a referenced file, which may be any type.
 private enum ThumbnailSource {
     /// `derived` only for a blob we hold, so no copy is ever written beside someone else's file.
     case image(derived: Bool)
@@ -254,11 +245,9 @@ private enum ThumbnailSource {
     }
 }
 
-/// A downsampled thumbnail, decoding misses off the main thread.
 private struct AsyncThumbnail<Content: View, Placeholder: View>: View {
     let url: URL?
     let maxPixel: CGFloat
-    /// Not nested here: the off-main decode would carry this view's isolated `View` conformances.
     var source: ThumbnailSource = .image(derived: false)
     @ViewBuilder let content: (Image) -> Content
     @ViewBuilder let placeholder: () -> Placeholder
@@ -282,7 +271,7 @@ private struct AsyncThumbnail<Content: View, Placeholder: View>: View {
                 image = hit
                 return
             }
-            image = nil  // show the placeholder while a new image decodes
+            image = nil
             image = await source.loadAsync(url, maxPixel: maxPixel)
         }
     }
@@ -346,7 +335,6 @@ struct ClipboardPreview: View {
     }
 }
 
-/// The "Information" block; disk-touching details are gathered off the main actor.
 private struct ClipboardInfoSection: View {
     @Environment(\.metrics) private var metrics
     let item: ClipboardItem
@@ -369,7 +357,6 @@ private struct ClipboardInfoSection: View {
         var id: String { label }
     }
 
-    /// Relative day plus exact time; shared, `DateFormatter` being expensive to build.
     @MainActor private static let copiedFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -418,7 +405,6 @@ private struct ClipboardInfoSection: View {
                 InfoRow(
                     label: String(localized: "Type"),
                     value: isColor ? String(localized: "Color") : String(localized: "Text")))
-            // A colour's own notations are the pane above; its length is not what you came for.
             if !isColor {
                 if let characters = details.characters {
                     rows.append(
@@ -475,7 +461,6 @@ private struct ClipboardInfoSection: View {
     }
 
     private func loadDetails() async {
-        // Only a text entry: a file's `text` is its path, and counting its words says nothing.
         let text = item.kind == .text ? item.text : nil
         let url = imageURL
         let filePath = item.filePath
@@ -499,7 +484,6 @@ private struct ClipboardInfoSection: View {
         }.value
     }
 
-    /// Single pass: `split(whereSeparator:)` allocates per word, which a multi-MB copy feels.
     private nonisolated static func wordCount(_ text: String) -> Int {
         var count = 0
         var inWord = false

@@ -18,7 +18,6 @@ struct FileSearchScreen: PaletteScreen {
 
     private var needsAccess: Bool { indexer.status == .needsAccess }
 
-    /// ↵ on the access hint opens the one pane that can fix it.
     var actsWithoutRows: Bool { needsAccess }
 
     var primaryActionTitle: String {
@@ -91,7 +90,6 @@ struct FileSearchScreen: PaletteScreen {
         }
     }
 
-    /// Nothing is said while a query runs: the rows it replaces would only flash a message.
     @ViewBuilder
     private var emptyState: some View {
         if needsAccess {
@@ -164,7 +162,6 @@ enum FileSearchActionsMenu {
         return PopoverMenuContent(header: result.name, items: items)
     }
 
-    /// No ⌃⇧X: there is no "all" to trash, only the one row.
     static func perform(_ shortcut: PaletteShortcut, result: FileSearchResult, core: AppCore) -> Bool {
         let coordinator = core.fileSearchCoordinator
         switch shortcut {
@@ -172,7 +169,6 @@ enum FileSearchActionsMenu {
         case .copyName: coordinator.copyName(result)
         case .copyPath: coordinator.copyPath(result)
         case .pasteFile: coordinator.pasteFile(result)
-        // Trashing is undoable, so it asks nothing first, as the clipboard's delete does.
         case .delete: coordinator.trash(result)
         default: return false
         }

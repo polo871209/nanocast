@@ -265,8 +265,7 @@ struct CustomCommandEditorView: View {
         }
     }
 
-    private func scrollTarget(for field: CustomCommandEditorSession.Field) -> CustomCommandEditorSession.Field
-    {
+    private func scrollTarget(for field: CustomCommandEditorSession.Field) -> CustomCommandEditorSession.Field {
         switch field {
         case .icon: .name
         case .chooseDirectory: .workingDirectory

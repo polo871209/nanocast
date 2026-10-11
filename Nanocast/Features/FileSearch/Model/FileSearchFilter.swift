@@ -22,7 +22,6 @@ enum FileSearchFilter: CaseIterable, Sendable {
         }
     }
 
-    /// Also the header button's glyph, so it states the active filter without opening the menu.
     var systemImage: String {
         switch self {
         case .all: return "list.bullet"
@@ -35,7 +34,6 @@ enum FileSearchFilter: CaseIterable, Sendable {
         }
     }
 
-    /// What an empty list says, so a filter hiding every match explains itself.
     var emptyMessage: String {
         switch self {
         case .all: return String(localized: "No files found")
@@ -48,7 +46,6 @@ enum FileSearchFilter: CaseIterable, Sendable {
         }
     }
 
-    /// The types a case admits; `all` names none, which is what keeps an unfiltered search free.
     var contentTypes: [UTType] {
         switch self {
         case .all: return []
@@ -63,16 +60,13 @@ enum FileSearchFilter: CaseIterable, Sendable {
 
     func accepts(contentType: UTType?, isDirectory: Bool) -> Bool {
         guard self != .all else { return true }
-        // An unresolved type is only ever a plain directory: everything else carries one.
         guard let contentType else { return self == .folders && isDirectory }
         return contentTypes.contains { contentType.conforms(to: $0) }
     }
 
-    /// The index records no type, and a stat per row would cost more than the extension.
     static func contentType(extension pathExtension: String, isDirectory: Bool) -> UTType? {
         guard !pathExtension.isEmpty else { return isDirectory ? .folder : nil }
         guard isDirectory else { return UTType(filenameExtension: pathExtension) }
-        // A folder named `v1.2` is still a folder; only a declared package is a document.
         let package = UTType(filenameExtension: pathExtension, conformingTo: .package)
         return package.flatMap { $0.isDeclared ? $0 : nil } ?? .folder
     }

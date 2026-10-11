@@ -2,7 +2,6 @@
 import CoreGraphics
 import Foundation
 
-/// Where each parked window belongs, on disk before it moves, so none is ever lost.
 @MainActor
 final class RoomParkingLedger {
     struct Entry: Codable, Equatable, Sendable {
@@ -26,9 +25,7 @@ final class RoomParkingLedger {
         entries[windowID]
     }
 
-    /// False when the way back is not on disk, and then the window must not move.
     func record(_ entry: Entry) -> Bool {
-        // Parking a parked window again must keep its first way back, not the parked frame.
         if entries[entry.windowID] == nil { entries[entry.windowID] = entry }
         return save()
     }
@@ -46,7 +43,6 @@ final class RoomParkingLedger {
         save()
     }
 
-    // Synchronous on purpose: the write must land before the window it protects moves.
     @discardableResult
     private func save() -> Bool {
         do {
@@ -58,7 +54,6 @@ final class RoomParkingLedger {
         }
     }
 
-    /// An unreadable ledger is the only record of where its windows belong, so it moves aside.
     private static func load(from url: URL) -> [UInt32: Entry] {
         guard let data = try? Data(contentsOf: url) else { return [:] }
         guard let list = try? JSONDecoder().decode([Entry].self, from: data) else {

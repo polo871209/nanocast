@@ -8,7 +8,6 @@ enum HotKeyBinding: Hashable, Sendable, Codable {
     case globe
     case doubleGlobe
 
-    /// One string per keycap, so every display site renders all bindings through one path.
     @MainActor var keycaps: [String] {
         switch self {
         case .combo(let shortcut): shortcut.keycaps

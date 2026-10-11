@@ -1,6 +1,5 @@
 import AppKit
 
-/// Owns copying a calculation out: the inline card records history, a history row never re-records.
 @MainActor
 final class CalculatorCoordinator {
     private let calcHistory: CalculatorHistoryStore
@@ -15,7 +14,6 @@ final class CalculatorCoordinator {
         self.core = core
     }
 
-    /// Both the ⌃⇧X chord and the menu row land here, so neither can skip the confirmation.
     func deleteAllHistory() async {
         guard
             await core.confirm(
@@ -27,7 +25,6 @@ final class CalculatorCoordinator {
         calcHistory.clearAll()
     }
 
-    /// History records the canonical answer; only what reaches the pasteboard is localized.
     private var format: CalcNumberFormat { core.calcNumberFormat }
 
     func copyCalculatorResult(_ result: CalcResult) {
@@ -37,7 +34,6 @@ final class CalculatorCoordinator {
         Paster.copyPlainText(format.localized(copyText))
     }
 
-    /// `⌘↵` on the card: the answer becomes the query, so the next step chains onto it.
     @discardableResult
     func putAnswerInSearchBar(_ result: CalcResult) -> Bool {
         guard case .value(let display, let copyText) = result.payload, result.canChain,

@@ -1,15 +1,11 @@
 import Foundation
 
 struct DoubleTapDetector {
-    /// Longest a press may last and still be a tap; matches `HyperKeyTap.quickPressWindow`.
     static let maxHold: TimeInterval = 0.25
-    /// Longest gap between the first tap's release and the second tap's press.
     static let maxGap: TimeInterval = 0.30
 
     enum Input: Sendable {
-        /// Which of the four eligible modifiers are now held, and whether `fn` is down too.
         case modifiers(Set<DoubleTapModifier>, hasOtherModifiers: Bool)
-        /// A key press or mouse click, which turns the press in flight into a chord.
         case otherInput
     }
 
@@ -17,7 +13,6 @@ struct DoubleTapDetector {
     private var press: (modifier: DoubleTapModifier, startedAt: TimeInterval)?
     private var pendingTap: (modifier: DoubleTapModifier, releasedAt: TimeInterval)?
 
-    /// The modifier whose double-tap completed, fired on the second release, never the press.
     mutating func handle(_ input: Input, at now: TimeInterval) -> DoubleTapModifier? {
         switch input {
         case .otherInput:
@@ -45,7 +40,6 @@ struct DoubleTapDetector {
         }
         if modifiers.isEmpty { return completeTap(at: now) }
 
-        // A tap begins only from nothing held, so an unwinding chord isn't a fresh press.
         guard previous.isEmpty, modifiers.count == 1, let modifier = modifiers.first else {
             invalidate()
             return nil
