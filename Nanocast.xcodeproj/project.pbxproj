@@ -541,6 +541,7 @@
 		CB36E0F593D4460104F0804A /* LauncherList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A12A74D988985ACEF75BEA6 /* LauncherList.swift */; };
 		CC521E6600C74FF4E2752E40 /* UninstallTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72D1F19FDBE32F43610F0F8 /* UninstallTarget.swift */; };
 		CD02E9BFAAB2226A43179119 /* UninstallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F39419B9B842423504922E8 /* UninstallView.swift */; };
+		CD9403224BC24B70E8A9AD95 /* ColorPickerCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C6B07FD50A2DD6C6F52CA35 /* ColorPickerCoordinator.swift */; };
 		CE0A32AF4693E0A128504479 /* ScrollIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0DDF6B4497D0265220D255 /* ScrollIntent.swift */; };
 		CE15BBBE9D5CFEFA13B55DC9 /* RaycastImportError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596A667877F19680501826C0 /* RaycastImportError.swift */; };
 		CECCBE8106229AF5EBE18092 /* CustomWindowSizeEditorPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C383535B8601677E999C3E5 /* CustomWindowSizeEditorPanel.swift */; };
@@ -931,6 +932,7 @@
 		5BFFD8CB8F4461B5D1E96C22 /* FileIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileIndex.swift; sourceTree = "<group>"; };
 		5C09BBC1EEAC91EF7F903BB3 /* BundleSignature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundleSignature.swift; sourceTree = "<group>"; };
 		5C4AFD207117BCEF019C3F98 /* SymbolImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolImage.swift; sourceTree = "<group>"; };
+		5C6B07FD50A2DD6C6F52CA35 /* ColorPickerCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickerCoordinator.swift; sourceTree = "<group>"; };
 		5D0DBA44FFDFA37E333EF007 /* UninstallRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UninstallRules.swift; sourceTree = "<group>"; };
 		5D5118063AD6C77FF246180F /* NoteLayoutFragmentProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteLayoutFragmentProvider.swift; sourceTree = "<group>"; };
 		5D8A88C44E14AB7420D23804 /* ClipboardTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardTextExtractor.swift; sourceTree = "<group>"; };
@@ -1522,6 +1524,14 @@
 			path = UI;
 			sourceTree = "<group>";
 		};
+		2468FAE292CCA24A94C39582 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				5C6B07FD50A2DD6C6F52CA35 /* ColorPickerCoordinator.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
 		28F25A69D3D4A288DF1818FE /* Service */ = {
 			isa = PBXGroup;
 			children = (
@@ -2081,6 +2091,14 @@
 			path = UI;
 			sourceTree = "<group>";
 		};
+		7A81C41BB56F6E37966EDA7D /* ColorPicker */ = {
+			isa = PBXGroup;
+			children = (
+				2468FAE292CCA24A94C39582 /* UI */,
+			);
+			path = ColorPicker;
+			sourceTree = "<group>";
+		};
 		7B5794B16DF14DF50CD7B974 /* Model */ = {
 			isa = PBXGroup;
 			children = (
@@ -2539,6 +2557,7 @@
 				11D3456F754E670F2936D305 /* Calculator */,
 				1D987F61849199C47FCE8D72 /* Camera */,
 				3F909A795CF3F75AAFDEDF9F /* Clipboard */,
+				7A81C41BB56F6E37966EDA7D /* ColorPicker */,
 				45BB4895EE61487E435B9AC1 /* CustomCommands */,
 				7F0A147E48FE7BC9DF3CCA32 /* Dictation */,
 				AE55F02205EE7A0B4056B136 /* Dictionary */,
@@ -3277,6 +3296,7 @@
 				9EADED6575F0F096E0F93D20 /* ColorCard.swift in Sources */,
 				3D4691D99770A67E90D9C2E9 /* ColorDot.swift in Sources */,
 				E4E9E6C9D848B2A206BDC9FB /* ColorFormat.swift in Sources */,
+				CD9403224BC24B70E8A9AD95 /* ColorPickerCoordinator.swift in Sources */,
 				C20723EF10A94F4BFA4B2F6B /* ColorPreview.swift in Sources */,
 				962D6B0DEF831D76E99D7CD5 /* ColorSpaces.swift in Sources */,
 				EB197EE7060356727DD4D185 /* ColorSwatch.swift in Sources */,
