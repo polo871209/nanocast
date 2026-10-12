@@ -135,6 +135,7 @@ final class AppCore {
     @ObservationIgnored private lazy var windowSwitchCoordinator = WindowSwitchCoordinator(
         settings: settings, hotKeys: hotKeys, healthTicker: healthTicker)
     @ObservationIgnored private(set) lazy var cameraCoordinator = CameraCoordinator(core: self)
+    @ObservationIgnored private(set) lazy var colorPickerCoordinator = ColorPickerCoordinator(core: self)
     @ObservationIgnored private(set) lazy var screenshotCoordinator = ScreenshotCoordinator(core: self)
     @ObservationIgnored private(set) lazy var dictionaryCoordinator = DictionaryCoordinator(
         paletteCoordinator: paletteCoordinator)

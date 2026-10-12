@@ -123,6 +123,8 @@ final class LauncherCoordinator {
         case .openCamera:
             dismissPalette()
             Task { await core.cameraCoordinator.show() }
+        case .pickColor:
+            core.colorPickerCoordinator.pick()
         case .captureScreenshot:
             core.screenshotCoordinator.capture()
         case .define:
