@@ -2,7 +2,7 @@ import Foundation
 
 enum SettingsTab: CaseIterable, Identifiable {
     case general, applications, systemSettings, systemActions, commands, clipboard, fileSearch,
-        windowManagement, navigation, notes, emoji, permissions, backup, about
+        screenshot, windowManagement, navigation, notes, emoji, permissions, backup, about
     var id: Self { self }
 
     var title: String {
@@ -17,6 +17,7 @@ enum SettingsTab: CaseIterable, Identifiable {
         case .navigation: return "Navigation"
         case .windowManagement: return "Window Management"
         case .clipboard: return "Clipboard"
+        case .screenshot: return "Screenshot"
         case .emoji: return "Emoji & Symbols"
         case .permissions: return "Permissions"
         case .backup: return "Backup"
@@ -36,6 +37,7 @@ enum SettingsTab: CaseIterable, Identifiable {
         case .navigation: return "arrow.left.arrow.right"
         case .windowManagement: return "macwindow"
         case .clipboard: return "doc.on.clipboard"
+        case .screenshot: return "camera.viewfinder"
         case .emoji: return "face.smiling"
         case .permissions: return "lock.shield"
         case .backup: return "arrow.up.arrow.down.circle"
@@ -64,7 +66,7 @@ enum SettingsSection: CaseIterable, Identifiable {
             return [.applications, .systemSettings, .systemActions, .commands]
         case .features:
             return [
-                .clipboard, .fileSearch, .windowManagement, .navigation, .notes, .emoji
+                .clipboard, .fileSearch, .screenshot, .windowManagement, .navigation, .notes, .emoji
             ]
         case .advanced: return [.backup, .about]
         }

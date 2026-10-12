@@ -136,6 +136,10 @@ If a change touches anything in the right column, the harness on the left is man
 | `raycast-test` | `Backup/Service/RaycastDecoder.swift`, `Scrypt.swift`, `Platform/Compression/Zlib.swift`, `Clipboard/Model/RaycastClipboardImport.swift` and import-time clipboard retention |
 | `icon-cache-test` | `Platform/Images/IconCache.swift` — row sizing at 1×/2×, warm reuse, stamp and style invalidation, bitmap release, fitted geometry across all 256 alpha values, and that a row icon draws identically to the 96px one |
 | `entry-icon-test` | `EntryIcon` — that each case draws, caches and prints apart from the others, and that a moved `FileIconStamp` retires the bitmap decoded before it |
+| `screenshot-selection-test` | all of `Screenshot/Model/` — pixel rects, handles, draw, move, resize, keyboard nudge, window snap and the window shot crop, chrome placement, file names and the sRGB hex |
+| `screenshot-annotation-test` | all of `Screenshot/Model/` — tool keys, Shift constraints, the arrow outline, hit testing, drawing, moving, restyling, deleting, undo and redo, text edits, steps, the highlighter and mosaic order |
+| `screenshot-stitch-test` | `Screenshot/Model/` plus `ScrollFrame` and `ScrollStitchFile` — slices a page with a sticky header, a sticky footer, blank runs and a moving scrollbar into frames, then requires a rebuild within one level through the stitch and through the file, with noise on every pixel, a repeating list, a blank overlap, a hover highlight, a lost frame and the height cap |
+| `screenshot-render-test` | `Screenshot/Model/` plus the painter, text, mosaic and renderer services — probes the pixels of rendered fixtures: plain crops, marks in place, window shots with transparent corners, the highlighter's half-transparent ink, steps, mosaic blocks and blur, and text |
 | `settings-backup-test` | `Settings/AppSettingsKey.swift`, `Backup/Model/SettingsBackupCoverage.swift` |
 | `settings-file-test` | `Settings/Model/` and `Settings/Service/` — key paths, value tokens, the printer and parser, and the repository's import, replace, save, reload and symlink handling on a scratch folder |
 | `window-file-test` | `WindowManagement/Model/WindowManagementFileFormat.swift` — command shortcuts, custom sizes, layouts and rooms as settings.json spells them, hand edits and bad records |
@@ -709,6 +713,24 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
   with the gap, hides other apps and parks their extra windows; quitting, `kill -9` then relaunching, and
   turning Window Management off each bring every window back.
   Repeat on two displays and with Reduce Motion on
+
+### Screenshot
+
+- Capture Screenshot from the palette: the frozen screen covers the menu bar, the palette is not in it, and Reduce Motion shows no zoom
+- Hover highlights the window under the cursor, a click takes it, and ⌘A takes the display
+- The cursor is a crosshair over the screen, a resize arrow over an edge, a hand inside the area and an arrow over the toolbar, while another app stays frontmost
+- The loupe follows the cursor, flips at the display edges, and C copies the same hex that Digital Color Meter shows in sRGB
+- A click on a window that another window covers copies the whole window, with transparent corners and no shadow
+- Every tool draws what its row in [features/screenshot.md](features/screenshot.md#tools) says, and the copied PNG matches the overlay
+- Text typed with the Pinyin input method shows its candidate window above the overlay
+- A pin opens over the area, drags, zooms with scroll and pinch, copies with ⌘C, and closes with Esc
+- ↩ copies a PNG with the exact pixel size of the area, which clipboard history records, and ⌘S saves one to the save folder
+- With an area, Esc copies the same PNG as ↩, and the ✗ button closes without a copy. With no area, Esc closes
+- A scrolling capture of a browser page and of a long Notes note scrolls to the end by itself, and copies one long image with no repeated or missing rows and one copy of a sticky header
+- A scrolling capture opens the long image in the editor at the end of the page and on ✓. It scrolls, the handles crop it, every tool draws on it, and the copied PNG has the cropped size
+- During a scrolling capture, nothing scrolls before Start, Space stops and starts it, the border and the bar are not in the image, Esc copies, and moving the mouse neither stops it nor ends up in the image
+- On two displays with different scales, each overlay lines up 1:1 with its screen
+- After the capture closes, `footprint -p "Nanocast Dev"` reports the value it had before the capture
 
 ### Settings and backup
 

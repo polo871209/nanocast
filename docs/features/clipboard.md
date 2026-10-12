@@ -32,7 +32,7 @@
   Application Support precisely because nothing else can put it back.
 - **A link or an address is derived from the text, never persisted.** `ClipboardItem.Kind` holds
   only what capture can tell apart on the pasteboard — `text`, `image`, `file` — so improving the
-  *classifier* stays a code change rather than a database migration plus a backfill, while a new
+  _classifier_ stays a code change rather than a database migration plus a backfill, while a new
   kind needs a new pasteboard type to justify it. `textForm` is nil for anything but `.text`, which
   is what keeps a path shaped like `apple.com/report.pdf` out of the links.
 - **A `.file` entry references the file where it lies and never copies it.** Its absolute path is
@@ -47,7 +47,7 @@
   never on `ClipboardItem` and never in the resident window, so no surface can paste it, copy it,
   or classify an entry by it. The one exception is Copy Text, which the reader invokes explicitly:
   it extracts fresh in the helper and puts the text on the pasteboard — the `item_text` table
-  itself is still never copied from. What an entry *is* still comes from the content that was
+  itself is still never copied from. What an entry _is_ still comes from the content that was
   captured.
 - **No recognition ever runs in the app process.** `ClipboardTextWorker` spawns one bundled
   `ClipboardTextHelper` per item and reaps it, which is the whole reason Vision's and PDFKit's
@@ -56,7 +56,7 @@
 ## Poll-based capture
 
 **A file URL is read before the text**, because that is the whole of the bug this ordering fixes:
-Finder puts the file's *display name* on `public.utf8-plain-string` beside `public.file-url`, so a
+Finder puts the file's _display name_ on `public.utf8-plain-string` beside `public.file-url`, so a
 text-first poller records `IMG_1234.png` as prose. The read sits after the `internalType` and
 sensitive-type guards, which stay unconditional — a secret must never be recorded whatever shape it
 arrives in. A bare screenshot carries no file URL and still falls through to the `.png`/`.tiff`
@@ -70,7 +70,7 @@ returns nil rather than an empty array, so the text branch runs; caps a batch at
 `maxCapturedFiles`, so a Finder select-all cannot insert ten thousand rows on one tick; and
 **rejects a file under a volatile root** (`/tmp`, `/var/folders`, `~/Library/Caches`), because an
 app that stages a temp export beside better inline content must keep the inline content. Paths come
-back reversed so the *first* file copied ends up leading the history. Durability checks stop after
+back reversed so the _first_ file copied ends up leading the history. Durability checks stop after
 32 accepted files, and decoding stops with them: the reader takes the cap and the durability test
 together rather than filtering a list it has already decoded whole. Rejected paths do not consume
 the cap, and even a rejected modern file URL suppresses the legacy filenames fallback. The uncapped
@@ -175,9 +175,13 @@ that run winds down, which is why `applyClipboardTextSearch` can be called again
 Recognition runs in a bundled `ClipboardTextHelper`, one item at a time, and Vision's and PDFKit's
 state leaves with it. The parent accepts at most 32 KB from the helper's output pipe, propagates
 cancellation, and terminates and reaps a helper that runs past 60 seconds. `ClipboardTextWorker`
-does its blocking read and wait on its own `DispatchQueue`, never the cooperative pool. No helper
+does its blocking read and wait on its own `DispatchQueue`, never the cooperative pool. The helper
+runs at the QoS of the task that asks: background for the indexer, user-initiated for a Copy Text.
+Background QoS makes Vision about 3× slower, and a first read after a new helper build compiles
+Vision's models, which takes about 27 s user-initiated and 40 s or more in the background. No helper
 exists while text search is off or the queue is empty — a Copy Text trigger is the exception: the
-helper is bundled either way, so an explicit extraction spawns one with the search switch off.
+helper is bundled either way, so an explicit extraction spawns one with the search switch off. The
+screenshot's Copy Text runs the same helper in its `screenshot` mode; see [screenshot.md](screenshot.md).
 
 Images include owned clipboard PNGs and referenced image files. Referenced PDFs use PDFKit's embedded
 text page by page, with Vision OCR for pages without text. Mixed text-and-scan documents therefore
@@ -241,7 +245,7 @@ and which reports nothing. A result never overwrites a newer copy — when the p
 changed, text not copied**.
 
 The bounds are the indexer's, stated precisely: the helper truncates its output at 32,000 UTF-8
-bytes, so a text-dense scan can copy *partial* text under a success HUD, and an input over 32 MB
+bytes, so a text-dense scan can copy _partial_ text under a success HUD, and an input over 32 MB
 extracts as empty and lands in **No text found**. The source row is not promoted — a copy is not a
 paste.
 
@@ -276,7 +280,7 @@ The clipboard header carries a `ClipboardFilterButton` at the trailing edge of t
 the only palette screen with a control up there. It toggles a `PopoverMenu` anchored `.topTrailing`
 under the button, so the ⌘K Actions menu and this one are the same view on the same
 glass. **⌘P** toggles it; ↑/↓, ↵ and Esc come free from `RootPaletteView`'s one menu path, and the
-menu opens highlighting the *active* filter rather than the first row, the way a pop-up button does.
+menu opens highlighting the _active_ filter rather than the first row, the way a pop-up button does.
 A native, row-height search field above the rows filters their titles with the shared fuzzy matcher;
 an empty result centres **No Results** in one row. Escape clears a non-empty query before closing.
 The filter is not gated on the list having rows: an over-narrow filter empties it, and the button is
@@ -284,8 +288,8 @@ the way back out.
 
 `ClipboardFilter` owns the seven cases and everything the UI needs from them — title, glyph, and the
 `emptyMessage` that stops "Clipboard history is empty" from appearing over a history that only looks
-empty. The cases are **exclusive**: a copied URL is a link, not a narrower kind of text, so *Text
-Only* means prose, and *Colors Only* takes `#FF5733` out of it.
+empty. The cases are **exclusive**: a copied URL is a link, not a narrower kind of text, so _Text
+Only_ means prose, and _Colors Only_ takes `#FF5733` out of it.
 
 `ClipboardItem.textForm` derives `plain`/`color`/`link`/`email` from the text on demand — nil for an
 image.
@@ -303,7 +307,7 @@ under the wrong type, and `clipboard-test` pins the cases that matter.
 `search(_:filter:)` filters **after** the pinned/rest split, so a matching pin still leads its block
 in pin order, and the filter joins the search memo's key — keying on the query alone would serve
 stale rows for a render or more, since the filter changes without the query moving. One consequence
-of filtering after the fact: the FTS statement's `LIMIT 200` applies to the *unfiltered* matches, so
+of filtering after the fact: the FTS statement's `LIMIT 200` applies to the _unfiltered_ matches, so
 a narrow filter over a broad query can show fewer rows than the history holds.
 
 ## Colours
@@ -353,7 +357,7 @@ checkerboard built only when there is alpha to show, so an opaque colour never p
 nothing can see. The preview shows the colour and the copied text and nothing else. Detection is
 narrow by design: anything past 64 UTF-8 bytes is not a colour, and no named colour (`red`) is
 recognised, since a bare English word is prose far more often than CSS — and **a colour is never
-named**: `#D6D6D6` is a swatch and its digits, never *Silver*. `NSColorList` naming was built,
+named**: `#D6D6D6` is a swatch and its digits, never _Silver_. `NSColorList` naming was built,
 measured and removed; it knew only the 59 names macOS ships, so most colours read as nothing, and
 CSS's own (`gainsboro`) are in no catalog at all. The card runs **after** the calculator, which
 costs nothing — no colour notation is also an expression.
@@ -421,7 +425,7 @@ sees can never be deleted by `deleteBlob` or a retention cut. `clipboard-test`'s
 Clear History alike.
 
 **Pasting writes two flavours.** `public.file-url` so Finder, Mail and anything file-taking receive
-the *file*, and `.string` carrying the **path** — deliberately not Finder's own choice of the name,
+the _file_, and `.string` carrying the **path** — deliberately not Finder's own choice of the name,
 because a text field or Terminal almost always wants a path, a name is recoverable from a path and
 a path is not recoverable from a name. "A name arrived where a file was meant" is the bug being
 fixed, so it must not be reintroduced on the way out.
@@ -432,7 +436,7 @@ happened, and the recorded path is still the answer to "where was it?". The prev
 place, and the Path row keeps showing where the file used to be.
 
 `FilePreviewThumbnailer` is the row tile and the preview still. `QLThumbnailGenerator` is the only
-thing that renders a *content* thumbnail for any type — a video's poster frame, a PDF's first page
+thing that renders a _content_ thumbnail for any type — a video's poster frame, a PDF's first page
 — and with `representationTypes: .all` it falls back to the type icon itself, so every file paints
 something through one path. It copies `ImageThumbnail`'s shape exactly: two byte-bounded caches
 split at 128px, cost measured as the real bitmap footprint, and `purgePreviews()` called from

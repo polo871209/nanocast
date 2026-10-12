@@ -29,7 +29,8 @@ Independently of the folder tree, every mature subsystem has converged on the sa
 │ SettingsFile{JSON,Key,Value,Format,Binding,Issue,Identity} ·               │
 │ HotKeySpelling · WindowManagementFileFormat ·                              │
 │ MenuSearch{Item,Shortcut,Query,TreeNode,SnapshotPolicy,Target} ·           │
-│ WindowSwitch{Entry,Order,Chord,Grid,FallbackPolicy}                        │
+│ WindowSwitch{Entry,Order,Chord,Grid,FallbackPolicy} ·                      │
+│ Screenshot/Model/*                                                         │
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ consumed by
 ┌─ EFFECT ─────────────────────────▼─────────────────────────────────────────┐
@@ -46,11 +47,15 @@ Independently of the folder tree, every mature subsystem has converged on the sa
 │ AXMenuAccess · WindowSwitchSweep · WindowSwitchTap ·                       │
 │ WindowPreviewCapture · AppRecencyMonitor ·                                 │
 │ SettingsFileRepository · SettingsFileMonitor ·                             │
-│ WindowManagementSettingsFile                                               │
+│ WindowManagementSettingsFile · DisplayCapture · WindowFrameProvider ·      │
+│ WindowCapture · AnnotationPainter · AnnotationText · MosaicSource ·        │
+│ ScreenshotRenderer · ScreenshotOutputRunner · ScrollFrameCapture ·         │
+│ ScrollFrame · ScrollStitchFile · AutoScrollRunner ·                        │
+│ ScreenRecordingRunner                                                      │
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ published through
 ┌─ OBSERVABLE STATE ───────────────▼─────────────────────────────────────────┐
-│ 48 @MainActor @Observable stores, sessions, indices and State types        │
+│ 52 @MainActor @Observable stores, sessions, indices and State types        │
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ rendered by
 ┌─ VIEW ───────────────────────────▼─────────────────────────────────────────┐
@@ -115,6 +120,7 @@ the stateless `ClipboardTextWorker` runs one bundled `ClipboardTextHelper` per i
 to a process that exits, and the helper — which has no database, clipboard or settings access — is
 handed an input path and answers with bounded text down a pipe. Its `thumbnail` mode writes the
 clipboard's downscaled image copies, so a full-size decode stays out of the app unless that fails.
+The screenshot's Copy Text uses the same worker and helper.
 
 ## Entry points and windows
 
@@ -150,6 +156,7 @@ imperatively from AppKit.
 - **The camera** — a borderless, non-activating `CameraPanel` at `.floating` over one
   `CameraSession`, driven by `CameraCoordinator` on `AppCore` for the `Open Camera` command. See
   [features/camera.md](features/camera.md).
+- **The screenshot overlay** covers each display with one borderless, non-activating `ScreenshotPanel` at `.screenshot`, above the menu bar, for the life of one capture. `ScreenshotCoordinator`, owned by `AppCore`, owns the session and the `ScreenshotOverlayController` that shows it. It also owns `PinController`, whose pins are non-activating `PinPanel`s at `.floating` that outlive the capture, and at most one `ScrollCaptureController`, which replaces the overlay during a scrolling capture with a click-through border and a key bar, both `LiveCapturePanel`s at `.screenshot`. A screen recording replaces the overlay the same way with a `ScreenRecordingController`, whose bar never takes key, so typing still reaches the recorded app. When it ends, a new session and overlay open the long image in one `ScreenshotPanel` with a scroll view. See [features/screenshot.md](features/screenshot.md).
 - **HUDs** are separate, because a dialog asks and a HUD reports: `MessageHUDController` (the pill) and
   `VolumeHUDController` (the level box), both over a shared `HUDPresenter` that owns the
   one-at-a-time, auto-dismiss and fade policy. See [ui.md](ui.md#dialogs--hud).
@@ -162,7 +169,7 @@ every live `AnimatedPanel` (see [ui.md](ui.md#non-negotiable-invariants)).
 
 ## Observation
 
-48 types are `@MainActor @Observable`. Nothing uses `ObservableObject` or `@Published`, and views read
+52 types are `@MainActor @Observable`. Nothing uses `ObservableObject` or `@Published`, and views read
 state through `@Environment` rather than `@EnvironmentObject`.
 
 Three things about this model are easy to get wrong:
@@ -220,7 +227,7 @@ Nanocast/
     PaletteRowIndex.swift   the flat selection index — palette-owned, so it sits at the top
     Launcher/ Clipboard/ Calculator/ Camera/ Dictionary/ Emoji/ FileSearch/ MenuSearch/
     Notes/ Uninstall/ SystemActions/ CustomCommands/ HotKeys/ Backup/
-    WindowManagement/ WindowSwitcher/ Onboarding/ Updates/ Settings/
+    WindowManagement/ WindowSwitcher/ Screenshot/ Onboarding/ Updates/ Settings/
         Model/      pure — the harness inputs
         Service/    effects — stores, monitors, runners, AppKit glue
         UI/         screens, views, and the feature's coordinator

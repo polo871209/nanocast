@@ -94,8 +94,8 @@ enum SettingsSearchCatalog {
 
     static let entries: [SettingsSearchEntry] =
         general + applications + systemSettings + systemActions + commands + clipboard
-        + fileSearch + windowManagement + navigation + notes + emoji + permissions
-        + backup + about
+        + fileSearch + screenshot + windowManagement + navigation + notes + emoji
+        + permissions + backup + about
 
     private static let general: [SettingsSearchEntry] = [
         .init(pane: .general, keywords: ["preferences", "settings"]),
@@ -369,6 +369,21 @@ enum SettingsSearchCatalog {
             keywords: ["delete", "erase", "wipe"])
     ]
 
+    private static let screenshot: [SettingsSearchEntry] = [
+        .init(
+            pane: .screenshot,
+            keywords: ["capture", "screen", "snip", "grab", "shottr", "annotate", "record", "video"]),
+        .init(
+            group: .screenshotCommands, "Screenshot commands",
+            keywords: ["shortcut", "hotkey", "capture"]),
+        .init(
+            .screenshotSaving, "Save Folder",
+            keywords: ["desktop", "location", "directory", "png", "mov", "recording"]),
+        .init(
+            .screenshotSaving, "Recording Format",
+            keywords: ["video", "screen recording", "mov", "mp4", "file type"])
+    ]
+
     private static let emoji: [SettingsSearchEntry] = [
         .init(
             pane: .emoji,
@@ -393,7 +408,10 @@ enum SettingsSearchCatalog {
             keywords: ["paste", "keystrokes", "privacy", "grant"]),
         .init(
             .permissionsFullDiskAccess, "Full Disk Access",
-            keywords: ["files", "folders", "uninstall", "leftovers", "privacy", "grant", "fda"])
+            keywords: ["files", "folders", "uninstall", "leftovers", "privacy", "grant", "fda"]),
+        .init(
+            .permissionsScreenRecording, "Screen Recording",
+            keywords: ["screenshot", "capture", "window switcher", "previews", "privacy", "grant"])
     ]
 
     private static let backup: [SettingsSearchEntry] = [

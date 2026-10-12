@@ -5,6 +5,7 @@ struct PermissionsSettingsView: View {
     @Environment(AppCore.self) private var core
     @State private var accessibilityTrusted = Permissions.isAccessibilityTrusted()
     @State private var fullDiskAccess = Permissions.hasFullDiskAccess()
+    @State private var screenRecordingGranted = Permissions.isScreenRecordingGranted()
     private let refreshTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -70,6 +71,38 @@ struct PermissionsSettingsView: View {
             } header: {
                 SettingsSectionHeader(.permissionsFullDiskAccess)
             }
+
+            Section {
+                LabeledContent {
+                    HStack(spacing: Theme.Spacing.lg) {
+                        HStack(spacing: Theme.Spacing.xs) {
+                            Image(systemName: screenRecordingStatus.symbol)
+                                .accessibilityHidden(true)
+                            Text(screenRecordingStatus.title)
+                        }
+                        .foregroundStyle(screenRecordingStatus.tint)
+                        Button(screenRecordingGranted ? "Open…" : "Grant Access…") {
+                            Permissions.requestScreenRecording()
+                            Permissions.openScreenRecordingSettings()
+                        }
+                        .help("Opens Privacy & Security › Screen & System Audio Recording.")
+                    }
+                } label: {
+                    HStack(spacing: Theme.Spacing.lg) {
+                        Image(systemName: "camera.viewfinder")
+                            .font(.system(size: SettingsListMetrics.iconSize - Theme.Spacing.xs))
+                            .frame(width: SettingsListMetrics.iconSize)
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: Theme.Spacing.xxs) {
+                            SettingsRowTitle(.permissionsScreenRecording, "Screen Recording")
+                            Text("Takes screenshots and shows window previews.")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            } header: {
+                SettingsSectionHeader(.permissionsScreenRecording)
+            }
         }
         .formStyle(.grouped)
         .settingsScrollTarget(.permissions)
@@ -91,6 +124,12 @@ struct PermissionsSettingsView: View {
             : ("Not granted", "exclamationmark.triangle.fill", .orange)
     }
 
+    private var screenRecordingStatus: (title: String, symbol: String, tint: Color) {
+        screenRecordingGranted
+            ? ("Granted", "checkmark.circle.fill", .green)
+            : ("Not granted", "exclamationmark.triangle.fill", .orange)
+    }
+
     private func refresh() {
         let trusted = Permissions.isAccessibilityTrusted()
         if trusted != accessibilityTrusted { accessibilityTrusted = trusted }
@@ -99,6 +138,8 @@ struct PermissionsSettingsView: View {
             fullDiskAccess = diskAccess
             core.fileIndexer.refreshAccess()
         }
+        let screenRecording = Permissions.isScreenRecordingGranted()
+        if screenRecording != screenRecordingGranted { screenRecordingGranted = screenRecording }
     }
 }
 

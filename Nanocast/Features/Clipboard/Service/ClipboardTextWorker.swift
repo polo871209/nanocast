@@ -3,10 +3,13 @@ import Foundation
 nonisolated enum ClipboardTextWorker {
     enum Failure: Error { case recognition, outputLimit }
 
+    enum Input: String {
+        case image, pdf, screenshot
+    }
+
     static let maximumOutputBytes = 32_000
     private static let readSize = 4096
-    private static let queue = DispatchQueue(
-        label: "com.nanocast.clipboard-text", qos: .background, attributes: .concurrent)
+    private static let queue = DispatchQueue(label: "com.nanocast.clipboard-text", attributes: .concurrent)
     static let executable = Bundle.main.bundleURL.appendingPathComponent(
         "Contents/Helpers/ClipboardTextHelper")
 
@@ -14,21 +17,19 @@ nonisolated enum ClipboardTextWorker {
         guard let path = item.imagePath ?? item.filePath else { return "" }
         let kind = item.kind == .image ? ClipboardFileKind.image : ClipboardFileKind.of(path: path)
         guard kind == .image || kind == .pdf else { return "" }
-        return try await extract(at: URL(fileURLWithPath: path), isPDF: kind == .pdf, executable: executable)
+        return try await extract(at: URL(fileURLWithPath: path), as: kind == .pdf ? .pdf : .image)
     }
 
-    static func extract(
-        at url: URL, isPDF: Bool, executable: URL, timeout: Duration = .seconds(60)
-    ) async throws -> String {
+    static func extract(at url: URL, as input: Input, timeout: Duration = .seconds(60)) async throws -> String {
         try Task.checkCancellation()
         let process = Process()
         let output = Pipe()
         process.executableURL = executable
-        process.arguments = [isPDF ? "pdf" : "image", url.path]
+        process.arguments = [input.rawValue, url.path]
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = output
         process.standardError = FileHandle.nullDevice
-        process.qualityOfService = .background
+        process.qualityOfService = qualityOfService(for: Task.currentPriority)
         guard let exit = try? process.runObservingExit() else { throw Failure.recognition }
         if Task.isCancelled { terminate(process) }
         let deadline = Task.detached(priority: .background) {
@@ -72,6 +73,16 @@ nonisolated enum ClipboardTextWorker {
             return .failure(.recognition)
         }
         return .success(text)
+    }
+
+    // Background QoS throttles Vision's CPU and disk reads, about 3× slower and up to 40 s cold.
+    private static func qualityOfService(for priority: TaskPriority) -> QualityOfService {
+        switch priority {
+        case .userInitiated...: .userInitiated
+        case .medium...: .default
+        case .utility...: .utility
+        default: .background
+        }
     }
 
     /// `terminate()` traps on a process that never launched, so the state has to be asked first.
