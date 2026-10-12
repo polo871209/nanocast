@@ -375,6 +375,7 @@ extension View {
             .environment(core.roomCoordinator)
             .environment(core.customWindowSizes)
             .environment(core.customWindowSizeCoordinator)
+            .environment(core.screenshotCoordinator)
             .scrollContentBackground(.hidden)
     }
 }

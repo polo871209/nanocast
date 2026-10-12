@@ -174,7 +174,8 @@ state leaves with it. The parent accepts at most 32 KB from the helper's output 
 cancellation, and terminates and reaps a helper that runs past 60 seconds. `ClipboardTextWorker`
 does its blocking read and wait on its own `DispatchQueue`, never the cooperative pool. No helper
 exists while text search is off or the queue is empty — a Copy Text trigger is the exception: the
-helper is bundled either way, so an explicit extraction spawns one with the search switch off.
+helper is bundled either way, so an explicit extraction spawns one with the search switch off. The
+screenshot's Copy Text runs the same helper in its `screenshot` mode; see [screenshot.md](screenshot.md).
 
 Images include owned clipboard PNGs and referenced image files. Referenced PDFs use PDFKit's embedded
 text page by page, with Vision OCR for pages without text. Mixed text-and-scan documents therefore
