@@ -34,6 +34,8 @@ struct SystemAction: Identifiable, Hashable, Sendable {
         case quitAllApps = "quit-all-apps"
         case dismissNotifications = "dismiss-notifications"
         case toggleBluetooth = "toggle-bluetooth"
+        case copyPublicIP = "copy-public-ip"
+        case clearDNSCache = "clear-dns-cache"
     }
 
     enum Confirmation: Hashable, Sendable {
@@ -103,6 +105,8 @@ enum SystemActionCatalog {
         case .quitAllApps: return "Quit All Applications"
         case .dismissNotifications: return "Dismiss Notifications"
         case .toggleBluetooth: return "Toggle Bluetooth"
+        case .copyPublicIP: return "Copy Public IP Address"
+        case .clearDNSCache: return "Clear DNS Cache"
         }
     }
 
@@ -136,6 +140,8 @@ enum SystemActionCatalog {
         case .quitAllApps: return "xmark.circle"
         case .dismissNotifications: return "bell.slash"
         case .toggleBluetooth: return "bluetooth"
+        case .copyPublicIP: return "globe"
+        case .clearDNSCache: return "arrow.triangle.2.circlepath"
         }
     }
 
