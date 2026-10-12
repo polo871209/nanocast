@@ -587,6 +587,22 @@ top of it.
 `AVCaptureVideoPreviewLayer` is hosted in one `NSViewRepresentable` (`CameraStage`) and nothing
 else; the footer buttons around it are `CameraButton`s on the shared `ModalActionButtonStyle`.
 
+## The screenshot overlay
+
+The overlay is a photo of the screen with a hole cut in it, so the dim is not ink. `captureDim` is the same black at 45% in both appearances, and the selection border is `primaryAction` at `Theme.Size.captureBorder`. The 8 handles are `primaryAction` dots of `captureHandle` with a white `captureHandleRim`, and the whole edge is a resize target out to `captureHandleReach`.
+
+The chrome floats over arbitrary pixels, so it follows the floating-control recipe:
+
+- The toolbar is `panelScrim`, then `GlassEffectView`, with the clip on the background only, so a `.tooltip(...)` can draw outside it. Its buttons are `BarButton(chrome: .rounded, isCompact: true)`. Discard takes the `destructive` tint and Copy the `success` tint, like Lark's red cross and green check. This overlay breaks the "Escape cancels" rule on purpose. With an area, Esc copies, and only the Discard button throws the capture away.
+- The size pill is a capsule of the same recipe.
+- The loupe is a `loupeSurface` card with `Radius.loupe`. It draws 15 × 15 pixels at `loupeCell` each, with `.nearest` filtering and a `loupeGrid` grid, over a caption with the position and the hex.
+- The scrolling capture bar uses the same card, with the stitched size in `keyCap` digits at a fixed `Markup.scrollStatusWidth`, so the bar never changes width. A lost page or the height cap turns that text `warning`. The Start button turns into Stop while the page scrolls.
+- The options bar under the toolbar uses the same card through `screenshotChrome(_:)`. Its buttons are `BarButton`s too, and the selected step or ink takes the `selection` fill.
+
+The chrome follows `AppSettings.appearance` like every other surface. In Dark it matches Lark's own screenshot bar.
+
+Annotations are content, not chrome, so they look the same in both appearances. The six inks are `Theme.Colors.markupRed` through `markupWhite`, and every annotation size is a point value in `Theme.Markup`, which `AnnotationAppearance` turns into the display's pixels. A step is a circle of its ink with a `markupWhite` rim, and a light ink takes a `markupBlack` number. The highlighter paints its ink at `Markup.highlighterOpacity`. The selected annotation gets a `primaryAction` outline dashed with `Markup.selectionDash`. A pin is the captured image with a `border` hairline and the system window shadow, with no chrome of its own.
+
 ## Dialog accessories
 
 A dialog carries at most one control beyond its buttons, and `DialogAccessory` makes that structural
