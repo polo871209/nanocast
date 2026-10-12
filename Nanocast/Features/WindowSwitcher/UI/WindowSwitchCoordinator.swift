@@ -34,7 +34,7 @@ final class WindowSwitchCoordinator: HealthCheckable {
         recency.start()
         healthTicker?.subscribe(self)
         if !tap.install() { Permissions.ensureAccessibility() }
-        WindowPreviewCapture.requestPermission()
+        Permissions.requestScreenRecording()
     }
 
     func applyTrigger() {
@@ -92,7 +92,7 @@ final class WindowSwitchCoordinator: HealthCheckable {
             self?.session.selection = index
             self?.commit()
         }
-        guard WindowPreviewCapture.isPermitted else { return }
+        guard Permissions.isScreenRecordingGranted() else { return }
         let windowIDs = session.entries.compactMap(\.windowID)
         let pixelHeight = Int(Theme.Size.switcherThumbnail.height * 2)
         previews = Task { [session] in
