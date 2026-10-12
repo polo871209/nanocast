@@ -262,6 +262,14 @@ final class AppSettings {
         }
     }
 
+    var screenshotSaveFolder: String? {
+        didSet { defaults.set(screenshotSaveFolder, forKey: Key.screenshotSaveFolder.rawValue) }
+    }
+
+    var screenshotRecordingFormat: ScreenRecordingFormat {
+        didSet { defaults.set(screenshotRecordingFormat.rawValue, forKey: Key.screenshotRecordingFormat.rawValue) }
+    }
+
     var navigationEnabled: Bool {
         didSet { defaults.set(navigationEnabled, forKey: Key.navigationEnabled.rawValue) }
     }
@@ -423,6 +431,9 @@ final class AppSettings {
         customCommandsShowInLauncher =
             defaults.object(forKey: Key.customCommandsShowInLauncher.rawValue) == nil
             || defaults.bool(forKey: Key.customCommandsShowInLauncher.rawValue)
+        screenshotSaveFolder = defaults.string(forKey: Key.screenshotSaveFolder.rawValue)
+        screenshotRecordingFormat =
+            defaults.string(forKey: Key.screenshotRecordingFormat.rawValue).flatMap(ScreenRecordingFormat.init) ?? .mov
         navigationEnabled = defaults.bool(forKey: Key.navigationEnabled.rawValue)
         menuSearchDisabledApps =
             defaults.stringArray(forKey: Key.menuSearchDisabledApps.rawValue) ?? []

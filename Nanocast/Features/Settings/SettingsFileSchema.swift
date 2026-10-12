@@ -104,6 +104,9 @@ enum SettingsFileSchema {
         case .clipboardDefaultAction: return bind(settings, \.clipboardDefaultAction)
         case .clipboardDisabledApps: return bind(settings, \.clipboardDisabledApps)
         case .clipboardCommands: return launcher.commandsBinding(for: key, owner: .clipboard)
+        case .screenshotSaveFolder: return bind(settings, \.screenshotSaveFolder, accept: folder)
+        case .screenshotRecordingFormat: return bind(settings, \.screenshotRecordingFormat)
+        case .screenshotCommands: return launcher.commandsBinding(for: key, owner: .screenshot)
         case .emojiSkinTone: return bind(settings, \.emojiSkinTone)
         case .emojiGridColumns: return bind(settings, \.emojiGridColumns)
         case .emojiCommands: return launcher.commandsBinding(for: key, owner: .emoji)
@@ -128,6 +131,7 @@ extension SearchSensitivity: SettingsFileRawValue {}
 extension WindowCycle: SettingsFileRawValue {}
 extension ClipboardDefaultAction: SettingsFileRawValue {}
 extension EmojiSkinTone: SettingsFileRawValue {}
+extension ScreenRecordingFormat: SettingsFileRawValue {}
 extension EmojiGridColumns: SettingsFileRawValue {}
 
 extension ClipboardRetention: SettingsFileToken {
