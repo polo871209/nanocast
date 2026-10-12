@@ -2,13 +2,6 @@ import CoreGraphics
 import ScreenCaptureKit
 
 enum WindowPreviewCapture {
-    static var isPermitted: Bool { CGPreflightScreenCaptureAccess() }
-
-    static func requestPermission() {
-        guard !isPermitted else { return }
-        CGRequestScreenCaptureAccess()
-    }
-
     @concurrent
     static func stream(
         _ windowIDs: [CGWindowID], pixelHeight: Int, interval: Duration,

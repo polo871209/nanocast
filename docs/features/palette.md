@@ -63,7 +63,8 @@ Closing a palette menu explicitly restores search focus after its panel returns 
 
 Hiding schedules Pop to Root Search, and `PaletteWindowController.popToRoot` is its only path: the
 palette returns to the launcher, at once or after `popToRootTimeout`, unless a re-summon inside that
-window consumes the pending reset first.
+window consumes the pending reset first. A re-summon keeps the preserved screen only when it asks for
+that same mode, so the launcher hotkey always opens the launcher.
 
 Each `PaletteMode` maps to one type conforming to `PaletteScreen`, and the protocol is what keeps the
 selection invariant honest: a screen exposes `rows` as its single source of visible order, and the

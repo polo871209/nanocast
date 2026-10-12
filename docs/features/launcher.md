@@ -559,7 +559,7 @@ and three places read it: `FeatureCommandsSection` draws the pane's rows from it
 category gate for it in both `isVisible` and `allowsHotKey`. Stamping the entry rather than sniffing its
 id is what keeps "which pane owns this" out of the entry-ID namespace.
 
-Six feature panes own commands today — File Search, Notes, Navigation, Window Management, Clipboard and Emoji.
+Seven feature panes own commands today — File Search, Notes, Navigation, Window Management, Clipboard, Screenshot and Emoji.
 What is left in Settings › Commands is
 the set no feature switch governs: Calculator History, Open Camera, Pick Color, the three backup commands, Check
 for Updates, Nanocast Settings, About, Support and Quit.

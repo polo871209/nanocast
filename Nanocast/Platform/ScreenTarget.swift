@@ -12,4 +12,8 @@ extension NSScreen {
     static var primary: NSScreen? {
         screens.first { $0.frame.origin == .zero } ?? screens.first
     }
+
+    var displayID: CGDirectDisplayID? {
+        (deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
+    }
 }
