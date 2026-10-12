@@ -121,6 +121,8 @@ final class LauncherCoordinator {
         case .openCamera:
             dismissPalette()
             Task { await core.cameraCoordinator.show() }
+        case .captureScreenshot:
+            core.screenshotCoordinator.capture()
         case .define:
             core.dictionaryCoordinator.show()
         case .openInBrowser:
