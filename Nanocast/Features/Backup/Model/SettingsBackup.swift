@@ -51,6 +51,7 @@ struct SettingsBackup: Codable {
         var notesShowsFormattingBar: Bool?
         var customCommandsEnabled: Bool?
         var customCommandsShowInLauncher: Bool?
+        var screenshotRecordingFormat: String?
         var navigationEnabled: Bool?
         var menuSearchDisabledApps: [String]?
         var menuSearchShowsAppleMenu: Bool?
@@ -132,6 +133,7 @@ extension SettingsBackup {
             notesShowsFormattingBar: s.notesShowsFormattingBar,
             customCommandsEnabled: s.customCommandsEnabled,
             customCommandsShowInLauncher: s.customCommandsShowInLauncher,
+            screenshotRecordingFormat: s.screenshotRecordingFormat.rawValue,
             navigationEnabled: s.navigationEnabled,
             menuSearchDisabledApps: s.menuSearchDisabledApps,
             menuSearchShowsAppleMenu: s.menuSearchShowsAppleMenu,
@@ -383,6 +385,10 @@ extension SettingsBackup {
         }
         if let flag = s.customCommandsShowInLauncher {
             settings.customCommandsShowInLauncher = flag
+            count += 1
+        }
+        if let raw = s.screenshotRecordingFormat, let format = ScreenRecordingFormat(rawValue: raw) {
+            settings.screenshotRecordingFormat = format
             count += 1
         }
         if let flag = s.navigationEnabled {

@@ -41,6 +41,8 @@ enum AppSettingsKey: String, CaseIterable {
     case notesFolder = "notesFolder"
     case customCommandsEnabled = "customCommandsEnabled"
     case customCommandsShowInLauncher = "customCommandsShowInLauncher"
+    case screenshotSaveFolder = "screenshotSaveFolder"
+    case screenshotRecordingFormat = "screenshotRecordingFormat"
     case navigationEnabled = "navigationEnabled"
     case menuSearchDisabledApps = "menuSearchDisabledApps"
     case menuSearchShowsAppleMenu = "menuSearchShowsAppleMenu"
