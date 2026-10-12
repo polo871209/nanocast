@@ -1,6 +1,7 @@
 import AppKit
 import CoreAudio
 import Darwin
+import Network
 
 struct SystemActionFeedback: Sendable {
     let title: String
@@ -156,8 +157,48 @@ enum SystemActionRunner {
             let on = try await toggleBluetooth()
             return SystemActionFeedback(
                 on ? "Bluetooth On" : "Bluetooth Off")
+        case .copyPublicIP:
+            let address = try await fetchPublicIP()
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(address, forType: .string)
+            return SystemActionFeedback("Copied \(address)")
+        case .clearDNSCache:
+            try await runAppleScript(
+                """
+                do shell script "/usr/bin/dscacheutil -flushcache; \
+                /usr/bin/killall -HUP mDNSResponder" with administrator privileges
+                """)
+            return SystemActionFeedback("DNS Cache Cleared")
         }
         return nil
+    }
+
+    private static let publicIPSession: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.urlCache = nil
+        return URLSession(configuration: config)
+    }()
+
+    private static func fetchPublicIP() async throws -> String {
+        let host = "ipv4.icanhazip.com"
+        let request = URLRequest(url: URL(string: "https://\(host)")!, timeoutInterval: 10)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await publicIPSession.data(for: request)
+        } catch {
+            throw SystemActionFailure("Nanocast could not reach \(host): \(error.localizedDescription)")
+        }
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw SystemActionFailure("\(host) did not return your IP address.")
+        }
+        let address = String(decoding: data, as: UTF8.self)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard IPv4Address(address) != nil else {
+            throw SystemActionFailure("\(host) returned an unexpected answer.")
+        }
+        return address
     }
 
     /// Finder writes the key only once the box is changed, so an absent key is its default: on.
@@ -577,6 +618,7 @@ enum SystemActionRunner {
             let detail =
                 errorInfo[NSAppleScript.errorMessage] as? String
                 ?? "Unknown automation error."
+            if number == -128 { throw CancellationError() }
             if number == -1743 {
                 throw SystemActionFailure(
                     """

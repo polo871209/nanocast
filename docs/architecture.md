@@ -230,7 +230,7 @@ Nanocast/
     PaletteRowIndex.swift   the flat selection index — palette-owned, so it sits at the top
     Launcher/ Clipboard/ Calculator/ Camera/ Dictionary/ Emoji/ FileSearch/ MenuSearch/
     Notes/ Uninstall/ SystemActions/ CustomCommands/ HotKeys/ Backup/
-    WindowManagement/ WindowSwitcher/ Screenshot/ Onboarding/ Updates/ Settings/
+    WindowManagement/ WindowSwitcher/ Screenshot/ ColorPicker/ Onboarding/ Updates/ Settings/
         Model/      pure — the harness inputs
         Service/    effects — stores, monitors, runners, AppKit glue
         UI/         screens, views, and the feature's coordinator
