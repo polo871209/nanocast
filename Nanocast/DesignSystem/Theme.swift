@@ -39,6 +39,7 @@ enum Theme {
         static let switcherPanel: CGFloat = 28
         static let switcherSelection: CGFloat = 18
         static let switcherThumbnail: CGFloat = 12
+        static let loupe: CGFloat = 8
     }
 
     enum Size {
@@ -176,6 +177,38 @@ enum Theme {
         static let switcherSelectionStroke: CGFloat = 1.5
         static let switcherScreenFraction = CGSize(width: 0.92, height: 0.85)
         static let switcherMinimumScale: CGFloat = 0.5
+        static let captureBorder: CGFloat = 1
+        static let captureHandle: CGFloat = 8
+        static let captureHandleRim: CGFloat = 1.5
+        static let captureHandleReach: CGFloat = 6
+        static let captureClickSlop: CGFloat = 3
+        static let loupeCell: CGFloat = 8
+        static let loupeCaption: CGFloat = 36
+        static let loupeOffset: CGFloat = 20
+        static let pinMinimum: CGFloat = 40
+    }
+
+    enum Markup {
+        static let strokes: [CGFloat] = [2, 4, 8, 14]
+        static let highlighters: [CGFloat] = [8, 14, 20, 30]
+        static let highlighterOpacity: CGFloat = 0.5
+        static let textSizes: [CGFloat] = [14, 20, 28]
+        static let brushes: [CGFloat] = [12, 24, 40]
+        static let stepInset: CGFloat = 5
+        static let mosaicBlock: CGFloat = 10
+        static let blurBlock: CGFloat = 4
+        static let hitSlop: CGFloat = 4
+        static let dragSlop: CGFloat = 3
+        static let selectionDash: [CGFloat] = [4, 3]
+        static let selectionOutset: CGFloat = 4
+        static let swatch: CGFloat = 14
+        static let levelDots: [CGFloat] = [4, 7, 10]
+        static let widthDots: [CGFloat] = [3, 5, 8, 12]
+        static let chromeScale: CGFloat = 1.25
+        static let scrollStatusWidth: CGFloat = 140
+        static let recordingStatusWidth: CGFloat = 72
+        static let recordingDot: CGFloat = 8
+        static let levelText: [CGFloat] = [10, 13, 16]
     }
 
     enum Duration {
@@ -324,6 +357,17 @@ enum Theme {
         static let success = Color.green
         static let warning = Color.orange
         static let progress = Color.blue
+        static let captureDim = Color(nsColor: .srgbInk(0, alpha: 0.45))
+        static let captureHandleRim = Color(nsColor: .srgbInk(1, alpha: 1))
+        static let loupeSurface = adaptive(
+            dark: .srgbInk(0.12, alpha: 0.94), light: .srgbInk(0.98, alpha: 0.94))
+        static let loupeGrid = Color(nsColor: .srgbInk(0, alpha: 0.18))
+        static let markupRed = Color(red: 0.961, green: 0.290, blue: 0.271)
+        static let markupYellow = Color(red: 1.0, green: 0.776, blue: 0.039)
+        static let markupGreen = Color(red: 0.204, green: 0.780, blue: 0.141)
+        static let markupBlue = Color(red: 0.200, green: 0.439, blue: 1.0)
+        static let markupBlack = Color(red: 0.122, green: 0.137, blue: 0.161)
+        static let markupWhite = Color(nsColor: .srgbInk(1, alpha: 1))
         static let terminalSurface = adaptive(
             dark: .srgbInk(0.07, alpha: 1), light: .srgbInk(0.99, alpha: 1))
     }

@@ -60,6 +60,7 @@ struct SettingsFileTest {
             "windowManagement.customSizes", "windowManagement.layouts", "windowManagement.rooms",
             "windowManagement.commands", "clipboard.enabled", "clipboard.retentionDays",
             "clipboard.defaultAction", "clipboard.disabledApps", "clipboard.commands",
+            "screenshot.saveFolder", "screenshot.recordingFormat", "screenshot.commands",
             "emoji.skinTone", "emoji.gridColumns", "emoji.commands"
         ]
         check(
@@ -80,7 +81,7 @@ struct SettingsFileTest {
             SettingsFileKey.sections == [
                 "general", "appearance", "hyperKey", "calculator", "search", "applications",
                 "systemSettings", "systemActions", "commands", "dictation", "fileSearch", "notes",
-                "navigation", "windowManagement", "clipboard", "emoji"
+                "navigation", "windowManagement", "clipboard", "screenshot", "emoji"
             ])
 
         let grantPaths = ["clipboard.textSearchEnabled", "dictation.enabled"]

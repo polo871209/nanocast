@@ -3,6 +3,10 @@ import Foundation
 nonisolated enum ClipboardTextWorker {
     enum Failure: Error { case recognition, outputLimit }
 
+    enum Input: String {
+        case image, pdf, screenshot
+    }
+
     static let maximumOutputBytes = 32_000
     private static let readSize = 4096
     private static let queue = DispatchQueue(
@@ -14,17 +18,15 @@ nonisolated enum ClipboardTextWorker {
         guard let path = item.imagePath ?? item.filePath else { return "" }
         let kind = item.kind == .image ? ClipboardFileKind.image : ClipboardFileKind.of(path: path)
         guard kind == .image || kind == .pdf else { return "" }
-        return try await extract(at: URL(fileURLWithPath: path), isPDF: kind == .pdf, executable: executable)
+        return try await extract(at: URL(fileURLWithPath: path), as: kind == .pdf ? .pdf : .image)
     }
 
-    static func extract(
-        at url: URL, isPDF: Bool, executable: URL, timeout: Duration = .seconds(60)
-    ) async throws -> String {
+    static func extract(at url: URL, as input: Input, timeout: Duration = .seconds(60)) async throws -> String {
         try Task.checkCancellation()
         let process = Process()
         let output = Pipe()
         process.executableURL = executable
-        process.arguments = [isPDF ? "pdf" : "image", url.path]
+        process.arguments = [input.rawValue, url.path]
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = output
         process.standardError = FileHandle.nullDevice
