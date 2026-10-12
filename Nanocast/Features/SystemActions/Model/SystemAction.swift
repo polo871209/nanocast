@@ -34,6 +34,8 @@ struct SystemAction: Identifiable, Hashable, Sendable {
         case quitAllApps = "quit-all-apps"
         case dismissNotifications = "dismiss-notifications"
         case toggleBluetooth = "toggle-bluetooth"
+        case copyPublicIP = "copy-public-ip"
+        case clearDNSCache = "clear-dns-cache"
     }
 
     enum Confirmation: Hashable, Sendable {
@@ -104,6 +106,8 @@ enum SystemActionCatalog {
         case .quitAllApps: return "Quit All Applications"
         case .dismissNotifications: return "Dismiss Notifications"
         case .toggleBluetooth: return "Toggle Bluetooth"
+        case .copyPublicIP: return "Copy Public IP Address"
+        case .clearDNSCache: return "Clear DNS Cache"
         }
     }
 
@@ -139,6 +143,8 @@ enum SystemActionCatalog {
         case .quitAllApps: return "xmark.circle.fill"
         case .dismissNotifications: return "bell.slash.fill"
         case .toggleBluetooth: return "bluetooth"
+        case .copyPublicIP: return "globe"
+        case .clearDNSCache: return "arrow.triangle.2.circlepath"
         }
     }
 
@@ -151,8 +157,9 @@ enum SystemActionCatalog {
         case .playPause, .nextTrack, .previousTrack: return .pink
         case .logOut, .openTrash, .ejectAllDisks: return .gray
         case .showDesktop, .toggleStageManager, .toggleHiddenFiles, .hideOtherApps, .unhideAllApps,
-            .toggleBluetooth:
+            .toggleBluetooth, .copyPublicIP:
             return .blue
+        case .clearDNSCache: return .cyan
         case .shutDown, .toggleMute, .toggleMicrophoneMute, .volumeUp, .volumeDown, .setVolume, .volume0,
             .volume25, .volume50, .volume75, .volume100, .emptyTrash, .quitAllApps, .dismissNotifications:
             return .red
