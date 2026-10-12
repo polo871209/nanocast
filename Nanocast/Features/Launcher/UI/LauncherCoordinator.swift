@@ -123,6 +123,8 @@ final class LauncherCoordinator {
             Task { await core.cameraCoordinator.show() }
         case .pickColor:
             core.colorPickerCoordinator.pick()
+        case .captureScreenshot:
+            core.screenshotCoordinator.capture()
         case .define:
             core.dictionaryCoordinator.show()
         case .openInBrowser:

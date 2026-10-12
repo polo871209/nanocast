@@ -309,6 +309,10 @@ final class AppSettings {
         }
     }
 
+    var screenshotSaveFolder: String? {
+        didSet { defaults.set(screenshotSaveFolder, forKey: Key.screenshotSaveFolder.rawValue) }
+    }
+
     var navigationEnabled: Bool {
         didSet { defaults.set(navigationEnabled, forKey: Key.navigationEnabled.rawValue) }
     }
@@ -506,6 +510,7 @@ final class AppSettings {
         customCommandsShowInLauncher =
             defaults.object(forKey: Key.customCommandsShowInLauncher.rawValue) == nil
             || defaults.bool(forKey: Key.customCommandsShowInLauncher.rawValue)
+        screenshotSaveFolder = defaults.string(forKey: Key.screenshotSaveFolder.rawValue)
         navigationEnabled = defaults.bool(forKey: Key.navigationEnabled.rawValue)
         menuSearchDisabledApps =
             defaults.stringArray(forKey: Key.menuSearchDisabledApps.rawValue) ?? []

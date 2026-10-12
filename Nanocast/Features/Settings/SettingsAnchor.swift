@@ -64,12 +64,16 @@ extension SettingsAnchor {
     static let clipboardDisabledApplications = Self(
         tab: .clipboard, title: "Excluded Applications")
 
+    static let screenshotCommands = Self(tab: .screenshot, title: "Commands")
+    static let screenshotSaving = Self(tab: .screenshot, title: "Saving")
+
     static let emojiCommands = Self(tab: .emoji, title: "Commands")
     static let emojiAppearance = Self(tab: .emoji, title: "Appearance")
 
     static let permissionsAccessibility = Self(tab: .permissions, title: "Accessibility")
     static let permissionsFullDiskAccess = Self(tab: .permissions, title: "Full Disk Access")
     static let permissionsMicrophone = Self(tab: .permissions, title: "Microphone")
+    static let permissionsScreenRecording = Self(tab: .permissions, title: "Screen Recording")
 
     static let backupExport = Self(tab: .backup, title: "Export")
     static let backupImport = Self(tab: .backup, title: "Import")

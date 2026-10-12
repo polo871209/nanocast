@@ -82,6 +82,8 @@ enum SettingsBackupCoverage {
             "Names a keyboard input source installed on this Mac; another Mac may not have it.",
         AppSettingsKey.notesFolder.rawValue:
             "Names a folder on this Mac; the one a backup lands on may not have it.",
+        AppSettingsKey.screenshotSaveFolder.rawValue:
+            "Names a folder on this Mac; the one a backup lands on may not have it.",
         AppSettingsKey.settingsFileEnabled.rawValue:
             "Lets a file on this Mac change its settings; an import must not hand that to another."
     ]
