@@ -58,6 +58,8 @@ final class SystemActionCoordinator {
             }
         } catch let failure as SystemActionFailure {
             await presentFailure(action: action, failure: failure)
+        } catch is CancellationError {
+            return
         } catch {
             await presentFailure(
                 action: action, failure: SystemActionFailure(error.localizedDescription))
