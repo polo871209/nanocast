@@ -1,9 +1,9 @@
 ---
 title: Permissions
-description: What Tinycast asks for, why it needs it, and when it asks.
+description: What Nanocast asks for, why it needs it, and when it asks.
 ---
 
-Tinycast asks for a permission **only when you use a feature that needs it**, never at launch. The
+Nanocast asks for a permission **only when you use a feature that needs it**, never at launch. The
 launcher, calculator, emoji picker and search all work without any permissions.
 
 **Settings → Permissions** shows the status of Accessibility and Calendars, and opens the right
@@ -11,7 +11,7 @@ System Settings pane for you.
 
 ## Accessibility
 
-macOS describes this permission as "control your computer". Tinycast uses it to read from and write
+macOS describes this permission as "control your computer". Nanocast uses it to read from and write
 to the window you were using before the palette opened.
 
 Grant it in **System Settings → Privacy & Security → Accessibility**, or from
@@ -28,7 +28,7 @@ Grant it in **System Settings → Privacy & Security → Accessibility**, or fro
 | [Navigation](/docs/features/navigation)                                       | Lists open windows and clicks menu bar items           |
 | [Hyper key](/docs/reference/hotkeys#hyper-key)                                | Turns one physical key into a modifier chord           |
 | Double-tap modifier shortcuts                                                 | Detects the tap pattern                                |
-| <kbd>⌘</kbd><kbd>esc</kbd> back to the root search                            | macOS uses this shortcut unless Tinycast intercepts it |
+| <kbd>⌘</kbd><kbd>esc</kbd> back to the root search                            | macOS uses this shortcut unless Nanocast intercepts it |
 | `getSelectedText` in [extensions](/docs/extensions)                           | Reads the selection from the frontmost app             |
 
 ### Snippets and keystroke matching
@@ -41,7 +41,7 @@ follows:
 - Matching happens **only on your Mac**. Keystrokes are never stored or sent anywhere.
 - The typing buffer holds at most 256 characters. It resets when you switch apps, press a shortcut
   with a modifier, turn on Secure Event Input, or stop typing for 15 seconds.
-- Tinycast uses a **listen-only** event tap under the Accessibility permission. It doesn't use Input
+- Nanocast uses a **listen-only** event tap under the Accessibility permission. It doesn't use Input
   Monitoring.
 - **Restoring a settings backup can't turn snippets on**, so importing a file someone sent you can
   never enable keystroke listening.
@@ -50,7 +50,7 @@ follows:
 
 The [Calendar](/docs/features/calendar) feature reads your events to find meeting links.
 
-When you turn it on, Tinycast shows its own explanation first, then the macOS prompt. The feature is
+When you turn it on, Nanocast shows its own explanation first, then the macOS prompt. The feature is
 only on once macOS grants access. If you declined earlier, **Settings → Permissions** opens the
 System Settings pane where you can change it.
 
@@ -70,12 +70,12 @@ A few actions show their own macOS prompt the first time you run them:
   shows the standard Automation prompt.
 - **Toggle Bluetooth** shows the Bluetooth prompt.
 
-If you decline, Tinycast tells you and links to the right System Settings pane, so the action never
+If you decline, Nanocast tells you and links to the right System Settings pane, so the action never
 fails silently.
 
 ## Full Disk Access
 
-Tinycast **checks** whether it has Full Disk Access but **never asks** for it automatically.
+Nanocast **checks** whether it has Full Disk Access but **never asks** for it automatically.
 Settings → Permissions and Settings → File Search both show its status and offer a button to open
 System Settings → Privacy & Security → Full Disk Access, where you can grant it manually.
 
@@ -87,7 +87,7 @@ move. Without Full Disk Access, protected folders like `~/Library/Containers`,
 `~/Library/Group Containers` and `~/Library/Cookies` appear as locked rows. At worst, you remove
 those by hand.
 
-## What Tinycast never needs
+## What Nanocast never needs
 
 - **Screen Recording.** The window switcher reads window titles through Accessibility.
 - **Location.** The calculator picks your currency from your Mac's region setting.

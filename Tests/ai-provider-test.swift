@@ -125,7 +125,7 @@ struct AIProviderTests {
         switchedOffRoutesLeaveTheDefault()
         installedOverridesPersistAndResolve()
         aFailedKeychainReadIsNeverSavedOver()
-        aLaunchInheritsTheReadersVariablesNotTinycastsOwn()
+        aLaunchInheritsTheReadersVariablesNotNanocastsOwn()
         subscriptionSelectionsReconcile()
         onDeviceSelectionsRoundTripAndLead()
         conversationSettingsPersistAndDecide()
@@ -269,7 +269,7 @@ struct AIProviderTests {
         expect(
             AIModelSelection.codex(model: "gpt", effort: nil).runsItsOwnTools
                 && AIModelSelection.claude(model: "sonnet", effort: nil).runsItsOwnTools,
-            "and they are the routes Tinycast never wraps in its own loop")
+            "and they are the routes Nanocast never wraps in its own loop")
         expect(
             !AIModelSelection.grok(model: "grok", effort: nil).runsItsOwnTools
                 && !AIModelSelection.cursor(model: "auto", effort: nil).runsItsOwnTools
@@ -277,7 +277,7 @@ struct AIProviderTests {
                 && !AIModelSelection.appleIntelligence.runsItsOwnTools
                 && !AIModelSelection.api(connection: UUID(), model: "m", effort: nil)
                     .runsItsOwnTools,
-            "every other route either runs Tinycast's loop or has nothing to call")
+            "every other route either runs Nanocast's loop or has nothing to call")
 
         expect(
             AIRequest(messages: []).tools.isEmpty,
@@ -532,7 +532,7 @@ struct AIProviderTests {
         for (provider, endpoint) in expected {
             let query = try? AIModelDiscovery.query(
                 provider: provider, baseURL: URL(string: provider.defaultBaseURL)!,
-                apiKey: "secret", appTitle: "Tinycast")
+                apiKey: "secret", appTitle: "Nanocast")
             expect(
                 query?.request.url?.absoluteString == endpoint,
                 "\(provider.title) resolves its model catalog endpoint")
@@ -540,28 +540,28 @@ struct AIProviderTests {
 
         let anthropic = try? AIModelDiscovery.query(
             provider: .anthropic, baseURL: URL(string: "https://api.anthropic.com")!,
-            apiKey: "secret", appTitle: "Tinycast"
+            apiKey: "secret", appTitle: "Nanocast"
         ).request
         expect(
             anthropic?.value(forHTTPHeaderField: "x-api-key") == "secret",
             "Anthropic model discovery uses x-api-key authentication")
         let gemini = try? AIModelDiscovery.query(
             provider: .gemini, baseURL: URL(string: AIProviderKind.gemini.defaultBaseURL)!,
-            apiKey: "secret", appTitle: "Tinycast"
+            apiKey: "secret", appTitle: "Nanocast"
         ).request
         expect(
             gemini?.value(forHTTPHeaderField: "x-goog-api-key") == "secret",
             "Gemini model discovery uses native API-key authentication")
         let openAI = try? AIModelDiscovery.query(
             provider: .openAI, baseURL: URL(string: AIProviderKind.openAI.defaultBaseURL)!,
-            apiKey: "secret", appTitle: "Tinycast"
+            apiKey: "secret", appTitle: "Nanocast"
         ).request
         expect(
             openAI?.value(forHTTPHeaderField: "Authorization") == "Bearer secret",
             "OpenAI-compatible discovery uses bearer authentication")
         let local = try? AIModelDiscovery.query(
             provider: .openAICompatible, baseURL: URL(string: "http://localhost:11434/")!,
-            apiKey: "", appTitle: "Tinycast"
+            apiKey: "", appTitle: "Nanocast"
         ).request
         expect(
             local?.url?.absoluteString == "http://localhost:11434/models",
@@ -1244,7 +1244,7 @@ struct AIProviderTests {
         expect(
             pagedError as? AIProviderError
                 == .responseFailed("The provider stopped the response with an error."),
-            "a mid-stream error that is only an HTML page says so in Tinycast's own words")
+            "a mid-stream error that is only an HTML page says so in Nanocast's own words")
 
         var bracketed = AIStreamDecoder(shape: .openAICompatible)
         let prose =
@@ -1634,7 +1634,7 @@ struct AIProviderTests {
             "a launch that cannot read the values starts without them")
     }
 
-    static func aLaunchInheritsTheReadersVariablesNotTinycastsOwn() {
+    static func aLaunchInheritsTheReadersVariablesNotNanocastsOwn() {
         let launch = InstalledAILaunch(
             environment: [
                 "PATH": "/reader/bin", "HTTPS_PROXY": "proxy", "NO_COLOR": "0",
@@ -1649,7 +1649,7 @@ struct AIProviderTests {
         expect(
             inherited["OPENCODE_CONFIG_CONTENT"] == nil && inherited["TC_MCP_0_0"] == nil
                 && inherited["NO_COLOR"] == "1" && inherited["1BAD"] == nil,
-            "but never one Tinycast sets itself, nor one that is not a variable name")
+            "but never one Nanocast sets itself, nor one that is not a variable name")
         expect(
             launch.inherited(for: .claude, base: [:])["OPENCODE_CONFIG_CONTENT"] == "{}",
             "a name only another tool reserves is an ordinary variable here")
@@ -1908,20 +1908,20 @@ struct AIProviderTests {
                 && arguments.contains("mcp_servers.files.enabled=false"),
             "every one of the reader's own servers is disabled by name, one named like ours too")
         expect(
-            arguments.contains("mcp_servers.tinycast-files.enabled=true")
+            arguments.contains("mcp_servers.nanocast-files.enabled=true")
                 && !arguments.contains {
                     $0.hasPrefix("mcp_servers.files.") && !$0.hasSuffix("=false")
                 },
-            "since Tinycast's go by names of their own, which no table of the reader's merges into")
+            "since Nanocast's go by names of their own, which no table of the reader's merges into")
         expect(
-            arguments.contains(#"mcp_servers.tinycast-files.command="/bin/sh""#)
+            arguments.contains(#"mcp_servers.nanocast-files.command="/bin/sh""#)
                 && arguments.contains(Self.renamingArguments),
             "a local server with variables arrives through a shell that renames them, then runs it")
         expect(
             arguments.contains(Self.forwardedVariables),
             "whose environment is named rather than carried: Codex forwards only what is listed")
         expect(
-            arguments.contains(#"mcp_servers.tinycast-linear.bearer_token_env_var="TC_MCP_1_0""#),
+            arguments.contains(#"mcp_servers.nanocast-linear.bearer_token_env_var="TC_MCP_1_0""#),
             "an OAuth endpoint lends its token through the variable Codex reads it from")
         expect(
             arguments.contains(Self.headerMapOverride),
@@ -1946,7 +1946,7 @@ struct AIProviderTests {
                 "https://open.example/mcp", headerName: "Authorization", headerValue: ""))
         let openArguments = CodexMCPLaunch.arguments(servers: [open], disabling: [])
         expect(
-            openArguments.contains(#"mcp_servers.tinycast-open.url="https://open.example/mcp""#)
+            openArguments.contains(#"mcp_servers.nanocast-open.url="https://open.example/mcp""#)
                 && !openArguments.contains { $0.contains("bearer_token") || $0.contains("headers") }
                 && CodexMCPLaunch.environment(servers: [open]) == [:],
             "a server that needs no credential goes to Codex with no header and no variable")
@@ -1959,7 +1959,7 @@ struct AIProviderTests {
                         path: #"/tmp/we"ird\bin"#, arguments: [], environment: [:]))
             ], disabling: [])
         expect(
-            quoted.contains(#"mcp_servers.tinycast-odd.command="/tmp/we\"ird\\bin""#),
+            quoted.contains(#"mcp_servers.nanocast-odd.command="/tmp/we\"ird\\bin""#),
             "a path with a quote in it is still one TOML string")
 
         expect(
@@ -1973,17 +1973,17 @@ struct AIProviderTests {
                     transport: .command(path: "/bin/echo", arguments: ["a\r\nb"], environment: [:]))
             ], disabling: [])
         expect(
-            crlf.contains(#"mcp_servers.tinycast-lines.args=["a\u000D\u000Ab"]"#),
+            crlf.contains(#"mcp_servers.nanocast-lines.args=["a\u000D\u000Ab"]"#),
             "so an argument carrying a Windows line ending still leaves Codex's config loadable")
 
         expect(
-            CodexMCPLaunch.handle(ofServer: "tinycast-files") == "files"
+            CodexMCPLaunch.handle(ofServer: "nanocast-files") == "files"
                 && CodexMCPLaunch.handle(ofServer: "files") == nil
-                && CodexMCPLaunch.handle(ofServer: "tinycast-") == nil,
-            "a name Codex reports maps back to a handle only when it is one of Tinycast's")
+                && CodexMCPLaunch.handle(ofServer: "nanocast-") == nil,
+            "a name Codex reports maps back to a handle only when it is one of Nanocast's")
         expect(
-            CodexMCPLaunch.takenName(servers: [stdio], foreignNames: ["tinycast-files"])
-                == "tinycast-files"
+            CodexMCPLaunch.takenName(servers: [stdio], foreignNames: ["nanocast-files"])
+                == "nanocast-files"
                 && CodexMCPLaunch.takenName(servers: [stdio], foreignNames: ["files"]) == nil,
             "and a reader's server already named like an armed one of ours is caught before launch")
 
@@ -2025,8 +2025,8 @@ struct AIProviderTests {
                 path: "/usr/bin/true", arguments: [], environment: ["NOT-A-NAME": "hidden"]))
         let oddArguments = CodexMCPLaunch.arguments(servers: [odd], disabling: [])
         expect(
-            oddArguments.contains(#"mcp_servers.tinycast-odd.command="/usr/bin/true""#)
-                && oddArguments.contains("mcp_servers.tinycast-odd." + "env" + "_vars=[]"),
+            oddArguments.contains(#"mcp_servers.nanocast-odd.command="/usr/bin/true""#)
+                && oddArguments.contains("mcp_servers.nanocast-odd." + "env" + "_vars=[]"),
             "a name the shell cannot export is not forwarded, and the server launches directly")
         expect(
             CodexMCPLaunch.environment(servers: [odd]) == [:],
@@ -2120,15 +2120,15 @@ struct AIProviderTests {
     }
 
     private static let renamingArguments =
-        #"mcp_servers.tinycast-files.args=["-c","set -- \"$TC_MCP_0_0\" \"$@\"; "#
+        #"mcp_servers.nanocast-files.args=["-c","set -- \"$TC_MCP_0_0\" \"$@\"; "#
         + #"unset TC_MCP_0_0; export API_KEY=\"${1}\"; shift 1; "#
-        + #"exec \"$@\"","tinycast-mcp","/usr/local/bin/node","server.js","--root=/tmp"]"#
+        + #"exec \"$@\"","nanocast-mcp","/usr/local/bin/node","server.js","--root=/tmp"]"#
 
     /// Spelled through a joined literal so no shell hook mistakes the key for a dotfile.
     private static let forwardedVariables =
-        "mcp_servers.tinycast-files." + "env" + #"_vars=["TC_MCP_0_0"]"#
+        "mcp_servers.nanocast-files." + "env" + #"_vars=["TC_MCP_0_0"]"#
     private static let headerMapOverride =
-        "mcp_servers.tinycast-notes." + "env" + #"_http_headers={"X-Api-Key"="TC_MCP_2_0"}"#
+        "mcp_servers.nanocast-notes." + "env" + #"_http_headers={"X-Api-Key"="TC_MCP_2_0"}"#
 
     /// The file is the only place Claude's secrets go, and the tool name is what routes back.
     static func claudeConfigurationCarriesServersAndRoutesToolNames() {
@@ -2164,7 +2164,7 @@ struct AIProviderTests {
                 && (linear["headers"] as? [String: String]) == [
                     "Authorization": "Bearer tok-123"
                 ],
-            "a remote one carries the header Tinycast would have sent itself")
+            "a remote one carries the header Nanocast would have sent itself")
 
         let bare = ClaudeMCPLaunch.configuration(servers: [
             AIToolServer(
@@ -2183,7 +2183,7 @@ struct AIProviderTests {
                 && arguments.contains("--permission-prompt-tool")
                 && arguments.contains("stdio")
                 && value(after: "--max-turns", in: arguments) == "25",
-            "the flags name the file, route consent to Tinycast and cap the turn")
+            "the flags name the file, route consent to Nanocast and cap the turn")
         let uncapped = ClaudeMCPLaunch.arguments(
             configurationPath: "/tmp/m.json", handles: ["files"], rounds: nil)
         expect(
@@ -2263,7 +2263,7 @@ struct AIProviderTests {
         "tool_name":"mcp__files__read","input":{"path":"/tmp"}}}
         """
 
-    /// The consent channel is the SDK's undocumented one; this is all of it Tinycast speaks.
+    /// The consent channel is the SDK's undocumented one; this is all of it Nanocast speaks.
     static func claudeControlFramesAnswerOneTool() {
         let frame =
             (try? JSONSerialization.jsonObject(with: Data(Self.canUseToolFrame.utf8)))
@@ -2314,7 +2314,7 @@ struct AIProviderTests {
             ClaudeControlProtocol.request(other) == nil
                 && ClaudeControlProtocol.unsupportedRequestID(other) == "r2"
                 && ClaudeControlProtocol.unsupportedRequestID(frame) == nil,
-            "a subtype Tinycast does not know is no tool question, yet it is still answered")
+            "a subtype Nanocast does not know is no tool question, yet it is still answered")
         let error =
             ClaudeControlProtocol.error(to: "r2", message: "no")
             .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }

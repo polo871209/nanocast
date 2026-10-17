@@ -3,12 +3,12 @@ title: Hotkeys
 description: Recording global shortcuts, double-tap modifiers, and the Hyper key.
 ---
 
-**Tinycast doesn't come with any shortcuts.** You record every global shortcut yourself.
+**Nanocast doesn't come with any shortcuts.** You record every global shortcut yourself.
 
 ## What can have a shortcut
 
 - The palette itself (**App Launcher**, in Settings → General)
-- Every built-in command, except Open in Browser, Run Shell Command and Quit Tinycast. See
+- Every built-in command, except Open in Browser, Run Shell Command and Quit Nanocast. See
   [Commands](/docs/launcher/commands).
 - Every app and every System Settings pane
 - Every quicklink, snippet, custom command, custom Quick Action and extension command
@@ -48,11 +48,11 @@ The rules:
 <kbd>⇧</kbd> works as a double tap, even though it can't be a regular shortcut on its own. Caps Lock
 can't be used this way; use the Hyper key for that. Having Caps Lock _on_ doesn't interfere.
 
-This needs [Accessibility](/docs/permissions), but **Tinycast never asks for it on its own**. The
+This needs [Accessibility](/docs/permissions), but **Nanocast never asks for it on its own**. The
 shortcut is saved anyway, the recorder shows a warning that opens System Settings, and the shortcut
 starts working as soon as you grant access.
 
-Tinycast only listens for double taps **while at least one shortcut uses one**, so if you don't use
+Nanocast only listens for double taps **while at least one shortcut uses one**, so if you don't use
 them, they cost nothing.
 
 ## Hyper key
@@ -63,8 +63,8 @@ or into <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⇧</kbd><kbd>⌘</kbd> with **Include 
 You can choose **Caps Lock**, or the **Left** or **Right** side of **Control**, **Shift**,
 **Option** or **Command**.
 
-Function keys aren't available. Their media functions run before Tinycast sees the key press, and
-catching them earlier would need Input Monitoring, which Tinycast never asks for.
+Function keys aren't available. Their media functions run before Nanocast sees the key press, and
+catching them earlier would need Input Monitoring, which Nanocast never asks for.
 
 Shortcuts you already use with those modifiers work with the Hyper key right away.
 
@@ -80,7 +80,7 @@ This only changes how the shortcut is displayed. With no Hyper key set,
 ### Include Shift
 
 Changing this setting **updates every saved shortcut**, so none of them stop working. If an update
-would conflict with another shortcut, Tinycast skips it and that shortcut keeps its original keys.
+would conflict with another shortcut, Nanocast skips it and that shortcut keeps its original keys.
 
 The option is dimmed while Hyper Key is set to None.
 
@@ -96,15 +96,15 @@ Many people who use Caps Lock as their Hyper key choose Escape.
 While Caps Lock is your Hyper key, it's remapped at the hardware level on **every keyboard**,
 including one you plug in later. Any remapping another app made for a different key is kept.
 
-The remapping is removed when you choose a different key or quit Tinycast, and it never persists
-after a restart. If Tinycast is force quit or crashes, it stays until Tinycast opens again, which
+The remapping is removed when you choose a different key or quit Nanocast, and it never persists
+after a restart. If Nanocast is force quit or crashes, it stays until Nanocast opens again, which
 removes it. It's also paused while your Mac sleeps, while the screen is locked, so Caps Lock
 works in the login password field, and while another user account is active.
 
-If a keyboard ever loses the remapping, one press there acts as plain Caps Lock. Tinycast then remaps
+If a keyboard ever loses the remapping, one press there acts as plain Caps Lock. Nanocast then remaps
 that keyboard again and turns Caps Lock back off.
 
-The Hyper key needs Accessibility. Tinycast asks for it when you choose a key, keeps checking, and
+The Hyper key needs Accessibility. Nanocast asks for it when you choose a key, keeps checking, and
 starts working as soon as access is granted.
 
 ### Status and diagnostics
@@ -115,7 +115,7 @@ Key** sets everything up again.
 
 ### Conflicts
 
-- **Hyperkey** or **Superkey** running: they have their own Hyper key, so Tinycast's stays off and
+- **Hyperkey** or **Superkey** running: they have their own Hyper key, so Nanocast's stays off and
   says so. It starts again by itself when you quit them.
 - **BetterTouchTool** running: listed in Diagnostics as a possible conflict, nothing more.
 - **Karabiner-Elements** remapping the same key: shown in Diagnostics.
@@ -125,21 +125,21 @@ Key** sets everything up again.
 ### Secure Input
 
 Password fields, password managers and some terminals turn on macOS **Secure Input**, which hides
-every key press from apps like Tinycast. While it's on, the Hyper key can't work, and pressing it
+every key press from apps like Nanocast. While it's on, the Hyper key can't work, and pressing it
 shows a message saying why. Diagnostics names the app most likely holding Secure Input.
 
-With Caps Lock as your Hyper key, turn on **Secure Input Compatibility** to keep **Tinycast's own**
+With Caps Lock as your Hyper key, turn on **Secure Input Compatibility** to keep **Nanocast's own**
 Hyper shortcuts working there. Caps Lock then acts as **Right Control**, so while it's on, the Right
 Control key also works as Hyper and its own shortcuts are reserved. Inside Secure Input, **Right
 Control** plus a shortcut's key runs that Hyper shortcut. Left Control never triggers Hyper; existing
-Tinycast Control shortcuts still work with Left Control. The Control combinations used by Hyper are
+Nanocast Control shortcuts still work with Left Control. The Control combinations used by Hyper are
 reserved while Secure Input lasts. Other apps' Hyper shortcuts still don't work there.
 
 ## Dictation key (🎤)
 
-Press 🎤 (F5) while recording any shortcut to use it in Tinycast, push-to-talk included. While a
+Press 🎤 (F5) while recording any shortcut to use it in Nanocast, push-to-talk included. While a
 shortcut uses it, macOS Dictation doesn't; remove the shortcut to give it back. With standard function
-keys on, press fn+🎤. Tinycast sends it as F20, so other apps' F20 shortcuts fire too.
+keys on, press fn+🎤. Nanocast sends it as F20, so other apps' F20 shortcuts fire too.
 
 ## Hiding versus turning off
 
@@ -161,4 +161,4 @@ shortcut, the same as in the palette.
 Shortcuts are included in [backups](/docs/reference/backup), except for custom Quick Actions and
 snippets.
 
-Shortcuts for items you deleted while Tinycast wasn't running are removed the next time it starts.
+Shortcuts for items you deleted while Nanocast wasn't running are removed the next time it starts.

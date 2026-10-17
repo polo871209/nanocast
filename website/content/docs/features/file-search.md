@@ -6,7 +6,7 @@ description: Find files and folders through the Spotlight index, with a preview 
 Search file and folder names in the folders you choose, using the index macOS already maintains.
 
 Turn it on in **Settings → File Search**. It's **off** by default. While it's off, there's no
-command and Tinycast doesn't query Spotlight.
+command and Nanocast doesn't query Spotlight.
 
 Open it with the **Search Files** command, its own global shortcut, or the **Search Files** row under
 "Use … with" at the bottom of any launcher search. The last option opens with your text already
@@ -14,7 +14,7 @@ typed.
 
 ## No permissions needed
 
-Tinycast doesn't ask for **any file permissions** for this feature. Hidden files and the contents of
+Nanocast doesn't ask for **any file permissions** for this feature. Hidden files and the contents of
 app bundles are always excluded, and no setting can include them. That's what lets the feature work
 without permissions.
 
@@ -23,7 +23,7 @@ If Spotlight hasn't indexed something, you get fewer results instead of a Full D
 ## The screen
 
 With nothing typed, the list shows **Recently Used**: files in your search scopes that you opened in
-the last 30 days or changed in the last 3 days. This comes from macOS's own records; Tinycast doesn't
+the last 30 days or changed in the last 3 days. This comes from macOS's own records; Nanocast doesn't
 keep its own history.
 
 When you type, the list changes to **Results**. Each row shows the file's icon and name. Folders also
@@ -38,7 +38,7 @@ size and dates. You can play video and audio there. Nothing plays until you pres
 
 **All Types** · **Folders** · **Documents** · **Images** · **Audio** · **Videos** · **Archives**
 
-The filter changes what Tinycast asks Spotlight for, so it never hides matches that were already cut
+The filter changes what Nanocast asks Spotlight for, so it never hides matches that were already cut
 off by the result limit. It resets each time you open the palette.
 
 ## Actions
@@ -78,14 +78,14 @@ The rows have the same actions as this screen, except Quick Look. To see every m
 
 ## Search scopes
 
-Set these in **Settings → File Search → Search Scopes**. By default, Tinycast searches your home
+Set these in **Settings → File Search → Search Scopes**. By default, Nanocast searches your home
 folder.
 
 Your home folder means its **visible** folders, plus `Library/CloudStorage` and your iCloud Drive.
-**Tinycast never adds `~/Library` by itself.** If you add a folder inside it, Tinycast searches that
+**Nanocast never adds `~/Library` by itself.** If you add a folder inside it, Nanocast searches that
 folder.
 
-**An empty scope list searches nothing.** Tinycast doesn't fall back to your home folder.
+**An empty scope list searches nothing.** Nanocast doesn't fall back to your home folder.
 
 Scopes are saved with your home folder written as `~`, so a backup still works on another Mac.
 
@@ -109,7 +109,7 @@ Every word you type must appear in the file name, in any order. `annual report` 
 "Report – annual 2025.pdf".
 
 Spotlight returns at most **1,000** matches, and at most **200** rows are shown after filtering.
-Tinycast waits 120 ms after you stop typing before it searches, so it doesn't start a new search for
+Nanocast waits 120 ms after you stop typing before it searches, so it doesn't start a new search for
 every letter.
 
 ## Messages you might see
@@ -119,4 +119,4 @@ every letter.
 | Type to search files and folders | Nothing recent in your search scopes         |
 | No files found                   | The search finished without a match          |
 | No images found                  | The same, with the Images filter on          |
-| File search is unavailable       | Tinycast couldn't get results from Spotlight |
+| File search is unavailable       | Nanocast couldn't get results from Spotlight |

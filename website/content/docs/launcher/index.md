@@ -1,6 +1,6 @@
 ---
 title: App launcher
-description: One search across everything Tinycast knows about, and how it orders the results.
+description: One search across everything Nanocast knows about, and how it orders the results.
 ---
 
 The launcher is the root screen. One search covers your apps, System Settings panes, commands,
@@ -47,7 +47,7 @@ The name has to match exactly. An app with exactly that name still appears too, 
 
 ## How matching works
 
-Tinycast checks several names for each entry and gives some of them more weight than others:
+Nanocast checks several names for each entry and gives some of them more weight than others:
 
 | Name                                  | Example                                 |
 | ------------------------------------- | --------------------------------------- |
@@ -86,7 +86,7 @@ If you renamed an app in Finder, both the old and the new name find it.
 
 ## Learned ranking
 
-Tinycast remembers which result you pick for a search and moves it up the next time. This happens on
+Nanocast remembers which result you pick for a search and moves it up the next time. This happens on
 your Mac.
 
 If you pick WhatsApp after typing `wha`, it also ranks higher for `w` and `wh`. The more often and
@@ -97,26 +97,26 @@ own shortcut, opening a favorite with <kbd>⌘</kbd> and a number, listing a cat
 Browser.
 
 **Resetting.** For one entry, choose <kbd>⌘</kbd><kbd>K</kbd> → **Reset Ranking**. It only appears
-when Tinycast has learned something about that entry. To reset everything, go to
+when Nanocast has learned something about that entry. To reset everything, go to
 **Settings → General → Learned ranking → Reset**.
 
-This data is stored in `launcher-ranking.json` in Tinycast's own folder and is never sent anywhere.
+This data is stored in `launcher-ranking.json` in Nanocast's own folder and is never sent anywhere.
 
 ## Search scopes
 
-**Settings → Applications → Search Scopes** sets which folders Tinycast searches for apps. A scope can
+**Settings → Applications → Search Scopes** sets which folders Nanocast searches for apps. A scope can
 be a folder or a single `.app`.
 
 The defaults cover `/Applications`, `/System/Applications`, both `Utilities` folders,
 `/System/Library/CoreServices/Applications`, the hidden system folder where Safari is actually
 installed, `~/Applications`, and Finder itself.
 
-Tinycast searches **one folder deep**, so it finds `/Applications/Blackmagic Design/DaVinci Resolve.app`
-without a separate scope. Apps nested deeper need their own scope. Tinycast never looks inside an app
+Nanocast searches **one folder deep**, so it finds `/Applications/Blackmagic Design/DaVinci Resolve.app`
+without a separate scope. Apps nested deeper need their own scope. Nanocast never looks inside an app
 bundle.
 
 Scopes are saved with your home folder written as `~`, so a backup still works on another Mac.
-Tinycast searches again as soon as you change them.
+Nanocast searches again as soon as you change them.
 
 ## Actions on an app
 
@@ -139,7 +139,7 @@ app to quit normally, so an app with unsaved work still asks you to save it. Res
 seconds for the app to quit, then opens it again. If the app doesn't quit, it isn't reopened.
 
 To quit every app at once, use the **Quit All Applications**
-[system action](/docs/launcher/system-actions). It leaves Finder and Tinycast running.
+[system action](/docs/launcher/system-actions). It leaves Finder and Nanocast running.
 
 ## Hiding a result
 

@@ -1,6 +1,6 @@
 # Search Files
 
-Search Files is a palette screen for opening any file or folder on the disk. It searches Tinycast's own
+Search Files is a palette screen for opening any file or folder on the disk. It searches Nanocast's own
 filename index, built by crawling the search scopes and kept current from FSEvents. Spotlight is not
 involved. It is reached from the built-in Search Files launcher command, or its own global shortcut, after the
 feature is enabled in Settings; with **Show in launcher** on, root search lists the top hits too. The
@@ -37,8 +37,8 @@ design follows [fsearch](https://github.com/noahdunnagan/fsearch).
   reaches the index, and `LauncherScreen` reads the switch before the session, so it observes nothing.
 - **A superseded query never publishes.** The session runs one search at a time, keeps only the newest
   pending request, and checks its revision before publishing.
-- **Share is the one system popover, and the palette stays up under it.** `AGENTS.md` keeps Tinycast's
-  own dialogs because a question or a report is Tinycast's to word. A share sheet is neither: it is
+- **Share is the one system popover, and the palette stays up under it.** `AGENTS.md` keeps Nanocast's
+  own dialogs because a question or a report is Nanocast's to word. A share sheet is neither: it is
   AirDrop, Mail and Messages, and re-drawing it would mean re-implementing the transports and losing
   whatever the system adds. So this row hands off, and the two rules it does keep are that the palette
   is never hidden and that the row stays visible beside the sheet — which is what anchoring to
@@ -184,7 +184,7 @@ entry name, so an unrelated entry builds no path; wildcard and escaped paths kee
 draws. The list uses the shared Results header, row metrics, edge dissolve, thin scrollbar and scroll
 intent; its header reads **Recent** on the blank screen and **Results** under a query. A row shows
 a fitted native file icon and the full filename — a folder prefixed by its parent's name, dimmed, since
-half the folder hits on a developer machine are some `src` or `Tinycast`. The path itself is the preview's
+half the folder hits on a developer machine are some `src` or `Nanocast`. The path itself is the preview's
 `Where` row rather than a second column the narrow list has no width for. A click selects and a double
 click opens, both through `onRowClick`, which answers on the press: `.onTapGesture(count: 2)` makes the
 single tap wait out the system's double-click interval first, and that wait *is* the second a click used
@@ -290,7 +290,7 @@ fitted cache, purged when the palette hides.
 
 Settings ▸ File Search owns the `fileSearchEnabled` switch, which is off when its preference is absent,
 the **Show in launcher** switch beneath it, along with the Full Disk Access status, the index status and **Rebuild Index**, the scope list, the
-ignore patterns and the Search Files command row. The lists are ordinary settings carried by Tinycast
+ignore patterns and the Search Files command row. The lists are ordinary settings carried by Nanocast
 settings backups; importing them grants no permission.
 
 `AppCore` observes the switch and asks `FileSearchCoordinator` to project `CommandID.searchFiles` into

@@ -4,9 +4,9 @@ export type Plan = "monthly" | "one-time";
 
 export const supportHero = {
   eyebrow: "Support",
-  title: "Enjoying Tinycast?",
+  title: "Enjoying Nanocast?",
   intro:
-    "Tinycast is free and open source. If you enjoy it, consider buying a wallpaper pack and get a discord role. It would help me a lot. Thanks",
+    "Nanocast is free and open source. If you enjoy it, consider buying a wallpaper pack and get a discord role. It would help me a lot. Thanks",
 } as const;
 
 export const plans: { id: Plan; label: string }[] = [
@@ -34,10 +34,10 @@ export const thanks = {
     title: "Download your wallpapers",
     body: "Sign in with your checkout email to download the pack and connect Discord to get your role.",
     action: "Open your Polar portal",
-    // Polar's customer portal for the tinycast organization; perks are claimed there.
-    href: "https://polar.sh/tinycast/portal",
+    // Polar's customer portal for the nanocast organization; perks are claimed there.
+    href: "https://polar.sh/nanocast/portal",
   },
-  share: "Know someone who lives in Spotlight? Tell them about Tinycast.",
+  share: "Know someone who lives in Spotlight? Tell them about Nanocast.",
 } as const satisfies {
   title: string;
   body: string;

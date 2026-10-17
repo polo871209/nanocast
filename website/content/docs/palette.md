@@ -1,9 +1,9 @@
 ---
 title: The palette
-description: Tinycast's one window, how to move around it, and how to adjust it.
+description: Nanocast's one window, how to move around it, and how to adjust it.
 ---
 
-Almost everything in Tinycast happens in one floating panel. The launcher is the root screen, and
+Almost everything in Nanocast happens in one floating panel. The launcher is the root screen, and
 every other feature is a screen you open from it. <kbd>esc</kbd> takes you back one screen at a time.
 
 ## Moving around
@@ -28,7 +28,7 @@ Every screen except the launcher has a back arrow in the top-left corner. Hover 
 whether clicking goes back a step or closes the window.
 
 <kbd>⌘</kbd><kbd>esc</kbd> needs the [Accessibility permission](/docs/permissions), because macOS
-uses that shortcut itself unless Tinycast intercepts it first.
+uses that shortcut itself unless Nanocast intercepts it first.
 
 ### Emacs chords
 
@@ -94,10 +94,10 @@ is on. Turn it off to always use the display with the menu bar.
 search field, the empty space in the header, or the search field itself while it's empty.
 
 While you drag, dotted guides show the default position and light up when you're close enough to
-snap to it. Release there and the palette snaps back. Release anywhere else and Tinycast remembers
+snap to it. Release there and the palette snaps back. Release anywhere else and Nanocast remembers
 that position, even after a restart.
 
-Tinycast forgets a saved position only when no display can show it anymore, for example after you
+Nanocast forgets a saved position only when no display can show it anymore, for example after you
 unplug a monitor. Positions aren't included in backups, since they don't carry over between Macs.
 
 ## Appearance
@@ -126,7 +126,7 @@ type. <kbd>↓</kbd> expands it and selects the first row. With **Show favorites
 your favorite apps appear at the right of the bar. See [Favorites](/docs/launcher/favorites).
 
 The [Toggle System Appearance](/docs/launcher/system-actions) action changes the appearance of
-_macOS itself_. Tinycast follows it only while its own theme is set to System.
+_macOS itself_. Nanocast follows it only while its own theme is set to System.
 
 ## Input source
 
@@ -134,12 +134,12 @@ _macOS itself_. Tinycast follows it only while its own theme is set to System.
 is open.
 
 This helps if you type Japanese or Chinese most of the day but your app names use Latin letters.
-Tinycast switches layouts when the palette opens and switches back when it closes. If you changed
-the layout yourself while the palette was open, Tinycast keeps your choice.
+Nanocast switches layouts when the palette opens and switches back when it closes. If you changed
+the layout yourself while the palette was open, Nanocast keeps your choice.
 
 ## Pop to root
 
-**Settings → General → Pop to Root Search** sets how long after the window closes Tinycast returns
+**Settings → General → Pop to Root Search** sets how long after the window closes Nanocast returns
 to the launcher: **Immediately** (default), or after 5, 15, 30, 60 or 90 seconds.
 
 Use a longer delay if you often close the palette and then come back to the same screen.
@@ -149,7 +149,7 @@ AI Chat has its own setting for reopening a conversation. See
 
 ## The menu bar
 
-The Tinycast menu bar icon has **Open Tinycast**, **Clipboard History**, **Settings…**,
-**Check for Updates…**, **Support Tinycast…** and **Quit Tinycast**.
+The Nanocast menu bar icon has **Open Nanocast**, **Clipboard History**, **Settings…**,
+**Check for Updates…**, **Support Nanocast…** and **Quit Nanocast**.
 
 **Settings → General → Show in menu bar** hides the icon. Your shortcuts still work without it.
