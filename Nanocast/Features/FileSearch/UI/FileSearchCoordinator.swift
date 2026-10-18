@@ -8,14 +8,12 @@ final class FileSearchCoordinator {
     private let indexer: FileIndexer
     private let palette: PaletteState
     private let paletteCoordinator: PaletteCoordinator
-    private let windowController: PaletteWindowController
     private var sharePicker: NSSharingServicePicker?
     private unowned let core: AppCore
 
     init(
         settings: AppSettings, appIndex: AppIndex, session: FileSearchSession,
-        indexer: FileIndexer, palette: PaletteState, paletteCoordinator: PaletteCoordinator,
-        windowController: PaletteWindowController, core: AppCore
+        indexer: FileIndexer, palette: PaletteState, paletteCoordinator: PaletteCoordinator, core: AppCore
     ) {
         self.settings = settings
         self.appIndex = appIndex
@@ -23,7 +21,6 @@ final class FileSearchCoordinator {
         self.indexer = indexer
         self.palette = palette
         self.paletteCoordinator = paletteCoordinator
-        self.windowController = windowController
         self.core = core
         indexer.onIndexChanged = { [weak session] in session?.refresh() }
         indexer.onRecentChanged = { [weak session] in session?.refreshRecent() }
@@ -82,12 +79,30 @@ final class FileSearchCoordinator {
         paletteCoordinator.togglePalette(mode: .fileSearch)
     }
 
-    func open(_ result: FileSearchResult) {
+    func activate(_ result: FileSearchResult) {
+        if result.opensInPreview {
+            openInPreview(result)
+        } else {
+            paletteCoordinator.hidePalette()
+            copyPath(result)
+        }
+    }
+
+    func openInPreview(_ result: FileSearchResult) {
+        open(result, with: NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.Preview"))
+    }
+
+    func open(_ result: FileSearchResult, with application: URL? = nil) {
         paletteCoordinator.hidePalette(restoreFocus: false)
         Task {
             do {
-                _ = try await NSWorkspace.shared.open(
-                    result.url, configuration: NSWorkspace.OpenConfiguration())
+                let configuration = NSWorkspace.OpenConfiguration()
+                if let application {
+                    _ = try await NSWorkspace.shared.open(
+                        [result.url], withApplicationAt: application, configuration: configuration)
+                } else {
+                    _ = try await NSWorkspace.shared.open(result.url, configuration: configuration)
+                }
             } catch {
                 await core.showNotice(
                     title: "Couldn’t Open \(result.name)",
@@ -127,12 +142,6 @@ final class FileSearchCoordinator {
     func copyFile(_ result: FileSearchResult) {
         PasteboardFiles.write(result.url, to: .general)
         core.showMessage("Copied file")
-    }
-
-    func pasteFile(_ result: FileSearchResult) {
-        let previous = windowController.previousApp
-        paletteCoordinator.hidePalette(restoreFocus: false)
-        Paster.pasteFile(result.url, previousApp: previous)
     }
 
     func trash(_ result: FileSearchResult) {

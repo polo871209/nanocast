@@ -231,6 +231,18 @@ final class AppSettings {
         }
     }
 
+    var fileToolsEnabled: Bool {
+        didSet { defaults.set(fileToolsEnabled, forKey: Key.fileToolsEnabled.rawValue) }
+    }
+
+    var fileToolsOptions: [String] {
+        didSet { defaults.set(fileToolsOptions, forKey: Key.fileToolsOptions.rawValue) }
+    }
+
+    var fileToolsFinderTab: Bool {
+        didSet { defaults.set(fileToolsFinderTab, forKey: Key.fileToolsFinderTab.rawValue) }
+    }
+
     var notesEnabled: Bool {
         didSet { defaults.set(notesEnabled, forKey: Key.notesEnabled.rawValue) }
     }
@@ -455,6 +467,9 @@ final class AppSettings {
         fileSearchRemovedDefaultPatterns =
             defaults.stringArray(forKey: Key.fileSearchRemovedDefaultPatterns.rawValue) ?? []
         fileSearchShowInLauncher = defaults.bool(forKey: Key.fileSearchShowInLauncher.rawValue)
+        fileToolsEnabled = defaults.bool(forKey: Key.fileToolsEnabled.rawValue)
+        fileToolsOptions = defaults.stringArray(forKey: Key.fileToolsOptions.rawValue) ?? []
+        fileToolsFinderTab = defaults.bool(forKey: Key.fileToolsFinderTab.rawValue)
         notesEnabled = defaults.bool(forKey: Key.notesEnabled.rawValue)
         dictationEnabled = defaults.bool(forKey: Key.dictationEnabled.rawValue)
         dictationMode =

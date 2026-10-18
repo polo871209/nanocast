@@ -30,6 +30,7 @@ struct SettingsBackupTest {
             "animationsEnabled", "dictationPlaysSounds",
             "paletteExpandedCenterDisplays", "fileSearchEnabled", "fileSearchScopes",
             "fileSearchIgnorePatterns", "fileSearchRemovedDefaultPatterns", "fileSearchShowInLauncher",
+            "fileToolsEnabled", "fileToolsOptions", "fileToolsFinderTab",
             "notesEnabled", "notesRendersMarkdown",
             "notesShowsFormattingBar", "notesFolder", "customCommandsEnabled",
             "customCommandsShowInLauncher", "screenshotSaveFolder",
@@ -103,7 +104,7 @@ struct SettingsBackupTest {
             mirrored["emojiGridColumns"] == .emojiGridColumns)
 
         for key: AppSettingsKey in [
-            .dictationEnabled, .clipboardTextSearchEnabled, .settingsFileEnabled
+            .dictationEnabled, .clipboardTextSearchEnabled, .settingsFileEnabled, .fileToolsFinderTab
         ] {
             check(
                 "\(key.rawValue) stays out of a backup",

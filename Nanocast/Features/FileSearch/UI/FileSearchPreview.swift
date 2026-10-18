@@ -24,7 +24,7 @@ struct FileSearchPreview: View {
     }
 }
 
-private struct FileSearchPreviewStage: View {
+struct FileSearchPreviewStage: View {
 
     @Environment(\.metrics) private var metrics
     @Environment(PaletteState.self) private var palette

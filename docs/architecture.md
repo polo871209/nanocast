@@ -51,11 +51,12 @@ Independently of the folder tree, every mature subsystem has converged on the sa
 │ WindowCapture · AnnotationPainter · AnnotationText · MosaicSource ·        │
 │ ScreenshotRenderer · ScreenshotOutputRunner · ScrollFrameCapture ·         │
 │ ScrollFrame · ScrollStitchFile · AutoScrollRunner ·                        │
-│ ScreenRecordingRunner                                                      │
+│ ScreenRecordingRunner ·                                                    │
+│ FileToolWorker · FileToolTransfer · FinderSelectionReader · FinderTabTap   │
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ published through
 ┌─ OBSERVABLE STATE ───────────────▼─────────────────────────────────────────┐
-│ 55 @MainActor @Observable stores, sessions, indices and State types        │
+│ 56 @MainActor @Observable stores, sessions, indices and State types        │
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ rendered by
 ┌─ VIEW ───────────────────────────▼─────────────────────────────────────────┐
@@ -122,6 +123,8 @@ handed an input path and answers with bounded text down a pipe. Its `thumbnail` 
 clipboard's downscaled image copies, so a full-size decode stays out of the app unless that fails.
 The screenshot's Copy Text uses the same worker and helper.
 
+File Tools jobs have the same shape. `FileToolWorker` runs one bundled `FileToolHelper` per job and moves its output into place only after the helper exits with status 0.
+
 Dictation similarly runs its model adapters in a bundled helper, with bounded in-memory audio and
 text over pipes. The coordinator keeps microphone capture, UI and insertion in Nanocast; the model
 store starts the helper on demand and reaps it after the selected idle delay or a model switch.
@@ -174,7 +177,7 @@ every live `AnimatedPanel` (see [ui.md](ui.md#non-negotiable-invariants)).
 
 ## Observation
 
-53 types are `@MainActor @Observable`. Nothing uses `ObservableObject` or `@Published`, and views read
+55 types are `@MainActor @Observable` (`grep -rln "@Observable" Nanocast --include=*.swift | wc -l`). Nothing uses `ObservableObject` or `@Published`, and views read
 state through `@Environment` rather than `@EnvironmentObject`.
 
 Three things about this model are easy to get wrong:

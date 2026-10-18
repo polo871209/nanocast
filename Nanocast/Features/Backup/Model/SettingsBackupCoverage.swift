@@ -32,6 +32,8 @@ enum SettingsBackupCoverage {
         "fileSearchIgnorePatterns": .fileSearchIgnorePatterns,
         "fileSearchRemovedDefaultPatterns": .fileSearchRemovedDefaultPatterns,
         "fileSearchShowInLauncher": .fileSearchShowInLauncher,
+        "fileToolsEnabled": .fileToolsEnabled,
+        "fileToolsOptions": .fileToolsOptions,
         "notesEnabled": .notesEnabled,
         "notesRendersMarkdown": .notesRendersMarkdown,
         "notesShowsFormattingBar": .notesShowsFormattingBar,
@@ -84,6 +86,8 @@ enum SettingsBackupCoverage {
             "Names a folder on this Mac; the one a backup lands on may not have it.",
         AppSettingsKey.screenshotSaveFolder.rawValue:
             "Names a folder on this Mac; the one a backup lands on may not have it.",
+        AppSettingsKey.fileToolsFinderTab.rawValue:
+            "Installs a key tap in Finder on this Mac; an import must not turn it on.",
         AppSettingsKey.settingsFileEnabled.rawValue:
             "Lets a file on this Mac change its settings; an import must not hand that to another."
     ]
