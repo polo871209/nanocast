@@ -159,13 +159,17 @@ somewhere on another; `/` is shown as the startup volume's name. The helper reso
 | no `/`, has `*` `?` `[` | the entry name, via `fnmatch` | `*.tmp` |
 | contains `/`, or starts with `~/` | the whole absolute path, via `fnmatch` | `~/Movies`, `**/[Cc]ache/**` |
 
-The defaults skip what a search for one's own files never wants: build output and dependency
-folders (`node_modules`, `.git`, `build`, `DerivedData`, `.venv`, …), the Photos library, the Trash,
-the `~/.cache` and `~/.npm` caches, and the noisy parts of `~/Library` — `Application Support`,
-`Caches`, `Containers`, `Developer`, `Group Containers` and `Mail`. Together they hold most of a home
-folder's entries and most of its churn: one browser's cache alone rewrites tens of thousands of files
-on every page load. `Preferences`, `LaunchAgents` and the cloud drives stay indexed. `/Library/Caches`
-and `/private/var/folders` cover a scope added outside home.
+The defaults skip what a search for one's own files never wants: Finder and volume metadata
+(`.DS_Store`, `._*` AppleDouble files, `.Spotlight-V100`, …), version control, build output and
+dependency folders (`node_modules`, `__pycache__`, `build`, `DerivedData`, `.venv`, `.cache`, …), the
+Photos library, the Trash, toolchain homes (`~/.npm`, `~/.cargo`, `~/.rustup`, `~/.local/share`, …),
+and the noisy parts of `~/Library` — `Application Support`, `Caches`, `Containers`, `Developer`,
+`Group Containers`, `Logs` and `Mail`. Together they hold most of a home folder's entries and most of
+its churn: one browser's cache alone rewrites tens of thousands of files on every page load.
+`Preferences`, `LaunchAgents` and the cloud drives stay indexed. For a scope added outside home, the
+read-only system volume (`/System`, `/usr`, `/bin`, `/sbin`), `/private/var`, `/private/tmp`,
+`/opt/homebrew` and the system caches and developer tools under `/Library` are skipped too. A pattern
+only matches below a root, so a scope such as `/usr/local` still indexes everything under it.
 
 The pane lists `FileSearchIgnoreList.patterns(added:removedDefaults:)`: the defaults the user kept,
 then what they added. Adding a removed default takes it off the removed list rather than storing it
