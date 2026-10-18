@@ -6,6 +6,8 @@ enum PaletteMode: String, CaseIterable, Identifiable {
     case calculatorHistory
     case emoji
     case fileSearch
+    case fileTools
+    case fileToolsDestination
     case menuSearch
     case rooms
     case roomWindows
@@ -27,6 +29,8 @@ enum PaletteMode: String, CaseIterable, Identifiable {
         case .calculatorHistory: return "plus.forwardslash.minus"
         case .emoji: return "face.smiling"
         case .fileSearch: return "doc.text.magnifyingglass"
+        case .fileTools: return "wand.and.sparkles"
+        case .fileToolsDestination: return "folder"
         case .menuSearch: return "menubar.rectangle"
         case .rooms: return "door.left.hand.open"
         case .roomWindows: return "macwindow.badge.plus"
@@ -43,6 +47,8 @@ enum PaletteMode: String, CaseIterable, Identifiable {
             return "Do math, convert units, or search your past calculations…"
         case .emoji: return "Search emoji and symbols…"
         case .fileSearch: return "Search files and folders…"
+        case .fileTools: return "Search tools…"
+        case .fileToolsDestination: return "Search folders…"
         case .menuSearch: return "Search menu bar items…"
         case .rooms: return "Search rooms, or name a new one…"
         case .roomWindows: return "Search windows, or type an app to add…"

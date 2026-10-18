@@ -46,6 +46,7 @@ extension SettingsTab {
         switch self {
         case .commands: [.createCustomCommand, .searchCustomCommands]
         case .fileSearch: [.searchFiles]
+        case .fileTools: [.fileTools]
         case .notes: [.showNotes, .createNote, .searchNotes]
         case .navigation: [.searchMenuItems]
         case .windowManagement:

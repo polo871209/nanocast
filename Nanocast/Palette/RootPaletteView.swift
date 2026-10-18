@@ -15,6 +15,7 @@ struct RootPaletteView: View {
     @Environment(DictionarySession.self) private var dictionary
     @Environment(MenuSearchSession.self) private var menuSearch
     @Environment(UninstallSession.self) private var uninstall
+    @Environment(FileToolsSession.self) private var fileTools
     @Environment(AppSettings.self) private var settings
     @Environment(\.metrics) private var metrics
     @FocusState private var searchFocused: Bool
@@ -48,6 +49,10 @@ struct RootPaletteView: View {
         case .fileSearch:
             return FileSearchScreen(
                 session: fileSearch, core: core, vm: vm, openActions: openActions)
+        case .fileTools:
+            return FileToolsScreen(session: fileTools, core: core, vm: vm, openActions: openActions)
+        case .fileToolsDestination:
+            return FileToolsDestinationScreen(search: fileSearch, core: core, vm: vm)
         case .menuSearch:
             return MenuSearchScreen(session: menuSearch, core: core)
         case .rooms:
@@ -224,6 +229,7 @@ struct RootPaletteView: View {
                 if vm.collapseQueryLineBreaks() { return }
                 land(restoringNavigation: true)
                 if vm.mode == .fileSearch { fileSearch.search(vm.query, filter: vm.fileSearchFilter) }
+                if vm.mode == .fileToolsDestination { fileSearch.search(vm.query, filter: .folders) }
                 if vm.mode == .launcher { core.fileSearchCoordinator.searchFromLauncher(vm.query) }
                 if vm.mode == .dictionary { dictionary.lookUp(vm.query) }
                 if vm.mode == .menuSearch { menuSearch.filter(vm.query) }
@@ -246,7 +252,9 @@ struct RootPaletteView: View {
                     fileSearch.search(vm.query, filter: vm.fileSearchFilter)
                 } else if vm.mode == .launcher {
                     core.fileSearchCoordinator.searchFromLauncher(vm.query)
-                } else {
+                } else if vm.mode == .fileToolsDestination {
+                    fileSearch.search(vm.query, filter: .folders)
+                } else if vm.mode != .fileTools {
                     fileSearch.cancel()
                 }
                 if vm.mode == .dictionary {
@@ -945,7 +953,8 @@ struct RootPaletteView: View {
             core.customCommandCoordinator.cancelCustomCommandEditing()
             return
         }
-        if !vm.pop() { core.paletteCoordinator.hidePalette() }
+        let preservesSelection = vm.mode == .fileTools || vm.mode == .fileToolsDestination
+        if !vm.pop(preservingSelection: preservesSelection) { core.paletteCoordinator.hidePalette() }
     }
 
     private func activateSelection() {
