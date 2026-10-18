@@ -39,7 +39,7 @@ design follows [fsearch](https://github.com/noahdunnagan/fsearch).
   from their saved paths, while disabling File Search hides them too.
 - **A superseded query never publishes.** The session runs one search at a time, keeps only the newest
   pending request, and checks its revision before publishing.
-- **Share is the one system popover, and the palette stays up under it.** `AGENTS.md` keeps Nanocast's
+- **Share is a system popover, as in Clipboard, and the palette stays up under it.** `AGENTS.md` keeps Nanocast's
   own dialogs because a question or a report is Nanocast's to word. A share sheet is neither: it is
   AirDrop, Mail and Messages, and re-drawing it would mean re-implementing the transports and losing
   whatever the system adds. So this row hands off, and the two rules it does keep are that the palette
@@ -176,15 +176,19 @@ somewhere on another; `/` is shown as the startup volume's name. The helper reso
 | no `/`, has `*` `?` `[`           | the entry name, via `fnmatch`          | `*.tmp`                      |
 | contains `/`, or starts with `~/` | the whole absolute path, via `fnmatch` | `~/Movies`, `**/[Cc]ache/**` |
 
-The defaults skip what a search for one's own files never wants: build output and dependency
-folders (`node_modules`, `.git`, `build`, `DerivedData`, `.venv`, …), the worktrees AI coding agents
-keep (`**/.claude/worktrees`, `**/.codex/worktrees`, `**/conductor/workspaces`, …), each a full copy of
-a repository, the Photos library, the Trash,
-the `~/.cache` and `~/.npm` caches, and the noisy parts of `~/Library`: `Application Support`,
-`Caches`, `Containers`, `Developer`, `Group Containers` and `Mail`. Together they hold most of a home
-folder's entries and most of its churn: one browser's cache alone rewrites tens of thousands of files
-on every page load. `Preferences`, `LaunchAgents` and the cloud drives stay indexed. `/Library/Caches`
-and `/private/var/folders` cover a scope added outside home.
+The defaults skip what a search for one's own files never wants: Finder and volume metadata
+(`.DS_Store`, `._*` AppleDouble files, `.Spotlight-V100`, …), version control, build output and
+dependency folders (`node_modules`, `__pycache__`, `build`, `DerivedData`, `.venv`, `.cache`, …), the
+worktrees AI coding agents keep (`**/.claude/worktrees`, `**/.codex/worktrees`,
+`**/conductor/workspaces`, …), each a full copy of a repository, the Photos library, the Trash,
+toolchain homes (`~/.npm`, `~/.cargo`, `~/.rustup`, `~/.local/share`, …), and the noisy parts of
+`~/Library`: `Application Support`, `Caches`, `Containers`, `Developer`, `Group Containers`, `Logs`
+and `Mail`. Together they hold most of a home folder's entries and most of its churn: one browser's
+cache alone rewrites tens of thousands of files on every page load. `Preferences`, `LaunchAgents` and
+the cloud drives stay indexed. For a scope added outside home, the read-only system volume
+(`/System`, `/usr`, `/bin`, `/sbin`), `/private/var`, `/private/tmp`, `/opt/homebrew` and the system
+caches and developer tools under `/Library` are skipped too. A pattern only matches below a root, so a
+scope such as `/usr/local` still indexes everything under it.
 
 The pane lists `FileSearchIgnoreList.patterns(added:removedDefaults:)`: the defaults the user kept,
 then what they added. Adding a removed default takes it off the removed list rather than storing it
@@ -234,8 +238,9 @@ off the main actor once per selection: no NUL and valid UTF-8 is text, anything 
 what the extension declares. `PlainTextSurface` copies QuickLook's own text preview (fixed-pitch 11pt,
 3pt inset, unselectable), so a `.jsx` reads like a `.swift`.
 **Nothing autoplays**: arrow-keying a list must not start a movie.
-The player view is `KeyboardFocusRefusing`, so clicking its transport leaves the caret in
-the search field; see [palette.md](palette.md#the-keyboard-belongs-to-the-search-field).
+The player view and the `QLPreviewView` are `KeyboardFocusRefusing`, so a click on a preview leaves
+the caret in the search field, and ↑ and ↓ keep moving the list. See
+[palette.md](palette.md#the-keyboard-belongs-to-the-search-field).
 The player is File Search's own, deliberately: the clipboard's preview is a separate surface with its own
 sizing, and copying forty lines of `AVPlayerView` teardown is the cheaper trade.
 
@@ -309,7 +314,7 @@ favorites lead indexed file hits in the Files section, with repeated paths remov
 five-row cap. Disabling File Search hides file favorites without deleting them. It is
 `LauncherScreen.Row.file`, id-prefixed `file-` because an application's entry id is its bundle path. It
 draws `FileSearchRow` with its location (name, dimmed parent path, then File or Folder) and answers
-the screen's own row actions: ↵ opens, ⌘↵ reveals, the copy, paste and trash chords run
+the screen's own row actions: ↵ opens Preview or copies the path as in File Search, ⌘↵ reveals, the copy, paste and trash chords run
 `FileSearchActionsMenu.perform`, and a row drags out as a copy. Row icons come from the same transient
 fitted cache, purged when the palette hides.
 

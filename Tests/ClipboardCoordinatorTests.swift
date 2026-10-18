@@ -259,6 +259,7 @@ final class PaletteWindowController {
 final class PaletteCoordinator {
     var isVisible = true
     var targetApp: NSRunningApplication? { nil }
+    var anchorView: NSView? { nil }
     func hidePalette(restoreFocus: Bool = true) {}
 }
 

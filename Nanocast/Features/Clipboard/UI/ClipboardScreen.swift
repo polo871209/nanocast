@@ -191,6 +191,10 @@ enum ClipboardActionsMenu {
             ) {
                 core.clipboardCoordinator.togglePinnedClip(item)
             })
+        items.append(
+            PopoverMenuItem(title: "Share…", systemImage: "square.and.arrow.up") {
+                core.clipboardCoordinator.share(item)
+            })
         if item.offersTextExtraction {
             items.append(
                 PopoverMenuItem(
