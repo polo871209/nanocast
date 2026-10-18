@@ -6,10 +6,9 @@ A palette sub-screen (reached like Clipboard / Calculator History) presenting a 
 
 - **`Model/` stays Foundation-only** — `EmojiCatalog`, `EmojiGridGeometry` and the generated dataset are
   compiled by `emoji-test`, so an `import AppKit` there breaks the test suite.
-- **`EmojiData.generated.swift` and `Resources/EmojiKeywords/` are emitted by `node Scripts/gen-emoji.js`**
-  (Node 18+ for global `fetch`) and are never edited by hand. Regenerate and commit instead.
-- **Keyword packs are plain files, never `.lproj` folders.** Search loads packs for the user's
-  macOS languages independently of Nanocast's UI language.
+- **`EmojiData.generated.swift` is emitted by `node Scripts/gen-emoji.js`**
+  (Node 18+ for global `fetch`) and is never edited by hand. Regenerate and commit instead.
+- **Search is English only.** Keywords come from CLDR's `en` annotations, and no other language is shipped.
 
 ## Layout
 
@@ -18,7 +17,6 @@ A palette sub-screen (reached like Clipboard / Calculator History) presenting a 
 | `Model/EmojiCatalog.swift`                          | The catalog model — groups, names, keywords |
 | `Model/EmojiGridGeometry.swift`                     | Pure grid math — columns, item sizing       |
 | `Model/EmojiData.generated.swift`                   | The dataset                                 |
-| `Resources/EmojiKeywords/<language>.txt`            | CLDR keyword packs, `glyph\|terms` per line |
 | `Service/EmojiIndex.swift`                          | Search index over the catalog               |
 | `Service/FrequentEmojiStore.swift`                  | Persisted emoji history and usage counts    |
 | `Service/PinnedEmojiStore.swift`                    | Persisted pins, in the order the user set   |
@@ -38,16 +36,8 @@ are pure.
 - **A full name ranks first, then a complete leading name word, then an exact keyword**, then a partial
   leading word: `birthday` keeps 🎂 first, and `pray` favours the annotation over "prayer beads".
 - **Colon-wrapped queries are unwrapped**, so `:+1:` reuses CLDR's `+1` annotation with no alias table.
-- **Other languages add keywords; English always stays.** `AppCore` loads one pack per language in
-  `SystemLanguages.preferred`, matched by `Bundle.preferredLocalizations` (`zh-CN` reads `zh-Hans`), so
-  a Simplified Chinese Mac finds 🐱 by `猫` and by `cat`. Pack terms join after the English keywords,
-  so an English name match still ranks first. An English-only Mac reads no pack. The generator drops terms
-  English already has, folds `’` to `'`, and gives katakana a hiragana twin, since an IME shows hiragana
-  until conversion. Packs ship for German, Spanish, French, Japanese, Korean, Portuguese, Russian and
-  Simplified Chinese.
 - **Search text is folded once, at load.** `EmojiIndex` keeps a `FuzzyMatch.Candidate` for each name
-  and keyword, so a keystroke folds only the query. Folding non-ASCII keywords per keystroke made one
-  pack cost 5–7× the English-only search.
+  and keyword, so a keystroke folds only the query.
 - **Usage breaks ties, never tiers.** The top 100 glyphs from `FrequentEmojiStore.top` add a 100…1
   bonus, and the store's identity and revision are in the search memo key.
 

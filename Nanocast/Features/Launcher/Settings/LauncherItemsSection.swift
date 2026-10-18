@@ -4,7 +4,7 @@ struct LauncherCategorySwitchSection: View {
     let kind: AppEntry.Kind
     let anchor: SettingsAnchor
     /// Spelled out by the caller, so it is the very string its search entry carries.
-    let title: LocalizedStringResource
+    let title: String
 
     @Environment(VisibilityStore.self) private var visibility
 
@@ -27,7 +27,7 @@ struct LauncherCategorySwitchSection: View {
 struct LauncherItemsSection: View {
     let kind: AppEntry.Kind
     let anchor: SettingsAnchor
-    let searchPrompt: LocalizedStringResource
+    let searchPrompt: String
 
     @Environment(AppIndex.self) private var appIndex
     @Environment(VisibilityStore.self) private var visibility

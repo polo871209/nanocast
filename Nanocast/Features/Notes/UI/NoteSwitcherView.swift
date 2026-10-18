@@ -167,10 +167,10 @@ private struct NoteSwitcherRow: View {
             Spacer(minLength: Theme.Spacing.md)
             if !editing, selected || hovered {
                 rowButton(
-                    title: String(localized: "Rename \(summary.displayTitle)"), symbol: "pencil",
+                    title: "Rename \(summary.displayTitle)", symbol: "pencil",
                     action: onBeginRename)
                 rowButton(
-                    title: String(localized: "Move \(summary.displayTitle) to Trash"), symbol: "trash",
+                    title: "Move \(summary.displayTitle) to Trash", symbol: "trash",
                     action: onTrash
                 )
                 .foregroundStyle(Theme.Colors.destructive)

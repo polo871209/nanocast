@@ -22,15 +22,15 @@ enum AppActionsMenu {
             items.append(
                 PopoverMenuItem(
                     title: favorites.isFavorite
-                        ? String(localized: "Remove from Favorites")
-                        : String(localized: "Add to Favorites"),
+                        ? "Remove from Favorites"
+                        : "Add to Favorites",
                     systemImage: favorites.isFavorite ? "star.slash" : "star", startsSection: true,
                     shortcut: "⇧⌘F", action: favorites.toggle))
         }
         if favorites.canMoveUp {
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Move Favorite Up"), systemImage: "arrow.up",
+                    title: "Move Favorite Up", systemImage: "arrow.up",
                     shortcut: "⌥⌘↑"
                 ) {
                     favorites.move(-1)
@@ -39,7 +39,7 @@ enum AppActionsMenu {
         if favorites.canMoveDown {
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Move Favorite Down"), systemImage: "arrow.down",
+                    title: "Move Favorite Down", systemImage: "arrow.down",
                     shortcut: "⌥⌘↓"
                 ) {
                     favorites.move(1)
@@ -48,7 +48,7 @@ enum AppActionsMenu {
         if core.launcherRanking.hasRanking(for: app.preferenceKey) {
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Reset Ranking"), systemImage: "arrow.counterclockwise"
+                    title: "Reset Ranking", systemImage: "arrow.counterclockwise"
                 ) {
                     onResetRanking()
                 })
@@ -57,7 +57,7 @@ enum AppActionsMenu {
         if isPersistent, app.canHideFromSearch || hidesFromRoot {
             let title =
                 hidesFromRoot
-                ? String(localized: "Hide from Root Search") : String(localized: "Hide from Search")
+                ? "Hide from Root Search" : "Hide from Search"
             items.append(
                 PopoverMenuItem(
                     title: title, systemImage: "eye.slash", shortcut: "⇧⌘H", action: onHideFromSearch))
@@ -65,20 +65,20 @@ enum AppActionsMenu {
         if running, app.kind == .application {
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Restart Application"), systemImage: "arrow.clockwise",
+                    title: "Restart Application", systemImage: "arrow.clockwise",
                     startsSection: true, shortcut: "⌘R"
                 ) {
                     core.launcherCoordinator.restart(app)
                 })
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Quit Application"), systemImage: "power", shortcut: "⌃⇧Q"
+                    title: "Quit Application", systemImage: "power", shortcut: "⌃⇧Q"
                 ) {
                     core.launcherCoordinator.quit(app)
                 })
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Force Quit Application"), systemImage: "xmark.circle",
+                    title: "Force Quit Application", systemImage: "xmark.circle",
                     shortcut: "⌃⌥⇧Q"
                 ) {
                     core.launcherCoordinator.quit(app, force: true)
@@ -87,7 +87,7 @@ enum AppActionsMenu {
         if app.kind == .application, app.primaryInstallationID == nil {
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Uninstall Application"), systemImage: "trash",
+                    title: "Uninstall Application", systemImage: "trash",
                     startsSection: true, isDestructive: true
                 ) {
                     core.uninstallCoordinator.beginUninstall(app)
@@ -113,14 +113,14 @@ enum AppActionsMenu {
             }
         var items = [
             PopoverMenuItem(
-                title: String(localized: app.kind.descriptor.openVerb), systemImage: primarySymbol,
+                title: app.kind.descriptor.openVerb, systemImage: primarySymbol,
                 shortcut: "↵"
             ) { core.launcherCoordinator.launch(app, searchQuery: searchQuery) }
         ]
         if app.canRevealInFinder {
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Show in Finder"), systemImage: "folder", shortcut: "⌘↵"
+                    title: "Show in Finder", systemImage: "folder", shortcut: "⌘↵"
                 ) {
                     core.launcherCoordinator.showInFinder(app)
                 })

@@ -58,7 +58,7 @@ struct ShortcutRecorderPopover: View {
             width: Theme.Size.shortcutPopover.width, height: Theme.Size.shortcutPopover.height
         )
         .overlay(alignment: .topLeading) {
-            KeyCapChip(text: String(localized: "esc"), scale: .compact)
+            KeyCapChip(text: "esc", scale: .compact)
                 .opacity(0.7)
                 .padding(.leading, Theme.Spacing.md)
                 .padding(
@@ -79,19 +79,19 @@ struct ShortcutRecorderPopover: View {
             return .binding(
                 secondPress ? key.doubleBinding : key.singleBinding,
                 label: secondPress
-                    ? String(localized: "Release to record") : String(localized: "Tap again for double"))
+                    ? "Release to record" : "Tap again for double")
         }
         if let key = capture.heldModifier {
-            return .binding(key.singleBinding, label: String(localized: "Release or add a key"))
+            return .binding(key.singleBinding, label: "Release or add a key")
         }
         let flags =
             capture.heldGlobe
             ? capture.heldModifiers.union(.function) : capture.heldModifiers
         let held = KeyShortcut.collapsedModifierSymbols(
             from: flags, hyperChord: KeyShortcut.displayedHyperChord())
-        guard held.isEmpty else { return State(caps: held, label: String(localized: "Add a key")) }
+        guard held.isEmpty else { return State(caps: held, label: "Add a key") }
         return State(
-            caps: [DoubleTapModifier.option.glyph, "A"], label: String(localized: "Type a shortcut"),
+            caps: [DoubleTapModifier.option.glyph, "A"], label: "Type a shortcut",
             isExample: true)
     }
 }

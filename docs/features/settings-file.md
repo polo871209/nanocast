@@ -108,7 +108,6 @@ Where a number has a special case, the case is a word:
 
 | Key | Values |
 | --- | --- |
-| `general.language` | `"en"` (default), `"de"`, `"es"`, `"fr"`, `"ja"`, `"ko"`, `"pt"`, `"ru"`, `"zh-Hans"` |
 | `clipboard.retentionDays` | 1, 7, 30, 90, 180, 365, `"forever"` |
 | `windowManagement.gap` | 0 to 64 |
 | `notes.folder` | an absolute or `~/` path, or `null` for Application Support |

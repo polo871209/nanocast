@@ -97,12 +97,12 @@ struct WindowLayoutInspector: View {
             sectionLabel("Size")
             HStack(spacing: Theme.Spacing.md) {
                 WindowLayoutNumberField(
-                    label: String(localized: "W"), name: String(localized: "Width"), suffix: "%",
+                    label: "W", name: "Width", suffix: "%",
                     range: WindowLayoutDraft.percentRange,
                     value: WindowLayoutDraft.percent(entry.widthFraction),
                     onCommit: draft.setWidthPercent)
                 WindowLayoutNumberField(
-                    label: String(localized: "H"), name: String(localized: "Height"), suffix: "%",
+                    label: "H", name: "Height", suffix: "%",
                     range: WindowLayoutDraft.percentRange,
                     value: WindowLayoutDraft.percent(entry.heightFraction),
                     onCommit: draft.setHeightPercent)
@@ -115,11 +115,11 @@ struct WindowLayoutInspector: View {
             sectionLabel("Offset")
             HStack(spacing: Theme.Spacing.md) {
                 WindowLayoutNumberField(
-                    label: "X", name: String(localized: "Horizontal offset"), suffix: "pt",
+                    label: "X", name: "Horizontal offset", suffix: "pt",
                     range: WindowLayoutDraft.offsetRange, value: Int(entry.offset.x.rounded()),
                     onCommit: draft.setOffsetX)
                 WindowLayoutNumberField(
-                    label: "Y", name: String(localized: "Vertical offset"), suffix: "pt",
+                    label: "Y", name: "Vertical offset", suffix: "pt",
                     range: WindowLayoutDraft.offsetRange, value: Int(entry.offset.y.rounded()),
                     onCommit: draft.setOffsetY)
             }
@@ -134,7 +134,7 @@ struct WindowLayoutInspector: View {
     }
 
     private func switchRow(
-        _ title: LocalizedStringResource, detail: LocalizedStringResource, isOn: Binding<Bool>
+        _ title: String, detail: String, isOn: Binding<Bool>
     ) -> some View {
         HStack(alignment: .top, spacing: Theme.Spacing.xl) {
             VStack(alignment: .leading, spacing: Theme.Spacing.xxs) {
@@ -154,7 +154,7 @@ struct WindowLayoutInspector: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func sectionLabel(_ title: LocalizedStringResource) -> some View {
+    private func sectionLabel(_ title: String) -> some View {
         Text(title)
             .font(.callout.weight(.medium))
     }

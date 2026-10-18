@@ -204,7 +204,7 @@ private struct FileSearchScopesSection: View {
     }
 
     private func addScopes() {
-        guard let urls = chooseFolders(message: String(localized: "Choose folders to index and search."))
+        guard let urls = chooseFolders(message: "Choose folders to index and search.")
         else { return }
         settings.fileSearchScopes = FileSearchScope.normalize(
             settings.fileSearchScopes + urls.map(\.path), homeDirectory: home)
@@ -254,7 +254,7 @@ private struct FileSearchIgnoreSection: View {
     private func addFolders() {
         guard
             let urls = chooseFolders(
-                message: String(localized: "Choose folders to leave out of the index."))
+                message: "Choose folders to leave out of the index.")
         else { return }
         for url in urls {
             add(FileSearchScope.abbreviate(url.standardizedFileURL.path, homeDirectory: home))
@@ -292,7 +292,7 @@ private func chooseFolders(message: String) -> [URL]? {
     panel.canChooseDirectories = true
     panel.canChooseFiles = false
     panel.allowsMultipleSelection = true
-    panel.prompt = String(localized: "Add")
+    panel.prompt = "Add"
     panel.message = message
     // Nanocast is an accessory app, so the panel opens behind the frontmost app without this.
     NSApp.activate()

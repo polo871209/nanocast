@@ -385,7 +385,7 @@ struct WindowLayoutTests {
             plan.skipped.first?.reason == .displayDisconnected(name: "Display 2"),
             "the skip names the stored display")
         expect(
-            plan.skippedSummary == String(localized: "\(1) displays not connected"),
+            plan.skippedSummary == "1 display not connected",
             "the summary names the cause")
 
         let none = WindowLayoutPlan.make(

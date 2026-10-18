@@ -5,7 +5,7 @@ struct SectionHeader: View {
     let title: String
     var isFirst = false
     var configure: (() -> Void)?
-    var configureHelp = String(localized: "Configure…")
+    var configureHelp = "Configure…"
 
     var body: some View {
         HStack(spacing: metrics.spacing.sm) {

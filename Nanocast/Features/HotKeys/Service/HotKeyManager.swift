@@ -292,27 +292,27 @@ final class HotKeyManager {
     private func displayName(of action: HotKeyAction) -> String {
         switch action {
         case .togglePalette:
-            return String(localized: "App Launcher")
+            return "App Launcher"
         case .dictation:
-            return String(localized: "Dictation")
+            return "Dictation"
         case .windowSwitcher:
-            return String(localized: "Window Switcher")
+            return "Window Switcher"
         case .command(let id):
             return id.name
         case .app(let bundleID), .settingsPane(let bundleID):
             return displayName?(action) ?? bundleID
         case .customCommand:
-            return displayName?(action) ?? String(localized: "Custom Command")
+            return displayName?(action) ?? "Custom Command"
         case .systemAction(let id):
             return SystemActionCatalog.action(id: id).name
         case .windowCommand(let id):
-            return WindowCommandCatalog.command(id: id)?.name ?? String(localized: "Window Command")
+            return WindowCommandCatalog.command(id: id)?.name ?? "Window Command"
         case .windowLayout:
-            return displayName?(action) ?? String(localized: "Window Layout")
+            return displayName?(action) ?? "Window Layout"
         case .windowRoom:
-            return displayName?(action) ?? String(localized: "Room")
+            return displayName?(action) ?? "Room"
         case .customWindowSize:
-            return displayName?(action) ?? String(localized: "Custom Size")
+            return displayName?(action) ?? "Custom Size"
         }
     }
 

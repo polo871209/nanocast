@@ -37,19 +37,19 @@ enum PaletteMode: String, CaseIterable, Identifiable {
     }
     var placeholder: String {
         switch self {
-        case .launcher: return String(localized: "Search for apps and commands…")
-        case .clipboard: return String(localized: "Type to filter entries…")
+        case .launcher: return "Search for apps and commands…"
+        case .clipboard: return "Type to filter entries…"
         case .calculatorHistory:
-            return String(localized: "Do math, convert units, or search your past calculations…")
-        case .emoji: return String(localized: "Search emoji and symbols…")
-        case .fileSearch: return String(localized: "Search files and folders…")
-        case .menuSearch: return String(localized: "Search menu bar items…")
-        case .rooms: return String(localized: "Search rooms, or name a new one…")
-        case .roomWindows: return String(localized: "Search windows, or type an app to add…")
-        case .customCommandEditor: return String(localized: "Command editor")
-        case .customCommands: return String(localized: "Search custom commands…")
-        case .uninstall: return String(localized: "Filter files and folders by name…")
-        case .dictionary: return String(localized: "Look up a word…")
+            return "Do math, convert units, or search your past calculations…"
+        case .emoji: return "Search emoji and symbols…"
+        case .fileSearch: return "Search files and folders…"
+        case .menuSearch: return "Search menu bar items…"
+        case .rooms: return "Search rooms, or name a new one…"
+        case .roomWindows: return "Search windows, or type an app to add…"
+        case .customCommandEditor: return "Command editor"
+        case .customCommands: return "Search custom commands…"
+        case .uninstall: return "Filter files and folders by name…"
+        case .dictionary: return "Look up a word…"
         }
     }
 }
@@ -64,5 +64,5 @@ struct PasteTarget: Equatable {
         iconPath = app.bundleURL?.path
     }
 
-    var pasteTitle: String { String(localized: "Paste to \(name)") }
+    var pasteTitle: String { "Paste to \(name)" }
 }

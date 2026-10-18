@@ -13,13 +13,12 @@ struct SettingsSearchEntry: Identifiable, Hashable, Sendable {
         self.keywords = keywords
     }
 
-    init(_ anchor: SettingsAnchor, _ title: LocalizedStringResource, keywords: [String] = []) {
-        let localized = String(localized: title)
-        self.init(.row(anchor, localized), localized, keywords + [title.key])
+    init(_ anchor: SettingsAnchor, _ title: String, keywords: [String] = []) {
+        self.init(.row(anchor, title), title, keywords)
     }
 
-    init(group anchor: SettingsAnchor, _ title: LocalizedStringResource, keywords: [String] = []) {
-        self.init(.section(anchor), String(localized: title), keywords + [title.key])
+    init(group anchor: SettingsAnchor, _ title: String, keywords: [String] = []) {
+        self.init(.section(anchor), title, keywords)
     }
 
     init(pane: SettingsTab, keywords: [String] = []) {
@@ -103,9 +102,6 @@ enum SettingsSearchCatalog {
         .init(
             .generalGlobalShortcuts, "App Launcher",
             keywords: ["hotkey", "shortcut", "summon", "palette"]),
-        .init(
-            .generalGeneral, "Language",
-            keywords: ["localization", "translation", "locale", "region"]),
         .init(
             .generalGeneral, "Launch at login",
             keywords: ["startup", "login item", "start", "boot"]),

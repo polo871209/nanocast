@@ -128,7 +128,7 @@ struct RootPaletteView: View {
             return PaletteMenuContent(
                 popover: filtered.content, selection: $menuSelection,
                 search: PopoverMenu.Search(
-                    placeholder: String(localized: "Search for actions…"), placement: .bottom),
+                    placeholder: "Search for actions…", placement: .bottom),
                 onActivate: activateMenuItem, preferredSelection: filtered.bestMatch)
         case .clipboardFilter:
             return headerMenu(
@@ -468,7 +468,7 @@ struct RootPaletteView: View {
                 HeaderMenuButton(
                     title: vm.fileSearchFilter.title, systemImage: vm.fileSearchFilter.systemImage,
                     isOpen: openMenu == .fileSearchFilter,
-                    help: String(localized: "Filter by type  ⌘P"),
+                    help: "Filter by type  ⌘P",
                     action: toggleFileSearchFilter)
             }
             if !isCollapsed, vm.mode == .emoji {
@@ -477,7 +477,7 @@ struct RootPaletteView: View {
                     title: vm.emojiCategoryFilter.title,
                     systemImage: vm.emojiCategoryFilter.systemImage,
                     isOpen: openMenu == .emojiCategory,
-                    help: String(localized: "Filter by category  ⌘P"),
+                    help: "Filter by category  ⌘P",
                     action: toggleEmojiCategory)
             }
             if isCollapsed, settings.showFavoritesInCompactMode,
@@ -640,7 +640,7 @@ struct RootPaletteView: View {
         let filtered = popover.matching(ActionMenuSearchQuery(vm.menuQuery))
         return PaletteMenuContent(
             popover: filtered.content, selection: $menuSelection, width: width,
-            search: PopoverMenu.Search(placeholder: String(localized: "Search…"), placement: .top),
+            search: PopoverMenu.Search(placeholder: "Search…", placement: .top),
             onActivate: activateMenuItem, preferredSelection: filtered.bestMatch,
             extraRowsHeight: extraRowsHeight)
     }
@@ -936,8 +936,8 @@ struct RootPaletteView: View {
 
     private var backHelp: String {
         vm.canGoBack
-            ? String(localized: "Esc to go back or ⌘ Esc to go to root search")
-            : String(localized: "Esc to close or ⌘ Esc to go to root search")
+            ? "Esc to go back or ⌘ Esc to go to root search"
+            : "Esc to close or ⌘ Esc to go to root search"
     }
 
     private func goBack() {

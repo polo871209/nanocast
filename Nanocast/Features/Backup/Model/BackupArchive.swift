@@ -10,9 +10,9 @@ enum BackupArchive {
 
         var errorDescription: String? {
             switch self {
-            case .cannotWrite: return String(localized: "Couldn't write the backup file.")
+            case .cannotWrite: return "Couldn't write the backup file."
             case .cannotRead:
-                return String(localized: "This file isn't a Nanocast backup, or it's damaged.")
+                return "This file isn't a Nanocast backup, or it's damaged."
             }
         }
     }

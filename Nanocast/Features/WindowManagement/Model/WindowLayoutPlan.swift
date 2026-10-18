@@ -62,9 +62,9 @@ struct WindowLayoutPlan: Equatable, Sendable {
                 return name
             })
         if !displays.isEmpty, displays.count == skipped.count {
-            return String(localized: "\(displays.count) displays not connected")
+            return displays.count == 1 ? "1 display not connected" : "\(displays.count) displays not connected"
         }
-        return String(localized: "\(skipped.count) entries skipped")
+        return skipped.count == 1 ? "1 entry skipped" : "\(skipped.count) entries skipped"
     }
 
     static func make(

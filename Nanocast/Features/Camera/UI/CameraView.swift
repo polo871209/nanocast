@@ -27,23 +27,23 @@ struct CameraView: View {
         HStack(spacing: Theme.Spacing.md) {
             if isLive {
                 CameraButton(
-                    title: String(localized: "Mirror"),
+                    title: "Mirror",
                     emphasis: coordinator.mirrored ? .primary : .secondary
                 ) {
                     coordinator.mirrored.toggle()
                 }
                 if coordinator.canSwitchCamera {
-                    CameraButton(title: String(localized: "Switch Camera"), emphasis: .secondary) {
+                    CameraButton(title: "Switch Camera", emphasis: .secondary) {
                         coordinator.switchCamera()
                     }
                 }
             }
             Spacer(minLength: Theme.Spacing.md)
-            CameraButton(title: String(localized: "Close"), keyCap: "esc", emphasis: .secondary) {
+            CameraButton(title: "Close", keyCap: "esc", emphasis: .secondary) {
                 coordinator.close()
             }
             if isLive {
-                CameraButton(title: String(localized: "Take Photo"), keyCap: "↵") {
+                CameraButton(title: "Take Photo", keyCap: "↵") {
                     coordinator.takePhoto()
                 }
             }

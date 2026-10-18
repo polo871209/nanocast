@@ -18,20 +18,20 @@ enum EmojiCategory: String, CaseIterable, Sendable {
 
     var title: String {
         switch self {
-        case .smileysAndPeople: return String(localized: "Smileys & People")
-        case .animalsAndNature: return String(localized: "Animals & Nature")
-        case .foodAndDrink: return String(localized: "Food & Drink")
-        case .activity: return String(localized: "Activity")
-        case .travelAndPlaces: return String(localized: "Travel & Places")
-        case .objects: return String(localized: "Objects")
-        case .symbols: return String(localized: "Symbols")
-        case .flags: return String(localized: "Flags")
-        case .arrows: return String(localized: "Arrows")
-        case .currency: return String(localized: "Currency")
-        case .math: return String(localized: "Math")
-        case .shapesAndPunctuation: return String(localized: "Shapes & Punctuation")
-        case .cjk: return String(localized: "CJK Symbols")
-        case .keysAndTechnical: return String(localized: "Keys & Technical")
+        case .smileysAndPeople: return "Smileys & People"
+        case .animalsAndNature: return "Animals & Nature"
+        case .foodAndDrink: return "Food & Drink"
+        case .activity: return "Activity"
+        case .travelAndPlaces: return "Travel & Places"
+        case .objects: return "Objects"
+        case .symbols: return "Symbols"
+        case .flags: return "Flags"
+        case .arrows: return "Arrows"
+        case .currency: return "Currency"
+        case .math: return "Math"
+        case .shapesAndPunctuation: return "Shapes & Punctuation"
+        case .cjk: return "CJK Symbols"
+        case .keysAndTechnical: return "Keys & Technical"
         }
     }
 
@@ -58,9 +58,9 @@ enum EmojiCategory: String, CaseIterable, Sendable {
         switch self {
         case .symbols, .arrows, .currency, .math, .shapesAndPunctuation, .cjk,
             .keysAndTechnical:
-            String(localized: "Symbol")
+            "Symbol"
         default:
-            String(localized: "Emoji")
+            "Emoji"
         }
     }
 }
@@ -76,9 +76,9 @@ enum EmojiCategoryFilter: Hashable, Sendable {
 
     var title: String {
         switch self {
-        case .all: String(localized: "All Categories")
-        case .pinned: String(localized: "Pinned")
-        case .frequentlyUsed: String(localized: "Frequently Used")
+        case .all: "All Categories"
+        case .pinned: "Pinned"
+        case .frequentlyUsed: "Frequently Used"
         case .category(let category): category.title
         }
     }
@@ -139,12 +139,12 @@ enum EmojiSkinTone: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .none: return String(localized: "Default")
-        case .light: return String(localized: "Light")
-        case .mediumLight: return String(localized: "Medium Light")
-        case .medium: return String(localized: "Medium")
-        case .mediumDark: return String(localized: "Medium Dark")
-        case .dark: return String(localized: "Dark")
+        case .none: return "Default"
+        case .light: return "Light"
+        case .mediumLight: return "Medium Light"
+        case .medium: return "Medium"
+        case .mediumDark: return "Medium Dark"
+        case .dark: return "Dark"
         }
     }
 
@@ -175,51 +175,17 @@ enum EmojiCatalog {
         return String(scalars)
     }
 
-    nonisolated static func parse(_ raw: String, localized: [String] = []) -> [EmojiEntry] {
-        let localizedTerms = terms(in: localized)
+    nonisolated static func parse(_ raw: String) -> [EmojiEntry] {
         var result: [EmojiEntry] = []
         result.reserveCapacity(2200)
         for line in raw.split(separator: "\n") {
             let fields = line.split(separator: "|", maxSplits: 4, omittingEmptySubsequences: false)
             guard fields.count == 5, let category = EmojiCategory(rawValue: String(fields[2]))
             else { continue }
-            let glyph = String(fields[0])
-            var keywords = String(fields[4])
-            for pack in localizedTerms[glyph] ?? [] {
-                if !keywords.isEmpty { keywords += "," }
-                keywords += pack
-            }
             result.append(
                 EmojiEntry(
-                    glyph: glyph, name: String(fields[1]), category: category,
-                    supportsSkinTone: fields[3] == "1", keywords: keywords))
-        }
-        return result
-    }
-
-    private nonisolated static func terms(in packs: [String]) -> [String: [Substring]] {
-        var result: [String: [Substring]] = [:]
-        for pack in packs {
-            for line in pack.split(separator: "\n") {
-                let fields = line.split(separator: "|", maxSplits: 1)
-                guard fields.count == 2 else { continue }
-                result[String(fields[0]), default: []].append(fields[1])
-            }
-        }
-        return result
-    }
-
-    nonisolated static func keywordLanguages(available: [String], preferred: [String]) -> [String] {
-        let candidates = ["en"] + available
-        var result: [String] = []
-        for language in preferred {
-            guard
-                let match = Bundle.preferredLocalizations(
-                    from: candidates, forPreferences: [language]
-                ).first,
-                match != "en", !result.contains(match)
-            else { continue }
-            result.append(match)
+                    glyph: String(fields[0]), name: String(fields[1]), category: category,
+                    supportsSkinTone: fields[3] == "1", keywords: String(fields[4])))
         }
         return result
     }

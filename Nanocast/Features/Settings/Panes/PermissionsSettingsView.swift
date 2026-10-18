@@ -163,8 +163,8 @@ struct PermissionsSettingsView: View {
 
     private func grantStatus(_ granted: Bool) -> (title: String, symbol: String, tint: Color) {
         granted
-            ? (String(localized: "Granted"), "checkmark.circle.fill", .green)
-            : (String(localized: "Not granted"), "exclamationmark.triangle.fill", .orange)
+            ? ("Granted", "checkmark.circle.fill", .green)
+            : ("Not granted", "exclamationmark.triangle.fill", .orange)
     }
 
     private var screenRecordingStatus: (title: String, symbol: String, tint: Color) {
@@ -175,10 +175,10 @@ struct PermissionsSettingsView: View {
 
     private var microphoneStatus: (title: String, symbol: String, tint: Color) {
         switch microphoneAccess {
-        case .authorized: return (String(localized: "Granted"), "checkmark.circle.fill", .green)
+        case .authorized: return ("Granted", "checkmark.circle.fill", .green)
         case .notDetermined:
-            return (String(localized: "Not asked yet"), "questionmark.circle.fill", .secondary)
-        default: return (String(localized: "Not granted"), "exclamationmark.triangle.fill", .orange)
+            return ("Not asked yet", "questionmark.circle.fill", .secondary)
+        default: return ("Not granted", "exclamationmark.triangle.fill", .orange)
         }
     }
 

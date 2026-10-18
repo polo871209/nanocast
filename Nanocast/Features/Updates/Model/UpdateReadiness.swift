@@ -19,11 +19,11 @@ enum UpdateReadiness {
         var message: String {
             switch self {
             case .insertingText:
-                return String(localized: "Waiting for dictated text to finish inserting.")
-            case .uninstalling: return String(localized: "Waiting for the uninstaller to finish.")
-            case .recordingHotKey: return String(localized: "Finish recording the shortcut first.")
-            case .dialogOpen: return String(localized: "Close the open dialog first.")
-            case .paletteOpen: return String(localized: "Close Nanocast's window first.")
+                return "Waiting for dictated text to finish inserting."
+            case .uninstalling: return "Waiting for the uninstaller to finish."
+            case .recordingHotKey: return "Finish recording the shortcut first."
+            case .dialogOpen: return "Close the open dialog first."
+            case .paletteOpen: return "Close Nanocast's window first."
             }
         }
     }

@@ -90,7 +90,7 @@ final class FileSearchCoordinator {
                     result.url, configuration: NSWorkspace.OpenConfiguration())
             } catch {
                 await core.showNotice(
-                    title: String(localized: "Couldn’t Open \(result.name)"),
+                    title: "Couldn’t Open \(result.name)",
                     message: error.localizedDescription,
                     symbol: result.isDirectory ? "folder" : "doc", tone: .danger)
             }
@@ -116,17 +116,17 @@ final class FileSearchCoordinator {
 
     func copyPath(_ result: FileSearchResult) {
         Paster.copyPlainText(result.id)
-        core.showMessage(String(localized: "Copied path"))
+        core.showMessage("Copied path")
     }
 
     func copyName(_ result: FileSearchResult) {
         Paster.copyPlainText(result.name)
-        core.showMessage(String(localized: "Copied name"))
+        core.showMessage("Copied name")
     }
 
     func copyFile(_ result: FileSearchResult) {
         PasteboardFiles.write(result.url, to: .general)
-        core.showMessage(String(localized: "Copied file"))
+        core.showMessage("Copied file")
     }
 
     func pasteFile(_ result: FileSearchResult) {
@@ -142,10 +142,10 @@ final class FileSearchCoordinator {
                     try FileManager.default.trashItem(at: result.url, resultingItemURL: nil)
                 }.value
                 session.remove(result)
-                core.showMessage(String(localized: "Moved to Trash"))
+                core.showMessage("Moved to Trash")
             } catch {
                 await core.showNotice(
-                    title: String(localized: "Couldn’t Move \(result.name) to Trash"),
+                    title: "Couldn’t Move \(result.name) to Trash",
                     message: error.localizedDescription,
                     symbol: "trash", tone: .danger)
             }
