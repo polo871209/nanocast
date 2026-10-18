@@ -159,13 +159,17 @@ somewhere on another; `/` is shown as the startup volume's name. The helper reso
 | no `/`, has `*` `?` `[` | the entry name, via `fnmatch` | `*.tmp` |
 | contains `/`, or starts with `~/` | the whole absolute path, via `fnmatch` | `~/Movies`, `**/[Cc]ache/**` |
 
-The defaults skip what a search for one's own files never wants: build output and dependency
-folders (`node_modules`, `.git`, `build`, `DerivedData`, `.venv`, …), the Photos library, the Trash,
-the `~/.cache` and `~/.npm` caches, and the noisy parts of `~/Library` — `Application Support`,
-`Caches`, `Containers`, `Developer`, `Group Containers` and `Mail`. Together they hold most of a home
-folder's entries and most of its churn: one browser's cache alone rewrites tens of thousands of files
-on every page load. `Preferences`, `LaunchAgents` and the cloud drives stay indexed. `/Library/Caches`
-and `/private/var/folders` cover a scope added outside home.
+The defaults skip what a search for one's own files never wants: Finder and volume metadata
+(`.DS_Store`, `._*` AppleDouble files, `.Spotlight-V100`, …), version control, build output and
+dependency folders (`node_modules`, `__pycache__`, `build`, `DerivedData`, `.venv`, `.cache`, …), the
+Photos library, the Trash, toolchain homes (`~/.npm`, `~/.cargo`, `~/.rustup`, `~/.local/share`, …),
+and the noisy parts of `~/Library` — `Application Support`, `Caches`, `Containers`, `Developer`,
+`Group Containers`, `Logs` and `Mail`. Together they hold most of a home folder's entries and most of
+its churn: one browser's cache alone rewrites tens of thousands of files on every page load.
+`Preferences`, `LaunchAgents` and the cloud drives stay indexed. For a scope added outside home, the
+read-only system volume (`/System`, `/usr`, `/bin`, `/sbin`), `/private/var`, `/private/tmp`,
+`/opt/homebrew` and the system caches and developer tools under `/Library` are skipped too. A pattern
+only matches below a root, so a scope such as `/usr/local` still indexes everything under it.
 
 The pane lists `FileSearchIgnoreList.patterns(added:removedDefaults:)`: the defaults the user kept,
 then what they added. Adding a removed default takes it off the removed list rather than storing it
@@ -227,17 +231,20 @@ a folder, whose preview is its icon. Information rows are the compact variant; t
 in a detached task, never in `body`, and a folder shows no Size — its own record is a few bytes, which is
 never what the row means.
 
-**There is no Quick Look action.** The pane already previews the selection, and ↵ opens the file in
-its default app. A system `QLPreviewPanel` would take key, and the palette hides on `windowDidResignKey`.
+**↵ depends on the file type.** An image or a PDF (`FileSearchResult.opensInPreview`) opens in Preview. Any other file, and every folder, copies its path, hides the palette and shows "Copied path". Open File and Open Folder open the default app, with no chord.
+
+**There is no Quick Look action.** The pane already previews the selection. A system `QLPreviewPanel` would take key, and the palette hides on `windowDidResignKey`.
 
 | Row | Chord | What it does |
 | --- | --- | --- |
-| Open File / Open Folder | ↵ | `NSWorkspace`'s asynchronous configuration API; hides the palette without restoring focus, and reports a failure through the dialog controller |
+| Open in Preview | ↵ | an image or a PDF, through `NSWorkspace` with Preview as the application; hides the palette without restoring focus, and reports a failure through the dialog controller |
+| Copy Path | ↵ | any other file or a folder: copies the path, hides the palette and shows "Copied path" |
+| Open File / Open Folder | — | the default app, through `NSWorkspace`; hides the palette without restoring focus |
 | Show in Finder | ⌘↵ | reveals and dismisses |
 | Share… | — | `NSSharingServicePicker`, anchored to the palette's trailing edge so the row it was opened from stays visible beside it. Escape or a click elsewhere dismisses it, and the palette is never hidden, so the flow returns to the same row. There is no chord: the destinations are the system's, and it is the only place a system popover is right |
 | Copy File | ⇧⌘C | the file itself on the pasteboard through `PasteboardFiles.write`, which declares `.fileURL` and the path as `.string` |
 | Copy Name | ⌥⌘C | through `Paster`, palette stays open |
-| Copy Path | ⌃⌘C | the standardized path, palette stays open |
+| Copy Path | ⌃⌘C | the standardized path, palette stays open. Listed only for an image or a PDF, where ↵ opens Preview |
 | Paste File to … | ⇧⌘V | `Paster.pasteFile` into the app the palette was summoned over, named by `PasteTarget` |
 | Move to Trash | ⌃X | `FileManager.trashItem` off the main actor, then the row leaves the session |
 
@@ -281,7 +288,7 @@ nothing.
 A Files row is not an `AppEntry`: no `Kind`, no ranking, favorite, alias or Hide from Search. It is
 `LauncherScreen.Row.file`, id-prefixed `file-` because an application's entry id is its bundle path. It
 draws `FileSearchRow` with its location — name, dimmed parent path, then File or Folder — and answers
-the screen's own row actions: ↵ opens, ⌘↵ reveals, the copy, paste and trash chords run
+the screen's own row actions: ↵ opens Preview or copies the path as in File Search, ⌘↵ reveals, the copy, paste and trash chords run
 `FileSearchActionsMenu.perform`, and a row drags out as a copy. Row icons come from the same transient
 fitted cache, purged when the palette hides.
 
