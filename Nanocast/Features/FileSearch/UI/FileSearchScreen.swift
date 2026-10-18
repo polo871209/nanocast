@@ -28,7 +28,16 @@ struct FileSearchScreen: PaletteScreen {
 
     func actions(at selection: Int) -> PopoverMenuContent? {
         guard let result = result(at: selection) else { return nil }
-        return FileSearchActionsMenu.content(result: result, core: core, target: vm.pasteTarget)
+        return FileSearchActionsMenu.content(
+            result: result, core: core, offersFileTools: core.fileToolsCoordinator.isEnabled)
+    }
+
+    func tab(at selection: Int, backwards: Bool) -> Bool {
+        guard !backwards, let result = result(at: selection), core.fileToolsCoordinator.isEnabled else {
+            return false
+        }
+        core.fileToolsCoordinator.open(result)
+        return true
     }
 
     func activate(at selection: Int) {
@@ -117,7 +126,7 @@ struct FileSearchScreen: PaletteScreen {
 @MainActor
 enum FileSearchActionsMenu {
     static func content(
-        result: FileSearchResult, core: AppCore, target: PasteTarget?
+        result: FileSearchResult, core: AppCore, offersFileTools: Bool
     ) -> PopoverMenuContent {
         let coordinator = core.fileSearchCoordinator
         var items = [
@@ -137,16 +146,19 @@ enum FileSearchActionsMenu {
             ) { coordinator.showInFinder(result) },
             PopoverMenuItem(title: "Share…", systemImage: "square.and.arrow.up") {
                 coordinator.share(result)
-            },
+            }
+        ]
+        if offersFileTools {
+            items.append(
+                PopoverMenuItem(
+                    title: "File Tools…", systemImage: "wand.and.sparkles", shortcut: "⇥"
+                ) { core.fileToolsCoordinator.open(result) })
+        }
+        items += [
             PopoverMenuItem(
                 title: "Copy File", systemImage: "doc.on.clipboard", startsSection: true,
                 shortcut: "⇧⌘C"
             ) { coordinator.copyFile(result) },
-            PopoverMenuItem(
-                title: target.map { "Paste File to \($0.name)" }
-                    ?? "Paste File",
-                icon: .paste(target, fallback: "doc.on.clipboard"), shortcut: "⇧⌘V"
-            ) { coordinator.pasteFile(result) },
             PopoverMenuItem(
                 title: "Copy Name", systemImage: "doc.on.clipboard", shortcut: "⌥⌘C"
             ) { coordinator.copyName(result) }
@@ -171,7 +183,6 @@ enum FileSearchActionsMenu {
         case .copyFile: coordinator.copyFile(result)
         case .copyName: coordinator.copyName(result)
         case .copyPath: coordinator.copyPath(result)
-        case .pasteFile: coordinator.pasteFile(result)
         case .delete: coordinator.trash(result)
         default: return false
         }

@@ -28,7 +28,7 @@ trap 'rm -f "$ENTITLEMENTS"' EXIT
 codesign -d --entitlements - --xml "$APP" > "$ENTITLEMENTS" 2>/dev/null
 
 HELPER="$APP/Contents/Helpers/Nanocast Dictation.app"
-for BIN in "$APP/Contents/MacOS/$NAME" "$APP/Contents/Helpers/ClipboardTextHelper" "$APP/Contents/Helpers/FileIndexHelper" "$HELPER/Contents/MacOS/Nanocast Dictation"; do
+for BIN in "$APP/Contents/MacOS/$NAME" "$APP/Contents/Helpers/ClipboardTextHelper" "$APP/Contents/Helpers/FileIndexHelper" "$APP/Contents/Helpers/FileToolHelper" "$HELPER/Contents/MacOS/Nanocast Dictation"; do
     INFO="$(codesign -dv --verbose=2 "$BIN" 2>&1)"
     [[ "$INFO" =~ flags=0x[0-9a-f]+\([^\)]*runtime ]] ||
         fail "${BIN##*/}: hardened runtime not enabled"
