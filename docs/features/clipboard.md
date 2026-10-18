@@ -282,6 +282,14 @@ An edit is held to `ClipboardStore.maxTextLength`, the same 32,000 characters ca
 longer one is refused with a HUD and nothing changes; past that, every later paste of the entry
 would reindex it on the main actor.
 
+## AirDrop a text entry
+
+**AirDrop** (a ⌘K row on a `.text` entry) sends the entry to a nearby device through the system AirDrop sheet. macOS AirDrop refuses a bare string, because `NSSharingService.canPerform` is false for one. So `AirDropTextSender` writes the text as UTF-8 to a `.txt` file in its own temporary folder and sends the file. `ClipboardTextFileName.stem` names the file after the first non-blank line, cut to 40 characters, with `/`, `:` and `\` replaced by hyphens and leading dots removed. Blank text gets "Clipboard Text".
+
+What the receiver gets is AirDrop's own behavior: a Mac saves the file in Downloads. Nothing reaches the receiver's clipboard. Universal Clipboard does that, but only between devices on the same Apple Account.
+
+The palette closes before the sheet opens. The sheet is the same system-sheet exception as the AirDrop tool in File Tools. The temporary folder is deleted when the share finishes or fails, and otherwise at the next send. An image or file entry has no AirDrop row.
+
 ## Type filter
 
 The clipboard header carries a `ClipboardFilterButton` at the trailing edge of the search field —

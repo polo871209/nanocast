@@ -12,6 +12,7 @@ final class ClipboardCoordinator {
     private unowned let core: AppCore
     private var textTask: Task<Void, Never>?
     private var pasteSequence: PasteSequence?
+    private let airDropSender = AirDropTextSender()
 
     init(
         clipboardStore: ClipboardStore,
@@ -171,6 +172,18 @@ final class ClipboardCoordinator {
         guard let url = clipURL(for: item) else { return }
         paletteCoordinator.hidePalette(restoreFocus: false)
         AppLauncher.showInFinder(url)
+    }
+
+    func airDropText(_ item: ClipboardItem) {
+        guard item.kind == .text, let text = item.text, !text.isEmpty else { return }
+        paletteCoordinator.hidePalette(restoreFocus: false)
+        do throws(AirDropTextSender.Failure) {
+            try airDropSender.send(text)
+        } catch .unavailable {
+            core.showMessage("AirDrop isn’t available", tone: .danger)
+        } catch {
+            core.showMessage("Couldn’t prepare the text for AirDrop", tone: .danger)
+        }
     }
 
     func dragPayload(for item: ClipboardItem) -> ClipDragPayload? {

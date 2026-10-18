@@ -90,6 +90,8 @@ If a change touches anything in the right column, the harness on the left is man
 | `FileSearchTests` | `FileSearch/Model/`: folding, masks, scoring, ignore rules, priors, scopes |
 | `FileIndexTests` | `FileIndexCrawler`, `FileIndexSnapshot`, `FileIndex`: a real fixture crawled, written, mapped, searched and live-updated |
 | `FileSearchSessionTests` | serialized query execution, coalescing, cancellation and refresh |
+| `FileToolsTests` | `FileTools/Model/`: the catalog per type and per Finder batch, option tokens, field parsing, output names with collisions, the request round trip, archive names, `FinderTabPolicy` |
+| `FileToolsHelperTests` | `FileTools/Helper/` engines, `FileToolWorker` and `FileToolTransfer`: every image input to every output, Compress to Size, QR codes, archives, PDFs, audio, video speed, and the worker's progress, text, failure, move, no-replace and deadline paths |
 | `MenuSearchTests` | `MenuSearch/Model/` decisions, `MenuSearch/Service/` session filtering, the shared `FuzzyMatch` scorer |
 | `ActionMenuSearchTests` | Action-menu query normalization and shared fuzzy matching |
 | `AppInstallationTests` | Multiple app copies and app-wide preferences; file-favorite persistence, mixed ordering, hidden slots and restoration through the existing favorite key list |
@@ -102,7 +104,7 @@ If a change touches anything in the right column, the harness on the left is man
 | `ClipboardSearchTests` | Ordinary and OCR result ordering, opt-in lifecycle, cancellation, pins and type filters |
 | `ClipboardTextTests` | Apple Vision/PDF extraction, scheduling, retry backoff and recovery |
 | `PasteSequenceTests` | `Clipboard/Model/PasteSequence.swift` — the walk's order, its end, and what starts it over |
-| `ClipboardTests` | `Clipboard/Model/ClipboardStore.swift`, `ClipboardFilter.swift`, `ClipboardFileKind.swift`, the colour trio |
+| `ClipboardTests` | `Clipboard/Model/ClipboardStore.swift`, `ClipboardFilter.swift`, `ClipboardFileKind.swift`, `ClipboardTextFileName.swift`, the colour trio |
 | `ClipboardCoordinatorTests` | Edit Entry selection across query/type changes and pins, failed writes, deletion during editing and cancellation; isolated database and recorded clipboard effects |
 | `ClipboardThumbnailTests` | `Platform/Images/ImageThumbnail.swift` copies against the real store — a remove or clear mid-copy leaves none, same-named JPEG/PNG copies stay apart, a timeout or cancel frees the queue, and a failed or unreadable copy falls back to the original; a stand-in script plays the helper |
 | `PasteboardTests` | `Clipboard/Service/ClipboardManager.swift` capture and `Paster.write` — what a Finder copy reads as, and what a file or image entry writes back |
@@ -434,6 +436,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - ⌃⌘↵ pastes as plain text: a text entry as typed, a file entry as its path rather than the file
 - Default action ▸ Paste as Plain Text: ↵ pastes plain, ⌃⌘↵ pastes, ⌘↵ still copies; an image
   entry's ↵ still pastes the image and its ⌘K menu has no plain row
+- AirDrop on a text row closes the palette and opens the AirDrop sheet; a Mac that receives it saves a `.txt` file named after the first line in Downloads, with the full text
 - ⇧⌘T on an image row and on an image-file row copies the recognized text, and the ⌘K menu carries
   the same Copy Text row
 - The "Reading text…" progress pill appears while the helper runs and is replaced by the outcome:

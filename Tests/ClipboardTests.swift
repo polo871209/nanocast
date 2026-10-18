@@ -40,6 +40,7 @@ struct ClipboardTests {
         defaultActionChords()
         plainTextSkipsTheFile()
         offersTextExtraction()
+        airDropFileNames()
 
         print("\(passes)/\(passes + failures) passed")
         if failures > 0 { exit(1) }
@@ -859,6 +860,18 @@ struct ClipboardTests {
         expect(
             ClipboardItem(imagePath: "/a/b.png", sourceBundleID: nil).plainText == nil,
             "an image has no plain text")
+    }
+
+    static func airDropFileNames() {
+        let stem = ClipboardTextFileName.stem
+        expect(stem("Meeting notes\nsecond line") == "Meeting notes", "the first line names the file")
+        expect(stem("\n  \n  Buy\tmilk  ") == "Buy milk", "blank lines and runs of spaces collapse")
+        expect(stem("a/b:c\\d") == "a-b-c-d", "path separators become hyphens")
+        expect(stem("..hidden") == "hidden", "a name never starts with a dot")
+        expect(stem("   \n\t") == "Clipboard Text", "blank text falls back to a fixed name")
+        expect(stem(String(repeating: "x", count: 60)).count == 40, "a long line is cut at 40 characters")
+        let cut = "word " + String(repeating: "y", count: 34)
+        expect(stem(cut + " tail") == cut, "the cut drops trailing space")
     }
 
     static func offersTextExtraction() {

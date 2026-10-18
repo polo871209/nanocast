@@ -50,7 +50,7 @@ struct PaletteShortcutTests {
             resolve("c", command: true, option: true, control: true), .copyName,
             "Option is read before Control")
 
-        expect(resolve("v", command: true, shift: true), .pasteFile, "⇧⌘V pastes the file")
+        expect(resolve("v", command: true, shift: true), nil, "⇧⌘V stays with the search field")
         expect(resolve("v", command: true), nil, "bare ⌘V stays with the search field")
         expect(resolve("t", command: true, shift: true), .copyText, "⇧⌘T copies an image's text")
         expect(resolve("t", command: true), nil, "bare ⌘T stays with the search field")
@@ -98,7 +98,7 @@ struct PaletteShortcutTests {
         expect(resolve("a"), nil, "typing is never a chord")
 
         let expanded: [PaletteShortcut] = [
-            .copyFile, .copyName, .copyPath, .copyText, .pasteFile, .quickLook, .toggleFavorite,
+            .copyFile, .copyName, .copyPath, .copyText, .quickLook, .toggleFavorite,
             .hideFromSearch, .quit, .forceQuit, .restart, .edit, .duplicate, .showInFinder
         ]
         let anywhere: [PaletteShortcut] = [
@@ -118,7 +118,7 @@ struct PaletteShortcutTests {
             .showInFinder
         ]
         let leaving: [PaletteShortcut] = [
-            .commandDelete, .pasteFile, .quit, .forceQuit, .restart, .pin, .favoriteSlot(0)
+            .commandDelete, .quit, .forceQuit, .restart, .pin, .favoriteSlot(0)
         ]
         for shortcut in closing {
             expect(shortcut.closesMenu, "\(shortcut) closes an open menu")

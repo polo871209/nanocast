@@ -191,6 +191,12 @@ enum ClipboardActionsMenu {
             ) {
                 core.clipboardCoordinator.togglePinnedClip(item)
             })
+        if item.kind == .text {
+            items.append(
+                PopoverMenuItem(title: "AirDrop", systemImage: "airplayaudio") {
+                    core.clipboardCoordinator.airDropText(item)
+                })
+        }
         if item.offersTextExtraction {
             items.append(
                 PopoverMenuItem(
