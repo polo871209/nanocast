@@ -24,15 +24,15 @@ enum CalcQuantity {
                 parser.operationCount > 0 || (!preserveStandaloneUnit && tokens.count > 1)
             else { return nil }
             return CalcResult(
-                expression: CalcFormatter.expression(query), sourceBadge: String(localized: "Expression"),
-                targetBadge: String(localized: "Result"), payload: .number(value.effective))
+                expression: CalcFormatter.expression(query), sourceBadge: "Expression",
+                targetBadge: "Result", payload: .number(value.effective))
         }
         if value.isBoolean {
             guard split.targetName == nil else { return nil }
             let text = value.amount == 0 ? "false" : "true"
             return CalcResult(
                 expression: expressionText(split.expressionTokens),
-                sourceBadge: String(localized: "Expression"), targetBadge: String(localized: "Boolean"),
+                sourceBadge: "Expression", targetBadge: "Boolean",
                 payload: .value(display: text, copyText: text),
                 canChain: false)
         }
@@ -42,12 +42,12 @@ enum CalcQuantity {
                 return CalcResult(
                     expression: query,
                     payload: .error(
-                        message: String(localized: "Exchange rates unavailable — check your connection.")))
+                        message: "Exchange rates unavailable — check your connection."))
             }
             if let code = parser.currencyCodes.first(where: { rates.rate(for: $0) == nil }) {
                 return CalcResult(
                     expression: query,
-                    payload: .error(message: String(localized: "No exchange rate for \(code).")))
+                    payload: .error(message: "No exchange rate for \(code)."))
             }
         }
 
@@ -59,8 +59,8 @@ enum CalcQuantity {
                 let text = CalcFormatter.timespan(seconds)
                 return CalcResult(
                     expression: expressionText(split.expressionTokens),
-                    sourceBadge: parser.operationCount == 0 ? unit.name : String(localized: "Expression"),
-                    targetBadge: String(localized: "Timespan"),
+                    sourceBadge: parser.operationCount == 0 ? unit.name : "Expression",
+                    targetBadge: "Timespan",
                     payload: .value(display: text, copyText: text))
             }
             guard let output = parser.converted(value, to: targetName) else {
@@ -75,7 +75,7 @@ enum CalcQuantity {
             guard parser.operationCount > 0 else { return nil }
             return CalcResult(
                 expression: expressionText(split.expressionTokens),
-                sourceBadge: String(localized: "Expression"), targetBadge: String(localized: "Result"),
+                sourceBadge: "Expression", targetBadge: "Result",
                 payload: .number(value.effective))
         case .unit(let unit):
             if !preserveStandaloneUnit, parser.operationCount == 0, parser.dimensionCount == 1,
@@ -131,13 +131,13 @@ enum CalcQuantity {
     ) -> CalcResult {
         CalcResult(
             expression: expression,
-            sourceBadge: String(localized: "Expression"), targetBadge: unit.name,
+            sourceBadge: "Expression", targetBadge: unit.name,
             payload: .measurement(amount, unit: unit))
     }
 
     private static func currencyResult(
         _ amount: Double, definition: CurrencyDef, expression: String,
-        sourceBadge: String = String(localized: "Expression")
+        sourceBadge: String = "Expression"
     ) -> CalcResult {
         let formatted = CalcFormatter.currency(amount)
         return CalcResult(

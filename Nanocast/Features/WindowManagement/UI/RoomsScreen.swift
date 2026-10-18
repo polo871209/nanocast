@@ -56,30 +56,30 @@ struct RoomsScreen: PaletteScreen {
             header: room.name,
             items: [
                 PopoverMenuItem(
-                    title: String(localized: "Enter Room"), systemImage: Room.sfSymbol, shortcut: "↵"
+                    title: "Enter Room", systemImage: Room.sfSymbol, shortcut: "↵"
                 ) {
                     coordinator.enterRoom(id: room.id)
                 },
                 PopoverMenuItem(
-                    title: String(localized: "Next Layout"), systemImage: "rectangle.3.group",
+                    title: "Next Layout", systemImage: "rectangle.3.group",
                     shortcut: "⇥"
                 ) {
                     coordinator.cycleLayout(of: room, backwards: false)
                 },
                 PopoverMenuItem(
-                    title: String(localized: "Remember Arrangement"),
+                    title: "Remember Arrangement",
                     systemImage: "rectangle.dashed.badge.record",
                     startsSection: true
                 ) {
                     coordinator.rememberArrangement(of: room)
                 },
                 PopoverMenuItem(
-                    title: String(localized: "Choose Windows…"), systemImage: "macwindow.badge.plus"
+                    title: "Choose Windows…", systemImage: "macwindow.badge.plus"
                 ) {
                     coordinator.editWindows(of: room)
                 },
                 PopoverMenuItem(
-                    title: String(localized: "Delete Room"), systemImage: "trash", startsSection: true,
+                    title: "Delete Room", systemImage: "trash", startsSection: true,
                     shortcut: "⌃X",
                     isDestructive: true
                 ) {
@@ -105,7 +105,7 @@ struct RoomsScreen: PaletteScreen {
     @ViewBuilder
     private func content(rows: [RoomRow], selectedID: RoomRow.ID?, scroll: ScrollIntent) -> some View {
         if rows.isEmpty {
-            EmptyResults(text: String(localized: "Type a name to make your first room"))
+            EmptyResults(text: "Type a name to make your first room")
         } else {
             RoomsList(
                 rows: rows, selectedID: selectedID, scroll: scroll,

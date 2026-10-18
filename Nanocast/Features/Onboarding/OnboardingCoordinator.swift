@@ -8,7 +8,7 @@ final class OnboardingCoordinator {
     init(core: AppCore) {
         self.core = core
         window = AppWindowController(
-            title: String(localized: "Welcome to Nanocast"), contentSize: OnboardingView.initialSize,
+            title: "Welcome to Nanocast", contentSize: OnboardingView.initialSize,
             activation: core.activationPolicy)
     }
 

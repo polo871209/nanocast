@@ -19,12 +19,12 @@ struct MenuSearchList: View {
         let title: String
         let items: ArraySlice<MenuSearchItem>
 
-        var label: String { String(localized: "\(title) (\(items.count) items)") }
+        var label: String { items.count == 1 ? "\(title) (1 item)" : "\(title) (\(items.count) items)" }
     }
 
     private var sections: [Section] {
         guard !isSearching else {
-            return [Section(id: 0, title: String(localized: "Results"), items: items[...])]
+            return [Section(id: 0, title: "Results", items: items[...])]
         }
         var sections: [Section] = []
         var start = items.startIndex

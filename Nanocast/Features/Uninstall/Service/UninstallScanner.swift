@@ -13,7 +13,7 @@ enum UninstallScanner {
         var errorDescription: String? {
             switch self {
             case .refused:
-                return String(localized: "Nanocast can’t uninstall this app.")
+                return "Nanocast can’t uninstall this app."
             }
         }
     }

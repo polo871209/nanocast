@@ -39,9 +39,9 @@ final class EmojiIndex {
 
     var isLoaded: Bool { !entries.isEmpty }
 
-    func load(_ raw: String = EmojiData.raw, languages: [String] = [], bundle: Bundle = .main) async {
+    func load(_ raw: String = EmojiData.raw) async {
         let (parsed, folded) = await Task.detached(priority: .utility) {
-            let parsed = EmojiCatalog.parse(raw, localized: Self.keywordPacks(for: languages, in: bundle))
+            let parsed = EmojiCatalog.parse(raw)
             return (parsed, parsed.map(FoldedEntry.init))
         }.value
         entries = parsed
@@ -53,16 +53,6 @@ final class EmojiIndex {
         }
         byGlyph = Dictionary(parsed.map { ($0.glyph, $0) }, uniquingKeysWith: { first, _ in first })
         revision &+= 1
-    }
-
-    /// Plain files let search follow macOS languages independently of the app's UI language.
-    private nonisolated static func keywordPacks(for languages: [String], in bundle: Bundle) -> [String] {
-        let urls = bundle.urls(forResourcesWithExtension: "txt", subdirectory: "EmojiKeywords") ?? []
-        let byLanguage = Dictionary(
-            urls.map { ($0.deletingPathExtension().lastPathComponent, $0) },
-            uniquingKeysWith: { first, _ in first })
-        return EmojiCatalog.keywordLanguages(available: byLanguage.keys.sorted(), preferred: languages)
-            .compactMap { byLanguage[$0].flatMap { try? String(contentsOf: $0, encoding: .utf8) } }
     }
 
     func entry(for glyph: String) -> EmojiEntry? { byGlyph[glyph] }

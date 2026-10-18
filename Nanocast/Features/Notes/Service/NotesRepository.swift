@@ -12,13 +12,13 @@ struct NotesRepository: Sendable {
         var errorDescription: String? {
             switch self {
             case .invalidTitle(let title):
-                return String(localized: "“\(title)” can't be used as a note title.")
+                return "“\(title)” can't be used as a note title."
             case .unreadable(let fileURL):
-                return String(localized: "The note isn't valid UTF-8. (\(fileURL.lastPathComponent))")
+                return "The note isn't valid UTF-8. (\(fileURL.lastPathComponent))"
             case .invalidLocation(let fileURL):
-                return String(localized: "The note file is outside the notes folder. (\(fileURL.path))")
+                return "The note file is outside the notes folder. (\(fileURL.path))"
             case .io(let fileURL, let message):
-                return String(localized: "Could not access \(fileURL.path): \(message)")
+                return "Could not access \(fileURL.path): \(message)"
             }
         }
     }

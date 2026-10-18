@@ -36,32 +36,28 @@ enum UninstallProtection: String, Hashable, Sendable, CaseIterable {
         case .removable:
             return nil
         case .systemProtected:
-            return String(localized: "Part of macOS and protected by the system.")
+            return "Part of macOS and protected by the system."
         case .userLocked:
-            return String(localized: "Locked in Finder. Unlock it in Get Info, then try again.")
+            return "Locked in Finder. Unlock it in Get Info, then try again."
         case .notOwned:
-            return String(
-                localized: "Owned by another user, in a folder that only lets owners remove things.")
+            return "Owned by another user, in a folder that only lets owners remove things."
         case .needsFullDiskAccess:
-            return String(
-                localized: """
-                    Needs Full Disk Access, which Nanocast doesn’t request. \
-                    Grant it in System Settings › Privacy & Security to include this item.
-                    """)
+            return """
+                Needs Full Disk Access, which Nanocast doesn’t request. \
+                Grant it in System Settings › Privacy & Security to include this item.
+                """
         case .parentNotWritable:
-            return String(
-                localized: """
-                    Its enclosing folder isn’t writable by you, and Nanocast never asks for an \
-                    administrator password.
-                    """)
+            return """
+                Its enclosing folder isn’t writable by you, and Nanocast never asks for an \
+                administrator password.
+                """
         case .notWritable:
-            return String(
-                localized: """
-                    Only an administrator can move it, as with App Store apps. \
-                    Drag it to the Trash in Finder instead.
-                    """)
+            return """
+                Only an administrator can move it, as with App Store apps. \
+                Drag it to the Trash in Finder instead.
+                """
         case .missing:
-            return String(localized: "No longer on disk.")
+            return "No longer on disk."
         }
     }
 }

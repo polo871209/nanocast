@@ -45,9 +45,9 @@ struct CommandOutputView: View {
         HStack(spacing: Theme.Spacing.xs) {
             CopyLogButton(log: run.log)
             if run.isRunning {
-                iconButton("stop.fill", help: String(localized: "Stop")) { presenter.stopRunning() }
+                iconButton("stop.fill", help: "Stop") { presenter.stopRunning() }
             } else {
-                iconButton("arrow.clockwise", help: String(localized: "Run Again")) { presenter.runAgain() }
+                iconButton("arrow.clockwise", help: "Run Again") { presenter.runAgain() }
             }
         }
     }
@@ -137,7 +137,7 @@ private struct CopyLogButton: View {
                 .font(Theme.Typography.bar)
                 .foregroundStyle(copiedAt == nil ? Theme.Colors.textSecondary : Theme.Colors.success)
         }
-        .tooltip(String(localized: "Copy Output"))
+        .tooltip("Copy Output")
         .task(id: copiedAt) {
             guard copiedAt != nil else { return }
             try? await Task.sleep(for: .seconds(Theme.Duration.copyFeedback))

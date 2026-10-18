@@ -16,7 +16,7 @@ final class DialogController: NSObject, NSWindowDelegate {
 
     func confirm(
         title: String, message: String?, symbol: String?, tone: DialogTone, confirmTitle: String,
-        confirmRole: DialogAction.Role, dismissTitle: String = String(localized: "Cancel")
+        confirmRole: DialogAction.Role, dismissTitle: String = "Cancel"
     ) async -> Bool {
         let request = DialogRequest(
             title: title, message: message, symbol: symbol, tone: tone,
@@ -41,7 +41,7 @@ final class DialogController: NSObject, NSWindowDelegate {
     func notice(title: String, message: String, symbol: String, tone: DialogTone) async {
         let request = DialogRequest(
             title: title, message: message, symbol: symbol, tone: tone,
-            actions: [DialogAction(title: String(localized: "OK"), role: .cancel)], defaultIndex: 0,
+            actions: [DialogAction(title: "OK", role: .cancel)], defaultIndex: 0,
             cancelIndex: 0)
         _ = await present(request)
     }
@@ -51,7 +51,7 @@ final class DialogController: NSObject, NSWindowDelegate {
     ) async
         -> Bool
     {
-        var actions = [DialogAction(title: String(localized: "OK"), role: .cancel)]
+        var actions = [DialogAction(title: "OK", role: .cancel)]
         if let recovery { actions.append(DialogAction(title: recovery)) }
         let recoveryIndex = recovery == nil ? nil : actions.count - 1
         let request = DialogRequest(
@@ -63,12 +63,12 @@ final class DialogController: NSObject, NSWindowDelegate {
     func pickVolume(current: Float32) async -> Float32? {
         let volume = VolumeState(level: Double(current))
         let request = DialogRequest(
-            title: String(localized: "Set Volume"),
-            message: String(localized: "Choose the output volume."), symbol: "speaker.wave.2",
+            title: "Set Volume",
+            message: "Choose the output volume.", symbol: "speaker.wave.2",
             tone: .neutral,
             actions: [
-                DialogAction(title: String(localized: "Set Volume")),
-                DialogAction(title: String(localized: "Cancel"), role: .cancel)
+                DialogAction(title: "Set Volume"),
+                DialogAction(title: "Cancel", role: .cancel)
             ],
             defaultIndex: 0, cancelIndex: 1, accessory: .volume(volume))
         guard await present(request) == 0 else { return nil }
@@ -78,10 +78,10 @@ final class DialogController: NSObject, NSWindowDelegate {
     func editClipboardText(_ text: String) async -> String? {
         let state = ClipboardEditState(text: text)
         let request = DialogRequest(
-            title: String(localized: "Edit Entry"), message: String(localized: "⌘↵ saves."), symbol: nil,
+            title: "Edit Entry", message: "⌘↵ saves.", symbol: nil,
             actions: [
-                DialogAction(title: String(localized: "Save")),
-                DialogAction(title: String(localized: "Cancel"), role: .cancel)
+                DialogAction(title: "Save"),
+                DialogAction(title: "Cancel", role: .cancel)
             ],
             defaultIndex: 0, cancelIndex: 1, accessory: .clipboardText(state))
         guard await present(request) == 0 else { return nil }

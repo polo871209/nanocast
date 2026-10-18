@@ -91,55 +91,6 @@ struct AppNameTest {
             "two blank keys still fall back to the filename",
             blankBoth?.installedAppName == "Ghost")
 
-        func codes(_ preferred: [String]) -> [String] {
-            BundleLocalization.indexedLanguages(preferred)
-        }
-        check(
-            "a Simplified Chinese Mac looks up the zh_CN Apple actually keys by",
-            codes(["zh-Hans-CN"]).contains("zh_CN"))
-        check(
-            "a script-bearing tag reads the zh-Hans folder, its own region, then the script's zh_CN",
-            codes(["zh-Hans-US"])
-                == [
-                    "zh-Hans-US", "zh_Hans_US", "zh-Hans", "zh_Hans", "zh-US", "zh_US", "zh-CN",
-                    "zh_CN", "zh", "en"
-                ])
-        check(
-            "Hong Kong Traditional Chinese reads zh_HK, then Taiwan's zh_TW, never zh_CN",
-            codes(["zh-Hant-HK"])
-                == [
-                    "zh-Hant-HK", "zh_Hant_HK", "zh-Hant", "zh_Hant", "zh-HK", "zh_HK", "zh-TW",
-                    "zh_TW", "zh", "en"
-                ])
-        check(
-            "a region written in the other script is skipped",
-            !codes(["zh-Hans-HK"]).contains("zh_HK") && codes(["zh-Hans-HK"]).contains("zh_CN")
-                && !codes(["zh-Hant-CN"]).contains("zh_CN") && codes(["zh-Hant-CN"]).contains("zh_TW"))
-        check(
-            "a script-only tag maximizes to reach the same key",
-            codes(["zh-Hans"]).contains("zh_CN"))
-        check(
-            "Traditional Chinese resolves to its own region, not the mainland's",
-            codes(["zh-Hant-TW"]).contains("zh_TW") && !codes(["zh-Hant-TW"]).contains("zh_CN"))
-        check(
-            "English stays last so a Chinese reader still types \"Calendar\"",
-            codes(["zh-Hans-CN"]).last == "en")
-        check(
-            "Portuguese keeps its exact, underscore and bare-language forms",
-            codes(["pt-BR"]) == ["pt-BR", "pt_BR", "pt", "en"])
-        check(
-            "Bokmål reads Apple's no key after an explicit nb localization",
-            codes(["nb-NO"]) == ["nb-NO", "nb_NO", "nb", "no", "en"])
-        check(
-            "a bare Bokmål preference also reaches no",
-            codes(["nb"]) == ["nb", "no", "en"])
-        check(
-            "repeated Norwegian preferences never repeat a resource lookup",
-            codes(["nb-NO", "nb", "no"]) == ["nb-NO", "nb_NO", "nb", "no", "en"])
-        check(
-            "Nynorsk does not acquire the Bokmål resource alias",
-            codes(["nn-NO"]) == ["nn-NO", "nn_NO", "nn", "en"])
-
         func makeLocalizedApp(_ fileName: String, table: [String: Any]) -> URL {
             let url = root.appendingPathComponent(fileName)
             let resources = url.appendingPathComponent("Contents/Resources")
@@ -150,133 +101,26 @@ struct AppNameTest {
             return url
         }
 
-        func names(_ url: URL, _ preferred: [String], region: String? = "en") -> [String] {
-            BundleLocalization.names(
-                for: url, base: url.deletingPathExtension().lastPathComponent,
-                developmentRegion: region, languages: codes(preferred))
+        func names(_ url: URL, region: String? = "en") -> [String] {
+            BundleEnglishName.names(
+                for: url, base: url.deletingPathExtension().lastPathComponent, developmentRegion: region)
         }
 
         let calculator = makeLocalizedApp(
-            "Calculator.app",
-            table: [
-                "no": ["CFBundleDisplayName": "Kalkulator"],
-                "de": ["CFBundleDisplayName": "Rechner"]
-            ])
-        check(
-            "a Bokmål Mac displays the no translation and keeps English searchable",
-            names(calculator, ["nb-NO"]) == ["Kalkulator", "Calculator"])
-        check(
-            "a more preferred language still outranks Norwegian",
-            names(calculator, ["de-DE", "nb-NO"]) == ["Rechner", "Kalkulator", "Calculator"])
-        check(
-            "an English Mac does not index Norwegian translations",
-            names(calculator, ["en-US"]) == ["Calculator"])
-        check(
-            "a no translation replaces the base name of a Norwegian-developed bundle",
-            names(calculator, ["nb-NO"], region: "no") == ["Kalkulator"]
-                && names(calculator, ["nb-NO"], region: "nb") == ["Kalkulator"])
-        check(
-            "a no preference also recognizes its canonical development language",
-            names(calculator, ["no"], region: "no") == ["Kalkulator"])
-
-        let norwegianBase = makeLocalizedApp(
-            "Notater.app", table: ["de": ["CFBundleName": "Notizen"]])
-        check(
-            "an untranslated Norwegian base name stays ahead of less preferred languages",
-            names(norwegianBase, ["nb-NO", "de-DE"], region: "no") == ["Notater", "Notizen"])
-        check(
-            "a translated earlier language still outranks the Norwegian base name",
-            names(norwegianBase, ["de-DE", "nb-NO"], region: "nb") == ["Notizen", "Notater"])
-
-        let norwegianStrings = root.appendingPathComponent("NorwegianStrings.app")
-        let no = norwegianStrings.appendingPathComponent("Contents/Resources/no.lproj")
-        try? fm.createDirectory(at: no, withIntermediateDirectories: true)
-        try? Data("\"CFBundleDisplayName\" = \"Norsk navn\";\n".utf8)
-            .write(to: no.appendingPathComponent("InfoPlist.strings"))
-        check(
-            "the Norwegian alias also reads no.lproj strings",
-            names(norwegianStrings, ["nb-NO"]) == ["Norsk navn", "NorwegianStrings"])
-
-        let nb = calculator.appendingPathComponent("Contents/Resources/nb.lproj")
-        try? fm.createDirectory(at: nb, withIntermediateDirectories: true)
-        try? Data("\"CFBundleDisplayName\" = \"Bokmål-kalkulator\";\n".utf8)
-            .write(to: nb.appendingPathComponent("InfoPlist.strings"))
-        check(
-            "an explicit nb folder wins over Apple's no table",
-            names(calculator, ["nb-NO"]) == ["Bokmål-kalkulator", "Kalkulator", "Calculator"])
-        check(
-            "an explicit nb translation suppresses the development base across the alias",
-            names(calculator, ["nb-NO"], region: "no") == ["Bokmål-kalkulator", "Kalkulator"])
-        check(
-            "development fallback waits for nb even when no was preferred first",
-            names(calculator, ["no", "nb"], region: "nb") == ["Kalkulator", "Bokmål-kalkulator"])
-
-        let bokmalOnly = makeLocalizedApp(
-            "BokmalOnly.app", table: ["nb": ["CFBundleName": "Bokmålsnavn"]])
-        check(
-            "a missing no alias never reinstates a base name replaced under nb",
-            names(bokmalOnly, ["nb-NO"], region: "no") == ["Bokmålsnavn"])
-        check(
-            "an empty no lookup waits for a later nb translation before inserting the base",
-            names(bokmalOnly, ["no", "nb"], region: "nb") == ["Bokmålsnavn"])
+            "Calculator.app", table: ["de": ["CFBundleDisplayName": "Rechner"]])
+        check("a translation is never indexed", names(calculator) == ["Calculator"])
 
         let monitor = makeLocalizedApp(
             "Activity Monitor.app",
-            table: [
-                "zh_CN": ["CFBundleName": "活动监视器"],
-                "zh_TW": ["CFBundleName": "活動監視器"],
-                "en": ["CFBundleName": "Activity Monitor"]
-            ])
-        check(
-            "a loctable app is found by its Chinese name, English still indexed",
-            names(monitor, ["zh-Hans-CN"]) == ["活动监视器", "Activity Monitor"])
-        check(
-            "a Simplified Chinese Mac outside China still finds Apple's zh_CN name",
-            names(monitor, ["zh-Hans-US"]) == ["活动监视器", "Activity Monitor"])
-        check(
-            "a Traditional Chinese Mac outside Taiwan finds Apple's zh_TW name",
-            names(monitor, ["zh-Hant-US"]) == ["活動監視器", "Activity Monitor"])
-        check(
-            "an English Mac indexes only the English name",
-            names(monitor, ["en-US"]) == ["Activity Monitor"])
-
-        // WeChat names itself only in `zh-Hans.lproj`, which a `zh-Hans-US` Mac never reached.
-        let weChat = root.appendingPathComponent("WeChat.app")
-        let hans = weChat.appendingPathComponent("Contents/Resources/zh-Hans.lproj")
-        try? fm.createDirectory(at: hans, withIntermediateDirectories: true)
-        try? Data("\"CFBundleDisplayName\" = \"微信\";\n".utf8)
-            .write(to: hans.appendingPathComponent("InfoPlist.strings"))
-        check(
-            "a strings-only app is found by the name in its zh-Hans folder",
-            names(weChat, ["zh-Hans-US", "en-US"]) == ["微信", "WeChat"])
-
-        // Tips.app ships every language but its own: `en` is the one key Apple's loctables omit.
-        let tips = makeLocalizedApp(
-            "Tips.app", table: ["ru": ["CFBundleName": "Советы"], "de": ["CFBundleName": "Tipps"]])
-        check(
-            "an untranslated name outranks a language the user reads less well",
-            names(tips, ["en-US", "ru-RU"]) == ["Tips", "Советы"])
-        check(
-            "the language a Mac actually prefers still wins over the untranslated name",
-            names(tips, ["ru-RU"]) == ["Советы", "Tips"])
-        check(
-            "a language nobody asked for is never indexed",
-            !names(tips, ["en-US", "ru-RU"]).contains("Tipps"))
-
-        // Safari's `CFBundleDevelopmentRegion` still reads "English", not "en".
-        check(
-            "a pre-BCP-47 development region names the same language",
-            names(tips, ["en-US", "ru-RU"], region: "English") == ["Tips", "Советы"])
-        check(
-            "a bundle claiming no region leaves its name last, still searchable",
-            names(tips, ["en-US", "ru-RU"], region: nil) == ["Советы", "Tips"])
+            table: ["zh_CN": ["CFBundleName": "活动监视器"], "en": ["CFBundleName": "Activity Monitor"]])
+        check("a loctable app indexes only its English name", names(monitor) == ["Activity Monitor"])
 
         // Print Center ships `en_GB` but no `en`; the file name is the English name it already has.
         let printCenter = makeLocalizedApp(
             "Print Center.app", table: ["en_GB": ["CFBundleName": "Print Centre"]])
         check(
             "a regional spelling never relabels the app the file name already names",
-            names(printCenter, ["en-US"]).first == "Print Center")
+            names(printCenter) == ["Print Center"])
 
         // VoiceMemos.app names itself nowhere on disk, so `en` carries the name the user sees.
         let memos = makeLocalizedApp(
@@ -284,13 +128,29 @@ struct AppNameTest {
             table: ["en": ["CFBundleName": "Voice Memos"], "ru": ["CFBundleName": "Диктофон"]])
         check(
             "a translated English name replaces the file name it was written for",
-            names(memos, ["en-US", "ru-RU"]) == ["Voice Memos", "Диктофон"])
+            names(memos) == ["Voice Memos"])
+
+        // Safari's `CFBundleDevelopmentRegion` still reads "English", not "en".
+        check(
+            "a pre-BCP-47 development region names the same language",
+            names(memos, region: "English") == ["Voice Memos"])
+        check(
+            "a non-English base name stays searchable after its English name",
+            names(memos, region: "de") == ["Voice Memos", "VoiceMemos"])
+        check(
+            "a bundle claiming no region keeps its base name searchable",
+            names(memos, region: nil) == ["Voice Memos", "VoiceMemos"])
+
+        let english = root.appendingPathComponent("EnglishStrings.app")
+        let lproj = english.appendingPathComponent("Contents/Resources/en.lproj")
+        try? fm.createDirectory(at: lproj, withIntermediateDirectories: true)
+        try? Data("\"CFBundleDisplayName\" = \"English Strings\";\n".utf8)
+            .write(to: lproj.appendingPathComponent("InfoPlist.strings"))
+        check("en.lproj strings name the bundle", names(english) == ["English Strings"])
 
         let trackpad = makeLocalizedApp(
             "TrackpadExtension.appex", table: ["en": ["CFBundleDisplayName": "Trackpad"]])
-        check(
-            "an identifier its own table renames is never indexed",
-            names(trackpad, ["en-US", "ru-RU"]) == ["Trackpad"])
+        check("an identifier its own table renames is never indexed", names(trackpad) == ["Trackpad"])
 
         try? fm.removeItem(at: root)
         print(failures == 0 ? "\nALL PASSED" : "\n\(failures) FAILED")

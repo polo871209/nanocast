@@ -103,7 +103,7 @@ final class WindowLayoutStore {
 
     private static func uniqueName(from name: String, among existing: [WindowLayout]) -> String {
         let taken = Set(existing.map { $0.name.lowercased() })
-        let base = String(localized: "\(name) Copy")
+        let base = "\(name) Copy"
         guard taken.contains(base.lowercased()) else { return base }
         var index = 2
         while taken.contains("\(base) \(index)".lowercased()) { index += 1 }

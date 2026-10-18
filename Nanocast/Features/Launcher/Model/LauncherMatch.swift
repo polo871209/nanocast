@@ -169,9 +169,9 @@ enum SearchSensitivity: String, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .low: String(localized: "Low")
-        case .medium: String(localized: "Medium")
-        case .high: String(localized: "High")
+        case .low: "Low"
+        case .medium: "Medium"
+        case .high: "High"
         }
     }
 

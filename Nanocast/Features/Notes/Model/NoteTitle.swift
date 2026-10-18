@@ -3,11 +3,6 @@ import Foundation
 enum NoteTitle {
     static let untitled = "Untitled"
 
-    static func displayName(_ title: String) -> String {
-        guard isUnnamed(title) else { return title }
-        return String(localized: "Untitled") + title.dropFirst(untitled.count)
-    }
-
     static let headByteCount = 4096
 
     private static let scanLimit = 1024

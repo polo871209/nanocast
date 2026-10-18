@@ -28,9 +28,7 @@ struct NotesSettingsView: View {
                 .settingsEnabled(settings.notesEnabled && settings.notesRendersMarkdown)
                 LabeledContent {
                     if settings.notesFolder != nil {
-                        Button(
-                            String(localized: "notes-use-default-folder", defaultValue: "Use Default"),
-                            action: core.notesCoordinator.resetNotesFolder)
+                        Button("Use Default", action: core.notesCoordinator.resetNotesFolder)
                     }
                     Button("Choose…", action: core.notesCoordinator.chooseNotesFolder)
                 } label: {

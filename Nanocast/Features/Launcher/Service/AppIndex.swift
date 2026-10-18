@@ -58,9 +58,9 @@ struct AppEntry: Identifiable, Hashable, Sendable {
     }
 
     struct KindDescriptor: Sendable {
-        let label: LocalizedStringResource
-        let sectionTitle: LocalizedStringResource
-        let openVerb: LocalizedStringResource
+        let label: String
+        let sectionTitle: String
+        let openVerb: String
         let canHideFromSearch: Bool
         let canRevealInFinder: Bool
         let canDragOut: Bool
@@ -108,7 +108,7 @@ struct AppEntry: Identifiable, Hashable, Sendable {
         alternateTitles.append(candidate)
     }
 
-    var kindLabel: String { String(localized: kind.descriptor.label) }
+    var kindLabel: String { kind.descriptor.label }
 
     var hotKeyAction: HotKeyAction? {
         switch kind {
@@ -188,7 +188,7 @@ extension AppEntry {
         self.init(
             id: command.entryID, name: command.name,
             url: URL(string: "nanocast://window-command/" + command.id.rawValue)!,
-            bundleID: nil, kind: .windowCommand, alternateTitles: [command.englishName])
+            bundleID: nil, kind: .windowCommand)
     }
 
     init(_ size: CustomWindowSize) {
@@ -208,27 +208,15 @@ extension AppEntry {
 }
 
 extension AppEntry.Kind {
-    private static let byCategoryName: [String: AppEntry.Kind] = {
-        func table(_ names: (AppEntry.Kind) -> [String]) -> [String: AppEntry.Kind] {
-            allCases.reduce(into: [:]) { table, kind in
-                for name in names(kind) { table[FuzzyMatch.normalized(name)] = kind }
-            }
-        }
-        // English wins a clash, so a translation never takes a word English already answers.
-        return table(\.localizedCategoryNames).merging(table(\.englishCategoryNames)) { $1 }
-    }()
-
-    private static let categoryNames = allCases.map { kind in
-        let english = kind.englishCategoryNames
-        let names = english + kind.localizedCategoryNames.filter { !english.contains($0) }
-        return (kind, names.map(FuzzyMatch.Candidate.init))
+    private static let byCategoryName: [String: AppEntry.Kind] = allCases.reduce(into: [:]) { table, kind in
+        for name in kind.categoryNames { table[FuzzyMatch.normalized(name)] = kind }
     }
 
-    private var englishCategoryNames: [String] { [descriptor.sectionTitle.key, descriptor.label.key] }
-
-    private var localizedCategoryNames: [String] {
-        [descriptor.sectionTitle, descriptor.label].map { String(localized: $0) }
+    private static let categoryCandidates = allCases.map { kind in
+        (kind, kind.categoryNames.map(FuzzyMatch.Candidate.init))
     }
+
+    private var categoryNames: [String] { [descriptor.sectionTitle, descriptor.label] }
 
     static func named(by query: LauncherOrder.CategoryQuery) -> AppEntry.Kind? {
         byCategoryName[query.name]
@@ -237,7 +225,7 @@ extension AppEntry.Kind {
     static func matching(by query: LauncherOrder.CategoryQuery) -> Set<AppEntry.Kind> {
         if let kind = named(by: query) { return [kind] }
         return Set(
-            categoryNames.compactMap { kind, names in
+            categoryCandidates.compactMap { kind, names in
                 names.contains(where: query.matches) ? kind : nil
             })
     }
@@ -283,7 +271,7 @@ final class AppIndex {
             AppEntry(
                 id: command.entryID, name: command.name,
                 url: URL(string: "nanocast://system-action/" + command.id.rawValue)!,
-                bundleID: nil, kind: .systemAction, alternateTitles: [command.englishName])
+                bundleID: nil, kind: .systemAction)
         }
         .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
@@ -407,11 +395,9 @@ final class AppIndex {
             refreshPending = false
             let scopes = settings?.searchScopes ?? SearchScopes.defaults
             let reusingPanes = paneCache
-            let languages = BundleLocalization.indexedLanguages(SystemLanguages.preferred)
-            let reusing = BundleNameCache(reusing: nameCache, languages: languages)
+            let reusing = BundleNameCache(reusing: nameCache)
             let (found, cache, panes) = await Task.detached(priority: .utility) {
-                AppIndex.scan(
-                    scopes: scopes, languages: languages, cache: reusing, paneCache: reusingPanes)
+                AppIndex.scan(scopes: scopes, cache: reusing, paneCache: reusingPanes)
             }.value
             nameCache = cache
             paneCache = panes
@@ -428,7 +414,7 @@ final class AppIndex {
     }
 
     nonisolated private static func scan(
-        scopes: [String], languages: [String], cache: BundleNameCache,
+        scopes: [String], cache: BundleNameCache,
         paneCache: SettingsPaneScanner.Cache?
     ) -> ([AppEntry], BundleNameCache, SettingsPaneScanner.Cache?) {
         Signposts.interval("AppIndex.scan") {
@@ -491,7 +477,7 @@ final class AppIndex {
                 if $0.isPrimaryInstallation != $1.isPrimaryInstallation { return $0.isPrimaryInstallation }
                 return $0.id < $1.id
             }
-            let (panes, panesCache) = SettingsPaneScanner.scan(languages: languages, cache: paneCache)
+            let (panes, panesCache) = SettingsPaneScanner.scan(cache: paneCache)
             return (AppIndex.named(apps + panes), cache, panesCache)
         }
     }

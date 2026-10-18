@@ -4,7 +4,7 @@ struct LauncherCategorySwitchSection: View {
     let kind: AppEntry.Kind
     let anchor: SettingsAnchor
     /// Spelled out by the caller, so it is the very string its search entry carries.
-    let title: LocalizedStringResource
+    let title: String
 
     @Environment(VisibilityStore.self) private var visibility
 
@@ -27,8 +27,7 @@ struct LauncherCategorySwitchSection: View {
 struct LauncherItemsSection: View {
     let kind: AppEntry.Kind
     let anchor: SettingsAnchor
-    let searchPrompt: LocalizedStringResource
-    var emptyMessage: LocalizedStringResource = "Nothing here yet."
+    let searchPrompt: String
 
     @Environment(AppIndex.self) private var appIndex
     @Environment(VisibilityStore.self) private var visibility
@@ -45,8 +44,7 @@ struct LauncherItemsSection: View {
         Section {
             SettingsFilterField(prompt: searchPrompt, query: $query)
             LauncherItemsList(
-                entries: entries, query: query, isEnabled: visibility.isKindEnabled(kind),
-                emptyMessage: emptyMessage)
+                entries: entries, query: query, isEnabled: visibility.isKindEnabled(kind))
         } header: {
             SettingsSectionHeader(anchor)
         }
@@ -58,7 +56,6 @@ private struct LauncherItemsList: View {
     let entries: [AppEntry]
     let query: String
     let isEnabled: Bool
-    var emptyMessage: LocalizedStringResource = "Nothing here yet."
 
     @Environment(VisibilityStore.self) private var visibility
     @Environment(AliasStore.self) private var aliases
@@ -67,7 +64,7 @@ private struct LauncherItemsList: View {
 
     var body: some View {
         if entries.isEmpty {
-            Text(query.isEmpty ? emptyMessage : "No matches for “\(query)”.")
+            Text(query.isEmpty ? "Nothing here yet." : "No matches for “\(query)”.")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .center)
         } else if entries.first?.kind != .application {

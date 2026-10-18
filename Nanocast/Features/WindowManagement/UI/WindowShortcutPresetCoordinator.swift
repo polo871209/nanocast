@@ -18,16 +18,17 @@ final class WindowShortcutPresetCoordinator {
         var current = currentBindings()
         var plan = WindowShortcutPresetPlan(preset: preset, current: current)
         guard !plan.assignments.isEmpty else {
-            core.showMessage(String(localized: "\(preset.title) shortcuts already set"))
+            core.showMessage("\(preset.title) shortcuts already set")
             return
         }
         if !plan.overwritten.isEmpty {
             let confirmed = Set(plan.overwritten)
             guard
                 await core.confirm(
-                    title: String(localized: "Replace \(plan.overwritten.count) shortcuts?"),
+                    title: plan.overwritten.count == 1
+                        ? "Replace 1 shortcut?" : "Replace \(plan.overwritten.count) shortcuts?",
                     message: replacementMessage(plan.overwritten, preset: preset),
-                    symbol: "keyboard", confirmTitle: String(localized: "Replace"))
+                    symbol: "keyboard", confirmTitle: "Replace")
             else { return }
             current = currentBindings()
             plan = WindowShortcutPresetPlan(preset: preset, current: current)
@@ -55,11 +56,10 @@ final class WindowShortcutPresetCoordinator {
             }
         }
         if skipped.isEmpty {
-            core.showMessage(String(localized: "Applied \(preset.title) shortcuts"))
+            core.showMessage("Applied \(preset.title) shortcuts")
         } else {
             core.showMessage(
-                String(
-                    localized: "Applied \(preset.title) shortcuts — \(skipped.count) skipped, keys in use"),
+                "Applied \(preset.title) shortcuts — \(skipped.count) skipped, keys in use",
                 tone: .danger)
         }
     }
@@ -78,14 +78,12 @@ final class WindowShortcutPresetCoordinator {
         let names = ids.compactMap { WindowCommandCatalog.command(id: $0)?.name }
         guard names.count > 3 else {
             let listed = names.formatted(.list(type: .and))
-            return String(
-                localized: "\(listed) will use the \(preset.title) keys instead of the ones you set.")
+            return "\(listed) will use the \(preset.title) keys instead of the ones you set."
         }
         let listed = names.prefix(3).joined(separator: ", ")
         let more = names.count - 3
-        return String(
-            localized: """
-                \(listed) and \(more) more will use the \(preset.title) keys instead of the ones you set.
-                """)
+        return """
+            \(listed) and \(more) more will use the \(preset.title) keys instead of the ones you set.
+            """
     }
 }

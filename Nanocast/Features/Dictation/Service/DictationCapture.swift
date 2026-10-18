@@ -11,10 +11,10 @@ final class DictationCapture {
 
         var errorDescription: String? {
             switch self {
-            case .microphoneUnavailable: String(localized: "No microphone is available.")
+            case .microphoneUnavailable: "No microphone is available."
             case .microphoneDenied:
-                String(localized: "Allow Nanocast to use the microphone in System Settings.")
-            case .captureUnavailable: String(localized: "Couldn't start recording from this microphone.")
+                "Allow Nanocast to use the microphone in System Settings."
+            case .captureUnavailable: "Couldn't start recording from this microphone."
             }
         }
     }
