@@ -153,10 +153,10 @@ somewhere on another; `/` is shown as the startup volume's name. The helper reso
 
 `FileSearchIgnoreList` compiles each pattern once into one of three buckets:
 
-| Pattern shape | Matched against | Example |
-| --- | --- | --- |
-| no `/`, no metacharacters | the entry name, case-insensitively | `node_modules` |
-| no `/`, has `*` `?` `[` | the entry name, via `fnmatch` | `*.tmp` |
+| Pattern shape                     | Matched against                        | Example                      |
+| --------------------------------- | -------------------------------------- | ---------------------------- |
+| no `/`, no metacharacters         | the entry name, case-insensitively     | `node_modules`               |
+| no `/`, has `*` `?` `[`           | the entry name, via `fnmatch`          | `*.tmp`                      |
 | contains `/`, or starts with `~/` | the whole absolute path, via `fnmatch` | `~/Movies`, `**/[Cc]ache/**` |
 
 The defaults skip what a search for one's own files never wants: Finder and volume metadata
@@ -191,7 +191,7 @@ a fitted native file icon and the full filename — a folder prefixed by its par
 half the folder hits on a developer machine are some `src` or `Nanocast`. The path itself is the preview's
 `Where` row rather than a second column the narrow list has no width for. A click selects and a double
 click opens, both through `onRowClick`, which answers on the press: `.onTapGesture(count: 2)` makes the
-single tap wait out the system's double-click interval first, and that wait *is* the second a click used
+single tap wait out the system's double-click interval first, and that wait _is_ the second a click used
 to take before the preview moved.
 
 Fitted row icons use a separate 8 MB transient cache. Leaving the list or hiding the palette purges it
@@ -203,12 +203,12 @@ Modified. The stage is **16:9 and sized before the block beneath it**, which the
 left; without that layout priority the aspect ratio shrinks to the leftover height instead of claiming
 it. `FileSearchPreviewKind` picks what draws the file, and `FileSearchSurface` mounts it:
 
-| Kind | Surface | Why not QuickLook |
-| --- | --- | --- |
-| movies, audio | `FileSearchMediaPlayer` | it draws a movie's first frame but never plays one inside a non-activating panel |
-| PDF | `PDFSurface`, PDFKit in process | it draws a PDF in an out-of-process `NSRemoteView` that never scrolls inside the palette |
-| text QuickLook shows as an icon | `PlainTextSurface` | it renders only a declared `public.text` type as text |
-| everything else | `QuickLookSurface` | — |
+| Kind                            | Surface                         | Why not QuickLook                                                                        |
+| ------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------- |
+| movies, audio                   | `FileSearchMediaPlayer`         | it draws a movie's first frame but never plays one inside a non-activating panel         |
+| PDF                             | `PDFSurface`, PDFKit in process | it draws a PDF in an out-of-process `NSRemoteView` that never scrolls inside the palette |
+| text QuickLook shows as an icon | `PlainTextSurface`              | it renders only a declared `public.text` type as text                                    |
+| everything else                 | `QuickLookSurface`              | —                                                                                        |
 
 The extension decides without touching the disk, except where it cannot: an undeclared extension
 (`.jsx`, `.vue`) or `.ts`, which the system declares as MPEG-TS video. Those read their first 256 KB
@@ -216,8 +216,9 @@ off the main actor once per selection — no NUL and valid UTF-8 is text, anythi
 what the extension declares. `PlainTextSurface` copies QuickLook's own text preview (fixed-pitch 11pt,
 3pt inset, unselectable), so a `.jsx` reads like a `.swift`.
 **Nothing autoplays**: arrow-keying a list must not start a movie.
-The player view is `KeyboardFocusRefusing`, so clicking its transport leaves the caret in
-the search field; see [palette.md](palette.md#the-keyboard-belongs-to-the-search-field).
+The player view and the `QLPreviewView` are `KeyboardFocusRefusing`, so a click on a preview leaves
+the caret in the search field, and ↑ and ↓ keep moving the list. See
+[palette.md](palette.md#the-keyboard-belongs-to-the-search-field).
 The player is File Search's own, deliberately: the clipboard's preview is a separate surface with its own
 sizing, and copying forty lines of `AVPlayerView` teardown is the cheaper trade.
 
@@ -235,18 +236,18 @@ never what the row means.
 
 **There is no Quick Look action.** The pane already previews the selection. A system `QLPreviewPanel` would take key, and the palette hides on `windowDidResignKey`.
 
-| Row | Chord | What it does |
-| --- | --- | --- |
-| Open in Preview | ↵ | an image or a PDF, through `NSWorkspace` with Preview as the application; hides the palette without restoring focus, and reports a failure through the dialog controller |
-| Copy Path | ↵ | any other file or a folder: copies the path, hides the palette and shows "Copied path" |
-| Open File / Open Folder | — | the default app, through `NSWorkspace`; hides the palette without restoring focus |
-| Show in Finder | ⌘↵ | reveals and dismisses |
-| Share… | — | `NSSharingServicePicker`, anchored to the palette's trailing edge so the row it was opened from stays visible beside it. Escape or a click elsewhere dismisses it, and the palette is never hidden, so the flow returns to the same row. There is no chord: the destinations are the system's, and it is the only place a system popover is right |
-| Copy File | ⇧⌘C | the file itself on the pasteboard through `PasteboardFiles.write`, which declares `.fileURL` and the path as `.string` |
-| Copy Name | ⌥⌘C | through `Paster`, palette stays open |
-| Copy Path | ⌃⌘C | the standardized path, palette stays open. Listed only for an image or a PDF, where ↵ opens Preview |
-| Paste File to … | ⇧⌘V | `Paster.pasteFile` into the app the palette was summoned over, named by `PasteTarget` |
-| Move to Trash | ⌃X | `FileManager.trashItem` off the main actor, then the row leaves the session |
+| Row                     | Chord | What it does                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Open in Preview         | ↵     | an image or a PDF, through `NSWorkspace` with Preview as the application; hides the palette without restoring focus, and reports a failure through the dialog controller                                                                                                                                                                          |
+| Copy Path               | ↵     | any other file or a folder: copies the path, hides the palette and shows "Copied path"                                                                                                                                                                                                                                                            |
+| Open File / Open Folder | —     | the default app, through `NSWorkspace`; hides the palette without restoring focus                                                                                                                                                                                                                                                                 |
+| Show in Finder          | ⌘↵    | reveals and dismisses                                                                                                                                                                                                                                                                                                                             |
+| Share…                  | —     | `NSSharingServicePicker`, anchored to the palette's trailing edge so the row it was opened from stays visible beside it. Escape or a click elsewhere dismisses it, and the palette is never hidden, so the flow returns to the same row. There is no chord: the destinations are the system's, and it is the only place a system popover is right |
+| File Tools…             | ⇥     | pushes the File Tools screen with the row's file as its subject. Listed only while `fileToolsEnabled` is on, and Tab does the same on a selected row. See [file-tools.md](file-tools.md)                                                                                                                                                          |
+| Copy File               | ⇧⌘C   | the file itself on the pasteboard through `PasteboardFiles.write`, which declares `.fileURL` and the path as `.string`                                                                                                                                                                                                                            |
+| Copy Name               | ⌥⌘C   | through `Paster`, palette stays open                                                                                                                                                                                                                                                                                                              |
+| Copy Path               | ⌃⌘C   | the standardized path, palette stays open. Listed only for an image or a PDF, where ↵ opens Preview                                                                                                                                                                                                                                               |
+| Move to Trash           | ⌃X    | `FileManager.trashItem` off the main actor, then the row leaves the session                                                                                                                                                                                                                                                                       |
 
 None of the copies is marked with `ClipboardManager.internalType`, so a copied file enters clipboard
 history like any other copy. Move to Trash rides the clipboard's own ⌃X, asks nothing first — trashing is
@@ -289,7 +290,8 @@ A Files row is not an `AppEntry`: no `Kind`, no ranking, favorite, alias or Hide
 `LauncherScreen.Row.file`, id-prefixed `file-` because an application's entry id is its bundle path. It
 draws `FileSearchRow` with its location — name, dimmed parent path, then File or Folder — and answers
 the screen's own row actions: ↵ opens Preview or copies the path as in File Search, ⌘↵ reveals, the copy, paste and trash chords run
-`FileSearchActionsMenu.perform`, and a row drags out as a copy. Row icons come from the same transient
+`FileSearchActionsMenu.perform`, and a row drags out as a copy.
+With File Tools on, Tab on a selected Files row opens File Tools on that file, and Tab on any other row keeps the launcher and clipboard ring. Row icons come from the same transient
 fitted cache, purged when the palette hides.
 
 ## Invocation

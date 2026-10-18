@@ -94,7 +94,7 @@ enum SettingsSearchCatalog {
 
     static let entries: [SettingsSearchEntry] =
         general + applications + systemSettings + systemActions + commands + clipboard
-        + fileSearch + screenshot + windowManagement + navigation + notes + emoji + dictation
+        + fileSearch + fileTools + screenshot + windowManagement + navigation + notes + emoji + dictation
         + permissions + backup + about
 
     private static let general: [SettingsSearchEntry] = [
@@ -250,6 +250,21 @@ enum SettingsSearchCatalog {
         .init(
             group: .fileSearchIgnorePatterns, "Ignore Patterns",
             keywords: ["exclude", "glob", "node_modules", "skip", "ignore folder"])
+    ]
+
+    private static let fileTools: [SettingsSearchEntry] = [
+        .init(
+            pane: .fileTools,
+            keywords: ["convert", "compress", "resize", "image", "heic", "jpeg", "png", "tangerine"]),
+        .init(
+            .fileToolsFileTools, "Enable File Tools",
+            keywords: ["convert", "tab", "actions", "metadata"]),
+        .init(
+            .fileToolsFinder, "Tab in Finder",
+            keywords: ["finder", "selection", "accessibility", "automation", "tab"]),
+        .init(
+            group: .fileToolsCommands, "File Tools commands",
+            keywords: ["shortcut", "launcher"])
     ]
 
     private static let notes: [SettingsSearchEntry] = [
