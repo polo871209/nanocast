@@ -13,6 +13,7 @@ struct SettingsDetailView: View {
             case .systemActions: SystemActionsSettingsView()
             case .commands: CommandsSettingsView()
             case .fileSearch: FileSearchSettingsView()
+            case .fileTools: FileToolsSettingsView()
             case .notes: NotesSettingsView()
             case .navigation: NavigationSettingsView()
             case .windowManagement: WindowManagementSettingsView()

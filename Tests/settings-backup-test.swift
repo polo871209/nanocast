@@ -30,6 +30,7 @@ struct SettingsBackupTest {
             "animationsEnabled",
             "paletteExpandedCenterDisplays", "fileSearchEnabled", "fileSearchScopes",
             "fileSearchIgnorePatterns", "fileSearchRemovedDefaultPatterns", "fileSearchShowInLauncher",
+            "fileToolsEnabled", "fileToolsOptions", "fileToolsFinderTab",
             "notesEnabled", "notesRendersMarkdown",
             "notesShowsFormattingBar", "notesShowsInMenuBar", "notesFolder", "customCommandsEnabled",
             "customCommandsShowInLauncher", "screenshotSaveFolder",
@@ -102,7 +103,7 @@ struct SettingsBackupTest {
             "emoji grid density rides the settings backup",
             mirrored["emojiGridColumns"] == .emojiGridColumns)
 
-        for key: AppSettingsKey in [.clipboardTextSearchEnabled, .settingsFileEnabled] {
+        for key: AppSettingsKey in [.clipboardTextSearchEnabled, .settingsFileEnabled, .fileToolsFinderTab] {
             check(
                 "\(key.rawValue) stays out of a backup",
                 excluded[key.rawValue] != nil && mirrored.values.allSatisfy { $0 != key })

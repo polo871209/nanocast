@@ -89,7 +89,7 @@ jobs:
             echo "::error::expected LSMinimumSystemVersion 27.0, got $PLIST_MIN"
             exit 1
           fi
-          for BIN in "$APP/Contents/MacOS/Nanocast" "$APP/Contents/Helpers/ClipboardTextHelper" "$APP/Contents/Helpers/FileIndexHelper"; do
+          for BIN in "$APP/Contents/MacOS/Nanocast" "$APP/Contents/Helpers/ClipboardTextHelper" "$APP/Contents/Helpers/FileIndexHelper" "$APP/Contents/Helpers/FileToolHelper"; do
             SLICES="$(lipo -archs "$BIN")"
             if [ "$SLICES" != "arm64" ]; then
               echo "::error::${BIN##*/}: expected arm64 alone, got '$SLICES'"

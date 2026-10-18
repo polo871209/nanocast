@@ -134,7 +134,7 @@ The record button in the toolbar, or ⌘R, closes the frozen screen and starts a
 
 The bar under the area shows the elapsed time, a ✗ that discards the recording, and a stop button that saves it. Running `Capture Screenshot` again also stops and saves, so its shortcut is a stop key. Stopping from the macOS menu-bar recording indicator saves too.
 
-The file is `Screen Recording <date> at <time>.mov` in the save folder, HEVC at up to 60 frames per second, with the pointer and without audio. **Recording Format** in the Screenshot pane switches the container to MP4, and it is `screenshot.recordingFormat` in `settings.json`. It is written in place while the recording runs. A discard or a failure deletes it. An odd width or height loses its last pixel, because the encoder needs even sizes. A window records at its own pixel size when the recording starts.
+The file is `Screen Recording <date> at <time>.mov` in the save folder, HEVC at up to 60 frames per second, with the pointer and without audio. **Recording Format** in the Screenshot pane switches the container to MP4, and it is `screenshot.recordingFormat` in `settings.json`. File Tools converts a recording between MOV, MP4 and M4V later, without a re-encode. It is written in place while the recording runs. A discard or a failure deletes it. An odd width or height loses its last pixel, because the encoder needs even sizes. A window records at its own pixel size when the recording starts.
 
 ## Output
 
