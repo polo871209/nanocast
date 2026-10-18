@@ -159,7 +159,8 @@ struct LauncherScreen: PaletteScreen {
                 },
                 onHideFromSearch: { _ = hideFromSearch(at: selection) })
         case .file(let result):
-            return FileSearchActionsMenu.content(result: result, core: core, target: vm.pasteTarget)
+            return FileSearchActionsMenu.content(
+                result: result, core: core, offersFileTools: core.fileToolsCoordinator.isEnabled)
         case nil:
             return nil
         }
@@ -176,6 +177,14 @@ struct LauncherScreen: PaletteScreen {
         case .file(let result): core.fileSearchCoordinator.open(result)
         case nil: break
         }
+    }
+
+    func tab(at selection: Int, backwards: Bool) -> Bool {
+        guard !backwards, let file = file(at: selection), core.fileToolsCoordinator.isEnabled else {
+            return false
+        }
+        core.fileToolsCoordinator.open(file)
+        return true
     }
 
     func secondary(at selection: Int) -> Bool {

@@ -14,6 +14,7 @@ struct SettingsDetailView: View {
             case .commands: CommandsSettingsView()
             case .dictation: DictationSettingsView()
             case .fileSearch: FileSearchSettingsView()
+            case .fileTools: FileToolsSettingsView()
             case .notes: NotesSettingsView()
             case .navigation: NavigationSettingsView()
             case .windowManagement: WindowManagementSettingsView()

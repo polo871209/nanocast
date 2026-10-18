@@ -8,14 +8,12 @@ final class FileSearchCoordinator {
     private let indexer: FileIndexer
     private let palette: PaletteState
     private let paletteCoordinator: PaletteCoordinator
-    private let windowController: PaletteWindowController
     private var sharePicker: NSSharingServicePicker?
     private unowned let core: AppCore
 
     init(
         settings: AppSettings, appIndex: AppIndex, session: FileSearchSession,
-        indexer: FileIndexer, palette: PaletteState, paletteCoordinator: PaletteCoordinator,
-        windowController: PaletteWindowController, core: AppCore
+        indexer: FileIndexer, palette: PaletteState, paletteCoordinator: PaletteCoordinator, core: AppCore
     ) {
         self.settings = settings
         self.appIndex = appIndex
@@ -23,7 +21,6 @@ final class FileSearchCoordinator {
         self.indexer = indexer
         self.palette = palette
         self.paletteCoordinator = paletteCoordinator
-        self.windowController = windowController
         self.core = core
         indexer.onIndexChanged = { [weak session] in session?.refresh() }
         indexer.onRecentChanged = { [weak session] in session?.refreshRecent() }
@@ -127,12 +124,6 @@ final class FileSearchCoordinator {
     func copyFile(_ result: FileSearchResult) {
         PasteboardFiles.write(result.url, to: .general)
         core.showMessage("Copied file")
-    }
-
-    func pasteFile(_ result: FileSearchResult) {
-        let previous = windowController.previousApp
-        paletteCoordinator.hidePalette(restoreFocus: false)
-        Paster.pasteFile(result.url, previousApp: previous)
     }
 
     func trash(_ result: FileSearchResult) {
