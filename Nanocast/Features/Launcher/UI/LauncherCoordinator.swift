@@ -116,6 +116,8 @@ final class LauncherCoordinator {
             paletteCoordinator.togglePalette(mode: .emoji)
         case .searchFiles:
             fileSearchCoordinator.show()
+        case .fileTools:
+            core.fileToolsCoordinator.show()
         case .searchMenuItems:
             menuSearchCoordinator.show()
         case .openCamera:

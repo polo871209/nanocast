@@ -30,5 +30,6 @@ extension View {
             .environment(core.runningApps)
             .environment(core.hotKeys)
             .environment(core.uninstall)
+            .environment(core.fileTools)
     }
 }
