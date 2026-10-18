@@ -193,6 +193,7 @@ run ClipboardTests         Nanocast/Features/Clipboard/Model/ClipboardStore.swif
                            Nanocast/Features/Clipboard/Model/ColorFormat.swift \
                            Nanocast/Features/Clipboard/Model/ColorSpaces.swift
 run ClipboardCoordinatorTests Nanocast/Features/Clipboard/UI/ClipboardCoordinator.swift \
+                           Nanocast/Features/Clipboard/Service/ClipboardSharer.swift \
                            Nanocast/Features/Clipboard/Model/*.swift \
                            Nanocast/Platform/Images/ImageDerivative.swift \
                            Nanocast/Palette/PaletteState.swift Nanocast/Palette/PaletteMode.swift \

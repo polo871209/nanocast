@@ -56,7 +56,7 @@ The version is `<tinycast>-<revision>`, for example `0.11.21-1`. Nanocast has no
 
 It builds `Nanocast.app` (`com.nanocast.app`) on the `xcode-27` runner image with the newest released Xcode 27 and publishes a GitHub Release tagged `v<version>` with a versioned DMG and zip asset. A second job then points the Homebrew cask at that release, below.
 
-The floor is macOS 27, which boots only on Apple silicon, so `ARCHS_STANDARD` is `arm64` alone and no Intel build exists. The job asserts `arm64` alone and a `27.0` floor on every shipping binary: the app, `ClipboardTextHelper`, `FileIndexHelper` and `FileToolHelper`. A helper built with a different floor or slice fails only when clipboard OCR, file indexing or a File Tools job runs, so the check covers all four.
+The floor is macOS 27, which boots only on Apple silicon, so `ARCHS_STANDARD` is `arm64` alone and no Intel build exists. The job asserts `arm64` alone and a `27.0` floor on every shipping binary: the app, `ClipboardTextHelper` and `FileIndexHelper`. A helper built with a different floor or slice fails only when clipboard OCR or file indexing runs, so the check covers all three.
 
 ### Release notes
 

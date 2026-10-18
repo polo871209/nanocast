@@ -434,6 +434,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - ⌃⌘↵ pastes as plain text: a text entry as typed, a file entry as its path rather than the file
 - Default action ▸ Paste as Plain Text: ↵ pastes plain, ⌃⌘↵ pastes, ⌘↵ still copies; an image
   entry's ↵ still pastes the image and its ⌘K menu has no plain row
+- Share… on a text row opens the share menu beside the palette; AirDrop to a Mac saves `clipboard-share.txt` in Downloads with the full text, and an image row shares the image
 - ⇧⌘T on an image row and on an image-file row copies the recognized text, and the ⌘K menu carries
   the same Copy Text row
 - The "Reading text…" progress pill appears while the helper runs and is replaced by the outcome:
