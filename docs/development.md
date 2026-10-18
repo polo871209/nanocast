@@ -49,10 +49,7 @@ Xcode, prefix with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (t
 project settings in `project.yml`, run `xcodegen generate` and commit the result. There is no
 `Package.swift`, and `Bundle.module` must never be used.
 
-The app target builds and embeds `ClipboardTextHelper` and `FileIndexHelper` under `Contents/Helpers`,
-signing each on copy. Build the app scheme to include them; copying only the main executable omits OCR
-support and file indexing. Each helper's executable name is pinned in `project.yml`, so it never follows
-the app's product name.
+The app target builds and embeds `ClipboardTextHelper`, `FileIndexHelper` and `FileToolHelper` under `Contents/Helpers`, signing each on copy. Build the app scheme to include them; copying only the main executable omits OCR support, file indexing and File Tools jobs. Each helper's executable name is pinned in `project.yml`, so it never follows the app's product name.
 
 Dictation similarly embeds its Swift/Core ML helper, named `Nanocast Dev Dictation` in Debug and
 `Nanocast Dictation` in Release, in an accessory `.app` bundle without a bundled icon. Model weights

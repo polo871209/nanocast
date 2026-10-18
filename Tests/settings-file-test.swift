@@ -49,6 +49,7 @@ struct SettingsFileTest {
             "dictation.liveInsertion", "dictation.releaseAfterMinutes", "dictation.language",
             "fileSearch.enabled", "fileSearch.scopes", "fileSearch.ignorePatterns",
             "fileSearch.removedDefaultPatterns", "fileSearch.showInLauncher", "fileSearch.commands",
+            "fileTools.enabled", "fileTools.commands", "fileTools.options",
             "notes.enabled", "notes.rendersMarkdown", "notes.showsFormattingBar", "notes.folder",
             "notes.commands", "navigation.enabled", "navigation.menuSearchShowsAppleMenu",
             "navigation.menuSearchDisabledApps", "navigation.windowSwitcherShortcut",
@@ -79,7 +80,7 @@ struct SettingsFileTest {
             "sections follow the Settings sidebar",
             SettingsFileKey.sections == [
                 "general", "appearance", "hyperKey", "calculator", "search", "applications",
-                "systemSettings", "systemActions", "commands", "dictation", "fileSearch", "notes",
+                "systemSettings", "systemActions", "commands", "dictation", "fileSearch", "fileTools", "notes",
                 "navigation", "windowManagement", "clipboard", "screenshot", "emoji"
             ])
 

@@ -28,7 +28,16 @@ struct FileSearchScreen: PaletteScreen {
 
     func actions(at selection: Int) -> PopoverMenuContent? {
         guard let result = result(at: selection) else { return nil }
-        return FileSearchActionsMenu.content(result: result, core: core, target: vm.pasteTarget)
+        return FileSearchActionsMenu.content(
+            result: result, core: core, offersFileTools: core.fileToolsCoordinator.isEnabled)
+    }
+
+    func tab(at selection: Int, backwards: Bool) -> Bool {
+        guard !backwards, let result = result(at: selection), core.fileToolsCoordinator.isEnabled else {
+            return false
+        }
+        core.fileToolsCoordinator.open(result)
+        return true
     }
 
     func activate(at selection: Int) {
@@ -37,7 +46,7 @@ struct FileSearchScreen: PaletteScreen {
             return
         }
         guard let result = result(at: selection) else { return }
-        core.fileSearchCoordinator.open(result)
+        core.fileSearchCoordinator.activate(result)
     }
 
     func secondary(at selection: Int) -> Bool {
@@ -117,40 +126,54 @@ struct FileSearchScreen: PaletteScreen {
 @MainActor
 enum FileSearchActionsMenu {
     static func content(
-        result: FileSearchResult, core: AppCore, target: PasteTarget?
+        result: FileSearchResult, core: AppCore, offersFileTools: Bool
     ) -> PopoverMenuContent {
         let coordinator = core.fileSearchCoordinator
-        let items = [
+        var items = [
+            result.opensInPreview
+                ? PopoverMenuItem(title: "Open in Preview", systemImage: "eye", shortcut: "↵") {
+                    coordinator.openInPreview(result)
+                }
+                : PopoverMenuItem(title: "Copy Path", systemImage: "doc.on.clipboard", shortcut: "↵") {
+                    coordinator.activate(result)
+                },
             PopoverMenuItem(
                 title: result.isDirectory ? "Open Folder" : "Open File",
-                systemImage: result.isDirectory ? "folder" : "doc", shortcut: "↵"
+                systemImage: result.isDirectory ? "folder" : "doc"
             ) { coordinator.open(result) },
             PopoverMenuItem(
                 title: "Show in Finder", systemImage: "folder", shortcut: "⌘↵"
             ) { coordinator.showInFinder(result) },
             PopoverMenuItem(title: "Share…", systemImage: "square.and.arrow.up") {
                 coordinator.share(result)
-            },
+            }
+        ]
+        if offersFileTools {
+            items.append(
+                PopoverMenuItem(
+                    title: "File Tools…", systemImage: "wand.and.sparkles", shortcut: "⇥"
+                ) { core.fileToolsCoordinator.open(result) })
+        }
+        items += [
             PopoverMenuItem(
                 title: "Copy File", systemImage: "doc.on.clipboard", startsSection: true,
                 shortcut: "⇧⌘C"
             ) { coordinator.copyFile(result) },
             PopoverMenuItem(
-                title: target.map { "Paste File to \($0.name)" }
-                    ?? "Paste File",
-                icon: .paste(target, fallback: "doc.on.clipboard"), shortcut: "⇧⌘V"
-            ) { coordinator.pasteFile(result) },
-            PopoverMenuItem(
                 title: "Copy Name", systemImage: "doc.on.clipboard", shortcut: "⌥⌘C"
-            ) { coordinator.copyName(result) },
-            PopoverMenuItem(
-                title: "Copy Path", systemImage: "doc.on.clipboard", shortcut: "⌃⌘C"
-            ) { coordinator.copyPath(result) },
+            ) { coordinator.copyName(result) }
+        ]
+        if result.opensInPreview {
+            items.append(
+                PopoverMenuItem(
+                    title: "Copy Path", systemImage: "doc.on.clipboard", shortcut: "⌃⌘C"
+                ) { coordinator.copyPath(result) })
+        }
+        items.append(
             PopoverMenuItem(
                 title: "Move to Trash", systemImage: "trash", startsSection: true,
                 shortcut: "⌃X", isDestructive: true
-            ) { coordinator.trash(result) }
-        ]
+            ) { coordinator.trash(result) })
         return PopoverMenuContent(header: result.name, items: items)
     }
 
@@ -160,7 +183,6 @@ enum FileSearchActionsMenu {
         case .copyFile: coordinator.copyFile(result)
         case .copyName: coordinator.copyName(result)
         case .copyPath: coordinator.copyPath(result)
-        case .pasteFile: coordinator.pasteFile(result)
         case .delete: coordinator.trash(result)
         default: return false
         }

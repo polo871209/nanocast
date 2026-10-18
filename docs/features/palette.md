@@ -85,23 +85,21 @@ every screen but two: the clipboard lands past its pins
 ([clipboard.md](clipboard.md#pinned-entries)), and Search Custom Commands lands on the row a prompt
 names.
 
-| Mode                   | Screen                      | Inner list                                                                                               |
-| ---------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `.launcher`            | `LauncherScreen`            | `LauncherList`                                                                                           |
-| `.clipboard`           | `ClipboardScreen`           | `ClipboardList` + preview                                                                                |
-| `.calculatorHistory`   | `CalculatorHistoryScreen`   | `CalculatorHistoryList`                                                                                  |
-| `.emoji`               | `EmojiScreen`               | `EmojiGridView`                                                                                          |
-| `.fileSearch`          | `FileSearchScreen`          | `FileSearchList` (see [file-search.md](file-search.md))                                                  |
-| `.customCommandEditor` | `CustomCommandEditorScreen` | `CustomCommandEditorView` (see [custom-commands.md](custom-commands.md#launcher-editor))                 |
-| `.customCommands`      | `CustomCommandListScreen`   | `CustomCommandList` + script preview (see [custom-commands.md](custom-commands.md#launcher-integration)) |
-| `.uninstall`           | `UninstallScreen`           | `UninstallList` (see [uninstall.md](uninstall.md))                                                       |
-| `.dictionary`          | `DictionaryScreen`          | `DictionaryEntryView` (see [dictionary.md](dictionary.md))                                               |
+| Mode                    | Screen                       | Inner list                                                                                                   |
+| ----------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `.launcher`             | `LauncherScreen`             | `LauncherList`                                                                                               |
+| `.clipboard`            | `ClipboardScreen`            | `ClipboardList` + preview                                                                                    |
+| `.calculatorHistory`    | `CalculatorHistoryScreen`    | `CalculatorHistoryList`                                                                                      |
+| `.emoji`                | `EmojiScreen`                | `EmojiGridView`                                                                                              |
+| `.fileSearch`           | `FileSearchScreen`           | `FileSearchList` (see [file-search.md](file-search.md))                                                      |
+| `.fileTools`            | `FileToolsScreen`            | `FileToolsList` + `FileToolsPane` (see [file-tools.md](file-tools.md))                                       |
+| `.fileToolsDestination` | `FileToolsDestinationScreen` | `FileSearchList` of folders (see [file-tools.md](file-tools.md#move-to-and-copy-to-pick-a-folder-by-search)) |
+| `.customCommandEditor`  | `CustomCommandEditorScreen`  | `CustomCommandEditorView` (see [custom-commands.md](custom-commands.md#launcher-editor))                     |
+| `.customCommands`       | `CustomCommandListScreen`    | `CustomCommandList` + script preview (see [custom-commands.md](custom-commands.md#launcher-integration))     |
+| `.uninstall`            | `UninstallScreen`            | `UninstallList` (see [uninstall.md](uninstall.md))                                                           |
+| `.dictionary`           | `DictionaryScreen`           | `DictionaryEntryView` (see [dictionary.md](dictionary.md))                                                   |
 
-**Tab flips between the two surfaces a reader opens directly — launcher ↔ clipboard** — unless the
-screen claims it through `tab(at:backwards:)` (native editors walk their own fields), or the selected
-row declares arguments, in which case it walks those fields first (see below). Every other mode stays
-off the ring, and is reached by a command or a global hotkey, with Uninstall only from a launcher
-app's Actions menu, scoped to that app. With `clipboardEnabled` off, Tab on the launcher stays put.
+**Tab flips between the two surfaces a reader opens directly — launcher ↔ clipboard** — unless the screen claims it through `tab(at:backwards:)` (native editors walk their own fields), or the selected row declares arguments, in which case it walks those fields first (see below). Every other mode stays off the ring, and is reached by a command or a global hotkey, with Uninstall only from a launcher app's Actions menu, scoped to that app. File Tools is reached by Tab on a selected file, in File Search or on a launcher Files row, or by its command over Finder. On its own screen, Tab picks the selected tool's next option, or walks the tool's fields when it has some. With `clipboardEnabled` off, Tab on the launcher stays put.
 
 ### Navigation
 
@@ -613,6 +611,10 @@ inside its transport — the window's first responder, and the search field sile
 keystrokes with nothing on screen to say so. Refusing costs the transport nothing, since a button
 performs its action from the click, not from focus; both preview players are marked, and the field
 keeps the caret through a click on play.
+
+File Search's `QLPreviewView` is marked for the same reason. A click on an image preview makes the
+`QLPreviewView` itself the first responder, and an HTML preview with an autofocused input hands focus to
+its web view. Either way ↑ and ↓ stop moving the list until the search field is clicked again.
 
 The mark sits on the player view and the check walks up from the responder, because the control that
 claims focus is private and several levels down — there is nothing to override on it.
