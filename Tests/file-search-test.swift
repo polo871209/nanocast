@@ -37,6 +37,7 @@ struct FileSearchTests {
         scopes()
         resultModel()
         previewKind()
+        enterAction()
 
         print(failures == 0 ? "File search tests passed" : "\(failures) file search tests failed")
         exit(failures == 0 ? 0 : 1)
@@ -185,7 +186,8 @@ struct FileSearchTests {
         }
         for path in [
             "/Users/test/.Trash", "/Users/test/Library/Caches", "/Users/test/Library/Containers",
-            "/Users/test/Library/Application Support", "/Library/Caches", "/private/var/folders"
+            "/Users/test/Library/Application Support", "/Library/Caches", "/private/var",
+            "/System", "/usr", "/opt/homebrew", "/Users/test/.cargo", "/Users/test/.local/share"
         ] {
             expect(
                 shipped.excludes(name: URL(filePath: path).lastPathComponent, path: path),
@@ -194,6 +196,15 @@ struct FileSearchTests {
         expect(
             !shipped.excludes(name: "Caches", path: "/Users/test/Developer/Caches"),
             "a caches folder elsewhere is indexed")
+        expect(
+            shipped.excludes(name: "._notes.txt", path: "/Volumes/USB/._notes.txt"),
+            "AppleDouble files are skipped")
+        expect(
+            !shipped.excludes(name: "Users", path: "/Users"),
+            "a system path pattern names that one folder")
+        expect(
+            !shipped.excludes(name: "bin", path: "/usr/local/bin"),
+            "a scope inside a skipped system folder still indexes its children")
         expect(
             !shipped.excludes(name: ".config", path: "/Users/test/.config"),
             "hidden folders are indexed unless a pattern says otherwise")
@@ -371,5 +382,15 @@ struct FileSearchTests {
         expect(
             !FileSearchPreviewKind.isText(Data("abc".utf8) + [0xFF], isWholeFile: false),
             "a read forgives a cut character, not a malformed byte")
+    }
+
+    static func enterAction() {
+        for path in ["Pictures/a.png", "Pictures/b.JPG", "Pictures/c.heic", "Documents/d.pdf"] {
+            expect(result(path).opensInPreview, "\(path) opens in Preview")
+        }
+        for path in ["Documents/e.txt", "Music/f.mp3", "Documents/g.docx", "Documents/noextension"] {
+            expect(!result(path).opensInPreview, "\(path) copies its path")
+        }
+        expect(!result("Pictures/album.png", folder: true).opensInPreview, "a folder copies its path")
     }
 }

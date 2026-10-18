@@ -56,15 +56,6 @@ enum Paster {
     }
 
     @MainActor
-    static func pasteFile(_ url: URL, previousApp: NSRunningApplication?) {
-        PasteboardFiles.write(url, to: .general)
-        previousApp?.activate()
-        DispatchQueue.main.asyncAfter(deadline: .now() + activationDelay) {
-            postCommandV()
-        }
-    }
-
-    @MainActor
     static func copyString(_ text: String) {
         writeString(text)
     }

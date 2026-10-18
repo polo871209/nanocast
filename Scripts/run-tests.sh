@@ -113,6 +113,12 @@ FILE_INDEX="$FS/Service/FileIndex.swift $FS/Service/FileIndexSnapshot.swift $FS/
 run file-search-test       $FS/Model/*.swift
 run file-index-test        $FS/Model/*.swift $FILE_INDEX
 run file-search-session-test $FS/Model/*.swift $FS/Service/FileSearchSession.swift $FILE_INDEX
+FT=Nanocast/Features/FileTools
+run file-tools-test        $FT/Model/*.swift
+run file-tools-helper-test $FT/Model/FileToolFormats.swift $FT/Model/FileToolOption.swift \
+                           $FT/Model/FileToolParameters.swift $FT/Model/FileToolRequest.swift \
+                           $FT/Helper/FileTool*Engine.swift $FT/Service/FileToolWorker.swift \
+                           $FT/Service/FileToolTransfer.swift Nanocast/Platform/ProcessExit.swift
 run menu-search-test       $L/SearchRelevance.swift \
                            Nanocast/Features/MenuSearch/Model/*.swift \
                            Nanocast/Features/MenuSearch/Service/*.swift

@@ -87,6 +87,8 @@ If a change touches anything in the right column, the harness on the left is man
 | `file-search-test` | `FileSearch/Model/`: folding, masks, scoring, ignore rules, priors, scopes |
 | `file-index-test` | `FileIndexCrawler`, `FileIndexSnapshot`, `FileIndex`: a real fixture crawled, written, mapped, searched and live-updated |
 | `file-search-session-test` | serialized query execution, coalescing, cancellation and refresh |
+| `file-tools-test` | `FileTools/Model/`: the catalog per type and per Finder batch, option tokens, field parsing, output names with collisions, the request round trip, archive names, `FinderTabPolicy` |
+| `file-tools-helper-test` | `FileTools/Helper/` engines, `FileToolWorker` and `FileToolTransfer`: every image input to every output, Compress to Size, QR codes, archives, PDFs, audio, video speed, and the worker's progress, text, failure, move, no-replace and deadline paths |
 | `menu-search-test` | `MenuSearch/Model/` decisions, `MenuSearch/Service/` session filtering, the shared `FuzzyMatch` scorer |
 | `action-menu-search-test` | Action-menu query normalization and shared fuzzy matching |
 | `app-installation-test` | Multiple app copies and app-wide preferences; file-favorite persistence, mixed ordering, hidden slots and restoration through the existing favorite key list |

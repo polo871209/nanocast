@@ -5,7 +5,7 @@ struct QuickLookSurface: NSViewRepresentable {
     let url: URL
 
     func makeNSView(context: Context) -> QLPreviewView {
-        let view = QLPreviewView(frame: .zero, style: .normal) ?? QLPreviewView()
+        let view = PreviewQuickLookView(frame: .zero, style: .normal) ?? PreviewQuickLookView()
         view.autostarts = false
         view.shouldCloseWithWindow = false
         return view
@@ -20,3 +20,5 @@ struct QuickLookSurface: NSViewRepresentable {
         view.close()
     }
 }
+
+private final class PreviewQuickLookView: QLPreviewView, KeyboardFocusRefusing {}

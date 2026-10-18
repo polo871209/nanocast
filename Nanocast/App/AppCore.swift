@@ -52,6 +52,7 @@ final class AppCore {
     let menuSearch = MenuSearchSession()
     let activationPolicy = ActivationPolicy()
     let uninstall = UninstallSession()
+    let fileTools = FileToolsSession()
     let notesStore: NotesStore
 
     var pendingWindowLayoutEdit: WindowLayoutEditRequest?
@@ -143,8 +144,10 @@ final class AppCore {
         calcHistory: calcHistory, paletteCoordinator: paletteCoordinator, core: self)
     @ObservationIgnored private(set) lazy var fileSearchCoordinator = FileSearchCoordinator(
         settings: settings, appIndex: appIndex, session: fileSearch, indexer: fileIndexer,
-        palette: palette, paletteCoordinator: paletteCoordinator,
-        windowController: windowController, core: self)
+        palette: palette, paletteCoordinator: paletteCoordinator, core: self)
+    @ObservationIgnored private(set) lazy var fileToolsCoordinator = FileToolsCoordinator(
+        settings: settings, appIndex: appIndex, session: fileTools, palette: palette,
+        paletteCoordinator: paletteCoordinator, healthTicker: healthTicker, core: self)
     @ObservationIgnored private(set) lazy var menuSearchCoordinator = MenuSearchCoordinator(
         settings: settings, appIndex: appIndex, session: menuSearch, palette: palette,
         paletteCoordinator: paletteCoordinator, core: self)
@@ -203,6 +206,7 @@ final class AppCore {
             appIndex.start(settings: settings)
             clipboardCoordinator.applyEnabled()
             fileSearchCoordinator.applyEnabled()
+            fileToolsCoordinator.applyEnabled()
             windowSwitchCoordinator.applyEnabled()
             menuSearchCoordinator.applyEnabled()
             fileSearchCoordinator.applyPolicy()
@@ -433,6 +437,11 @@ final class AppCore {
         track(
             { _ = $0.clipboardTextSearchEnabled }, reproject: { $0.applyClipboardTextSearch() })
         track({ _ = $0.fileSearchEnabled }, reproject: { $0.fileSearchCoordinator.applyEnabled() })
+        track(
+            {
+                _ = $0.fileToolsEnabled
+                _ = $0.fileToolsFinderTab
+            }, reproject: { $0.fileToolsCoordinator.applyEnabled() })
         track(
             { _ = $0.fileSearchShowInLauncher },
             reproject: { $0.fileSearchCoordinator.applyLauncherFiles() })

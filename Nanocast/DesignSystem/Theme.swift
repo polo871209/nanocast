@@ -167,6 +167,8 @@ enum Theme {
         static let roomCardIconLarge: CGFloat = 96
         static let roomCardIconMinHeight: CGFloat = 160
         static let roomCardLargeIconMinSide: CGFloat = 320
+        static let fileStackIcon: CGFloat = 80
+        static let fileStackTilt: Double = 6
         static let switcherThumbnail = CGSize(width: 312, height: 195)
         static let switcherBadgeIcon: CGFloat = 28
         static let switcherBadgeInset: CGFloat = 6
