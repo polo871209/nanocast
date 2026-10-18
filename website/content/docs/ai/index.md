@@ -102,38 +102,38 @@ Apple Intelligence runs **on your Mac**. It needs no key or account, and nothing
 When your Mac supports it, it's the default.
 
 It works with text only, with no web search or attachments. If Apple Intelligence is turned off in
-System Settings, Tinycast tells you. **It never switches you to a paid API without asking.**
+System Settings, Nanocast tells you. **It never switches you to a paid API without asking.**
 
 ### Installed AI: Codex, Claude, Grok, OpenCode and Cursor
 
 If you already use the `codex`, `claude`, `grok`, `opencode` or `agent` (Cursor) command-line tools,
-Tinycast can use their existing setup. Codex also works with a configured API provider that doesn't
-require an OpenAI sign-in. OpenCode needs version 2 or later. **Tinycast never asks for or stores
+Nanocast can use their existing setup. Codex also works with a configured API provider that doesn't
+require an OpenAI sign-in. OpenCode needs version 2 or later. **Nanocast never asks for or stores
 their keys.**
 
 Each tool has its own switch, and all five are off by default. The pane shows whether each one is
 ready, not installed, or needs you to sign in. It links to the install page and can copy the sign-in
 command for you.
 
-Tinycast finds each command the same way your Terminal does. If it finds the wrong copy, or none,
+Nanocast finds each command the same way your Terminal does. If it finds the wrong copy, or none,
 open the tool's **Advanced** tab:
 
-- **Command path** sets the command to run instead. Leave it empty to let Tinycast find it. **If
-  nothing exists at the path, Tinycast reports it** rather than using another copy it finds.
+- **Command path** sets the command to run instead. Leave it empty to let Nanocast find it. **If
+  nothing exists at the path, Nanocast reports it** rather than using another copy it finds.
 - **Variables** are set for that tool every time it starts, such as a proxy or a config folder.
-  Values are stored in your login Keychain. A few variable names are reserved by Tinycast to keep the
+  Values are stored in your login Keychain. A few variable names are reserved by Nanocast to keep the
   tool from touching your files, and the row tells you when a value won't be used.
 
-Tinycast uses these tools for chat only. Claude, Grok and OpenCode run with tools, file access and
+Nanocast uses these tools for chat only. Claude, Grok and OpenCode run with tools, file access and
 shell access turned off. The exception is [MCP servers](/docs/ai/mcp) you add, which Codex and Claude
 can call but the other three can't.
 
-Cursor runs in Ask mode in a private Tinycast workspace: it can read but not edit, and MCP tools
+Cursor runs in Ask mode in a private Nanocast workspace: it can read but not edit, and MCP tools
 aren't approved automatically. Cursor's command-line tool can't start without your MCP
 configuration, so MCP servers you've already approved in Cursor still apply. The Cursor row in the
 Providers pane points this out.
 
-After each reply, Tinycast deletes the chat or session that the reply created. Your other saved
+After each reply, Nanocast deletes the chat or session that the reply created. Your other saved
 chats in those tools aren't touched.
 
 ### API connections
@@ -145,9 +145,9 @@ any **OpenAI Compatible** endpoint, including a local one like Ollama.
   backups.
 - Remote endpoints must use HTTPS. Plain HTTP only works for `localhost`, `127.0.0.1` and `::1`,
   where a key is optional.
-- A key is tied to the address it was saved for. If you change a connection's base URL, Tinycast
+- A key is tied to the address it was saved for. If you change a connection's base URL, Nanocast
   asks for a new key instead of sending the old one to the new address.
-- While you edit a connection, Tinycast asks the provider which models your key can use, and you can
+- While you edit a connection, Nanocast asks the provider which models your key can use, and you can
   search that list as you type. If a gateway can't list its models, type the model ID yourself.
 
 For gateways that follow DeepSeek's API, the reasoning effort menu includes **None**, which turns
@@ -174,7 +174,7 @@ like `+2`, for the rest. Hover over the pill to see their names, or click it to 
 small preview for each image, and remove any one with its ✕. Press <kbd>delete</kbd> in an empty
 message box to remove the last one.
 
-Not every model accepts every kind of file. Tinycast refuses an attachment as soon as you add it and
+Not every model accepts every kind of file. Nanocast refuses an attachment as soon as you add it and
 explains why, so it never sends something the model can't read.
 
 | Route                                      | Images                   | PDFs | Text files |
@@ -192,7 +192,7 @@ Only files on your Mac are read. Copied web addresses are never downloaded.
 
 ## System prompt
 
-Tinycast sends a short note before every conversation that tells the model where it's running. The
+Nanocast sends a short note before every conversation that tells the model where it's running. The
 **System prompt** box adds your own instructions after that note.
 
 **Send a system prompt** (on by default) controls both. If you turn it off, no instructions are sent.
@@ -208,7 +208,7 @@ MCP servers you add. See [MCP servers](/docs/ai/mcp).
 
 ## Privacy and storage
 
-- Conversations are saved on your Mac in `ai-chats.sqlite3`, in Tinycast's Application Support
+- Conversations are saved on your Mac in `ai-chats.sqlite3`, in Nanocast's Application Support
   folder.
 - **Keep conversations** sets how long they're kept: **7 Days**, **30 Days**, **3 Months** or
   **Forever** (default). Old chats are only removed while AI is on, so they're kept on a Mac with AI

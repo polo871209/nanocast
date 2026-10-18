@@ -1,6 +1,6 @@
 # Engineering standards
 
-How code in Tinycast is written. This is **guidance** — it describes what the codebase already looks
+How code in Nanocast is written. This is **guidance** — it describes what the codebase already looks
 like so that new code reads like it was there all along, and a good reason to depart from it is a good
 reason. What is actually checked is the bar in
 [testing.md](testing.md#definition-of-done); the rules that may not be broken at all are the
@@ -10,7 +10,7 @@ When this document and the code disagree, the code is probably right and this fi
 
 ## Posture
 
-Tinycast supports macOS 26 and later, with macOS 27 strongly preferred. Swift 6+ with complete strict
+Nanocast supports macOS 26 and later, with macOS 27 strongly preferred. Swift 6+ with complete strict
 concurrency is required. Prefer the latest Swift patterns and modern Apple APIs, following
 [`AGENTS.md`](../AGENTS.md#posture-modern-first-always).
 
@@ -40,7 +40,7 @@ cross an asynchronous actor boundary.
 
 Full detail in [architecture.md](architecture.md); the rules a new feature has to satisfy:
 
-- **One folder per feature** under `Tinycast/Features/<Name>/`, holding everything that feature owns —
+- **One folder per feature** under `Nanocast/Features/<Name>/`, holding everything that feature owns —
   its model, its services, its views and its own Settings panes.
 - A larger feature splits into `Model/` (pure), `Service/` (effects), `UI/` (views and the feature's
   coordinator) and `Settings/` (its panes). A small one stays flat. Split when the flat folder stops being
@@ -238,8 +238,8 @@ need saying explicitly. Adding it as the view is written costs a line; retrofitt
 
 ## Localization
 
-Tinycast ships English plus German, Spanish, French, Japanese, Korean, Portuguese, Russian and
-Simplified Chinese. Every string lives in `Tinycast/Resources/Localizable.xcstrings`, keyed by its
+Nanocast ships English plus German, Spanish, French, Japanese, Korean, Portuguese, Russian and
+Simplified Chinese. Every string lives in `Nanocast/Resources/Localizable.xcstrings`, keyed by its
 English source text; the compiler extracts the keys, and `./Scripts/sync-strings.sh` writes them into
 the catalog (Xcode's own build does the same in the IDE). The six privacy prompts live in
 `InfoPlist.xcstrings`, keyed by their `Info.plist` key.
@@ -262,13 +262,13 @@ the catalog (Xcode's own build does the same in the IDE). The six privacy prompt
 - **Never localized**: anything from macOS, the user or an extension — app and pane names, user
   content, everything a Raycast extension supplies or receives — and persisted formats, identifiers,
   log text, prompts sent to a model, and what the calculator parses.
-- **Tinycast's own command names are translated and stay findable in English**: `CommandID`,
+- **Nanocast's own command names are translated and stay findable in English**: `CommandID`,
   `SystemAction` and `WindowCommand` keep their English source as `englishName`, which the launcher
   indexes as an alternate title.
 
-English is the default; Tinycast never follows the Mac's language. Settings › General › Language
+English is the default; Nanocast never follows the Mac's language. Settings › General › Language
 writes the same per-app `AppleLanguages` key as System Settings › Language & Region › Applications,
-and it applies on relaunch. `TinycastLaunch` writes the key back before anything is localized, so an
+and it applies on relaunch. `NanocastLaunch` writes the key back before anything is localized, so an
 empty or unshipped list still launches in English. Because that key also changes
 `Locale.preferredLanguages` for this process, anything that indexes what the user *types* — app
 names, emoji keywords — reads macOS's own list through `SystemLanguages.preferred` instead.

@@ -4,7 +4,7 @@ description: Math, units, live currency and crypto rates, dates and time zones, 
 ---
 
 Type a calculation into the launcher and the answer appears on a card above the results. There's no
-separate calculator mode; Tinycast works out the answer as you type.
+separate calculator mode; Nanocast works out the answer as you type.
 
 | Action                   | Shortcut                                  |
 | ------------------------ | ----------------------------------------- |
@@ -159,19 +159,19 @@ BTU, `rpm` and pound-force (`lbf`).
 | `100 USD / 4hr`             | `25 USD/hr`                |
 | `25 USD/hr to EUR/min`      | A rate in another currency |
 
-Tinycast supports 159 currencies and a selected list of cryptocurrencies.
+Nanocast supports 159 currencies and a selected list of cryptocurrencies.
 
 **An amount on its own is converted to your Mac's currency.** On a Mac set to Bangladesh, `1 usd`
 shows `122.84 BDT`. If you type an amount in your own currency, it's converted to US dollars, or to
 euros if your currency is the dollar. Your currency comes from your Mac's region setting.
-**Tinycast never asks for your location.**
+**Nanocast never asks for your location.**
 
 ### Words with two meanings
 
 Some currency words are shared by several countries: `dollars` could mean 22 currencies, `francs`
-10, `pounds` 9, `pesos` 8 and `rupees` 6. Tinycast maps each of these to one currency. If a word is
-still ambiguous, Tinycast shows **no card**. For example, `krona` could be Swedish or Icelandic, so
-Tinycast doesn't guess.
+10, `pounds` 9, `pesos` 8 and `rupees` 6. Nanocast maps each of these to one currency. If a word is
+still ambiguous, Nanocast shows **no card**. For example, `krona` could be Swedish or Icelandic, so
+Nanocast doesn't guess.
 
 Slang isn't supported: **`quid` and `bucks` show no card.** `rmb` and `renminbi` work, because the
 ISO 4217 standard names the currency "Yuan Renminbi".
@@ -183,10 +183,10 @@ over words: `1 sol` is Solana, while `soles` means the Peruvian sol.
 ### Rates
 
 Rates are saved on your Mac and refreshed every 24 hours, counted from when they were saved.
-Restarting Tinycast doesn't refresh them early, so if the saved rates are recent, opening Tinycast
+Restarting Nanocast doesn't refresh them early, so if the saved rates are recent, opening Nanocast
 makes **no** network requests.
 
-Crypto prices are best effort. If they fail to load, currencies still work, and Tinycast tries
+Crypto prices are best effort. If they fail to load, currencies still work, and Nanocast tries
 loading crypto prices again in 30 minutes.
 
 When you're offline, the last saved rates keep working. If no rates have been saved yet, the card
@@ -209,7 +209,7 @@ is always written out in full: `1 IDR to USD` is `0.00005539 USD`, never `5.539e
 | A weekday in a later week | `monday in 3 weeks`, `friday in 2 weeks`         |
 | A named moment            | `tomorrow at 9am`, `next monday`, `aug 25`       |
 
-**When the answer is a date, Tinycast also shows the day of the week.**
+**When the answer is a date, Nanocast also shows the day of the week.**
 
 `till` looks forward and `since` looks back. A date without a year uses the **nearest** year, so a
 date three days in the past means three days ago, not next year.
@@ -257,7 +257,7 @@ doesn't include, like Salzburg or Basel. Accents are optional, so `zurich` works
 abbreviations also work, like `pst`, `cet`, `jst`, `sf`, `nyc` and `ldn`, as do airport codes like
 `lhr`, `nrt` and `sfo`.
 
-Time zone answers work offline. Tinycast doesn't look up cities online.
+Time zone answers work offline. Nanocast doesn't look up cities online.
 
 ## Percent, ratios and lists
 

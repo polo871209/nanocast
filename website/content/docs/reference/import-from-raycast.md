@@ -3,31 +3,31 @@ title: Import from Raycast
 description: Import your shortcuts, favorites, snippets, quicklinks and clipboard history from a Raycast export.
 ---
 
-Tinycast reads Raycast's export file directly. Import it in **Settings → Backup → Raycast Export**,
-or from the welcome screen the first time you open Tinycast.
+Nanocast reads Raycast's export file directly. Import it in **Settings → Backup → Raycast Export**,
+or from the welcome screen the first time you open Nanocast.
 
 ## Which exports it reads
 
-**Only Raycast v2.0 and newer.** Tinycast reads the `.rayconfig` file written by Raycast v2.0 and
+**Only Raycast v2.0 and newer.** Nanocast reads the `.rayconfig` file written by Raycast v2.0 and
 later, and no other format. Check your Raycast version in **Raycast → Settings → About** before you
 export.
 
 **Raycast v1.x exports aren't supported.** Support for that format was removed in
-**Tinycast v0.10.5**, along with the Raycast X beta format. If your file won't open, export it again
+**Nanocast v0.10.5**, along with the Raycast X beta format. If your file won't open, export it again
 from a current version of Raycast.
 
 ## Steps
 
 1. In Raycast, export your settings and data, and note the passphrase.
-2. In Tinycast, go to **Settings → Backup → Raycast Export** and choose the file.
+2. In Nanocast, go to **Settings → Backup → Raycast Export** and choose the file.
 3. Enter the passphrase, select what you want to import, and import.
-4. **Quit Tinycast and open it again.**
+4. **Quit Nanocast and open it again.**
 
-**You need to quit and reopen Tinycast after the import finishes.** Some imported settings don't take
+**You need to quit and reopen Nanocast after the import finishes.** Some imported settings don't take
 effect in the running app until it restarts. Quit from the menu bar icon (closing the Settings window
-isn't enough), then open Tinycast again.
+isn't enough), then open Nanocast again.
 
-Tinycast recognizes the file **before** you enter the passphrase, so a wrong passphrase is reported
+Nanocast recognizes the file **before** you enter the passphrase, so a wrong passphrase is reported
 as a wrong passphrase, not as "this is not a Raycast file".
 
 ## About the passphrase
@@ -38,7 +38,7 @@ your login Keychain.
 You can find it in **Raycast → Settings → Extensions → Export Settings & Data**, or in Keychain
 Access under the service `Raycast` and account `export_passphrase`.
 
-**Tinycast never reads your Keychain.** You paste the passphrase yourself.
+**Nanocast never reads your Keychain.** You paste the passphrase yourself.
 
 ## What gets imported
 
@@ -50,15 +50,15 @@ Access under the service `Raycast` and account `export_passphrase`.
 | Clipboard history   | Text, and images whose files still exist                   |
 | Snippets            | Name, text and keyword                                     |
 | Quicklinks          | Name, link and the app it opens with                       |
-| Emoji skin tone     | Raycast's default becomes Tinycast's Default               |
+| Emoji skin tone     | Raycast's default becomes Nanocast's Default               |
 | Compact mode        | From Raycast's window mode                                 |
-| Pop to root         | Only when the delay matches an option Tinycast offers      |
+| Pop to root         | Only when the delay matches an option Nanocast offers      |
 | Launch at login     |                                                            |
 | Menu bar visibility | From Raycast's menu bar icon setting                       |
 
 The list of apps excluded from clipboard history is imported along with Clipboard history.
 
-If a shortcut uses a modifier Tinycast doesn't recognize, the **whole shortcut is skipped** rather
+If a shortcut uses a modifier Nanocast doesn't recognize, the **whole shortcut is skipped** rather
 than imported as something slightly different.
 
 ## Clipboard history
@@ -106,5 +106,5 @@ Two things aren't part of a `.rayconfig`, so they have their own importers:
 
 The pane has a **Quit Raycast** button for when you're ready.
 
-Tinycast doesn't need Raycast to be installed, except to import extensions from it, since that reads
+Nanocast doesn't need Raycast to be installed, except to import extensions from it, since that reads
 Raycast's folder.

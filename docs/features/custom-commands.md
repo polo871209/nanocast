@@ -40,7 +40,7 @@ save rather than offering a second control for it. Deleting
 goes through `CustomCommandCoordinator`, which unregisters the hotkey and clears those references before removing the
 command. Native settings backups include both commands and bindings; import warns before accepting
 executable content.
-Deletion from Settings or the command browser confirms through Tinycast's dialog before removing the command.
+Deletion from Settings or the command browser confirms through Nanocast's dialog before removing the command.
 
 ## Launcher integration
 
@@ -87,10 +87,10 @@ If the item is deleted from Settings during editing, Save reports that failure a
 - `/bin/zsh -lc <command>`, or `/bin/zsh -ilc <command>` when the command's **Load shell
   environment** flag is on — unless the text starts with `#!`, which picks
   [another interpreter](#another-interpreter)
-- `tinycast` as `$0`, then the collected argument values as `$1`, `$2`, …
+- `nanocast` as `$0`, then the collected argument values as `$1`, `$2`, …
 - the command's own **Run In** folder, or the home directory when it names none
 - standard input reading EOF immediately
-- `TINYCAST=1` added to the inherited environment
+- `NANOCAST=1` added to the inherited environment
 - up to 8 KiB of standard error retained for a failure dialog
 - standard output discarded
 
@@ -110,7 +110,7 @@ command exits **127**. That is the single most common way a custom command fails
 It is per-command and off by default, because turning it on runs whatever the user's shell startup
 does — oh-my-zsh's auto-update (`git pull`, network, seconds), powerlevel10k's `gitstatusd`,
 `compinit` rewriting `~/.zcompdump`, or an `exec` that replaces the shell so the command never runs at
-all. `TINYCAST=1` exists so an rc file can skip those sections: `[[ -n $TINYCAST ]] && return`.
+all. `NANOCAST=1` exists so an rc file can skip those sections: `[[ -n $NANOCAST ]] && return`.
 
 Measured cost: ~10 ms for `-lc`, ~65 ms for `-ilc` against a real-world `~/.zshrc` (~11 ms against a
 minimal one — the interactive shell itself is ~2 ms, the rest is the user's own config).
@@ -119,8 +119,8 @@ Interactive prompts still cannot block. Standard input is `/dev/null` — or, un
 pty already sent EOF — so a `read` gets EOF and
 returns non-zero, and a launchd-launched app has no controlling terminal, so `/dev/tty` fails with
 `device not configured`. A dev build launched _from a terminal_ inherits that terminal's tty, so an rc
-file reading `/dev/tty` can hang there but not for real users. There is **no timeout** — Tinycast never kills a
-running command except through the output window's Stop button, and a command outlives Tinycast
+file reading `/dev/tty` can hang there but not for real users. There is **no timeout** — Nanocast never kills a
+running command except through the output window's Stop button, and a command outlives Nanocast
 quitting.
 
 Because standard error surfaces only on a non-zero exit and only its last 8 KiB, rc-file startup noise
@@ -150,7 +150,7 @@ its aliases and functions do not. Another shell's startup files are its `#!` lin
 Values arrive as the script's own arguments — `$1` in bash, `$argv[1]` in fish, `sys.argv[1]` in
 Python — so the [never-spliced invariant](#invariants) holds. A missing interpreter fails with 127
 and `bad interpreter: <path>`. The file is removed when the command exits; one still running when
-Tinycast quits leaves its file behind in the temporary folder.
+Nanocast quits leaves its file behind in the temporary folder.
 
 ### Arguments
 
@@ -180,7 +180,7 @@ launcher, since its shortcut still has to be answered; typing anything else retu
 Values reach zsh as **positional parameters**, never as text substituted into the command:
 
 ```
-/bin/zsh -lc '<command>' tinycast <value1> <value2> …
+/bin/zsh -lc '<command>' nanocast <value1> <value2> …
 ```
 
 so the script reads them as `$1`, `$2`, and a value containing `; rm -rf ~` is a string, not a second
@@ -238,8 +238,8 @@ the success pill is skipped for the same reason.
 #### Consequences worth knowing
 
 - **rc-file noise is now visible.** With **Load shell environment** on, anything `~/.zshrc` writes
-  reaches the log. The guard is the documented `[[ -n $TINYCAST ]] && return`.
-- **Stop is the one exception** to "Tinycast never kills a running command". Only the button does it;
+  reaches the log. The guard is the documented `[[ -n $NANOCAST ]] && return`.
+- **Stop is the one exception** to "Nanocast never kills a running command". Only the button does it;
   a second command superseding the window never touches the first.
 - Escape closes the window without stopping its command.
 
@@ -278,7 +278,7 @@ so the gate lives there and neither path can bypass it. The palette hides before
 floating panel and would sit above it. The dialog shows the command text as well as its name; ↵ runs
 it and Escape cancels, with Cancel rendered on the left of the two buttons. It carries the `terminal`
 glyph the command's launcher row uses, and reads neutral rather than destructive — running a command the
-user wrote themselves wants a deliberate second tap, not a red alarm. The gate is Tinycast's own
+user wrote themselves wants a deliberate second tap, not a red alarm. The gate is Nanocast's own
 dialog, not an `NSAlert` ([ui.md](../ui.md#dialogs--hud)): presentation is `async` with no nested run loop,
 and the presenter itself refuses a second dialog while one is up, so a held shortcut can't stack them.
 
@@ -291,8 +291,8 @@ command showing its output reports through the window instead.
 
 ### Reporting
 
-Tinycast dismisses an open palette before starting a custom command. With **Show output** off, a zero
-exit status is silent; a launch failure or non-zero status opens a Tinycast dialog with the bounded
+Nanocast dismisses an open palette before starting a custom command. With **Show output** off, a zero
+exit status is silent; a launch failure or non-zero status opens a Nanocast dialog with the bounded
 error detail. When the
 status is 127 and **Load shell environment** is off, the dialog adds a one-line hint and an **Open
 Settings…** button that lands on the Commands pane — the hint is gated on the status alone, not

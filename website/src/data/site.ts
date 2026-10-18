@@ -3,12 +3,12 @@
 
 // The page title and meta description, shared by the layout and /llms.txt. Google truncates a
 // description near 160 characters, so `summary` is written to land under it rather than be cut.
-export const pageTitle = "Tinycast: a free, native launcher for macOS";
+export const pageTitle = "Nanocast: a free, native launcher for macOS";
 export const summary =
   "A free, open source macOS launcher with app search, clipboard history, snippets, custom commands, window management, your own AI keys and Raycast extensions.";
 
 export const site = {
-  name: "Tinycast",
+  name: "Nanocast",
   repo: "https://github.com/abue-ammar/tinycast",
   url: "https://tinycast.dev",
   // The R2 bucket behind cdn.tinycast.dev. Anything over Workers' 25 MiB
@@ -46,7 +46,7 @@ export const nav = [
 // where both install CTAs point.
 export const brewTrustCommand = "brew trust --tap abue-ammar/tinycast";
 export const brewInstallCommand =
-  "brew install --cask abue-ammar/tinycast/tinycast";
+  "brew install --cask abue-ammar/tinycast/nanocast";
 
 // The logo wall under the hero, in render order. The track starts at the first
 // entry with the left edge under the mask, so the two least-known names lead

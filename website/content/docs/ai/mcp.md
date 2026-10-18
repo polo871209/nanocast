@@ -8,7 +8,7 @@ reading a folder, searching an issue tracker or looking something up. When you a
 gives its tools to the model during your conversations.
 
 Turn it on in **Settings → AI → MCP Servers → Enable MCP servers**. It's **off** by default, and it
-only applies while [AI Chat](/docs/ai) is on. While either one is off, Tinycast doesn't contact any
+only applies while [AI Chat](/docs/ai) is on. While either one is off, Nanocast doesn't contact any
 server or run any server process.
 
 ## Adding a server
@@ -39,7 +39,7 @@ A local server runs with your user account, so only add commands you trust.
 ### Signing in to an OAuth server
 
 Choose **HTTP**, paste the server's MCP URL, and select **OAuth**. Click **Sign In**, complete the
-provider's sign-in in your browser and review the access it asks for. Return to Tinycast when the
+provider's sign-in in your browser and review the access it asks for. Return to Nanocast when the
 browser says you can close the tab. **Signed in** confirms that it worked, and **Test Connection**
 checks the signed-in connection and reports how many tools it offers. Save the server to use it in
 chat.
@@ -47,14 +47,14 @@ chat.
 Leave Client ID and Client secret empty if the provider supports automatic registration. If it
 requires you to register your own OAuth client, enter its client ID and secret, if it has one, and
 register `http://127.0.0.1:4962/callback` as the redirect URL. Sign-in times out after five minutes.
-If another app is using that port, Tinycast tells you so you can close it and try again.
+If another app is using that port, Nanocast tells you so you can close it and try again.
 
-Tinycast refreshes tokens automatically before they expire. If a server shows **Sign-in required**,
+Nanocast refreshes tokens automatically before they expire. If a server shows **Sign-in required**,
 open it in Settings and sign in again. **Sign Out** disconnects the server and removes its access and
 refresh tokens from your Mac. The client registration stays; to fully revoke access, remove the app
 in the provider's account settings.
 
-Signing in doesn't change the server's trust setting. With **Ask Each Chat**, Tinycast still asks
+Signing in doesn't change the server's trust setting. With **Ask Each Chat**, Nanocast still asks
 before the first tool call.
 
 ## Using tools in a chat
@@ -72,7 +72,7 @@ before the message is sent. A handle that doesn't match any server is sent as yo
 
 ### Permission to run
 
-With **Ask Each Chat** (the default), Tinycast asks before the first tool call in each conversation:
+With **Ask Each Chat** (the default), Nanocast asks before the first tool call in each conversation:
 
 - **Always Allow** remembers your choice for that server.
 - **Allow This Chat** allows calls for this conversation only.
@@ -90,13 +90,13 @@ Tools are offered to **API connections** (OpenAI API, Anthropic Claude, Google G
 OpenAI Compatible endpoints) and to the installed **Codex** and **Claude** commands. With those two
 commands, the command-line tool calls the tools itself. The servers, the confirmation and the rows in
 the reply work the same as everywhere else, except that OAuth servers you aren't signed in to are
-left out. Tinycast never changes either command's settings.
+left out. Nanocast never changes either command's settings.
 
-Your own Codex and Claude MCP servers aren't used in a Tinycast chat. Claude is told to use only
-Tinycast's server list. Codex receives Tinycast's servers under their own names, like
-`tinycast-github`, and every server in your Codex configuration is turned off for that chat, so one
-of your servers named `github` is never confused with Tinycast's `@github`. If Tinycast can't read
-which servers your Codex configuration has, or one of them has a dot or `=` in its name, Tinycast
+Your own Codex and Claude MCP servers aren't used in a Nanocast chat. Claude is told to use only
+Nanocast's server list. Codex receives Nanocast's servers under their own names, like
+`nanocast-github`, and every server in your Codex configuration is turned off for that chat, so one
+of your servers named `github` is never confused with Nanocast's `@github`. If Nanocast can't read
+which servers your Codex configuration has, or one of them has a dot or `=` in its name, Nanocast
 won't start Codex at all, and the Codex row in Settings explains why.
 
 A few things work differently with Codex:
@@ -118,7 +118,7 @@ Apple Intelligence and the installed Grok, OpenCode and Cursor commands never ge
 chat works the same as it does without MCP.
 
 If your organization installs a Claude Code MCP policy, that policy decides MCP for the Claude
-command, and Tinycast doesn't pass any servers to it. The Providers row tells you when this applies.
+command, and Nanocast doesn't pass any servers to it. The Providers row tells you when this applies.
 
 ## Limits
 
@@ -131,11 +131,11 @@ command, and Tinycast doesn't pass any servers to it. The Providers row tells yo
   while the palette is hidden, and every round is billed by your provider or counted against your
   plan.
 - Each tool result, and the total of all results in one reply, has a size limit.
-- Servers start when you use chat and stop after **10 minutes** without use, or when Tinycast quits.
+- Servers start when you use chat and stop after **10 minutes** without use, or when Nanocast quits.
   While Codex or Claude is the chat model, a server that runs on your Mac is started by that command
-  instead of by Tinycast, so it never runs twice. Its row in Settings shows **Stopped** until you
+  instead of by Nanocast, so it never runs twice. Its row in Settings shows **Stopped** until you
   switch to an API model.
-- Tinycast doesn't offer anything back to servers. Requests from a server, like sampling, are
+- Nanocast doesn't offer anything back to servers. Requests from a server, like sampling, are
   declined.
 
 ## Backups

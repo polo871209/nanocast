@@ -39,7 +39,7 @@ reviews:
   path_instructions:
     - path: "**/*.swift"
       instructions: |
-        Tinycast supports macOS 26 and later, with macOS 27 strongly preferred. Swift 6+ with complete
+        Nanocast supports macOS 26 and later, with macOS 27 strongly preferred. Swift 6+ with complete
         strict concurrency is required. Prefer the latest Swift patterns and modern Apple APIs;
         no compatibility layers or legacy workarounds.
         Verify API and language-feature availability against the SDK and compiler used by the build
@@ -169,7 +169,7 @@ reviews:
         Check observation timing, task ownership, priority and cancellation semantics; they are not
         automatic drop-in replacements. @available(*, unavailable) on init(coder:) is intentional.
 
-    - path: "Tinycast/Features/*/Model/**"
+    - path: "Nanocast/Features/*/Model/**"
       instructions: |
         Pure model layer, compiled directly by the test harnesses.
         - No import of AppKit, SwiftUI or Cocoa.
@@ -177,7 +177,7 @@ reviews:
           ambient reads of Date(), FileManager.default, NSHomeDirectory() or Locale.current that
           a harness cannot override; defaulted injected parameters are allowed.
 
-    - path: "Tinycast/Features/Extensions/**"
+    - path: "Nanocast/Features/Extensions/**"
       instructions: |
         Runs untrusted Raycast extensions in JavaScriptCore.
         - Treat every JS value as hostile: check types, sizes, paths and URLs.
@@ -185,7 +185,7 @@ reviews:
         - Views, layout and sizing stay in this folder. Only Theme base tokens, InterfaceMetrics,
           PopoverMenuItem and Platform/ come from outside.
 
-    - path: "Tinycast/DesignSystem/Scrolling/{EdgeDissolve,ThinScrollbar}.swift"
+    - path: "Nanocast/DesignSystem/Scrolling/{EdgeDissolve,ThinScrollbar}.swift"
       instructions: |
         Off-limits, tuned by eye. Flag any edit unless the PR says it exists to change this file.
 

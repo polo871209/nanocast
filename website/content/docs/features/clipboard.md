@@ -3,7 +3,7 @@ title: Clipboard history
 description: Search the text, images, files and colors you copied, and paste them back where you were.
 ---
 
-Tinycast saves what you copy, so you can find it later and paste it back into the app you were
+Nanocast saves what you copy, so you can find it later and paste it back into the app you were
 using.
 
 Clipboard history is the only feature that's **on** by default. To turn it off, go to
@@ -15,7 +15,7 @@ removed. Your existing history is kept, and **Clear history** still works.
 
 - Press <kbd>tab</kbd> from the launcher (after AI Chat, if AI is on).
 - Run the **Clipboard History** command, or use its global shortcut from **Settings → Clipboard**.
-- Choose **Clipboard History** in the Tinycast menu bar menu.
+- Choose **Clipboard History** in the Nanocast menu bar menu.
 
 The footer shows where a paste will go, like "Paste to Notes".
 
@@ -56,7 +56,7 @@ oldest entry, it shows **Nothing left to paste** instead of starting over.
 
 - **Text**, with a preview.
 - **Images**, like screenshots, saved as PNG files.
-- **Files you copy in Finder.** Tinycast saves a reference to the file in its current location, not
+- **Files you copy in Finder.** Nanocast saves a reference to the file in its current location, not
   a copy of the file. Up to 32 files per copy are recorded. When you paste, apps receive the file
   itself, and text fields receive its path.
 - **Colors.** A copied `#FF5733`, `rgb(…)` or `hsl(…)` is shown as a color swatch.
@@ -101,12 +101,12 @@ a common domain ending, so `Safari.app`, `report.pdf` and `index.html` stay text
 
 ## Searching text inside images and PDFs
 
-**Search text in images and PDFs** is **off** by default. When you turn it on, Tinycast reads the
+**Search text in images and PDFs** is **off** by default. When you turn it on, Nanocast reads the
 text in your copied images, image files and PDFs, so searching for a word in a screenshot finds it.
 
 - Text recognition happens **on your Mac**, one item at a time, while you aren't typing or moving
   the mouse.
-- It runs in a separate helper process, so Tinycast itself stays light.
+- It runs in a separate helper process, so Nanocast itself stays light.
 - It handles files up to 32 MB and the first 64 pages of a PDF.
 - The recognized text is only used for search. Pasting still gives you the original item.
 - Turning the setting off stops recognition. Text that was already recognized is kept and reused if
@@ -129,17 +129,17 @@ This setting isn't included in [backups](/docs/reference/backup).
 | Disabled Applications          | A list of apps                                                    | Keychain Access, Passwords |
 | Clear history                  | Removes every saved clip and image                                | None                       |
 
-**Disabled Applications** includes Keychain Access and Passwords by default, so Tinycast never
+**Disabled Applications** includes Keychain Access and Passwords by default, so Nanocast never
 records what you copy from them. You can add your own apps. Copies that apps mark as confidential
 are also skipped.
 
 ## Limits worth knowing
 
-History is stored in `clipboard.sqlite3`, with images next to it, in Tinycast's Application Support
+History is stored in `clipboard.sqlite3`, with images next to it, in Nanocast's Application Support
 folder. Because it isn't in Caches, Time Machine backs it up and macOS never clears it on its own.
 
-- Tinycast checks the clipboard twice a second. It recognizes and skips its own pastes, so pasting
-  from Tinycast never adds a new entry.
+- Nanocast checks the clipboard twice a second. It recognizes and skips its own pastes, so pasting
+  from Nanocast never adds a new entry.
 - The newest **1,000** entries are kept in memory. Search also covers older entries.
 - **Search needs at least three characters** to use the full index. Shorter searches only look
   through the recent entries in memory.
