@@ -58,49 +58,6 @@ struct EmojiTests {
             EmojiGridColumns.nine.applying(.actualSize, default: .nine) == nil,
             "actual size at the default changes nothing")
 
-        let merged = EmojiCatalog.parse(
-            "A|alpha|ob|0|red\nB|beta|ob|0|", localized: ["A|rouge,vif\nbad line\nB|bleu", "A|rot"])
-        expect(merged.map(\.keywords) == ["red,rouge,vif,rot", "bleu"], "packs append keywords")
-
-        let packDirectory = URL(fileURLWithPath: "Nanocast/Resources/EmojiKeywords")
-        let packs =
-            (try? FileManager.default.contentsOfDirectory(
-                at: packDirectory, includingPropertiesForKeys: nil)) ?? []
-        let available = packs.map { $0.deletingPathExtension().lastPathComponent }
-        expect(
-            Set(available) == ["de", "es", "fr", "ja", "ko", "pt", "ru", "zh-Hans"],
-            "keyword packs ship for the supported languages")
-        let glyphs = Set(entries.map(\.glyph))
-        for pack in packs {
-            let lines = ((try? String(contentsOf: pack, encoding: .utf8)) ?? "").split(separator: "\n")
-            let name = pack.deletingPathExtension().lastPathComponent
-            expect(
-                lines.count > 1500
-                    && lines.allSatisfy {
-                        let fields = $0.split(separator: "|", omittingEmptySubsequences: false)
-                        return fields.count == 2 && glyphs.contains(String(fields[0]))
-                            && !fields[1].isEmpty
-                    },
-                "\(name) pack is well-formed and keyed by catalog glyphs")
-            expect(
-                EmojiCatalog.keywordLanguages(available: available, preferred: [name]) == [name],
-                "\(name) pack is reachable by its own language")
-        }
-
-        for (preferred, expected) in [
-            (["en-US"], []),
-            (["en-GB", "fr-CA"], ["fr"]),
-            (["fr-FR", "de-DE", "fr-CA"], ["fr", "de"]),
-            (["zh-CN"], ["zh-Hans"]),
-            (["zh-Hans-CN", "zh-SG"], ["zh-Hans"]),
-            (["pt-PT"], ["pt"]),
-            (["sr-Latn-RS"], [])
-        ] {
-            expect(
-                EmojiCatalog.keywordLanguages(available: available, preferred: preferred) == expected,
-                "\(preferred) reads the \(expected) packs")
-        }
-
         expect(EmojiCatalog.applyTone(.dark, to: "👋") == "👋🏿", "modifier appended")
         let victory = entries.first { $0.name == "victory hand" }!
         expect(victory.glyph.unicodeScalars.contains { $0.value == 0xFE0F }, "✌️ base carries VS16")

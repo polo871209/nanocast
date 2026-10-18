@@ -8,7 +8,7 @@ enum FolderPicker {
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = String(localized: "Use Folder")
+        panel.prompt = "Use Folder"
         panel.message = message
         panel.directoryURL = directory
         // Nanocast is an accessory app, so the panel opens behind the frontmost app without this.

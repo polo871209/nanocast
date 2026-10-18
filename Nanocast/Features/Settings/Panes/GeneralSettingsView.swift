@@ -19,13 +19,6 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                Picker(selection: $settings.language) {
-                    ForEach(AppLanguage.allCases) { language in
-                        Text(verbatim: language.title).tag(language)
-                    }
-                } label: {
-                    SettingsRowTitle(.generalGeneral, "Language")
-                }
                 Toggle(isOn: $settings.launchAtLogin) {
                     SettingsRowTitle(.generalGeneral, "Launch at login")
                 }
@@ -172,12 +165,12 @@ private struct WindowModeRow: View {
     var body: some View {
         SettingsRow(
             title: "Window mode",
-            subtitle: String(localized: "Choose how the launcher opens."),
+            subtitle: "Choose how the launcher opens.",
             subtitleLineLimit: 2, alignment: .top, anchor: .generalAppearance
         ) {
             HStack(spacing: Theme.Spacing.md) {
-                option(String(localized: "Compact"), image: "WindowModeCompact", compact: true)
-                option(String(localized: "Expanded"), image: "WindowModeExpanded", compact: false)
+                option("Compact", image: "WindowModeCompact", compact: true)
+                option("Expanded", image: "WindowModeExpanded", compact: false)
             }
         }
     }
@@ -244,7 +237,7 @@ private struct InterfaceSizeRow: View {
     var body: some View {
         SettingsRow(
             title: "Interface size",
-            subtitle: String(localized: "Scales the launcher and its panels, not Settings."),
+            subtitle: "Scales the launcher and its panels, not Settings.",
             anchor: .generalAppearance
         ) {
             HStack(spacing: Theme.Spacing.xs) {

@@ -6,18 +6,15 @@ struct BundleNameCache: Sendable {
         let names: [String]
     }
 
-    private let languages: [String]
     private let previous: [String: Entry]
     private var current: [String: Entry] = [:]
 
     init() {
-        languages = []
         previous = [:]
     }
 
-    init(reusing cache: BundleNameCache, languages: [String]) {
-        self.languages = languages
-        previous = cache.languages == languages ? cache.current : [:]
+    init(reusing cache: BundleNameCache) {
+        previous = cache.current
     }
 
     mutating func names(for url: URL, base: String, developmentRegion: String?) -> [String] {
@@ -27,8 +24,7 @@ struct BundleNameCache: Sendable {
             current[url.path] = cached
             return cached.names
         }
-        let names = BundleLocalization.names(
-            for: url, base: base, developmentRegion: developmentRegion, languages: languages)
+        let names = BundleEnglishName.names(for: url, base: base, developmentRegion: developmentRegion)
         current[url.path] = Entry(modified: modified, names: names)
         return names
     }

@@ -25,7 +25,7 @@ enum CommandCatalog {
 
     static func openInBrowser(for query: String) -> AppEntry? {
         guard case .web(let url)? = LinkDestination.detect(query) else { return nil }
-        return makeEntry(.openInBrowser, url: url, subtitle: String(localized: "URL"))
+        return makeEntry(.openInBrowser, url: url, subtitle: "URL")
     }
 
     nonisolated static func makeEntry(
@@ -33,8 +33,7 @@ enum CommandCatalog {
     ) -> AppEntry {
         AppEntry(
             id: id.rawValue, name: id.name, url: url ?? placeholderURL(id), bundleID: nil,
-            kind: .command, settingsOwner: id.owner, subtitle: subtitle,
-            alternateTitles: [id.englishName])
+            kind: .command, settingsOwner: id.owner, subtitle: subtitle)
     }
 
     nonisolated private static func placeholderURL(_ id: CommandID) -> URL {

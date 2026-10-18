@@ -16,7 +16,7 @@ enum CalcPercent {
         else { return nil }
         let result = base * (1 - pct / 100)
         guard result.isFinite else { return nil }
-        return card(query, .number(result), target: String(localized: "Discounted"))
+        return card(query, .number(result), target: "Discounted")
     }
 
     private static func parseAsPercentOf(_ tokens: [CalcToken], query: String) -> CalcResult? {
@@ -27,16 +27,16 @@ enum CalcPercent {
         else { return nil }
         let ratio = x / y * 100
         guard ratio.isFinite else { return nil }
-        return card(query, .number(ratio, suffix: "%"), target: String(localized: "Percentage"))
+        return card(query, .number(ratio, suffix: "%"), target: "Percentage")
     }
 
     private static func card(
-        _ query: String, _ payload: CalcResult.Payload, target: String = String(localized: "Result"),
+        _ query: String, _ payload: CalcResult.Payload, target: String = "Result",
         canChain: Bool = true
     ) -> CalcResult {
         CalcResult(
             expression: query.split(whereSeparator: \.isWhitespace).joined(separator: " "),
-            sourceBadge: String(localized: "Expression"),
+            sourceBadge: "Expression",
             targetBadge: target,
             payload: payload,
             canChain: canChain)
@@ -51,7 +51,7 @@ enum CalcPercent {
         else { return nil }
         let amount = bill * pct / 100
         guard amount.isFinite else { return nil }
-        return card(query, .number(amount), target: String(localized: "Tip"))
+        return card(query, .number(amount), target: "Tip")
     }
 
     private static func parseWhatPercentOf(_ tokens: [CalcToken], query: String) -> CalcResult? {
@@ -64,7 +64,7 @@ enum CalcPercent {
         else { return nil }
         let ratio = x / y * 100
         guard ratio.isFinite else { return nil }
-        return card(query, .number(ratio, suffix: "%"), target: String(localized: "Percentage"))
+        return card(query, .number(ratio, suffix: "%"), target: "Percentage")
     }
 
     private static func parseIsPercentOfWhat(_ tokens: [CalcToken], query: String) -> CalcResult? {
@@ -77,7 +77,7 @@ enum CalcPercent {
         else { return nil }
         let whole = x / (pct / 100)
         guard whole.isFinite else { return nil }
-        return card(query, .number(whole), target: String(localized: "Total"))
+        return card(query, .number(whole), target: "Total")
     }
 
     private static func parseRatio(_ tokens: [CalcToken], query: String) -> CalcResult? {
@@ -91,7 +91,7 @@ enum CalcPercent {
         guard divisor > 0 else { return nil }
         let text = "\(CalcFormatter.display(a / divisor)) : \(CalcFormatter.display(b / divisor))"
         return card(
-            query, .value(display: text, copyText: text), target: String(localized: "Ratio"),
+            query, .value(display: text, copyText: text), target: "Ratio",
             canChain: false)
     }
 
@@ -120,7 +120,7 @@ enum CalcPercent {
         else { return nil }
         let result = (value / step).rounded() * step
         guard result.isFinite else { return nil }
-        return card(query, .number(result), target: String(localized: "Rounded"))
+        return card(query, .number(result), target: "Rounded")
     }
 
     private struct Aggregate {
@@ -129,13 +129,13 @@ enum CalcPercent {
     }
 
     private static let aggregates: [String: Aggregate] = [
-        "average": Aggregate(name: String(localized: "Average")) { $0.reduce(0, +) / Double($0.count) },
-        "avg": Aggregate(name: String(localized: "Average")) { $0.reduce(0, +) / Double($0.count) },
-        "mean": Aggregate(name: String(localized: "Average")) { $0.reduce(0, +) / Double($0.count) },
-        "sum": Aggregate(name: String(localized: "Sum")) { $0.reduce(0, +) },
-        "total": Aggregate(name: String(localized: "Sum")) { $0.reduce(0, +) },
-        "min": Aggregate(name: String(localized: "Minimum")) { $0.min() },
-        "max": Aggregate(name: String(localized: "Maximum")) { $0.max() }
+        "average": Aggregate(name: "Average") { $0.reduce(0, +) / Double($0.count) },
+        "avg": Aggregate(name: "Average") { $0.reduce(0, +) / Double($0.count) },
+        "mean": Aggregate(name: "Average") { $0.reduce(0, +) / Double($0.count) },
+        "sum": Aggregate(name: "Sum") { $0.reduce(0, +) },
+        "total": Aggregate(name: "Sum") { $0.reduce(0, +) },
+        "min": Aggregate(name: "Minimum") { $0.min() },
+        "max": Aggregate(name: "Maximum") { $0.max() }
     ]
 
     private static func splitList(_ tokens: [CalcToken]) -> [Double] {

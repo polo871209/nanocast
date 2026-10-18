@@ -14,7 +14,7 @@ enum DictationIdleRelease: Int, CaseIterable, Identifiable, Sendable {
     var id: Self { self }
     func title(locale: Locale) -> String {
         switch self {
-        case .never: String(localized: "Never", locale: locale)
+        case .never: "Never"
         default:
             Duration.seconds(rawValue * 60).formatted(
                 .units(allowed: [.hours, .minutes], width: .wide).locale(locale))

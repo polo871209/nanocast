@@ -38,7 +38,7 @@ struct CalculatorHistoryList: View {
 
     private var rows: [Row] {
         var rows: [Row] = []
-        if let calc { rows = [.header(String(localized: "Calculator")), .calc(calc)] }
+        if let calc { rows = [.header("Calculator"), .calc(calc)] }
         var currentBucket: DateBucket?
         for entry in results {
             let bucket = DateBucket(for: entry.createdAt)

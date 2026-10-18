@@ -7,22 +7,22 @@ enum SettingsTab: CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .general: return String(localized: "General")
-        case .applications: return String(localized: "Applications")
-        case .systemSettings: return String(localized: "System Settings")
-        case .systemActions: return String(localized: "System Actions")
-        case .commands: return String(localized: "Commands")
-        case .dictation: return String(localized: "Dictation")
-        case .fileSearch: return String(localized: "File Search")
-        case .notes: return String(localized: "Notes")
-        case .navigation: return String(localized: "Navigation")
-        case .windowManagement: return String(localized: "Window Management")
-        case .clipboard: return String(localized: "Clipboard")
-        case .screenshot: return String(localized: "Screenshot")
-        case .emoji: return String(localized: "Emoji & Symbols")
-        case .permissions: return String(localized: "Permissions")
-        case .backup: return String(localized: "Backup")
-        case .about: return String(localized: "About")
+        case .general: return "General"
+        case .applications: return "Applications"
+        case .systemSettings: return "System Settings"
+        case .systemActions: return "System Actions"
+        case .commands: return "Commands"
+        case .dictation: return "Dictation"
+        case .fileSearch: return "File Search"
+        case .notes: return "Notes"
+        case .navigation: return "Navigation"
+        case .windowManagement: return "Window Management"
+        case .clipboard: return "Clipboard"
+        case .screenshot: return "Screenshot"
+        case .emoji: return "Emoji & Symbols"
+        case .permissions: return "Permissions"
+        case .backup: return "Backup"
+        case .about: return "About"
         }
     }
 
@@ -54,10 +54,10 @@ enum SettingsSection: CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .general: return String(localized: "General")
-        case .launcher: return String(localized: "Launcher")
-        case .features: return String(localized: "Features")
-        case .advanced: return String(localized: "Advanced")
+        case .general: return "General"
+        case .launcher: return "Launcher"
+        case .features: return "Features"
+        case .advanced: return "Advanced"
         }
     }
 

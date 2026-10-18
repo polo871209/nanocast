@@ -36,11 +36,11 @@ struct BackupSettingsView: View {
 
     private var raycastFileSubtitle: String {
         guard let name = raycastFile?.lastPathComponent else {
-            return String(localized: "A .rayconfig file from Raycast 2.0 or later.")
+            return "A .rayconfig file from Raycast 2.0 or later."
         }
         return isRaycastExport
-            ? String(localized: "\(name) — Raycast export")
-            : String(localized: "\(name) — not a Raycast export")
+            ? "\(name) — Raycast export"
+            : "\(name) — not a Raycast export"
     }
 
     var body: some View {
@@ -96,7 +96,7 @@ struct BackupSettingsView: View {
                 }
                 LabeledContent {
                     RevealableSecureField(
-                        title: String(localized: "Passphrase"), text: $passphrase,
+                        title: "Passphrase", text: $passphrase,
                         prompt: Text("Export password")
                     )
                     .labelsHidden()
@@ -182,9 +182,9 @@ struct BackupSettingsView: View {
 
     private var backupFileSubtitle: String {
         guard let name = backupFile?.lastPathComponent else {
-            return String(localized: "A .nanocast file exported from Nanocast.")
+            return "A .nanocast file exported from Nanocast."
         }
-        return openedManifest == nil ? String(localized: "\(name) — couldn't be read") : name
+        return openedManifest == nil ? "\(name) — couldn't be read" : name
     }
 
     private func available(in manifest: BackupManifest) -> [BackupCategory: Int] {

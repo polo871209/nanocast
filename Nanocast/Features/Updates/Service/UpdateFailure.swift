@@ -13,42 +13,38 @@ enum UpdateFailure: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .downloadFailed(let detail):
-            return String(localized: "The download did not finish. \(detail)")
+            return "The download did not finish. \(detail)"
         case .extractFailed(let detail):
-            return String(localized: "The downloaded archive could not be expanded. \(detail)")
+            return "The downloaded archive could not be expanded. \(detail)"
         case .noAppInArchive:
-            return String(localized: "The downloaded archive does not contain Nanocast.")
+            return "The downloaded archive does not contain Nanocast."
         case .quarantined:
-            return String(
-                localized: "macOS quarantined the downloaded app and Nanocast could not clear the flag.")
+            return "macOS quarantined the downloaded app and Nanocast could not clear the flag."
         case .bundleMismatch:
-            return String(localized: "The downloaded app is not this build of Nanocast.")
+            return "The downloaded app is not this build of Nanocast."
         case .identityMismatch:
-            return String(
-                localized: "The downloaded app is not signed by the identity this copy was signed with.")
+            return "The downloaded app is not signed by the identity this copy was signed with."
         case .versionMismatch(let expected, let found):
-            return String(localized: "The downloaded app is version \(found), not \(expected).")
+            return "The downloaded app is version \(found), not \(expected)."
         case .replaceFailed(let detail):
-            return String(localized: "Nanocast could not be replaced. \(detail)")
+            return "Nanocast could not be replaced. \(detail)"
         }
     }
 
     var recoverySuggestion: String? {
         switch self {
         case .identityMismatch, .bundleMismatch, .versionMismatch:
-            return String(
-                localized: """
-                    Nothing was installed. Download the release from GitHub instead, so you can \
-                    check it yourself.
-                    """)
+            return """
+                Nothing was installed. Download the release from GitHub instead, so you can \
+                check it yourself.
+                """
         case .replaceFailed:
-            return String(
-                localized: """
-                    Nothing was installed. This usually means /Applications is not writable by \
-                    your account.
-                    """)
+            return """
+                Nothing was installed. This usually means /Applications is not writable by \
+                your account.
+                """
         case .quarantined:
-            return String(localized: "Nothing was installed.")
+            return "Nothing was installed."
         default:
             return nil
         }

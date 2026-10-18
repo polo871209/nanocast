@@ -1,13 +1,6 @@
 import SwiftUI
 
 @main
-enum NanocastLaunch {
-    static func main() {
-        AppSettings.pinLanguage()
-        NanocastApp.main()
-    }
-}
-
 struct NanocastApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 

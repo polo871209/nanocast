@@ -129,7 +129,7 @@ run ranking-test           $L/SearchRelevance.swift $L/ScriptRomanization.swift 
                            $L/LauncherMatch.swift $L/LauncherRankingStore.swift
 run scopes-test            $L/SearchScopes.swift
 run app-name-test          Nanocast/Platform/AppDisplayName.swift \
-                           Nanocast/Platform/BundleLocalization.swift \
+                           Nanocast/Platform/BundleEnglishName.swift \
                            $L/SearchRelevance.swift
 run favorites-test         $L/FavoriteSlots.swift
 run app-installation-test  $L/SearchRelevance.swift $L/ScriptRomanization.swift \
@@ -142,8 +142,7 @@ run app-installation-test  $L/SearchRelevance.swift $L/ScriptRomanization.swift 
                            Nanocast/Features/Launcher/Service/AliasStore.swift \
                            Nanocast/Features/Launcher/Service/VisibilityStore.swift \
                            Nanocast/Features/Launcher/Service/BundleNameCache.swift \
-                           Nanocast/Platform/AppDisplayName.swift Nanocast/Platform/BundleLocalization.swift \
-                           Nanocast/Platform/SystemLanguages.swift \
+                           Nanocast/Platform/AppDisplayName.swift Nanocast/Platform/BundleEnglishName.swift \
                            Nanocast/Platform/Images/FileIconStamp.swift Nanocast/Platform/Memo.swift \
                            Nanocast/Platform/Signposts.swift Nanocast/Platform/NotificationToken.swift
 run launcher-file-test     $L/LauncherFileFormat.swift \
@@ -243,7 +242,6 @@ run appearance-test        Nanocast/Platform/Appearance.swift \
                            Nanocast/DesignSystem/Theme.swift \
                            Nanocast/DesignSystem/InterfaceMetrics.swift \
                            Nanocast/Features/Settings/AppAppearance.swift
-run language-test          Nanocast/Features/Settings/AppLanguage.swift
 run relaunch-test          Nanocast/App/AppDelegate.swift Nanocast/Platform/RelaunchRunner.swift
 run interface-size-test    Nanocast/Platform/Appearance.swift \
                            Nanocast/DesignSystem/Theme.swift \

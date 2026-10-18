@@ -21,19 +21,19 @@ final class LauncherSettingsFile {
 
         func label(_ name: String) -> String {
             switch self {
-            case .app: String(localized: "app “\(name)”")
-            case .settingsPane: String(localized: "settings pane “\(name)”")
-            case .systemAction: String(localized: "system action “\(name)”")
-            case .command: String(localized: "command “\(name)”")
+            case .app: "app “\(name)”"
+            case .settingsPane: "settings pane “\(name)”"
+            case .systemAction: "system action “\(name)”"
+            case .command: "command “\(name)”"
             }
         }
 
         func unknown(_ name: String) -> String {
             switch self {
-            case .app: String(localized: "no app in this section is called “\(name)”")
-            case .settingsPane: String(localized: "no settings pane in this section is called “\(name)”")
-            case .systemAction: String(localized: "no system action in this section is called “\(name)”")
-            case .command: String(localized: "no command in this section is called “\(name)”")
+            case .app: "no app in this section is called “\(name)”"
+            case .settingsPane: "no settings pane in this section is called “\(name)”"
+            case .systemAction: "no system action in this section is called “\(name)”"
+            case .command: "no command in this section is called “\(name)”"
             }
         }
     }
@@ -212,7 +212,7 @@ final class LauncherSettingsFile {
             if let action = item.action {
                 wanted.append(HotKeySettingsFile.Wanted(action: action, text: record.shortcut, label: label))
             } else if record.shortcut != nil {
-                issues.append(.invalidEntry(key, String(localized: "\(label) can't have a shortcut")))
+                issues.append(.invalidEntry(key, "\(label) can't have a shortcut"))
             }
         }
         return issues + shortcuts.apply(wanted, key: key)

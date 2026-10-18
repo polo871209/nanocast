@@ -79,10 +79,10 @@ struct OnboardingView: View {
 
     private var title: String {
         switch step {
-        case 0: String(localized: "Welcome to Nanocast")
-        case 1: String(localized: "Enable Pasting")
-        case 2: String(localized: "Import from Raycast")
-        default: String(localized: "You're all set")
+        case 0: "Welcome to Nanocast"
+        case 1: "Enable Pasting"
+        case 2: "Import from Raycast"
+        default: "You're all set"
         }
     }
 
@@ -133,23 +133,23 @@ struct OnboardingView: View {
         return VStack(alignment: .leading, spacing: Theme.Spacing.md) {
             OnboardingCard {
                 OnboardingRow(
-                    title: String(localized: "App Launcher"),
-                    subtitle: String(localized: "Press this shortcut to open Nanocast."),
+                    title: "App Launcher",
+                    subtitle: "Press this shortcut to open Nanocast.",
                     systemImage: "magnifyingglass", tint: .blue
                 ) {
                     ShortcutRecorder(action: .togglePalette)
                 }
                 OnboardingDivider()
                 OnboardingRow(
-                    title: String(localized: "Launch at login"),
-                    subtitle: String(localized: "Start Nanocast automatically when you log in."),
+                    title: "Launch at login",
+                    subtitle: "Start Nanocast automatically when you log in.",
                     systemImage: "power", tint: .green
                 ) {
                     Toggle("", isOn: $settings.launchAtLogin)
                         .labelsHidden().toggleStyle(.switch).controlSize(.small)
                 }
             }
-            caption(String(localized: "You can change these anytime in Settings."))
+            caption("You can change these anytime in Settings.")
         }
     }
 
@@ -157,15 +157,14 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
             OnboardingCard {
                 OnboardingRow(
-                    title: String(localized: "Accessibility"),
-                    subtitle: String(
-                        localized: "Allows pasting clipboard items and dictated text into active apps."),
+                    title: "Accessibility",
+                    subtitle: "Allows pasting clipboard items and dictated text into active apps.",
                     systemImage: "accessibility", tint: .blue
                 ) {
                     statusBadge
                 }
             }
-            caption(String(localized: "Optional — you can enable this later in Settings › Permissions."))
+            caption("Optional — you can enable this later in Settings › Permissions.")
         }
     }
 
@@ -173,7 +172,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
             OnboardingCard {
                 OnboardingRow(
-                    title: String(localized: "Raycast Export"),
+                    title: "Raycast Export",
                     subtitle: model.fileSubtitle,
                     systemImage: "doc.badge.gearshape", tint: .orange
                 ) {
@@ -181,11 +180,11 @@ struct OnboardingView: View {
                 }
                 OnboardingDivider()
                 OnboardingRow(
-                    title: String(localized: "Passphrase"),
-                    subtitle: String(localized: "The password you set when exporting from Raycast."),
+                    title: "Passphrase",
+                    subtitle: "The password you set when exporting from Raycast.",
                     systemImage: "key", tint: .gray
                 ) {
-                    RevealableSecureField(title: String(localized: "Passphrase"), text: $model.passphrase)
+                    RevealableSecureField(title: "Passphrase", text: $model.passphrase)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 150)
                         .onSubmit { model.run(core: core) }
@@ -196,13 +195,13 @@ struct OnboardingView: View {
             if let status = model.status {
                 importStatus(status)
             } else {
-                caption(String(localized: "Optional — you can import later in Settings › Backup."))
+                caption("Optional — you can import later in Settings › Backup.")
             }
         }
     }
 
     private var doneStep: some View {
-        caption(String(localized: "Everything's ready. Hit Get Started to open the launcher."))
+        caption("Everything's ready. Hit Get Started to open the launcher.")
             .frame(maxWidth: .infinity, alignment: .center)
     }
 
@@ -259,18 +258,18 @@ struct OnboardingView: View {
 
     private var primaryTitle: String {
         switch step {
-        case 0: String(localized: "Continue")
+        case 0: "Continue"
         case 1:
-            if accessibilityTrusted { String(localized: "Continue") } else { String(localized: "Grant Access") }
+            if accessibilityTrusted { "Continue" } else { "Grant Access" }
         case 2:
             if model.didImport {
-                String(localized: "Continue")
+                "Continue"
             } else if model.importing {
-                String(localized: "Importing…")
+                "Importing…"
             } else {
-                String(localized: "Import")
+                "Import"
             }
-        default: String(localized: "Get Started")
+        default: "Get Started"
         }
     }
 
@@ -373,11 +372,11 @@ final class OnboardingModel {
 
     var fileSubtitle: String {
         guard let name = file?.lastPathComponent else {
-            return String(localized: "Choose a .rayconfig file exported from Raycast v2.0 or newer.")
+            return "Choose a .rayconfig file exported from Raycast v2.0 or newer."
         }
         return isRaycastExport
-            ? String(localized: "\(name) — Raycast export")
-            : String(localized: "\(name) — not a Raycast export")
+            ? "\(name) — Raycast export"
+            : "\(name) — not a Raycast export"
     }
 
     func chooseFile() {

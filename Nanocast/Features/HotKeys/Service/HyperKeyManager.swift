@@ -84,7 +84,7 @@ final class HyperKeyManager: HealthCheckable {
         }
         if let blocker = HyperKeyConflictScanner.runningBlocker() {
             if status != .blocked(appName: blocker) {
-                onProblem?(String(localized: "Quit \(blocker) to use the Hyper Key"))
+                onProblem?("Quit \(blocker) to use the Hyper Key")
             }
             return stop(.blocked(appName: blocker))
         }
@@ -150,7 +150,7 @@ final class HyperKeyManager: HealthCheckable {
         hotKeys.setSecureInputHint(
             swallowsCapsLock ? KeyShortcut(carbonKeyCode: kVK_F18, carbonModifiers: 0) : nil
         ) { [weak self] in
-            self?.onProblem?(String(localized: "The Hyper Key can't work while Secure Input is on"))
+            self?.onProblem?("The Hyper Key can't work while Secure Input is on")
         }
     }
 
@@ -232,9 +232,9 @@ final class HyperKeyManager: HealthCheckable {
     private func name(
         of identity: HyperKeyConflictPolicy.KeyboardIdentity, among keyboards: [HIDEventSystem.Keyboard]
     ) -> String {
-        if identity.isDefault { return String(localized: "All keyboards") }
+        if identity.isDefault { return "All keyboards" }
         return keyboards.first {
             $0.vendorID == identity.vendorID && $0.productID == identity.productID
-        }?.name ?? String(localized: "Keyboard \(String(identity.vendorID))-\(String(identity.productID))")
+        }?.name ?? "Keyboard \(String(identity.vendorID))-\(String(identity.productID))"
     }
 }

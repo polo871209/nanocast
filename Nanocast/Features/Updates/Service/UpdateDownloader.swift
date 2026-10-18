@@ -60,7 +60,7 @@ private final class Delegate: NSObject, URLSessionDownloadDelegate, Sendable {
         let status = (downloadTask.response as? HTTPURLResponse)?.statusCode ?? 0
         guard status == 200 else {
             events.finish(
-                throwing: UpdateFailure.downloadFailed(String(localized: "The server answered \(status).")))
+                throwing: UpdateFailure.downloadFailed("The server answered \(status)."))
             return
         }
         do {

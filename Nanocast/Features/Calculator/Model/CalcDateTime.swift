@@ -440,9 +440,9 @@ enum CalcDateTime {
             else { return nil }
             let text = String(value)
             return CalcResult(
-                expression: echo, sourceBadge: String(localized: "Date"),
+                expression: echo, sourceBadge: "Date",
                 targetBadge: scale == 1
-                    ? String(localized: "Unix Seconds") : String(localized: "Unix Milliseconds"),
+                    ? "Unix Seconds" : "Unix Milliseconds",
                 payload: .value(display: CalcFormatter.grouped(text), copyText: text))
         }
         let source = query.hasSuffix(" to date") ? String(query.dropLast(8)) : query
@@ -745,7 +745,7 @@ enum CalcDateTime {
         -> String
     {
         let day = dateString(date, now: now, calendar: calendar)
-        return hasTime ? String(localized: "\(day) at \(timeString(date, calendar: calendar))") : day
+        return hasTime ? "\(day) at \(timeString(date, calendar: calendar))" : day
     }
 
     private static func answerString(
@@ -755,7 +755,7 @@ enum CalcDateTime {
             calendar.component(.year, from: date) == calendar.component(.year, from: now)
         let day = format(
             date, calendar: calendar, pattern: sameYear ? "d MMMM" : "d MMMM, yyyy")
-        return hasTime ? String(localized: "\(day) at \(timeString(date, calendar: calendar))") : day
+        return hasTime ? "\(day) at \(timeString(date, calendar: calendar))" : day
     }
 
     private static func dateString(_ date: Date, now: Date, calendar: Calendar) -> String {

@@ -35,11 +35,11 @@ struct CustomWindowSizeEditorPanel: View {
             field("Size") {
                 HStack(spacing: Theme.Spacing.lg) {
                     dimensionField(
-                        label: String(localized: "W"), name: String(localized: "Width"),
+                        label: "W", name: "Width",
                         dimension: $size.width,
                         available: reference.width)
                     dimensionField(
-                        label: String(localized: "H"), name: String(localized: "Height"),
+                        label: "H", name: "Height",
                         dimension: $size.height,
                         available: reference.height)
                 }
@@ -47,8 +47,8 @@ struct CustomWindowSizeEditorPanel: View {
 
             field("Offset") {
                 HStack(spacing: Theme.Spacing.lg) {
-                    offsetField(label: "X", name: String(localized: "Horizontal offset"), value: \.x)
-                    offsetField(label: "Y", name: String(localized: "Vertical offset"), value: \.y)
+                    offsetField(label: "X", name: "Horizontal offset", value: \.x)
+                    offsetField(label: "Y", name: "Vertical offset", value: \.y)
                 }
             }
 
@@ -78,7 +78,7 @@ struct CustomWindowSizeEditorPanel: View {
     }
 
     private func field(
-        _ title: LocalizedStringResource, @ViewBuilder content: () -> some View
+        _ title: String, @ViewBuilder content: () -> some View
     ) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
             Text(title)
