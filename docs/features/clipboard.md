@@ -282,6 +282,12 @@ An edit is held to `ClipboardStore.maxTextLength`, the same 32,000 characters ca
 longer one is refused with a HUD and nothing changes; past that, every later paste of the entry
 would reindex it on the main actor.
 
+## Share an entry
+
+**Share…** (a ⌘K row on every entry) opens the system share menu through `ClipboardSharer`, the same `NSSharingServicePicker` exception and trailing-edge anchor as Share in File Search. The palette stays up under it. An image or file entry shares its file. A text entry is written as UTF-8 to `clipboard-share.txt` in its own temporary folder and shared as that file, because macOS AirDrop refuses a bare string (`NSSharingService.canPerform` is false for one). The folder is deleted when the share finishes, fails or is dismissed, and otherwise at the next share.
+
+What the receiver gets is the service's own behavior. AirDrop to a Mac saves `clipboard-share.txt` in Downloads, and nothing reaches the receiver's clipboard. Universal Clipboard does that, but only between devices on the same Apple Account.
+
 ## Type filter
 
 The clipboard header carries a `ClipboardFilterButton` at the trailing edge of the search field —

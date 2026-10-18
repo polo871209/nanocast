@@ -623,6 +623,10 @@ keystrokes with nothing on screen to say so. Refusing costs the transport nothin
 performs its action from the click, not from focus; both preview players are marked, and the field
 keeps the caret through a click on play.
 
+File Search's `QLPreviewView` is marked for the same reason. A click on an image preview makes the
+`QLPreviewView` itself the first responder, and an HTML preview with an autofocused input hands focus to
+its web view. Either way ↑ and ↓ stop moving the list until the search field is clicked again.
+
 The mark sits on the player view and the check walks up from the responder, because the control that
 claims focus is private and several levels down — there is nothing to override on it.
 
