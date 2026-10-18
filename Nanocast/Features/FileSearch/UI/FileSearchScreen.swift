@@ -37,7 +37,7 @@ struct FileSearchScreen: PaletteScreen {
             return
         }
         guard let result = result(at: selection) else { return }
-        core.fileSearchCoordinator.open(result)
+        core.fileSearchCoordinator.activate(result)
     }
 
     func secondary(at selection: Int) -> Bool {
@@ -120,10 +120,17 @@ enum FileSearchActionsMenu {
         result: FileSearchResult, core: AppCore, target: PasteTarget?
     ) -> PopoverMenuContent {
         let coordinator = core.fileSearchCoordinator
-        let items = [
+        var items = [
+            result.opensInPreview
+                ? PopoverMenuItem(title: "Open in Preview", systemImage: "eye", shortcut: "↵") {
+                    coordinator.openInPreview(result)
+                }
+                : PopoverMenuItem(title: "Copy Path", systemImage: "doc.on.clipboard", shortcut: "↵") {
+                    coordinator.activate(result)
+                },
             PopoverMenuItem(
                 title: result.isDirectory ? "Open Folder" : "Open File",
-                systemImage: result.isDirectory ? "folder" : "doc", shortcut: "↵"
+                systemImage: result.isDirectory ? "folder" : "doc"
             ) { coordinator.open(result) },
             PopoverMenuItem(
                 title: "Show in Finder", systemImage: "folder", shortcut: "⌘↵"
@@ -142,15 +149,19 @@ enum FileSearchActionsMenu {
             ) { coordinator.pasteFile(result) },
             PopoverMenuItem(
                 title: "Copy Name", systemImage: "doc.on.clipboard", shortcut: "⌥⌘C"
-            ) { coordinator.copyName(result) },
-            PopoverMenuItem(
-                title: "Copy Path", systemImage: "doc.on.clipboard", shortcut: "⌃⌘C"
-            ) { coordinator.copyPath(result) },
+            ) { coordinator.copyName(result) }
+        ]
+        if result.opensInPreview {
+            items.append(
+                PopoverMenuItem(
+                    title: "Copy Path", systemImage: "doc.on.clipboard", shortcut: "⌃⌘C"
+                ) { coordinator.copyPath(result) })
+        }
+        items.append(
             PopoverMenuItem(
                 title: "Move to Trash", systemImage: "trash", startsSection: true,
                 shortcut: "⌃X", isDestructive: true
-            ) { coordinator.trash(result) }
-        ]
+            ) { coordinator.trash(result) })
         return PopoverMenuContent(header: result.name, items: items)
     }
 

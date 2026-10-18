@@ -82,12 +82,30 @@ final class FileSearchCoordinator {
         paletteCoordinator.togglePalette(mode: .fileSearch)
     }
 
-    func open(_ result: FileSearchResult) {
+    func activate(_ result: FileSearchResult) {
+        if result.opensInPreview {
+            openInPreview(result)
+        } else {
+            paletteCoordinator.hidePalette()
+            copyPath(result)
+        }
+    }
+
+    func openInPreview(_ result: FileSearchResult) {
+        open(result, with: NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.Preview"))
+    }
+
+    func open(_ result: FileSearchResult, with application: URL? = nil) {
         paletteCoordinator.hidePalette(restoreFocus: false)
         Task {
             do {
-                _ = try await NSWorkspace.shared.open(
-                    result.url, configuration: NSWorkspace.OpenConfiguration())
+                let configuration = NSWorkspace.OpenConfiguration()
+                if let application {
+                    _ = try await NSWorkspace.shared.open(
+                        [result.url], withApplicationAt: application, configuration: configuration)
+                } else {
+                    _ = try await NSWorkspace.shared.open(result.url, configuration: configuration)
+                }
             } catch {
                 await core.showNotice(
                     title: "Couldn’t Open \(result.name)",

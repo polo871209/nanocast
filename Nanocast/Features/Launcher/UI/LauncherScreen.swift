@@ -173,7 +173,7 @@ struct LauncherScreen: PaletteScreen {
         case .entry(let app):
             core.launcherCoordinator.launch(
                 app, searchQuery: vm.query, arguments: argumentValues(for: app))
-        case .file(let result): core.fileSearchCoordinator.open(result)
+        case .file(let result): core.fileSearchCoordinator.activate(result)
         case nil: break
         }
     }
