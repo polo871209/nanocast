@@ -116,6 +116,12 @@ FILE_INDEX="$FS/Service/FileIndex.swift $FS/Service/FileIndexSnapshot.swift $FS/
 run FileSearchTests        $FS/Model/*.swift
 run FileIndexTests         $FS/Model/*.swift $FILE_INDEX
 run FileSearchSessionTests $FS/Model/*.swift $FS/Service/FileSearchSession.swift $FILE_INDEX
+FT=Nanocast/Features/FileTools
+run FileToolsTests         $FT/Model/*.swift
+run FileToolsHelperTests   $FT/Model/FileToolFormats.swift $FT/Model/FileToolOption.swift \
+                           $FT/Model/FileToolParameters.swift $FT/Model/FileToolRequest.swift \
+                           $FT/Helper/FileTool*Engine.swift $FT/Service/FileToolWorker.swift \
+                           $FT/Service/FileToolTransfer.swift Nanocast/Platform/ProcessExit.swift
 run MenuSearchTests        $L/SearchRelevance.swift \
                            Nanocast/Features/MenuSearch/Model/*.swift \
                            Nanocast/Features/MenuSearch/Service/*.swift
@@ -187,6 +193,7 @@ run ClipboardTests         Nanocast/Features/Clipboard/Model/ClipboardStore.swif
                            Nanocast/Features/Clipboard/Model/ColorFormat.swift \
                            Nanocast/Features/Clipboard/Model/ColorSpaces.swift
 run ClipboardCoordinatorTests Nanocast/Features/Clipboard/UI/ClipboardCoordinator.swift \
+                           Nanocast/Features/Clipboard/Service/ClipboardSharer.swift \
                            Nanocast/Features/Clipboard/Model/*.swift \
                            Nanocast/Platform/Images/ImageDerivative.swift \
                            Nanocast/Palette/PaletteState.swift Nanocast/Palette/PaletteMode.swift \

@@ -12,6 +12,7 @@ final class ClipboardCoordinator {
     private unowned let core: AppCore
     private var textTask: Task<Void, Never>?
     private var pasteSequence: PasteSequence?
+    private let sharer = ClipboardSharer()
 
     init(
         clipboardStore: ClipboardStore,
@@ -171,6 +172,19 @@ final class ClipboardCoordinator {
         guard let url = clipURL(for: item) else { return }
         paletteCoordinator.hidePalette(restoreFocus: false)
         AppLauncher.showInFinder(url)
+    }
+
+    func share(_ item: ClipboardItem) {
+        guard let anchor = paletteCoordinator.anchorView else { return }
+        guard item.kind == .text else {
+            if let url = clipURL(for: item) { sharer.share(file: url, from: anchor) }
+            return
+        }
+        do {
+            try sharer.share(text: item.text ?? "", from: anchor)
+        } catch {
+            core.showMessage("Couldn’t prepare the text to share", tone: .danger)
+        }
     }
 
     func dragPayload(for item: ClipboardItem) -> ClipDragPayload? {

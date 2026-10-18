@@ -27,7 +27,7 @@ ENTITLEMENTS="$(mktemp)"
 trap 'rm -f "$ENTITLEMENTS"' EXIT
 codesign -d --entitlements - --xml "$APP" > "$ENTITLEMENTS" 2>/dev/null
 
-for BIN in "$APP/Contents/MacOS/$NAME" "$APP/Contents/Helpers/ClipboardTextHelper" "$APP/Contents/Helpers/FileIndexHelper"; do
+for BIN in "$APP/Contents/MacOS/$NAME" "$APP/Contents/Helpers/ClipboardTextHelper" "$APP/Contents/Helpers/FileIndexHelper" "$APP/Contents/Helpers/FileToolHelper"; do
     INFO="$(codesign -dv --verbose=2 "$BIN" 2>&1)"
     [[ "$INFO" =~ flags=0x[0-9a-f]+\([^\)]*runtime ]] ||
         fail "${BIN##*/}: hardened runtime not enabled"

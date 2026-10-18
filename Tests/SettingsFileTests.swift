@@ -46,6 +46,7 @@ struct SettingsFileTests {
             "commands.builtInEnabled", "commands.builtIn", "commands.enabled",
             "commands.showInLauncher", "fileSearch.enabled", "fileSearch.scopes", "fileSearch.ignorePatterns",
             "fileSearch.removedDefaultPatterns", "fileSearch.showInLauncher", "fileSearch.commands",
+            "fileTools.enabled", "fileTools.commands", "fileTools.options",
             "notes.enabled", "notes.rendersMarkdown", "notes.showsFormattingBar", "notes.showsInMenuBar",
             "notes.folder",
             "notes.commands", "navigation.enabled", "navigation.menuSearchShowsAppleMenu",
@@ -78,7 +79,7 @@ struct SettingsFileTests {
             "sections follow the Settings sidebar",
             SettingsFileKey.sections == [
                 "general", "appearance", "hyperKey", "calculator", "search", "applications",
-                "systemSettings", "systemActions", "commands", "fileSearch", "notes",
+                "systemSettings", "systemActions", "commands", "fileSearch", "fileTools", "notes",
                 "navigation", "windowManagement", "clipboard", "screenshot", "emoji"
             ])
 

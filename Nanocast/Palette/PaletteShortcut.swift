@@ -9,7 +9,6 @@ enum PaletteShortcut: Equatable {
     case copyPath
     case copyText
     case copyCalculation
-    case pasteFile
     case quickLook
     case toggleFavorite
     case hideFromSearch
@@ -35,7 +34,6 @@ enum PaletteShortcut: Equatable {
             if option { return .copyName }
             return control ? .copyPath : nil
         }
-        if command, shift, matches("v") { return .pasteFile }
         if command, shift, matches("t") { return .copyText }
         if command, matches("y") { return .quickLook }
         if control, matches("x") { return shift ? .deleteAll : .delete }
@@ -52,7 +50,7 @@ enum PaletteShortcut: Equatable {
 
     var requiresExpanded: Bool {
         switch self {
-        case .copyFile, .copyName, .copyPath, .copyText, .pasteFile, .quickLook, .toggleFavorite,
+        case .copyFile, .copyName, .copyPath, .copyText, .quickLook, .toggleFavorite,
             .hideFromSearch, .quit, .forceQuit, .restart, .edit, .duplicate, .showInFinder:
             true
         case .commandDelete, .delete, .deleteAll, .pin, .favoriteSlot, .newItem,
@@ -67,7 +65,7 @@ enum PaletteShortcut: Equatable {
             .quickLook, .toggleFavorite, .hideFromSearch, .newItem, .settings, .edit, .duplicate,
             .showInFinder:
             true
-        case .commandDelete, .pasteFile, .quit, .forceQuit, .restart, .pin, .favoriteSlot:
+        case .commandDelete, .quit, .forceQuit, .restart, .pin, .favoriteSlot:
             false
         }
     }

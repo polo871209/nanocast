@@ -90,6 +90,8 @@ If a change touches anything in the right column, the harness on the left is man
 | `FileSearchTests` | `FileSearch/Model/`: folding, masks, scoring, ignore rules, priors, scopes |
 | `FileIndexTests` | `FileIndexCrawler`, `FileIndexSnapshot`, `FileIndex`: a real fixture crawled, written, mapped, searched and live-updated |
 | `FileSearchSessionTests` | serialized query execution, coalescing, cancellation and refresh |
+| `FileToolsTests` | `FileTools/Model/`: the catalog per type and per Finder batch, option tokens, field parsing, output names with collisions, the request round trip, archive names, `FinderTabPolicy` |
+| `FileToolsHelperTests` | `FileTools/Helper/` engines, `FileToolWorker` and `FileToolTransfer`: every image input to every output, Compress to Size, QR codes, archives, PDFs, audio, video speed, and the worker's progress, text, failure, move, no-replace and deadline paths |
 | `MenuSearchTests` | `MenuSearch/Model/` decisions, `MenuSearch/Service/` session filtering, the shared `FuzzyMatch` scorer |
 | `ActionMenuSearchTests` | Action-menu query normalization and shared fuzzy matching |
 | `AppInstallationTests` | Multiple app copies and app-wide preferences; file-favorite persistence, mixed ordering, hidden slots and restoration through the existing favorite key list |
@@ -434,6 +436,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - ⌃⌘↵ pastes as plain text: a text entry as typed, a file entry as its path rather than the file
 - Default action ▸ Paste as Plain Text: ↵ pastes plain, ⌃⌘↵ pastes, ⌘↵ still copies; an image
   entry's ↵ still pastes the image and its ⌘K menu has no plain row
+- Share… on a text row opens the share menu beside the palette; AirDrop to a Mac saves `clipboard-share.txt` in Downloads with the full text, and an image row shares the image
 - ⇧⌘T on an image row and on an image-file row copies the recognized text, and the ⌘K menu carries
   the same Copy Text row
 - The "Reading text…" progress pill appears while the helper runs and is replaced by the outcome:

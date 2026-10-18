@@ -31,6 +31,7 @@ extension View {
             .environment(core.hotKeys)
             .environment(core.uninstall)
             .environment(core.updateCoordinator)
+            .environment(core.fileTools)
             .motionScope()
     }
 }
