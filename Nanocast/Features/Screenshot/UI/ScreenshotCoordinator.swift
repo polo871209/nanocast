@@ -25,6 +25,15 @@ final class ScreenshotCoordinator {
         self.core = core
     }
 
+    func pin(_ image: CGImage, scale: CGFloat, centeredIn area: CGRect) {
+        let size = CGSize(width: CGFloat(image.width) / scale, height: CGFloat(image.height) / scale)
+        pins.pin(
+            image, scale: scale,
+            at: CGRect(
+                x: area.midX - size.width / 2, y: area.midY - size.height / 2, width: size.width,
+                height: size.height))
+    }
+
     var saveFolder: URL {
         guard let chosen = core.settings.screenshotSaveFolder, AppPaths.isFolderPath(chosen) else {
             return Self.desktop

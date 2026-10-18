@@ -31,6 +31,10 @@ extension SettingsAnchor {
     static let fileSearchSearchScopes = Self(tab: .fileSearch, title: "Search Scopes")
     static let fileSearchIgnorePatterns = Self(tab: .fileSearch, title: "Ignore Patterns")
 
+    static let fileToolsFileTools = Self(tab: .fileTools, title: "File Tools")
+    static let fileToolsFinder = Self(tab: .fileTools, title: "Finder")
+    static let fileToolsCommands = Self(tab: .fileTools, title: "Commands")
+
     static let notesNotes = Self(tab: .notes, title: "Notes")
     static let notesOptions = Self(tab: .notes, title: "Options")
     static let notesCommands = Self(tab: .notes, title: "Commands")

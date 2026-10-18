@@ -40,6 +40,7 @@ targets:
           - Features/Clipboard/Service/ClipboardTextHelper.swift
           - Features/Screenshot/Service/ScreenshotTextExtractor.swift
           - Features/FileSearch/Helper
+          - Features/FileTools/Helper
       # The MIT mark's licence asks the notice to travel with the binary, not just the repo.
       - path: NOTICE.md
         buildPhase: resources
@@ -52,6 +53,13 @@ targets:
           destination: wrapper
           subpath: Contents/Helpers
       - target: FileIndexHelper
+        link: false
+        embed: true
+        codeSign: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Helpers
+      - target: FileToolHelper
         link: false
         embed: true
         codeSign: true
@@ -102,5 +110,22 @@ targets:
         # Pinned, or release.yml's PRODUCT_NAME renames the binary FileIndexer looks for.
         EXECUTABLE_NAME: FileIndexHelper
         PRODUCT_MODULE_NAME: FileIndexHelper
+        SKIP_INSTALL: YES
+        SWIFT_OPTIMIZATION_LEVEL: -O
+
+  FileToolHelper:
+    type: tool
+    platform: macOS
+    sources:
+      - Nanocast/Features/FileTools/Helper
+      - Nanocast/Features/FileTools/Model/FileToolFormats.swift
+      - Nanocast/Features/FileTools/Model/FileToolOption.swift
+      - Nanocast/Features/FileTools/Model/FileToolParameters.swift
+      - Nanocast/Features/FileTools/Model/FileToolRequest.swift
+    settings:
+      base:
+        # Pinned, or release.yml's PRODUCT_NAME renames the binary FileToolWorker looks for.
+        EXECUTABLE_NAME: FileToolHelper
+        PRODUCT_MODULE_NAME: FileToolHelper
         SKIP_INSTALL: YES
         SWIFT_OPTIMIZATION_LEVEL: -O
