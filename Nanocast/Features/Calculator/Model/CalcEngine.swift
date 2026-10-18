@@ -78,13 +78,13 @@ enum CalcEngine {
                 let display = CalcFormatter.grouped(String(value))
                 return CalcResult(
                     expression: query,
-                    sourceBadge: base.name, targetBadge: String(localized: "Decimal"),
+                    sourceBadge: base.name, targetBadge: "Decimal",
                     payload: .value(display: display, copyText: String(value)))
             }
             if case .compactNumber(let value) = tokens[0] {
                 return CalcResult(
                     expression: query,
-                    sourceBadge: String(localized: "Expression"), targetBadge: String(localized: "Result"),
+                    sourceBadge: "Expression", targetBadge: "Result",
                     payload: .number(value))
             }
             return nil
@@ -108,10 +108,7 @@ enum CalcEngine {
                 return CalcResult(
                     expression: query,
                     payload: .error(
-                        message: String(
-                            localized:
-                                "Cannot convert \(from.category.displayName) to \(to.category.displayName)."
-                        )))
+                        message: "Cannot convert \(from.category.displayName) to \(to.category.displayName)."))
             }
         }
 
@@ -130,16 +127,16 @@ enum CalcEngine {
             case .mismatch(let from, let to):
                 return CalcResult(
                     expression: query,
-                    payload: .error(message: String(localized: "Cannot convert \(from) to \(to).")))
+                    payload: .error(message: "Cannot convert \(from) to \(to)."))
             case .noRate(let code):
                 return CalcResult(
                     expression: query,
-                    payload: .error(message: String(localized: "No exchange rate for \(code).")))
+                    payload: .error(message: "No exchange rate for \(code)."))
             case .unavailable:
                 return CalcResult(
                     expression: query,
                     payload: .error(
-                        message: String(localized: "Exchange rates unavailable — check your connection.")))
+                        message: "Exchange rates unavailable — check your connection."))
             }
         }
 
@@ -175,7 +172,7 @@ enum CalcEngine {
         if prefixTokens.count == 1, let value = decimalLiteral(prefixTokens[0]) {
             return CalcResult(
                 expression: CalcFormatter.expression(query),
-                sourceBadge: String(localized: "Expression"), targetBadge: String(localized: "Result"),
+                sourceBadge: "Expression", targetBadge: "Result",
                 payload: .number(value))
         }
 
@@ -196,7 +193,7 @@ enum CalcEngine {
         guard let value = CalcExpressionParser.scalar(prefixTokens) else { return nil }
         return CalcResult(
             expression: CalcFormatter.expression(query),
-            sourceBadge: String(localized: "Expression"), targetBadge: String(localized: "Result"),
+            sourceBadge: "Expression", targetBadge: "Result",
             payload: .number(value))
     }
 
@@ -267,13 +264,13 @@ enum CalcEngine {
             value >= 0, value.rounded() == value, value <= 9_007_199_254_740_992
         {
             source = UInt64(value)
-            sourceBadge = String(localized: "Decimal")
+            sourceBadge = "Decimal"
             sourceText = literalText
         } else if let value = CalcExpressionParser.scalar(valueTokens),
             value >= 0, value.rounded() == value, value <= 9_007_199_254_740_992
         {
             source = UInt64(value)
-            sourceBadge = String(localized: "Decimal")
+            sourceBadge = "Decimal"
             sourceText = CalcFormatter.grouped(String(source))
         } else {
             return nil

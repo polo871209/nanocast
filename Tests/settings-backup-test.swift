@@ -38,7 +38,7 @@ struct SettingsBackupTest {
             "windowRoomsShowInLauncher", "dictationEnabled", "dictationMode", "dictationModel",
             "dictationMicrophone", "dictationDestination", "dictationAdaptsCapitalization",
             "dictationLiveInsertion", "dictationIdleReleaseMinutes", "dictationLanguage",
-            "settingsFileEnabled", "AppleLanguages"
+            "settingsFileEnabled"
         ]
         check(
             "every AppSettingsKey raw value is a persisted spelling, so a case rename cannot move one",

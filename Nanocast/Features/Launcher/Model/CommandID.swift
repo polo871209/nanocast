@@ -29,11 +29,7 @@ enum CommandID: String, CaseIterable, Sendable {
     case about = "command:about"
     case quit = "command:quit"
 
-    var name: String { String(localized: nameResource) }
-
-    var englishName: String { nameResource.key }
-
-    private var nameResource: LocalizedStringResource {
+    var name: String {
         switch self {
         case .calculatorHistory: return "Calculator History"
         case .clipboardHistory: return "Clipboard History"

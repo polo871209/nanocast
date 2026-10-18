@@ -10,7 +10,7 @@ struct ClipboardFilterButton: View {
             title: filter.title,
             systemImage: filter.systemImage,
             isOpen: isOpen,
-            help: String(localized: "Filter by type  ⌘P"),
+            help: "Filter by type  ⌘P",
             action: action)
     }
 }

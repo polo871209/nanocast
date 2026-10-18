@@ -59,7 +59,7 @@ final class HotKeySettingsFile {
                 issues.append(
                     .invalidEntry(
                         key,
-                        String(localized: "\(item.label): “\(text)” isn't a shortcut Nanocast can bind")))
+                        "\(item.label): “\(text)” isn't a shortcut Nanocast can bind"))
                 continue
             }
             guard binding != current else { continue }
@@ -84,7 +84,7 @@ final class HotKeySettingsFile {
             issues.append(
                 .invalidEntry(
                     change.key,
-                    String(localized: "\(change.label): “\(change.text)” already runs \(owner)")))
+                    "\(change.label): “\(change.text)” already runs \(owner)"))
             if let previous = change.previous,
                 hotKeys.conflictOwner(of: previous, excluding: change.action) == nil
             {

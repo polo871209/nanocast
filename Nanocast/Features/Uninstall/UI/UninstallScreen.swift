@@ -18,7 +18,8 @@ struct UninstallScreen: PaletteScreen {
     private var summary: String {
         let total = session.plan?.removableIDs.count ?? 0
         let size = MeasuredSize(bytes: session.selectedBytes).formatted
-        return String(localized: "\(session.selectedCount) of \(total) files selected · \(size)")
+        let files = total == 1 ? "1 file" : "\(total) files"
+        return "\(session.selectedCount) of \(files) selected · \(size)"
     }
 
     private func candidate(at selection: Int) -> UninstallCandidate? {
@@ -57,8 +58,8 @@ struct UninstallScreen: PaletteScreen {
             if rows.isEmpty {
                 EmptyResults(
                     text: vm.query.trimmingCharacters(in: .whitespaces).isEmpty
-                        ? String(localized: "Nothing left to remove")
-                        : String(localized: "No matching files"))
+                        ? "Nothing left to remove"
+                        : "No matching files")
             } else {
                 UninstallList(
                     results: rows,
@@ -88,7 +89,7 @@ enum UninstallActionsMenu {
         if session.canConfirm {
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Uninstall Application"), systemImage: "trash",
+                    title: "Uninstall Application", systemImage: "trash",
                     shortcut: "↵",
                     isDestructive: true
                 ) { core.uninstallCoordinator.performUninstall() })
@@ -97,27 +98,27 @@ enum UninstallActionsMenu {
             let checked = session.selection?.isChecked(candidate.id) ?? false
             items.append(
                 PopoverMenuItem(
-                    title: checked ? String(localized: "Unselect File") : String(localized: "Select File"),
+                    title: checked ? "Unselect File" : "Select File",
                     systemImage: checked ? "circle" : "checkmark.circle", startsSection: true,
                     shortcut: "⌘↵"
                 ) { session.toggle(candidate.id) })
         }
         items.append(
             PopoverMenuItem(
-                title: String(localized: "Copy Path"), systemImage: "doc.on.clipboard",
+                title: "Copy Path", systemImage: "doc.on.clipboard",
                 startsSection: true, shortcut: "⌥⌘C"
             ) {
                 core.uninstallCoordinator.copyUninstallPath(candidate)
             })
         items.append(
             PopoverMenuItem(
-                title: String(localized: "Show in Finder"), systemImage: "folder", shortcut: "⇧⌘O"
+                title: "Show in Finder", systemImage: "folder", shortcut: "⇧⌘O"
             ) {
                 core.uninstallCoordinator.showUninstallItemInFinder(candidate)
             })
         items.append(
             PopoverMenuItem(
-                title: String(localized: "Show Info in Finder"), systemImage: "info.circle",
+                title: "Show Info in Finder", systemImage: "info.circle",
                 shortcut: "⇧⌘I"
             ) {
                 core.uninstallCoordinator.showUninstallItemInfo(candidate)

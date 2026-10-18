@@ -57,7 +57,7 @@ final class NoteTextView: NSTextView, InjectableTextView {
         super.draw(dirtyRect)
         guard textStorage?.length == 0 else { return }
         NSAttributedString(
-            string: String(localized: "Start writing…"),
+            string: "Start writing…",
             attributes: [
                 .font: NoteMarkdownTypography.body,
                 .foregroundColor: NSColor(Theme.Colors.textTertiary)

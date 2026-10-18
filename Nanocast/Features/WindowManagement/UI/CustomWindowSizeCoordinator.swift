@@ -45,9 +45,9 @@ final class CustomWindowSizeCoordinator {
     func deleteCustomWindowSize(id: UUID) async {
         guard let size = store.size(id: id),
             await core.confirm(
-                title: String(localized: "Delete “\(size.name)”?"),
-                message: String(localized: "Its shortcut and launcher references go with it."),
-                symbol: CustomWindowSize.sfSymbol, confirmTitle: String(localized: "Delete")),
+                title: "Delete “\(size.name)”?",
+                message: "Its shortcut and launcher references go with it.",
+                symbol: CustomWindowSize.sfSymbol, confirmTitle: "Delete"),
             store.remove(id: id) != nil
         else { return }
         removeReferences(ids: [size.id], entryIDs: [size.entryID])

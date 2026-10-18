@@ -35,9 +35,9 @@ struct WindowLayoutPreview: View {
     private var caption: String {
         guard let uuid = draft.selectedDisplayUUID,
             let display = tabs.first(where: { $0.uuid == uuid })
-        else { return String(localized: "No display selected") }
+        else { return "No display selected" }
         guard let screen = selectedScreen else {
-            return String(localized: "\(display.name) · not connected")
+            return "\(display.name) · not connected"
         }
         let size = screen.screen.frame.size
         return "\(display.name) · \(Int(size.width)) × \(Int(size.height))"
@@ -129,8 +129,8 @@ struct WindowLayoutPreviewCanvas: View {
     }
 
     private var accessibilityDescription: String {
-        guard let screen else { return String(localized: "Preview, display not connected") }
+        guard let screen else { return "Preview, display not connected" }
         let count = draft.entries(onDisplay: screen.display.uuid).count
-        return String(localized: "Preview of \(screen.display.name), \(count) windows")
+        return "Preview of \(screen.display.name), \(count == 1 ? "1 window" : "\(count) windows")"
     }
 }

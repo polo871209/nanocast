@@ -27,8 +27,8 @@ struct SettingsTabIcon: View {
 
 struct SettingsFeatureToggleLabel: View {
     let anchor: SettingsAnchor
-    let title: LocalizedStringResource
-    let subtitle: LocalizedStringResource
+    let title: String
+    let subtitle: String
 
     var body: some View {
         HStack(spacing: Theme.Spacing.lg) {
@@ -63,7 +63,7 @@ struct SettingsRow<Icon: View, Trailing: View>: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.xxs) {
                 Group {
                     if let anchor {
-                        SettingsRowTitle(anchor, verbatim: title)
+                        SettingsRowTitle(anchor, title)
                     } else {
                         Text(title)
                     }
@@ -104,12 +104,12 @@ extension SettingsRow where Icon == EmptyView {
 
     /// A fixed row a search result lands on, so its title is always Nanocast's own text.
     init(
-        title: LocalizedStringResource, subtitle: String? = nil, subtitleLineLimit: Int = 1,
+        title: String, subtitle: String? = nil, subtitleLineLimit: Int = 1,
         alignment: VerticalAlignment = .center, anchor: SettingsAnchor,
         @ViewBuilder trailing: () -> Trailing
     ) {
         self.init(
-            title: String(localized: title), subtitle: subtitle,
+            title: title, subtitle: subtitle,
             subtitleLineLimit: subtitleLineLimit, alignment: alignment, anchor: anchor,
             icon: { EmptyView() }, trailing: trailing)
     }
@@ -197,8 +197,8 @@ extension View {
 }
 
 struct SettingsEditorHeader: View {
-    let title: LocalizedStringResource
-    var subtitle: LocalizedStringResource?
+    let title: String
+    var subtitle: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
@@ -248,8 +248,8 @@ private struct SettingsEditorPanelSurface: ViewModifier {
 
 struct FeatureSwitchSection: View {
     let anchor: SettingsAnchor
-    let enableTitle: LocalizedStringResource
-    var enableSubtitle: LocalizedStringResource?
+    let enableTitle: String
+    var enableSubtitle: String?
     @Binding var isEnabled: Bool
     @Binding var showsInLauncher: Bool
     var showsIcon = false
@@ -283,7 +283,7 @@ struct FeatureSwitchSection: View {
 }
 
 struct SettingsFilterField: View {
-    let prompt: LocalizedStringResource
+    let prompt: String
     @Binding var query: String
     /// The plain field has no bezel: without this only the glyphs are a target.
     @FocusState private var focused: Bool

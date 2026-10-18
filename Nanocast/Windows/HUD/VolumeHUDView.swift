@@ -23,7 +23,7 @@ struct VolumeHUDView: View {
                 .frame(height: Theme.Size.volumeTrackHeight)
                 Text(
                     state.muted
-                        ? String(localized: "Muted") : VolumeLevel.percentage(state.level, locale: .current)
+                        ? "Muted" : VolumeLevel.percentage(state.level, locale: .current)
                 )
                 .font(Theme.Typography.rowTrailing)
                 .foregroundStyle(Theme.Colors.textSecondary)

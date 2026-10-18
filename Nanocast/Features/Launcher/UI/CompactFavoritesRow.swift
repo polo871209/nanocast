@@ -18,7 +18,7 @@ struct CompactFavoritesRow: View {
                 }
             }
             if showsOverflow {
-                CompactFavoriteButton(help: String(localized: "Show all  ↓"), action: onOverflow) {
+                CompactFavoriteButton(help: "Show all  ↓", action: onOverflow) {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 10))
                         .foregroundStyle(Theme.Colors.textSecondary)

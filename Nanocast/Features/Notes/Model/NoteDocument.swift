@@ -10,7 +10,7 @@ struct NoteSummary: Identifiable, Sendable, Equatable {
     let firstLine: String?
     let modifiedAt: Date
 
-    var displayTitle: String { firstLine ?? NoteTitle.displayName(title) }
+    var displayTitle: String { firstLine ?? title }
 }
 
 struct NoteSearchResult: Identifiable, Sendable, Equatable {

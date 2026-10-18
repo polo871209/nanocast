@@ -90,8 +90,8 @@ feature's doc, under its own `## Invariants`.
 - **`AppEntry.Kind` is the only thing that says what an entry is.** One case per launcher section and
   per `VisibilityStore` category — never re-derive a category by sniffing an entry ID. Which _pane_
   lists a command is a separate fact, and `SettingsTab.ownedCommands` is the only place that states it.
-- **Generated files are never hand-edited.** `EmojiData.generated.swift` and
-  `Resources/EmojiKeywords/` come from `node Scripts/gen-emoji.js`, `CurrencyData.generated.swift` from `node Scripts/gen-currencies.js`,
+- **Generated files are never hand-edited.** `EmojiData.generated.swift` comes from
+  `node Scripts/gen-emoji.js`, `CurrencyData.generated.swift` from `node Scripts/gen-currencies.js`,
   and `CountryZoneData.generated.swift` from `node Scripts/gen-countries.js`.
 - **`DesignSystem/Scrolling/EdgeDissolve.swift` and `ThinScrollbar.swift` are off-limits.** Both are
   tuned by eye against the palette's floating bars, so any edit is a visual regression. Needing to touch
@@ -99,10 +99,8 @@ feature's doc, under its own `## Invariants`.
 
 ## Conventions worth knowing up front
 
-- **User-facing text is localized through `Localizable.xcstrings`**: SwiftUI literals as they are,
-  `String(localized:)` wherever text travels as a `String`, one literal per sentence. Run
-  `./Scripts/sync-strings.sh` after changing any, and translate all eight languages in the same change.
-  See [standards.md](docs/standards.md#localization).
+- **Nanocast is English only.** Write user-facing text as plain literals, never `String(localized:)` or a
+  string catalog. See [standards.md](docs/standards.md#language).
 - **A new preference also gets a `SettingsFileKey`** and its binding in `SettingsFileSchema`, so the
   opt-in `settings.json` mirror carries it; the exhaustive switch fails the build until it is bound.
   See [settings-file.md](docs/features/settings-file.md).

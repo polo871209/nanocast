@@ -21,15 +21,14 @@ enum SettingsPaneScanner {
 
     struct Cache: Sendable {
         fileprivate let modified: Date
-        fileprivate let languages: [String]
         fileprivate let panes: [AppEntry]
     }
 
-    nonisolated static func scan(languages: [String], cache: Cache?) -> ([AppEntry], Cache?) {
+    nonisolated static func scan(cache: Cache?) -> ([AppEntry], Cache?) {
         let fm = FileManager.default
         let modified = try? extensionsDir.resourceValues(forKeys: [.contentModificationDateKey])
             .contentModificationDate
-        if let cache, cache.modified == modified, cache.languages == languages {
+        if let cache, cache.modified == modified {
             return (cache.panes, cache)
         }
         guard
@@ -48,10 +47,8 @@ enum SettingsPaneScanner {
             else { continue }
             let names =
                 nameOverrides[bundleID].map { [$0] }
-                ?? BundleLocalization.names(
-                    for: url, base: base,
-                    developmentRegion: info["CFBundleDevelopmentRegion"] as? String,
-                    languages: languages)
+                ?? BundleEnglishName.names(
+                    for: url, base: base, developmentRegion: info["CFBundleDevelopmentRegion"] as? String)
             result.append(
                 AppEntry(
                     id: url.path, name: names.first ?? base, url: url,
@@ -61,7 +58,7 @@ enum SettingsPaneScanner {
         let panes = result.sorted {
             $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
-        return (panes, modified.map { Cache(modified: $0, languages: languages, panes: panes) })
+        return (panes, modified.map { Cache(modified: $0, panes: panes) })
     }
 
     private static func isSettingsPane(info: [String: Any]) -> Bool {
