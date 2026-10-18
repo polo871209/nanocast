@@ -19,12 +19,12 @@ final class NotesStore {
     private(set) var searchResults: [NoteSearchResult] = []
     private(set) var isSearching = false
     var activeTitle: String {
-        guard let activeID else { return String(localized: "Notes") }
+        guard let activeID else { return "Notes" }
         let title =
             summaries.first(where: { $0.id == activeID })?.title
             ?? URL(fileURLWithPath: activeID.rawValue).deletingPathExtension().lastPathComponent
         guard NoteTitle.isUnnamed(title) else { return title }
-        return NoteTitle.firstLine(of: source) ?? NoteTitle.displayName(title)
+        return NoteTitle.firstLine(of: source) ?? title
     }
     var activeFileURL: URL? { activeID.map(repository.fileURL(for:)) }
     private(set) var notesDirectory: URL

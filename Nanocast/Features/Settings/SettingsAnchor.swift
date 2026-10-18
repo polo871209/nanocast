@@ -3,11 +3,6 @@ import Foundation
 struct SettingsAnchor: Hashable, Sendable {
     let tab: SettingsTab
     let title: String
-
-    init(tab: SettingsTab, title: LocalizedStringResource) {
-        self.tab = tab
-        self.title = title.resolved()
-    }
 }
 
 extension SettingsAnchor {

@@ -84,7 +84,6 @@ because the app rewrites the file.
 ```json
 {
   "general": {
-    "language": "en",
     "showInMenuBar": true,
     "automaticallyCheckForUpdates": true,
     "popToRootSeconds": 0,
@@ -108,13 +107,9 @@ Where a number has a special case, the case is a word:
 
 | Key | Values |
 | --- | --- |
-| `general.language` | `"en"`, `"de"`, `"es"`, `"fr"`, `"ja"`, `"ko"`, `"pt"`, `"ru"`, `"zh-Hans"` |
 | `clipboard.retentionDays` | 1, 7, 30, 90, 180, 365, `"forever"` |
 | `windowManagement.gap` | 0 to 64 |
 | `notes.folder` | an absolute or `~/` path, or `null` for Application Support |
-
-On first launch, `general.language` is set to the primary system language if supported, otherwise
-`"en"`. That explicit choice is saved; later system-language changes do not change it.
 
 ## Shortcut chords
 

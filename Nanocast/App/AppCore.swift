@@ -61,13 +61,12 @@ final class AppCore {
         audioDucker: dictationAudioDucker,
         confirmEnable: { [unowned self] in
             await self.confirm(
-                title: String(localized: "Enable Dictation?"),
-                message: String(
-                    localized: """
-                        Nanocast needs microphone access for dictation and Accessibility to paste into \
-                        other apps. Audio is processed on this Mac.
-                        """),
-                symbol: "waveform", confirmTitle: String(localized: "Continue"), tone: .neutral,
+                title: "Enable Dictation?",
+                message: """
+                    Nanocast needs microphone access for dictation and Accessibility to paste into \
+                    other apps. Audio is processed on this Mac.
+                    """,
+                symbol: "waveform", confirmTitle: "Continue", tone: .neutral,
                 confirmRole: .standard)
         },
         showMessage: { [unowned self] in self.showMessage($0, tone: $1) })
@@ -170,8 +169,6 @@ final class AppCore {
             isShowingDialog = isPresenting
         })
     private let healthTicker = HealthTicker()
-    /// Resolved once by AppKit, so it is what this process shows until it relaunches.
-    private let launchLocalization = Bundle.main.preferredLocalizations.first
     private var relaunchRequested = false
 
     private init() {
@@ -201,7 +198,7 @@ final class AppCore {
             applyMotion()
             observeEffectiveAppearance()
             pinnedEmoji.onPersistenceFailure = { [weak self] in
-                self?.showMessage(String(localized: "Couldn't save Emoji & Symbols pins"), tone: .danger)
+                self?.showMessage("Couldn't save Emoji & Symbols pins", tone: .danger)
             }
 
             appIndex.start(settings: settings)
@@ -236,7 +233,7 @@ final class AppCore {
             }
             updateCoordinator.applyEnabled()
             Task { await appIndex.refresh() }
-            Task { await emojiIndex.load(languages: SystemLanguages.preferred) }
+            Task { await emojiIndex.load() }
             currencyRates.start()
             updateChecker.onUpdateAvailable = { [weak self] release in
                 self?.updateCoordinator.presentIfAvailable(release) ?? true
@@ -311,7 +308,7 @@ final class AppCore {
                 paletteCoordinator.showPalette(mode: .launcher)
             }
             if let version = updateChecker.takeInstalledVersion() {
-                showMessage(String(localized: "Updated to Nanocast \(version.description)"))
+                showMessage("Updated to Nanocast \(version.description)")
             }
         }
     }
@@ -365,7 +362,7 @@ final class AppCore {
         }
         guard clipboardStore.setTextSearchEnabled(true) else {
             showMessage(
-                String(localized: "Couldn't enable text recognition for clipboard history."),
+                "Couldn't enable text recognition for clipboard history.",
                 tone: .danger)
             return
         }
@@ -475,7 +472,6 @@ final class AppCore {
         track({ _ = $0.hyperKeyIncludesShift }, reproject: { $0.applyHyperChord() })
         track({ _ = $0.appearance }, reproject: { $0.applyAppearance() })
         track({ _ = $0.animationsEnabled }, reproject: { $0.applyMotion() })
-        track({ _ = $0.language }, reproject: { $0.offerLanguageRelaunch() })
         track({ _ = $0.interfaceSize }, reproject: { $0.windowController.applyInterfaceSize() })
         track(
             { _ = $0.clipboardRetention },
@@ -492,23 +488,6 @@ final class AppCore {
         Motion.isEnabled = settings.animationsEnabled
         for case let panel as any AnimatedPanel in NSApp.windows {
             panel.followMotion()
-        }
-    }
-
-    private var isLanguagePending: Bool { settings.language.rawValue != launchLocalization }
-
-    private func offerLanguageRelaunch() {
-        guard isLanguagePending else { return }
-        Task {
-            guard
-                await confirm(
-                    title: String(localized: "Relaunch Nanocast?"),
-                    message: String(localized: "The new language applies after Nanocast relaunches."),
-                    symbol: "globe", confirmTitle: String(localized: "Relaunch"), tone: .neutral,
-                    confirmRole: .standard, dismissTitle: String(localized: "Later")),
-                isLanguagePending
-            else { return }
-            relaunch()
         }
     }
 
@@ -609,7 +588,7 @@ final class AppCore {
     func confirm(
         title: String, message: String?, symbol: String?, confirmTitle: String,
         tone: DialogTone = .danger, confirmRole: DialogAction.Role = .destructive,
-        dismissTitle: String = String(localized: "Cancel")
+        dismissTitle: String = "Cancel"
     ) async -> Bool {
         await dialogs.confirm(
             title: title, message: message, symbol: symbol, tone: tone, confirmTitle: confirmTitle,

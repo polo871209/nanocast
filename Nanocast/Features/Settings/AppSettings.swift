@@ -12,7 +12,7 @@ enum PopToRootTimeout: Int, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         self == .immediately
-            ? String(localized: "Immediately") : String(localized: "After \(rawValue) seconds")
+            ? "Immediately" : rawValue == 1 ? "After 1 second" : "After \(rawValue) seconds"
     }
 
     var interval: TimeInterval { TimeInterval(rawValue) }
@@ -120,11 +120,6 @@ final class AppSettings {
 
     var appearance: AppAppearance {
         didSet { defaults.set(appearance.rawValue, forKey: Key.appearance.rawValue) }
-    }
-
-    /// The per-app key System Settings writes too, so the two never disagree.
-    var language: AppLanguage {
-        didSet { defaults.set([language.rawValue], forKey: Key.language.rawValue) }
     }
 
     var calcNumberStyle: CalcNumberStyle {
@@ -372,19 +367,6 @@ final class AppSettings {
         didSet { defaults.set(settingsFileEnabled, forKey: Key.settingsFileEnabled.rawValue) }
     }
 
-    /// With no per-app list the bundle follows macOS's languages, so this runs before any lookup.
-    static func pinLanguage() {
-        UserDefaults.standard.set([storedLanguage.rawValue], forKey: Key.language.rawValue)
-    }
-
-    /// The app's own domain only: a plain read falls through to the global list.
-    private static var storedLanguage: AppLanguage {
-        AppLanguage(
-            storedPreferences: Bundle.main.bundleIdentifier
-                .flatMap(UserDefaults.standard.persistentDomain(forName:))?[Key.language.rawValue]
-                as? [String], systemPreferences: SystemLanguages.preferred)
-    }
-
     init() {
         clipboardEnabled =
             defaults.object(forKey: Key.clipboardEnabled.rawValue) == nil
@@ -431,7 +413,6 @@ final class AppSettings {
             ?? .navigateBackOrClose
         appearance =
             defaults.string(forKey: Key.appearance.rawValue).flatMap(AppAppearance.init) ?? .system
-        language = Self.storedLanguage
         calcNumberStyle =
             defaults.string(forKey: Key.calcNumberStyle.rawValue).flatMap(CalcNumberStyle.init)
             ?? .system

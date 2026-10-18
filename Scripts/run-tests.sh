@@ -132,7 +132,7 @@ run ranking-test           $L/SearchRelevance.swift $L/ScriptRomanization.swift 
                            $L/LauncherMatch.swift $L/LauncherRankingStore.swift
 run scopes-test            $L/SearchScopes.swift
 run app-name-test          Nanocast/Platform/AppDisplayName.swift \
-                           Nanocast/Platform/BundleLocalization.swift \
+                           Nanocast/Platform/BundleEnglishName.swift \
                            $L/SearchRelevance.swift
 run favorites-test         $L/FavoriteSlots.swift
 run app-installation-test  $L/SearchRelevance.swift $L/ScriptRomanization.swift \
@@ -145,11 +145,9 @@ run app-installation-test  $L/SearchRelevance.swift $L/ScriptRomanization.swift 
                            Nanocast/Features/Launcher/Service/AliasStore.swift \
                            Nanocast/Features/Launcher/Service/VisibilityStore.swift \
                            Nanocast/Features/Launcher/Service/BundleNameCache.swift \
-                           Nanocast/Platform/AppDisplayName.swift Nanocast/Platform/BundleLocalization.swift \
-                           Nanocast/Platform/SystemLanguages.swift \
+                           Nanocast/Platform/AppDisplayName.swift Nanocast/Platform/BundleEnglishName.swift \
                            Nanocast/Platform/Images/FileIconStamp.swift Nanocast/Platform/Memo.swift \
-                           Nanocast/Platform/Signposts.swift Nanocast/Platform/NotificationToken.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Platform/Signposts.swift Nanocast/Platform/NotificationToken.swift
 run launcher-file-test     $L/LauncherFileFormat.swift \
                            Nanocast/Features/Settings/Model/SettingsFileJSON.swift
 run launcher-settings-file-test \
@@ -171,8 +169,7 @@ run launcher-settings-file-test \
                            Nanocast/Features/HotKeys/Model/HIDKeyMapping.swift \
                            Nanocast/Platform/ASCIIKeyboardLayout.swift \
                            Nanocast/Features/SystemActions/Model/SystemAction.swift \
-                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift
 run calc-test              Nanocast/Features/Calculator/Model/*.swift
 run index calc-performance Nanocast/Features/Calculator/Model/*.swift
 run clipboard-test         Nanocast/Features/Clipboard/Model/ClipboardStore.swift \
@@ -257,8 +254,6 @@ run appearance-test        Nanocast/Platform/Appearance.swift \
                            Nanocast/DesignSystem/Theme.swift \
                            Nanocast/DesignSystem/InterfaceMetrics.swift \
                            Nanocast/Features/Settings/AppAppearance.swift
-run language-test          Nanocast/Features/Settings/AppLanguage.swift
-run localized-resource-test Nanocast/Platform/LocalizedResource.swift
 run exclusive onboarding-test Nanocast/Features/Onboarding/OnboardingCoordinator.swift \
                            Nanocast/Windows/AppWindowController.swift \
                            Nanocast/DesignSystem/Interaction/Motion.swift \
@@ -351,8 +346,7 @@ run hotkey-test            Nanocast/Features/HotKeys/Model/DoubleTapModifier.swi
                            Nanocast/Features/HotKeys/Model/HotKeyAction.swift \
                            Nanocast/Features/Launcher/Model/CommandID.swift \
                            Nanocast/Features/SystemActions/Model/SystemAction.swift \
-                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift
 run callout-test          Nanocast/Platform/Appearance.swift \
                            Nanocast/DesignSystem/Theme.swift \
                            Nanocast/DesignSystem/InterfaceMetrics.swift \
@@ -362,16 +356,14 @@ run icon-cache-test        Nanocast/Platform/Appearance.swift \
 run entry-icon-test        Nanocast/Platform/Appearance.swift \
                            Nanocast/Platform/Images/IconCache.swift \
                            Nanocast/Platform/Images/FileIconStamp.swift
-run system-action-test     Nanocast/Features/SystemActions/Model/SystemAction.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+run system-action-test     Nanocast/Features/SystemActions/Model/SystemAction.swift
 run microphone-mute-test   Nanocast/Features/SystemActions/Service/SystemActionFailure.swift \
                            Nanocast/Features/SystemActions/Service/SystemActionRunner+Microphone.swift
 run volume-test            Nanocast/Features/SystemActions/Model/VolumeLevel.swift
 run window-command-test    Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
                            Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
                            Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
-                           Nanocast/Features/WindowManagement/Model/WindowActionMemory.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/WindowActionMemory.swift
 run window-preset-test     Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
                            Nanocast/Features/WindowManagement/Model/WindowShortcutPreset.swift \
                            Nanocast/Features/HotKeys/Model/DoubleTapModifier.swift \
@@ -380,11 +372,9 @@ run window-preset-test     Nanocast/Features/WindowManagement/Model/WindowComman
                            Nanocast/Features/HotKeys/Model/HyperKey.swift \
                            Nanocast/Features/HotKeys/Model/HIDKeyMapping.swift \
                            Nanocast/Platform/ASCIIKeyboardLayout.swift \
-                           Nanocast/Features/HotKeys/Service/KeyShortcut.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/HotKeys/Service/KeyShortcut.swift
 run space-gesture-test     Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Nanocast/Features/WindowManagement/Model/SpaceGesture.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/SpaceGesture.swift
 run window-layout-test     Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
                            Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
                            Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
@@ -395,8 +385,7 @@ run window-layout-test     Nanocast/Features/WindowManagement/Model/WindowComman
                            Nanocast/Features/WindowManagement/Model/WindowLayoutPlan.swift \
                            Nanocast/Features/WindowManagement/Model/WindowLayoutStore.swift \
                            Nanocast/Features/WindowManagement/Model/CustomWindowSize.swift \
-                           Nanocast/Features/WindowManagement/Model/CustomWindowSizeStore.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/CustomWindowSizeStore.swift
 run window-room-test       Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
                            Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
                            Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
@@ -416,8 +405,7 @@ run window-room-test       Nanocast/Features/WindowManagement/Model/WindowComman
                            Nanocast/Features/WindowManagement/Model/RoomArrangement.swift \
                            Nanocast/Features/WindowManagement/Model/RoomStore.swift \
                            Nanocast/Features/WindowManagement/Model/RoomMinimumSizeStore.swift \
-                           Nanocast/Features/WindowManagement/Model/RoomParkingLedger.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/WindowManagement/Model/RoomParkingLedger.swift
 run window-file-test       Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
                            Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
                            Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
@@ -433,8 +421,7 @@ run window-file-test       Nanocast/Features/WindowManagement/Model/WindowComman
                            Nanocast/Features/WindowManagement/Model/RoomLayoutEngine.swift \
                            Nanocast/Features/WindowManagement/Model/WindowManagementFileFormat.swift \
                            Nanocast/Features/Settings/Model/SettingsFileJSON.swift \
-                           Nanocast/Features/Settings/Model/SettingsFileIdentity.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           Nanocast/Features/Settings/Model/SettingsFileIdentity.swift
 run custom-command-test    Nanocast/Platform/PseudoTerminal.swift \
                            Nanocast/Platform/ProcessExit.swift \
                            Nanocast/Features/CustomCommands/Model/CustomCommand.swift \
@@ -553,8 +540,7 @@ run settings-history-test  Nanocast/Features/Settings/SettingsTab.swift \
                            Nanocast/Features/Settings/SettingsAnchor.swift \
                            Nanocast/Features/Settings/SettingsNavigationState.swift \
                            Nanocast/Features/Settings/SettingsSearchCatalog.swift \
-                           $L/SearchRelevance.swift \
-                           Nanocast/Platform/LocalizedResource.swift
+                           $L/SearchRelevance.swift
 run updates-test           Nanocast/Features/Updates/Model/*.swift \
                            Nanocast/Features/Updates/Service/BundleSignature.swift
 run update-check-test      Nanocast/Features/Updates/Model/*.swift \

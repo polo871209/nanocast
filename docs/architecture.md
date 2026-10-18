@@ -128,7 +128,7 @@ store starts the helper on demand and reaps it after the selected idle delay or 
 
 ## Entry points and windows
 
-`NanocastLaunch` (`@main`) pins the interface language, then runs `NanocastApp`, which declares
+`NanocastApp` (`@main`) declares
 only Nanocast's own `MenuBarExtra`, inserted by one preference; everything else visible is driven
 imperatively from AppKit.
 
@@ -223,7 +223,6 @@ Nanocast/
                     AppDisplayName,
                     NotificationToken, AppPaths, Signposts, HealthTicker, Memo, ActivationPolicy,
                     Images/, Compression/
-  Resources/        EmojiKeywords/, the generated emoji search keywords
   Palette/          the palette shell: PalettePanel, PaletteWindowController, RootPaletteView,
                     the PaletteScreen protocol, PaletteCoordinator, PaletteState, PaletteMode
   Windows/          the non-palette AppKit surfaces: AppWindowController, Dialog/, HUD/, About/

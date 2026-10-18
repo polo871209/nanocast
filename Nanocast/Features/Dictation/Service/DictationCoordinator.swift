@@ -72,7 +72,7 @@ final class DictationCoordinator {
             guard !Task.isCancelled else { return }
             guard granted else {
                 showMessage(
-                    String(localized: "Allow Nanocast to use the microphone in System Settings"), .danger)
+                    "Allow Nanocast to use the microphone in System Settings", .danger)
                 return
             }
             settings.dictationEnabled = true
@@ -93,10 +93,10 @@ final class DictationCoordinator {
     var holdShortcutIssue: String? {
         guard let binding = hotKeys.binding(for: .dictation) else { return nil }
         guard binding.shortcut != nil || binding.holdKey != nil else {
-            return String(localized: "Record a single modifier or a key combination for hold to talk.")
+            return "Record a single modifier or a key combination for hold to talk."
         }
         if let owner = hotKeys.conflictOwner(of: binding, excluding: .dictation) {
-            return String(localized: "This shortcut is also used by \(owner). Record another shortcut.")
+            return "This shortcut is also used by \(owner). Record another shortcut."
         }
         return nil
     }
@@ -109,7 +109,7 @@ final class DictationCoordinator {
             hotKeys.binding(for: .dictation)?.holdKey == nil
         {
             showMessage(
-                String(localized: "Hold to talk needs a key combination or a single modifier"), .danger)
+                "Hold to talk needs a key combination or a single modifier", .danger)
             return
         }
         if phase != .idle {
@@ -129,7 +129,7 @@ final class DictationCoordinator {
 
     private func begin(target: InjectionTarget?) {
         guard models.isInstalled(settings.dictationModel) else {
-            showMessage(String(localized: "Download the dictation model in Settings first"), .danger)
+            showMessage("Download the dictation model in Settings first", .danger)
             return
         }
         token = UUID()
@@ -211,7 +211,7 @@ final class DictationCoordinator {
             if tail.count < 1_600 {
                 if liveText.isEmpty {
                     reset(cancelTranscription: false)
-                    showMessage(String(localized: "No speech was recorded"), .danger)
+                    showMessage("No speech was recorded", .danger)
                 } else {
                     finishWithoutRemainder(destination)
                 }
@@ -241,7 +241,7 @@ final class DictationCoordinator {
                             reset(cancelTranscription: false)
                             if lost, destination.pastes {
                                 showMessage(
-                                    String(localized: "Couldn't paste some dictation into this app"),
+                                    "Couldn't paste some dictation into this app",
                                     .danger)
                             }
                         },
@@ -249,7 +249,7 @@ final class DictationCoordinator {
                             guard let self, token == current else { return }
                             reset(cancelTranscription: false)
                             if destination.copies { Paster.copyPlainText(assembled) }
-                            showMessage(String(localized: "Couldn't paste dictation into this app"), .danger)
+                            showMessage("Couldn't paste dictation into this app", .danger)
                         })
                 } else {
                     Paster.copyPlainText(text)
@@ -269,7 +269,7 @@ final class DictationCoordinator {
         reset(cancelTranscription: false)
         if !text.isEmpty, destination.copies { Paster.copyPlainText(text) }
         if lost, destination.pastes {
-            showMessage(String(localized: "Couldn't paste some dictation into this app"), .danger)
+            showMessage("Couldn't paste some dictation into this app", .danger)
         }
     }
 

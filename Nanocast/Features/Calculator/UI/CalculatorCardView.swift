@@ -146,7 +146,7 @@ enum CalcActionsMenu {
     static func content(result: CalcResult, core: AppCore) -> PopoverMenuContent {
         var items = [
             PopoverMenuItem(
-                title: String(localized: "Copy Answer"), systemImage: "doc.on.doc", shortcut: "↵"
+                title: "Copy Answer", systemImage: "doc.on.doc", shortcut: "↵"
             ) {
                 core.calculatorCoordinator.copyCalculatorResult(result)
             }
@@ -154,7 +154,7 @@ enum CalcActionsMenu {
         if result.canChain {
             items.append(
                 PopoverMenuItem(
-                    title: String(localized: "Put Answer in Search Bar"), systemImage: "text.cursor",
+                    title: "Put Answer in Search Bar", systemImage: "text.cursor",
                     shortcut: "⌘↵"
                 ) {
                     core.calculatorCoordinator.putAnswerInSearchBar(result)
@@ -162,7 +162,7 @@ enum CalcActionsMenu {
         }
         items.append(
             PopoverMenuItem(
-                title: String(localized: "Copy Calculation"), systemImage: "doc.on.doc.fill",
+                title: "Copy Calculation", systemImage: "doc.on.doc.fill",
                 shortcut: "⇧⌘↵"
             ) {
                 core.calculatorCoordinator.copyCalculationWithExpression(result)

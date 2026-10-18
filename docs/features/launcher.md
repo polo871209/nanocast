@@ -47,9 +47,7 @@ reports notification-dependent checks as skipped when the session cannot deliver
   apply to applications and quietly skip custom commands — and nothing is built per keystroke. `AppIndex.scan`
   names the app slice on its own, off-main: transliterating a CJK index is ICU work, and
   `publishEntries` runs on the main actor whenever any unrelated slice changes.
-- **Nanocast never translates a name it did not write.** Apps and panes read the way their source
-  names them. A built-in command shows its translated name and keeps its English source as an
-  alternate title, so `clipboard` finds it in every language.
+- **Nanocast never translates a name it did not write.** Apps and panes read the way their source names them in English. Nanocast is English only, so a built-in command has one name.
 - **The fields stay separate.** Which field matched is half of what the comparator reads — an exact
   subtitle, an exact alternate title and a keyword hit are three different rules.
 - **`Model/SearchScopes.swift` and `Model/LauncherRankingStore.swift` are pure too** — the ranking store
@@ -100,7 +98,7 @@ refreshes collapse into a single trailing scan.
 | Field | What lands in it | Compared against | Ranks |
 | --- | --- | --- | --- |
 | title | the display name | the query read into Latin | yes |
-| alternate titles | the bundle's names in the user's other languages and English, a renamed bundle's file name, `CFBundleAlternateNames` | the query as typed | yes |
+| alternate titles | the bundle's other English names, a renamed bundle's file name, `CFBundleAlternateNames` | the query as typed | yes |
 | subtitle | a row's own subtitle | the query read into Latin | yes |
 | keywords | the declared Info.plist name, and the title and subtitle joined both ways | the query read into Latin | no — they only make an entry appear |
 
@@ -189,44 +187,13 @@ stripped, then `[.caseInsensitive, .diacriticInsensitive, .widthInsensitive]` wi
 alternate-name dedup, category lookup and rename dedup all call it. A full-width IME query therefore
 matches, and is learned, under the same key. ASCII text skips ICU entirely on a fast scalar check.
 
-## Names in the user's language
+## English names
 
-`BundleLocalization` reads both `InfoPlist.loctable` and `<code>.lproj/InfoPlist.strings` for
-macOS's own languages (`SystemLanguages.preferred`) plus English — not `Locale.preferredLanguages`,
-which turns into Nanocast's interface language once one is picked, and would rename every app. This matters because `CFBundle` resolves only
-`InfoPlist.strings`, and every app under `/System/Applications` translates in the loctable alone — so
-all 65 of them read English on every Mac, whatever language it is set to.
+`BundleEnglishName` reads the `en` entry of `InfoPlist.loctable` and `en.lproj/InfoPlist.strings`. It reads both because `CFBundle` resolves only `InfoPlist.strings`, and every app under `/System/Applications` names itself in the loctable alone. No other language is indexed.
 
-A tag carrying a script is read under more codes, because no one folder name covers it: a
-`zh-Hans-US` Mac also reads `zh-Hans`, the folder most third-party apps ship, then its own region
-`zh_US`, then `zh_CN`, the script's home region and the key Apple's own loctables use. A region is read
-only when it writes the tag's script, so `zh-Hans-HK` skips the Traditional `zh_HK`, and `zh-Hant-HK`
-reads `zh_HK` before `zh_TW`. A tag without a script otherwise keeps its exact, underscore and
-bare-language forms. Bokmål (`nb`) additionally reads `no` after `nb`, because Apple's Norwegian
-loctables use that key; an explicit `nb.lproj` still wins. Other languages, including Nynorsk (`nn`),
-gain no alias.
+**A bundle ships no `en` table when its base name is already English, so `CFBundleDevelopmentRegion` decides whether the base name stays.** If the region is English and an `en` name exists, that name replaces the base name: `VoiceMemos.app` ships `en`, so `Voice Memos` is its name, and a pane's `TrackpadExtension` is never indexed for `text` to find. If the region is English and no `en` name exists, the base name is the name: `Tips.app` and `Calculator.app` work this way. If the region is another language or is missing, the `en` name comes first and the base name follows as an alternate title. The app scan still adds every file name as an alternate title. Reading the `en_GB` some bundles carry is the wrong repair, because it relabels `Print Center` as `Print Centre`. The region is canonicalized before it is matched, because `CFBundleDevelopmentRegion` still ships its pre-BCP-47 spelling: Safari's and Terminal's read `English`.
 
-The user's own language wins the **display name**, so a row reads the way Finder reads it. The rest,
-English included, ride along as alternate titles, matched as typed and never transliterated.
-
-**A bundle ships no table for the language it is already written in, so `CFBundleDevelopmentRegion`
-places its untranslated name — an app's file name, a pane's `Info.plist` — in the walk at that
-language's own position.** Apple omits a loctable's `en` key exactly when the base name already says
-it in English: `Tips.app`, `Calculator.app` and `AppleIDSettings.appex` all do, and without this the
-walk fell straight past English into whatever *second* language the Mac listed, so an English Mac
-with Russian under it labelled them `Советы` and `Аккаунт Apple`. A real table for that same language
-replaces the base name outright — `VoiceMemos.app` does ship `en`, so `Voice Memos` is its English
-name, and a pane's `TrackpadExtension` is never indexed for `text` to find. The app scan still adds
-every file name as an alternate title. Reading the `en_GB` those bundles *do* carry is the wrong
-repair: it relabels `Print Center` as `Print Centre`. Below the development region the walk carries on,
-so every language under it stays indexed as an alternate title. The region is canonicalized before it is
-matched, because `CFBundleDevelopmentRegion` still ships its pre-BCP-47 spelling — Safari's and
-Terminal's read `English`. Norwegian development regions resolve as Bokmål, and both `nb` and `no`
-translations are checked before falling back to the untranslated name. `AppDisplayName.inInfo` reads
-the `-macos` variant of each key before the bare one, the way `CFBundle` does: Image Playground's
-loctable spells the bare `CFBundleDisplayName`
-`Playground` and only the suffixed key `Image Playground`. A non-English user finds their app by the
-name they see *and* by the English name the vendor advertises.
+`AppDisplayName.inInfo` reads the `-macos` variant of each key before the bare one, the way `CFBundle` does. Image Playground's loctable spells the bare `CFBundleDisplayName` `Playground` and only the suffixed key `Image Playground`.
 
 ### Non-Latin names
 
@@ -244,14 +211,9 @@ routes per script and keeps one space between words, which is what lets both `wx
 
 It fires only when transliteration actually changes the letters: `Adobe — Creative Cloud` and
 `Café Noir` are Latin already. **Kanji readings are not solved, only routed** — a Japanese app whose
-name is pure kanji gets a Mandarin reading, which is why the English localization is indexed too.
+name is pure kanji gets a Mandarin reading.
 
-**Only what an entry is called in the user's languages is indexed.** Spotlight's
-`kMDItemAlternateNames` merges every language a bundle ships — Safari's lists `浏览器` and `사파리` — so
-romanizing them would let `ll` and `sap` find Safari on an English Mac. Nothing reads Spotlight:
-localized names come from `BundleLocalization`, which walks the same loctables Spotlight indexes
-(every `kMDItemDisplayName` in the default scopes is among its names), and an app's other names come
-from its own Info.plist.
+**Only an entry's English names are indexed.** Spotlight's `kMDItemAlternateNames` merges every language a bundle ships. Safari's lists `浏览器` and `사파리`, so romanizing them would let `ll` and `sap` find Safari. Nothing reads Spotlight: English names come from `BundleEnglishName`, and an app's other names come from its own Info.plist.
 
 A renamed bundle is the other half. A Finder rename never touches `CFBundleDisplayName`, so the
 on-disk basename is indexed as an alternate title — rename `Slack.app` to `Work Chat.app` and both find
@@ -351,7 +313,7 @@ alternate titles, read from the **raw** `infoDictionary`: `object(forInfoDiction
 `EntryNaming.usable` (pure, covered by the harness) drops whatever repeats a name the entry already
 carries and the untranslated `ALTERNATE_NAME_1` placeholders several ship.
 
-**A row is labelled the way Finder labels it: the localized name if the bundle ships one, and
+**A row is labelled the way an English Finder labels it: the English name if the bundle ships one, and
 otherwise the file name.** `CFBundleDisplayName` is deliberately *not* the label — LaunchServices
 ignores one that disagrees with the file name, so an app cannot present itself under a name its
 folder does not carry, and neither should a launcher row. Visual Studio Code is the case that shows
@@ -368,9 +330,8 @@ only in the loctable.
 A loctable read costs ~0.2 ms per bundle and the scan reruns on every launcher open, so
 `BundleNameCache` memoizes the names per bundle path and re-reads only when the bundle's modification
 date moves. Each pass is seeded from the last and keeps only what it looked at, so uninstalled apps
-fall out instead of accumulating; a changed system language drops the whole table, because the names
-in it are in the old one. `SettingsPaneScanner` runs the same `BundleLocalization` walk for the
-`.appex` panes, and retires its cache when either the extensions folder or the language list moves.
+fall out instead of accumulating. `SettingsPaneScanner` runs the same `BundleEnglishName` read for the
+`.appex` panes, and retires its cache when the extensions folder moves.
 Headphones and Battery are named junk or nothing in every table, so their `nameOverrides` entry
 replaces the walk.
 

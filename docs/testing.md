@@ -10,7 +10,7 @@ The mechanical bar, in one place so it cannot drift. All five pass before a chan
 | Check | Command |
 | --- | --- |
 | The harnesses | `./Scripts/run-tests.sh` |
-| Lint, settings search and translations | `./Scripts/lint.sh` |
+| Lint and settings search | `./Scripts/lint.sh` |
 | Pure-layer purity | `grep -rln 'import AppKit\|import SwiftUI\|import Cocoa' Nanocast/Features/*/Model/` |
 | A clean build | `xcodebuild … -configuration Debug CODE_SIGNING_ALLOWED=NO`, zero **new** warnings |
 | Docs still true | any doc your change made wrong, fixed in the same commit |
@@ -92,9 +92,7 @@ If a change touches anything in the right column, the harness on the left is man
 | `ranking-test` | `Launcher/Model/LauncherRankingStore.swift` |
 | `link-destination-test` | `Launcher/Model/LinkDestination.swift` — web, deeplink, network and path detection against an injected home |
 | `scopes-test` | `Launcher/Model/SearchScopes.swift` |
-| `app-name-test` | `Platform/AppDisplayName.swift` — every path that names a scanned bundle |
-| `language-test` | `AppLanguage` and both string catalogs — compile every language, load privacy prompts, and select plural forms and independent counts at runtime |
-| `localized-resource-test` | `Platform/LocalizedResource.swift` — `resolved()` matches `String(localized:)` in every language, for plain, contextual, interpolated, plural and missing keys |
+| `app-name-test` | `Platform/AppDisplayName.swift` and `Platform/BundleEnglishName.swift` — every path that names a scanned bundle |
 | `onboarding-test` | Onboarding's handoff to the palette keeps focus; ordinary windows retain their Dock ownership |
 | `relaunch-test` | The shipped app delegate and relaunch helper — asynchronous cleanup, repeated quit requests, and a responsive replacement process |
 | `calc-test` | all of `Calculator/Model/` |
@@ -105,8 +103,8 @@ If a change touches anything in the right column, the harness on the left is man
 | `clipboard-coordinator-test` | Edit Entry selection across query/type changes and pins, failed writes, deletion during editing and cancellation; isolated database and recorded clipboard effects |
 | `clipboard-thumbnail-test` | `Platform/Images/ImageThumbnail.swift` copies against the real store — a remove or clear mid-copy leaves none, same-named JPEG/PNG copies stay apart, a timeout or cancel frees the queue, and a failed or unreadable copy falls back to the original; a stand-in script plays the helper |
 | `pasteboard-test` | `Clipboard/Service/ClipboardManager.swift` capture and `Paster.write` — what a Finder copy reads as, and what a file or image entry writes back |
-| `emoji-test` | `Emoji/Model/EmojiCatalog.swift`, `EmojiGridGeometry.swift`, the generated data and keyword packs |
-| `emoji-search-test` | `Emoji/Service/EmojiIndex.swift`, `FrequentEmojiStore.swift`, `Scripts/gen-emoji.js`'s keyword format, multilingual search |
+| `emoji-test` | `Emoji/Model/EmojiCatalog.swift`, `EmojiGridGeometry.swift`, and the generated data |
+| `emoji-search-test` | `Emoji/Service/EmojiIndex.swift`, `FrequentEmojiStore.swift`, `Scripts/gen-emoji.js`'s keyword format |
 | `command-escape-tap-test` | `Palette/CommandEscapeTap.swift` — dedicated run-loop dispatch while main is blocked, timeout recovery, stale actions, installation cancellation and teardown; private ports and unposted events only |
 | `palette-navigation-test` | `Palette/PaletteState.swift`'s screen motions — `prepare`, `replace`, `push`, `pop` — and hover arming, pointer drift, scroll disarming and highlight tokens |
 | `palette-selection-test` | `Features/PaletteRowIndex.swift` |
@@ -281,8 +279,7 @@ $D/clipboard-thumbnail-performance /tmp/ctp --copies
 
 `Tests/emoji-search-performance.swift` times uncached queries, typing prefixes and memo hits against
 the loaded catalog, with process RSS and footprint as JSON; `--names` also lists every catalog name
-missing from its own top five results, and `--languages fr,ja` loads those keyword packs first (run it
-from the repo root):
+missing from its own top five results (run it from the repo root):
 
 ```sh
 swiftc -O -swift-version 6 Nanocast/Features/Emoji/Model/{EmojiCatalog,EmojiData.generated}.swift \
@@ -290,7 +287,6 @@ swiftc -O -swift-version 6 Nanocast/Features/Emoji/Model/{EmojiCatalog,EmojiData
     Nanocast/Features/Launcher/Model/SearchRelevance.swift Nanocast/Platform/{AppPaths,Memo}.swift \
     Tests/emoji-search-performance.swift -o /tmp/emoji-search-performance
 /tmp/emoji-search-performance --names
-/tmp/emoji-search-performance --languages fr,ja
 ```
 
 `Tests/notes-editor-performance.swift` installs a 100,000-character note in a real rendered editor and
@@ -723,7 +719,6 @@ tccutil reset Accessibility com.nanocast.app.dev 2>/dev/null || true
 ```
 
 - Launches with every store directory absent — no crash, no hang; onboarding runs
-- With no saved app language, onboarding uses the primary system language if supported, otherwise English. A saved language stays unchanged on relaunch.
 - Onboarding has no Dock entry. Completing it leaves the palette open and ready for typing. Settings still adds a Dock entry while open and removes it when the last ordinary window closes.
 - Palette opens and lists apps; clipboard, custom commands and calculator history are all empty
   and all accept a first entry

@@ -45,8 +45,8 @@ struct SearchScopesSection: View {
         panel.allowedContentTypes = [.applicationBundle]
         panel.treatsFilePackagesAsDirectories = false
         panel.allowsMultipleSelection = true
-        panel.prompt = String(localized: "Add")
-        panel.message = String(localized: "Choose folders or applications to include in the launcher.")
+        panel.prompt = "Add"
+        panel.message = "Choose folders or applications to include in the launcher."
         // Nanocast is an accessory app, so the panel opens behind the frontmost app without this.
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK else { return }

@@ -31,8 +31,8 @@ struct LauncherList: View {
 
         var sectionTitle: String {
             switch self {
-            case .calc: return String(localized: "Calculator")
-            case .color: return String(localized: "Color")
+            case .calc: return "Calculator"
+            case .color: return "Color"
             }
         }
 
@@ -65,7 +65,7 @@ struct LauncherList: View {
 
     private var fileRows: [Row] {
         guard let files else { return [] }
-        return [.header(String(localized: "Files"))]
+        return [.header("Files")]
             + files.results.enumerated().map { Row.file($1, index: $0) }
     }
 
@@ -80,18 +80,18 @@ struct LauncherList: View {
         var grouped: [AppEntry.Kind: [AppEntry]] = [:]
         for app in rest { grouped[app.kind, default: []].append(app) }
         if !favorites.isEmpty {
-            rows.append(.header(String(localized: "Favorites")))
+            rows.append(.header("Favorites"))
             rows.append(
                 contentsOf: favorites.enumerated().map {
                     .app($1, slot: FavoriteSlots.digit(at: $0))
                 })
         }
         if !suggestions.isEmpty {
-            rows.append(.header(String(localized: "Suggestions")))
+            rows.append(.header("Suggestions"))
             rows.append(contentsOf: suggestions.map { .app($0, slot: nil) })
         }
         if !matches.isEmpty {
-            rows.append(.header(String(localized: "Results")))
+            rows.append(.header("Results"))
             rows.append(contentsOf: matches.map { .app($0, slot: nil) })
         }
         let kinds: [AppEntry.Kind] = [
@@ -100,7 +100,7 @@ struct LauncherList: View {
         ]
         for kind in kinds {
             guard let group = grouped[kind], !group.isEmpty else { continue }
-            rows.append(.header(kind.descriptor.sectionTitle.resolved()))
+            rows.append(.header(kind.descriptor.sectionTitle))
             rows.append(contentsOf: group.map { .app($0, slot: nil) })
         }
         assert(
@@ -114,7 +114,7 @@ struct LauncherList: View {
         let rows = rows
         return Group {
             if results.isEmpty && card == nil && files == nil {
-                EmptyResults(text: String(localized: "No apps found"))
+                EmptyResults(text: "No apps found")
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {

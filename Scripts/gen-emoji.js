@@ -8,17 +8,6 @@ const MAX_EMOJI_VERSION = 17.0;
 const EMOJI_TEST_URL = "https://unicode.org/Public/emoji/latest/emoji-test.txt";
 const CLDR_URL = "https://raw.githubusercontent.com/unicode-org/cldr-json/main/cldr-json";
 
-const KEYWORD_LOCALES = {
-  de: "de",
-  es: "es",
-  fr: "fr",
-  ja: "ja",
-  ko: "ko",
-  pt: "pt",
-  ru: "ru",
-  zh: "zh-Hans",
-};
-
 const GROUP_TO_CATEGORY = {
   "Smileys & Emotion": "sp",
   "People & Body": "sp",
@@ -337,43 +326,12 @@ function keywordsFor(glyph, name, annotations) {
   return out;
 }
 
-function hiraganaOf(term) {
-  return Array.from(term, (c) => {
-    const s = c.codePointAt(0);
-    return s >= 0x30a1 && s <= 0x30f6 ? String.fromCodePoint(s - 0x60) : c;
-  }).join("");
-}
-
-function localizedTermsFor(glyph, english, annotations) {
-  const annotation = annotationOf(glyph, annotations);
-  const out = [];
-  for (const raw of [...(annotation?.tts ?? []), ...(annotation?.default ?? [])]) {
-    const term = cleanField(raw.toLowerCase().replaceAll("’", "'"));
-    for (const t of new Set([term, hiraganaOf(term)])) {
-      if (t && !english.has(t) && !out.includes(t)) out.push(t);
-    }
-  }
-  return out;
-}
-
-function keywordPack(records, annotations) {
-  const pack = [];
-  for (const [glyph, name, , , keywords] of records) {
-    const english = new Set([name, ...name.split(" "), ...keywords.split(",")]);
-    const terms = localizedTermsFor(glyph, english, annotations);
-    if (terms.length > 0) pack.push(`${glyph}|${terms.join(",")}`);
-  }
-  return pack;
-}
-
 async function main() {
   const cacheDir = process.argv[2];
   if (cacheDir) fs.mkdirSync(cacheDir, { recursive: true });
-  const locales = Object.keys(KEYWORD_LOCALES);
-  const [emojiTest, annotations, ...localized] = await Promise.all([
+  const [emojiTest, annotations] = await Promise.all([
     source("emoji-test.txt", EMOJI_TEST_URL, cacheDir),
     annotationsFor("en", cacheDir),
-    ...locales.map((locale) => annotationsFor(locale, cacheDir)),
   ]);
 
   let group = null;
@@ -451,18 +409,6 @@ async function main() {
       "}\n",
   );
   console.log(`wrote ${out} (${records.length} records)`);
-
-  const packDir = path.resolve(import.meta.dirname, "..", "Nanocast/Resources/EmojiKeywords");
-  fs.rmSync(packDir, { recursive: true, force: true });
-  fs.mkdirSync(packDir, { recursive: true });
-  locales.forEach((locale, i) => {
-    const pack = keywordPack(lines, localized[i]);
-    if (pack.length <= 1500)
-      throw new Error(`suspiciously few ${locale} keywords: ${pack.length}`);
-    const file = path.join(packDir, `${KEYWORD_LOCALES[locale]}.txt`);
-    fs.writeFileSync(file, `${pack.join("\n")}\n`);
-  });
-  console.log(`wrote ${packDir} (${locales.length} keyword packs)`);
 }
 
 main().catch((e) => {

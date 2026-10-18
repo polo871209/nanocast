@@ -33,7 +33,7 @@ struct SettingsFileTest {
         let fileKeys: Set<String> = [
             "general.launcherShortcut", "general.showInMenuBar",
             "general.automaticallyCheckForUpdates", "general.popToRootSeconds",
-            "general.escapeKeyBehavior", "general.autoSwitchInputSource", "general.language",
+            "general.escapeKeyBehavior", "general.autoSwitchInputSource",
             "appearance.theme",
             "appearance.animations", "dictation.playsSounds",
             "appearance.interfaceSize", "appearance.compactMode",

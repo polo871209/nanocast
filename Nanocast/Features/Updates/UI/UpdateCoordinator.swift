@@ -20,7 +20,7 @@ final class UpdateCoordinator {
     private let store: UpdateCheckStore
     private unowned let core: AppCore
     @ObservationIgnored private lazy var window = AppWindowController(
-        title: String(localized: "Software Update"), contentSize: UpdateWindowView.initialSize,
+        title: "Software Update", contentSize: UpdateWindowView.initialSize,
         activation: core.activationPolicy)
     @ObservationIgnored private var installTask: Task<Void, Never>?
 
@@ -29,7 +29,7 @@ final class UpdateCoordinator {
         self.core = core
     }
 
-    var runningVersion: String { store.runningVersion?.description ?? String(localized: "unknown") }
+    var runningVersion: String { store.runningVersion?.description ?? "unknown" }
 
     func applyEnabled() {
         core.appIndex.setCommandsVisible([.checkForUpdates], store.channel.updatesItself)
@@ -72,7 +72,7 @@ final class UpdateCoordinator {
             } else if answered {
                 stage = .upToDate
             } else {
-                stage = .failed(.downloadFailed(String(localized: "Nanocast could not reach GitHub.")))
+                stage = .failed(.downloadFailed("Nanocast could not reach GitHub."))
             }
         }
     }

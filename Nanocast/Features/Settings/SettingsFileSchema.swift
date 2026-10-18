@@ -27,13 +27,12 @@ enum SettingsFileSchema {
         switch key {
         case .launcherShortcut:
             return shortcuts.binding(
-                for: key, action: .togglePalette, name: String(localized: "App Launcher"))
+                for: key, action: .togglePalette, name: "App Launcher")
         case .showInMenuBar: return bind(settings, \.showInMenuBar)
         case .automaticallyCheckForUpdates: return bind(settings, \.automaticallyCheckForUpdates)
         case .popToRootTimeout: return bind(settings, \.popToRootTimeout)
         case .escapeKeyBehavior: return bind(settings, \.escapeKeyBehavior)
         case .autoSwitchInputSource: return bind(settings, \.autoSwitchInputSourceID)
-        case .language: return bind(settings, \.language)
         case .appearance: return bind(settings, \.appearance)
         case .animationsEnabled: return bind(settings, \.animationsEnabled)
         case .interfaceSize: return bind(settings, \.interfaceSize)
@@ -74,7 +73,7 @@ enum SettingsFileSchema {
         case .notesCommands: return launcher.commandsBinding(for: key, owner: .notes)
         case .dictationMode: return bind(settings, \.dictationMode)
         case .dictationShortcut:
-            return shortcuts.binding(for: key, action: .dictation, name: String(localized: "Dictation"))
+            return shortcuts.binding(for: key, action: .dictation, name: "Dictation")
         case .dictationPlaysSounds: return bind(settings, \.dictationPlaysSounds)
         case .dictationModel: return bind(settings, \.dictationModel)
         case .dictationMicrophone: return bind(settings, \.dictationMicrophone)
@@ -133,7 +132,6 @@ enum SettingsFileSchema {
 extension PopToRootTimeout: SettingsFileRawValue {}
 extension EscapeKeyBehavior: SettingsFileRawValue {}
 extension AppAppearance: SettingsFileRawValue {}
-extension AppLanguage: SettingsFileRawValue {}
 extension InterfaceSize: SettingsFileRawValue {}
 extension HyperKeyPhysicalKey: SettingsFileRawValue {}
 extension HyperKeyQuickPress: SettingsFileRawValue {}
