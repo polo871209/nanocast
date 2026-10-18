@@ -1,4 +1,5 @@
 import Foundation
+import UniformTypeIdentifiers
 
 struct FileSearchResult: Identifiable, Equatable, Sendable {
     let id: String
@@ -28,6 +29,11 @@ struct FileSearchResult: Identifiable, Equatable, Sendable {
             parent.path, homePath: homeDirectory.path)
         self.parentName = parent.lastPathComponent
         self.isDirectory = isDirectory
+    }
+
+    var opensInPreview: Bool {
+        guard !isDirectory, let type = UTType(filenameExtension: url.pathExtension) else { return false }
+        return type.conforms(to: .image) || type.conforms(to: .pdf)
     }
 
     private static func abbreviate(_ path: String, homePath: String) -> String {
