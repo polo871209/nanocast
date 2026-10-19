@@ -4,7 +4,7 @@ description: Save an arrangement of apps across your displays, then restore ever
 ---
 
 A window layout is a saved arrangement of apps, with each window's size, position and display. When
-you run a layout, Tinycast opens any apps that aren't running and moves every window into place.
+you run a layout, Nanocast opens any apps that aren't running and moves every window into place.
 
 Layouts are part of [Window Management](/docs/features/window-management). They use its switch, its
 Accessibility permission and its gap setting, and need nothing else.
@@ -49,10 +49,10 @@ disconnected, so you can edit a desk layout on your laptop.
 Run a layout from the launcher, with its own global shortcut, or with the ▶ button in Settings.
 
 1. Windows that are already open all move into place at once.
-2. Apps that aren't running are opened, and each window is placed as soon as it appears. Tinycast
+2. Apps that aren't running are opened, and each window is placed as soon as it appears. Nanocast
    waits up to 10 seconds for each app.
 3. The window marked **Bring to front**, if any, is focused once everything else is done. If you
-   switched to another app while Tinycast was waiting, your choice is kept.
+   switched to another app while Nanocast was waiting, your choice is kept.
 
 A few rules keep the results predictable:
 

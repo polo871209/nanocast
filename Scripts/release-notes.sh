@@ -10,12 +10,12 @@ CHANNEL="${CHANNEL:?CHANNEL is required (beta|stable)}"
 TAG="${TAG:?TAG is required, e.g. v0.9.13-beta.61}"
 SHA="${SHA:-$(git rev-parse HEAD)}"
 VERSION="${VERSION:-${TAG#v}}"
-DISPLAY_NAME="${DISPLAY_NAME:-Tinycast}"
-BUNDLE_ID="${BUNDLE_ID:-com.tinycast.app}"
-CASK="${CASK:-tinycast}"
+DISPLAY_NAME="${DISPLAY_NAME:-Nanocast}"
+BUNDLE_ID="${BUNDLE_ID:-com.nanocast.app}"
+CASK="${CASK:-nanocast}"
 
 # Everything below this line is for the download page; the update window cuts here.
-MARKER="<!-- tinycast:install -->"
+MARKER="<!-- nanocast:install -->"
 # Discord rejects a component over 4000 characters, and a wall of bullets reads worse than a taste.
 DISCORD_BUDGET=1200
 DISCORD_BULLETS=15
@@ -55,7 +55,7 @@ CHANGELOG="$(printf '%s\n' "$GENERATED" | sed -E \
     printf '```sh\nbrew trust --tap abue-ammar/tinycast\nbrew install --cask abue-ammar/tinycast/%s\n```\n' "$CASK"
     # The stable DMG is arm64-only; macOS 26 is the last release that boots on Intel.
     if [ "$CHANNEL" = "stable" ]; then
-        printf '%s\n' "On an **Intel** Mac, install \`abue-ammar/tinycast/tinycast-universal\` instead — same app, built with both slices."
+        printf '%s\n' "On an **Intel** Mac, install \`abue-ammar/tinycast/nanocast-universal\` instead — same app, built with both slices."
     fi
     printf '%s\n' "This build is self-signed. If you download the DMG directly instead of using Homebrew, macOS will refuse to open it until you clear the quarantine flag once:"
     printf '```sh\nxattr -dr com.apple.quarantine "/Applications/%s.app"\n```\n' "$DISPLAY_NAME"

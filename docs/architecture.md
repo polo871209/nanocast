@@ -1,6 +1,6 @@
 # Architecture
 
-How Tinycast is wired together. Per-feature internals live in [features/](README.md#features);
+How Nanocast is wired together. Per-feature internals live in [features/](README.md#features);
 conventions for writing new code live in [standards.md](standards.md).
 
 ## The layering
@@ -121,14 +121,14 @@ handed an input path and answers with bounded text down a pipe. Its `thumbnail` 
 clipboard's downscaled image copies, so a full-size decode stays out of the app unless that fails.
 
 Dictation similarly runs its model adapters in a bundled helper, with bounded in-memory audio and
-text over pipes. The coordinator keeps microphone capture, UI and insertion in Tinycast; the model
+text over pipes. The coordinator keeps microphone capture, UI and insertion in Nanocast; the model
 store starts the helper on demand and reaps it after the selected idle delay or a model switch.
 `AppCore` owns the audio ducker and starts volume recovery on every launch, even when Dictation is off.
 
 ## Entry points and windows
 
-`TinycastLaunch` (`@main`) pins the interface language, then runs `TinycastApp`, which declares
-only two `MenuBarExtra` scenes — Tinycast's own item and the
+`NanocastLaunch` (`@main`) pins the interface language, then runs `NanocastApp`, which declares
+only two `MenuBarExtra` scenes — Nanocast's own item and the
 calendar's, each inserted by one preference and independent of the other; everything else visible is
 driven imperatively from AppKit. Extension menu extras are dynamic `NSStatusItem`s owned entirely by
 `Features/Extensions/`, through `ExtensionManager`, with no scene or lifecycle wiring in the core.
@@ -154,7 +154,7 @@ driven imperatively from AppKit. Extension menu extras are dynamic `NSStatusItem
   `NSSplitViewController` with a collapsible sidebar of saved chats beside the open conversation, as
   Settings is built. The conversation lives on `AppCore.aiChats`, not the window, so closing it cancels
   nothing. Quick AI is the same feature's palette screen. See [features/ai.md](features/ai.md).
-- **The main menu** — shaped by `TinycastApp`'s `.commands`, which rebinds ⌘Q to Close Window: the AI
+- **The main menu** — shaped by `NanocastApp`'s `.commands`, which rebinds ⌘Q to Close Window: the AI
   Chat window when it is key, otherwise Settings. It is only ever on screen while a titled window is
   open, so it is those windows' menu bar. It must stay declarative.
 - **Dialogs** — borderless `DialogPanel`s driven by `DialogController`, the app's only presenter for
@@ -222,7 +222,7 @@ The folder layout is the layering above, made navigable — one folder per featu
 everything that feature owns.
 
 ```
-Tinycast/
+Nanocast/
   App/              @main, AppDelegate, AppCore — the composition root
   DesignSystem/     Theme (the token source), KeyCapChip, Tooltip, SymbolImage,
                     GlassEffectView, PopoverMenu, SettingsComponents, Scrolling/, Interaction/

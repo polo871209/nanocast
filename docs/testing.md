@@ -1,6 +1,6 @@
 # Testing and verification
 
-How to check that a change holds up. Tinycast has no XCTest target and no UI tests: the automated half
+How to check that a change holds up. Nanocast has no XCTest target and no UI tests: the automated half
 is a set of standalone harnesses, and the manual half is the sweep at the bottom of this file.
 
 ## Definition of done
@@ -11,7 +11,7 @@ The mechanical bar, in one place so it cannot drift. All five pass before a chan
 | --- | --- |
 | The harnesses | `./Scripts/run-tests.sh` |
 | Lint, settings search and translations | `./Scripts/lint.sh` |
-| Pure-layer purity | `grep -rln 'import AppKit\|import SwiftUI\|import Cocoa' Tinycast/Features/*/Model/` |
+| Pure-layer purity | `grep -rln 'import AppKit\|import SwiftUI\|import Cocoa' Nanocast/Features/*/Model/` |
 | A clean build | `xcodebuild … -configuration Debug CODE_SIGNING_ALLOWED=NO`, zero **new** warnings |
 | Docs still true | any doc your change made wrong, fixed in the same commit |
 
@@ -29,7 +29,7 @@ what you touched.
 `apple-intelligence-test` runs deterministic checks by default. Its real model generation is opt-in:
 
 ```sh
-TINYCAST_TEST_APPLE_INTELLIGENCE=1 ./Scripts/run-tests.sh apple-intelligence-test
+NANOCAST_TEST_APPLE_INTELLIGENCE=1 ./Scripts/run-tests.sh apple-intelligence-test
 ```
 
 The opt-in check still skips with a reason if the Mac cannot run the on-device model.
@@ -44,10 +44,10 @@ They cover shipped CommonJS packages, exports maps, relative directories, nested
 cycles, failed-load retries and the extension-root boundary. The runtime fixture suite includes the
 same checks.
 
-The suite runs four harnesses at a time by default to reduce CPU usage. `TINYCAST_TEST_JOBS` overrides
-that limit; `TINYCAST_TEST_JOBS=1` runs one at a time. Each result is numbered
+The suite runs four harnesses at a time by default to reduce CPU usage. `NANOCAST_TEST_JOBS` overrides
+that limit; `NANOCAST_TEST_JOBS=1` runs one at a time. Each result is numbered
 against the total and shows its run and compile time, a quiet stretch names the harnesses still running, and a harness that runs longer
-than `TINYCAST_TEST_TIMEOUT` seconds (default 300) is killed and reported as timed out. Parallelism is safe
+than `NANOCAST_TEST_TIMEOUT` seconds (default 300) is killed and reported as timed out. Parallelism is safe
 because each harness already roots its scratch state somewhere of its own — a UUID-suffixed
 `temporaryDirectory`, a `UserDefaults(suiteName:)`, or `NSPasteboard.withUniqueName()` — and a new
 harness must keep doing that rather than reach for a fixed path.
@@ -73,7 +73,7 @@ assertion, and it is the more important one.
 
 A harness also runs in your own login session against the real system, with no sandbox and no fixture
 world, so it must never mutate state the machine shares with the apps you use. `NSPasteboard.general`
-is the trap: a running Tinycast records every write to it as a genuine copy, so a fixture left there
+is the trap: a running Nanocast records every write to it as a genuine copy, so a fixture left there
 lands in clipboard history looking like something the user copied. `notes-editor-test` seeded one on
 every run from #232 onward by calling the native `copy:`/`cut:`/`paste:` actions; it now drives the
 `writeSelection(to:types:)` and `readSelection(from:)` primitives those actions delegate to, against
@@ -177,7 +177,7 @@ If a change touches anything in the right column, the harness on the left is man
 | `ai-provider-test` | `AI/Model/` and `AISettingsStore` — instruction composition, provider requests and streams, route settings, protocol framing and CLI launch encodings |
 | `apple-intelligence-test` | On-device status, snapshot deltas, transcript assembly and error mapping; real generation is opt-in |
 | `syntax-highlight-test` | `AI/Model/SyntaxGrammar.swift`, `SyntaxHighlighter.swift`, `SyntaxStructuredLexers.swift` — every grammar's tokens, language aliases, the size limit and streaming prefixes |
-| `mcp-test` | `MCP/Model/` and `MCPSettingsStore` — JSON-RPC framing, handles, tool names, output flattening, trust, `@server` addressing, the shape a vendor CLI is handed, and which servers Tinycast leaves to that CLI |
+| `mcp-test` | `MCP/Model/` and `MCPSettingsStore` — JSON-RPC framing, handles, tool names, output flattening, trust, `@server` addressing, the shape a vendor CLI is handed, and which servers Nanocast leaves to that CLI |
 | `mcp-stdio-test` | `MCP/Service/` against a stub server — handshake, listing, calling, and every way one can go away |
 | `mcp-oauth-test` | OAuth parsing, RFC 7636 PKCE, discovery and resource binding, loopback callback validation/cancellation, dynamic registration, supplied client credentials and their token-endpoint authentication, Keychain token rotation, concurrent refresh, the wider margin for a token lent to a CLI, redirects and one-retry 401 handling |
 
@@ -201,7 +201,7 @@ same commit with the reason in the message.
 The layering rule reduces to one grep, and it must return nothing:
 
 ```sh
-grep -rln 'import AppKit\|import SwiftUI\|import Cocoa' Tinycast/Features/*/Model/
+grep -rln 'import AppKit\|import SwiftUI\|import Cocoa' Nanocast/Features/*/Model/
 ```
 
 Beyond the imports, the injected-environment half is not mechanically checkable, so it is worth an eye
@@ -222,11 +222,11 @@ A clean build is part of the bar; nothing builds the app for you, so this is on 
 
 ```sh
 xcodegen generate                 # only after editing project.yml
-xcodebuild build -project Tinycast.xcodeproj -scheme Tinycast -configuration Debug \
+xcodebuild build -project Nanocast.xcodeproj -scheme Nanocast -configuration Debug \
   CODE_SIGNING_ALLOWED=NO
-xcodebuild build -project Tinycast.xcodeproj -scheme Tinycast -configuration Release \
+xcodebuild build -project Nanocast.xcodeproj -scheme Nanocast -configuration Release \
   CODE_SIGNING_ALLOWED=NO
-find ~/Library/Developer/Xcode/DerivedData -name "Tinycast*.app" -maxdepth 6 -print -quit
+find ~/Library/Developer/Xcode/DerivedData -name "Nanocast*.app" -maxdepth 6 -print -quit
 ```
 
 - Zero **new** warnings. Pre-existing ones are not your problem; new ones are.
@@ -253,7 +253,7 @@ search result that navigates and then sits there.
 
 ## Performance measurement
 
-`Platform/Signposts.swift` emits eight intervals on the `com.tinycast.perf` subsystem: `AppCore.start`,
+`Platform/Signposts.swift` emits eight intervals on the `com.nanocast.perf` subsystem: `AppCore.start`,
 `AppIndex.scan`, `AppIndex.rank`, `PaletteWindowController.show`, `UninstallScanner.discover`,
 `UninstallScanner.measure`, `Notes.search` and `FileIndexer.update`. Open the Time Profiler or
 `os_signpost` instrument in Instruments and filter to that subsystem; nothing needs recompiling.
@@ -267,10 +267,10 @@ Run the file-index benchmark separately from the deterministic harnesses. With n
 them:
 
 ```sh
-swiftc -O -wmo -swift-version 6 Tinycast/Features/FileSearch/Model/*.swift \
-    Tinycast/Features/FileSearch/Service/FileIndex.swift \
-    Tinycast/Features/FileSearch/Service/FileIndexSnapshot.swift \
-    Tinycast/Features/FileSearch/Service/FileIndexCrawler.swift \
+swiftc -O -wmo -swift-version 6 Nanocast/Features/FileSearch/Model/*.swift \
+    Nanocast/Features/FileSearch/Service/FileIndex.swift \
+    Nanocast/Features/FileSearch/Service/FileIndexSnapshot.swift \
+    Nanocast/Features/FileSearch/Service/FileIndexCrawler.swift \
     Tests/file-search-performance.swift -o /tmp/file-search-performance
 /tmp/file-search-performance
 ```
@@ -281,7 +281,7 @@ The calculator benchmark is deterministic — an injected clock, calendar and ra
 timing harness rather than an assertion one, and stays out of `run-tests.sh` for that reason:
 
 ```sh
-swiftc -O -swift-version 6 Tinycast/Features/Calculator/Model/*.swift \
+swiftc -O -swift-version 6 Nanocast/Features/Calculator/Model/*.swift \
     Tests/calc-performance.swift -o /tmp/calc-performance
 /tmp/calc-performance          # µs per query, by grammar
 /tmp/calc-performance --probe  # every answer as JSON, to diff two builds
@@ -299,9 +299,9 @@ the attachment path against the bounded reader it now delegates to. Compare thre
 per build with identical `-O` settings:
 
 ```sh
-swiftc -O -swift-version 6 Tinycast/Platform/PasteboardFiles.swift \
-    Tinycast/Features/Clipboard/Model/{ClipboardStore,ClipboardFilter,ClipboardFileKind,ColorValue,ColorFormat,ColorSpaces}.swift \
-    Tinycast/Features/Clipboard/Service/ClipboardManager.swift \
+swiftc -O -swift-version 6 Nanocast/Platform/PasteboardFiles.swift \
+    Nanocast/Features/Clipboard/Model/{ClipboardStore,ClipboardFilter,ClipboardFileKind,ColorValue,ColorFormat,ColorSpaces}.swift \
+    Nanocast/Features/Clipboard/Service/ClipboardManager.swift \
     Tests/clipboard-file-performance.swift -o /tmp/clipboard-file-performance
 /tmp/clipboard-file-performance
 ```
@@ -316,10 +316,10 @@ helper must sit at `Contents/Helpers` beside the benchmark:
 ```sh
 D=/tmp/clipboard-thumbnail-performance; mkdir -p $D/Contents/Helpers
 swiftc -O -swift-version 6 -parse-as-library \
-    Tinycast/Features/Clipboard/Service/{ClipboardTextExtractor,ClipboardTextHelper}.swift \
+    Nanocast/Features/Clipboard/Service/{ClipboardTextExtractor,ClipboardTextHelper}.swift \
     -o $D/Contents/Helpers/ClipboardTextHelper
-swiftc -O -swift-version 6 Tinycast/Platform/ProcessExit.swift \
-    Tinycast/Platform/Images/{ImageThumbnail,ImageDerivative,ThumbnailCache}.swift \
+swiftc -O -swift-version 6 Nanocast/Platform/ProcessExit.swift \
+    Nanocast/Platform/Images/{ImageThumbnail,ImageDerivative,ThumbnailCache}.swift \
     Tests/clipboard-thumbnail-performance.swift -o $D/clipboard-thumbnail-performance
 $D/clipboard-thumbnail-performance /tmp/ctp --fixtures
 $D/clipboard-thumbnail-performance /tmp/ctp --original
@@ -332,9 +332,9 @@ missing from its own top five results, and `--languages fr,ja` loads those keywo
 from the repo root):
 
 ```sh
-swiftc -O -swift-version 6 Tinycast/Features/Emoji/Model/{EmojiCatalog,EmojiData.generated}.swift \
-    Tinycast/Features/Emoji/Service/{EmojiIndex,FrequentEmojiStore}.swift \
-    Tinycast/Features/Launcher/Model/SearchRelevance.swift Tinycast/Platform/{AppPaths,Memo}.swift \
+swiftc -O -swift-version 6 Nanocast/Features/Emoji/Model/{EmojiCatalog,EmojiData.generated}.swift \
+    Nanocast/Features/Emoji/Service/{EmojiIndex,FrequentEmojiStore}.swift \
+    Nanocast/Features/Launcher/Model/SearchRelevance.swift Nanocast/Platform/{AppPaths,Memo}.swift \
     Tests/emoji-search-performance.swift -o /tmp/emoji-search-performance
 /tmp/emoji-search-performance --names
 /tmp/emoji-search-performance --languages fr,ja
@@ -350,10 +350,10 @@ keystroke. Inside `didChange`, near the top of the note, the read does that layo
 2 ms:
 
 ```sh
-N=Tinycast/Features/Notes
-swiftc -O -swift-version 6 Tinycast/Platform/{Signposts,Appearance,NotificationToken}.swift \
-    Tinycast/DesignSystem/{Theme,InterfaceMetrics}.swift \
-    Tinycast/Features/TextInjection/Service/InjectableTextView.swift \
+N=Nanocast/Features/Notes
+swiftc -O -swift-version 6 Nanocast/Platform/{Signposts,Appearance,NotificationToken}.swift \
+    Nanocast/DesignSystem/{Theme,InterfaceMetrics}.swift \
+    Nanocast/Features/TextInjection/Service/InjectableTextView.swift \
     $N/Model/{NoteDocument,NoteMarkdown,NoteMarkdownParser,NoteInlineScanner}.swift \
     $N/Model/{NoteEditPlan,NoteEditAction,NoteFormatting,NoteMarkdownEditing,NoteRevealPolicy}.swift \
     $N/UI/{NoteMarkdownTypography,NoteBlockDecoration,NoteMarkdownStyler,NoteMarkdownRenderer}.swift \
@@ -402,7 +402,7 @@ There is no UI test suite, so this is it. Run the core sweep for any change that
 run the scoped section for whatever feature you touched. Budget about five minutes plus three per
 section.
 
-Run against the **Debug channel** (`Tinycast Dev.app`, `com.tinycast.app.dev`). It has its own prefs,
+Run against the **Debug channel** (`Nanocast Dev.app`, `com.nanocast.app.dev`). It has its own prefs,
 caches, TCC grants and login item, so this cannot disturb an installed copy.
 
 ### Core
@@ -454,7 +454,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - Footer menus are about 30pt wider; their row hover keeps the shared 10pt menu-row corner
 - Tab toggles launcher ↔ clipboard; bare Backspace on an empty query backs out of a sub-screen
 - Launching an app focuses it; escaping the palette returns focus to the app you came from
-- Paste from clipboard history lands in that app, not in Tinycast
+- Paste from clipboard history lands in that app, not in Nanocast
 - No flash, flicker or reflow on open, and row metrics unchanged
 
 ### Clipboard
@@ -467,7 +467,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - With enough pins to fill the list, opening it — the first show after launch too — highlights the
   newest clip, centred with pins above; clearing a query or the filter lands there again
 - ⌃X deletes the selected entry and ⌃⇧X clears the history, from the list and from an open ⌘K menu
-- ⌃⇧X asks first, through Tinycast's own dialog; Cancel and Esc both leave every entry in place
+- ⌃⇧X asks first, through Nanocast's own dialog; Cancel and Esc both leave every entry in place
 - ↵ pastes into the previous app; ⌥↵ pastes without closing the palette
 - ⌃⌘↵ pastes as plain text: a text entry as typed, a file entry as its path rather than the file
 - Default action ▸ Paste as Plain Text: ↵ pastes plain, ⌃⌘↵ pastes, ⌘↵ still copies; an image
@@ -522,10 +522,10 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
   Compatibility: a Hyper shortcut now fires there, and Diagnostics… names the Secure Input holder
 - With Secure Input held, record Hyper+J with and without Secure Input Compatibility: both save ✦J,
   never F18 or ⌃J, and a quick Hyper+J leaves Caps Lock off
-- Quit Tinycast: Caps Lock types capitals again on every keyboard, the built-in one included
+- Quit Nanocast: Caps Lock types capitals again on every keyboard, the built-in one included
 - 🎤 records in a recorder and fires its binding; unbound, it starts macOS Dictation again
 - With Karabiner-Elements running and Caps Lock left alone there, Hyper with Caps Lock still works;
-  quit Tinycast and Karabiner's own remaps keep working. Remap Caps Lock in Karabiner instead:
+  quit Nanocast and Karabiner's own remaps keep working. Remap Caps Lock in Karabiner instead:
   Diagnostics… reports a Karabiner conflict
 - Every binding survives quit and relaunch
 - `Enable Commands` off leaves every pane-owned command listed, searchable and firing — Notes,
@@ -570,7 +570,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - A row's hotkey runs it with the palette closed; switching the feature off silences it
 - Unchecking a row hides it from search, and its hotkey still fires
 - Deleting a shortcut in Shortcuts frees its alias and hotkey on the next launcher open
-- A shortcut that fails shows Tinycast's dialog with the tool's error
+- A shortcut that fails shows Nanocast's dialog with the tool's error
 
 ### File Search
 
@@ -578,7 +578,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - Without Full Disk Access the pane shows **Required** with the hint, the palette says so, and ↵ and the
   button both open Privacy & Security › Full Disk Access; granting it starts a build with no relaunch
 - The first build shows a rising item count in Settings and the palette, then a final count and date;
-  Activity Monitor shows the helper's memory, and Tinycast's own footprint is back at its baseline after
+  Activity Monitor shows the helper's memory, and Nanocast's own footprint is back at its baseline after
 - Enabling in Settings exposes Search Files immediately; it persists across relaunch and backup import
 - Disabling during a query cancels it, returns the open screen to the launcher and deletes the index
 - File Search and Quicklinks remain independently visible in all four enabled/disabled combinations
@@ -626,7 +626,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
   autosave — in the browse list; naming it replaces that, and clearing the name brings it back
 - Inline rename updates the Markdown filename without changing source, and starts from that filename
   even where the row shows a derived title; collisions receive a suffix
-- Delete confirms through Tinycast, moves the file to Trash, and selecting another note never loses an
+- Delete confirms through Nanocast, moves the file to Trash, and selecting another note never loses an
   unsaved edit
 - An existing `Floating Note.md` appears as an ordinary note without conversion
 - A note using every construct renders in Dark and Light: sized headings, emphasis, strikethrough,
@@ -706,7 +706,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - Dragging the title bar moves the window and dragging an edge resizes it; both survive relaunch
 - Clicking another app leaves the panel visible; Escape, Command-W, and the red light hide it
 - Command-Q does nothing anywhere; with Settings in front, Command-W closes Settings
-- Hiding restores the previous external app or Tinycast window
+- Hiding restores the previous external app or Nanocast window
 - Open Notes Folder opens Finder with the active Markdown file selected, or the folder with no note
 - Hide a saved checklist, reset its boxes in another editor, and reopen: the boxes match the file
 - Reopen an unchanged note: Undo still works; an external content change starts fresh history
@@ -758,7 +758,7 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
 - Two upcoming meetings with titles in reverse alphabetical order appear earliest first in the
   launcher's Meetings section and the `Meetings` category listing, even after opening the later one
 - Import a backup taken with Calendar on: it comes back **off**, and no calendar toggle travels
-- Calendar in Menu Bar on Disabled: the calendar item is gone and Tinycast's own item is unaffected;
+- Calendar in Menu Bar on Disabled: the calendar item is gone and Nanocast's own item is unaffected;
   turning `Show in menu bar` off leaves an enabled calendar item in place, and both off leaves neither
 - On Meeting Title with Show Upcoming Events at 5 minutes, the title and countdown appear at T-5 and
   step on the minute boundary, not on a keystroke
@@ -848,12 +848,12 @@ caches, TCC grants and login item, so this cannot disturb an installed copy.
   round trip preserve the choice.
 - Every pane renders and the sidebar switches without flicker
 - A feature switch takes effect in the launcher immediately; every setting survives relaunch
-- Export produces a `.tinycast`; import applies it and reports a per-category summary
+- Export produces a `.nanocast`; import applies it and reports a per-category summary
 - Untick a category on export, and the import picker greys that row out rather than offering it
 - Untick a category on **import** and confirm it did not arrive, while the ticked ones did
 - An image clip round-trips and still renders; the archive can then be deleted without breaking it
 - A file whose `manifest.json` `format` was hand-edited is refused **with a message naming it**
-- Cancelling the save panel leaves nothing in `~/Library/Caches/com.tinycast.app.dev/backup-staging/`
+- Cancelling the save panel leaves nothing in `~/Library/Caches/com.nanocast.app.dev/backup-staging/`
 - **`snippetsEnabled` is not in the exported file**, and importing does not enable snippets
 - Nothing in the extracted tree names a Keychain item, an extension, or an AI conversation
 
@@ -863,11 +863,11 @@ The realistic storage failure is a store that crashes on an absent file rather t
 Wipe the Dev channel and check that path directly:
 
 ```sh
-rm -rf ~/Library/Caches/com.tinycast.app.dev
-rm -rf "$HOME/Library/Application Support/com.tinycast.app.dev"
-rm -rf ~/.config/tinycast-dev
-defaults delete com.tinycast.app.dev 2>/dev/null || true
-tccutil reset Accessibility com.tinycast.app.dev 2>/dev/null || true
+rm -rf ~/Library/Caches/com.nanocast.app.dev
+rm -rf "$HOME/Library/Application Support/com.nanocast.app.dev"
+rm -rf ~/.config/nanocast-dev
+defaults delete com.nanocast.app.dev 2>/dev/null || true
+tccutil reset Accessibility com.nanocast.app.dev 2>/dev/null || true
 ```
 
 - Launches with every store directory absent — no crash, no hang; onboarding runs
@@ -877,5 +877,5 @@ tccutil reset Accessibility com.tinycast.app.dev 2>/dev/null || true
 - **Every setting shows its intended default.** Walk the panes: this is what catches a broken
   absence-versus-`false` read
 - Quit and relaunch: everything created above persisted
-- Nothing was written outside `com.tinycast.app.dev/`. Channel isolation is not negotiable — a Dev build
+- Nothing was written outside `com.nanocast.app.dev/`. Channel isolation is not negotiable — a Dev build
   writing into the stable app's directory is a defect even though the data is disposable

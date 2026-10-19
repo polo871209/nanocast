@@ -16,7 +16,7 @@ Turn snippets on in **Settings → Snippets**. They're **off** by default.
 | Show in launcher | On      |
 
 **Turning on the switch also counts as consent to keyword matching.** There's no separate prompt.
-Tinycast first explains what keyword matching does, then asks for
+Nanocast first explains what keyword matching does, then asks for
 [Accessibility](/docs/permissions#snippets-and-keystroke-matching).
 
 Turning snippets off stops the keyword listener, the file watcher and the launcher rows. Your files
@@ -63,12 +63,12 @@ launcher does: placeholders, arguments, the cursor position and the confirmation
 
 A snippet's shortcut does nothing while snippets are off or while that snippet is disabled.
 
-The shortcut is tied to the file. If you rename or move the file outside Tinycast, or choose a
+The shortcut is tied to the file. If you rename or move the file outside Nanocast, or choose a
 different snippets folder, the shortcut is cleared. Snippet shortcuts aren't included in backups.
 
 ## The file format
 
-Each snippet is one Markdown file in Tinycast's Application Support folder. Frontmatter is optional.
+Each snippet is one Markdown file in Nanocast's Application Support folder. Frontmatter is optional.
 
 ```markdown
 ---
@@ -139,7 +139,7 @@ take modifiers.
 
 ### When a token is wrong
 
-**If Tinycast can't read a token, it leaves it in the text exactly as you wrote it** instead of
+**If Nanocast can't read a token, it leaves it in the text exactly as you wrote it** instead of
 silently removing it. So if you see `{arguemnt}` in your pasted text, you know where the typo is.
 
 `{browser-tab}` and `{calculator}` aren't supported.
@@ -150,7 +150,7 @@ Each argument is asked for once, in the order it first appears, including argume
 referenced snippets. Values are inserted as they are: text in a value that looks like a token isn't
 expanded again.
 
-Snippet references aren't case-sensitive and can be nested up to **five** levels deep. Tinycast
+Snippet references aren't case-sensitive and can be nested up to **five** levels deep. Nanocast
 detects loops. A missing, looping or too-deeply nested reference stays in the text as a token.
 
 All `{cursor}` tokens are removed, and the first one sets where the cursor goes.
@@ -166,25 +166,25 @@ Give a snippet a keyword, and typing that keyword in any app replaces it with th
   without typing.
 - If you keep typing before an expansion happens, the expansion is canceled so it can't land in the
   middle of a word.
-- Right before deleting the keyword and inserting the text, Tinycast checks everything again. If
+- Right before deleting the keyword and inserting the text, Nanocast checks everything again. If
   anything changed, it leaves what you typed alone.
 
 Settings shows the current status: **Off**, **Needs Accessibility** or **Active**.
 
-Keywords never expand in Tinycast's own search field or in Settings. A keyword typed in
+Keywords never expand in Nanocast's own search field or in Settings. A keyword typed in
 [Notes](/docs/features/notes) expands directly in the note.
 
 ### How the text gets inserted
 
-Tinycast first tries a single replacement through Accessibility, then checks that it worked.
+Nanocast first tries a single replacement through Accessibility, then checks that it worked.
 
 Some apps, like Chrome, VS Code, Slack and other Electron apps, don't support that properly, so
-Tinycast types the text instead. Short, single-line expansions of up to 100 characters are typed as
+Nanocast types the text instead. Short, single-line expansions of up to 100 characters are typed as
 keystrokes.
 
-Longer or multi-line text is pasted using the clipboard for a moment. Tinycast saves your clipboard,
+Longer or multi-line text is pasted using the clipboard for a moment. Nanocast saves your clipboard,
 pastes only the snippet text, then restores your clipboard exactly. If you copied something new in
-the meantime, Tinycast keeps your new copy. None of this appears in your
+the meantime, Nanocast keeps your new copy. None of this appears in your
 [clipboard history](/docs/features/clipboard).
 
 ## In the launcher
@@ -199,7 +199,7 @@ keyword are searchable**, and they rank the same way app names do.
 Changes aren't saved until you click **Save**. **New** doesn't create a file until you save for the
 first time.
 
-If the file changed on disk while you were editing, Tinycast **refuses to save and reports a
+If the file changed on disk while you were editing, Nanocast **refuses to save and reports a
 conflict** so it doesn't overwrite the other changes. Open the snippet again to see the current
 version.
 
