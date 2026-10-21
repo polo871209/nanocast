@@ -3,14 +3,14 @@ title: Quick Actions
 description: Fix, rewrite, translate or summarize selected text in any app with one shortcut.
 ---
 
-Select text in any app, press a shortcut, and Tinycast works on it. Depending on the action, the
+Select text in any app, press a shortcut, and Nanocast works on it. Depending on the action, the
 result either replaces your selection or appears first in a small floating panel.
 
 Turn it on in **Settings → Quick Actions → Enable Quick Actions**. It's **off** by default. When you
-turn it on, Tinycast explains what the feature does and asks for
+turn it on, Nanocast explains what the feature does and asks for
 [Accessibility](/docs/permissions), which it needs to read your selection and type the result back.
 
-While it's off, Tinycast doesn't read any selection or call any model, and every Quick Action
+While it's off, Nanocast doesn't read any selection or call any model, and every Quick Action
 shortcut does nothing.
 
 ## The four built-in actions
@@ -35,7 +35,7 @@ Use the menu next to each action to choose **Replace** or **Preview**.
 ## Running one
 
 Press the action's shortcut, or type its name in the launcher. When you run it from the launcher,
-the palette closes first, so the action works on the app behind it instead of Tinycast's search
+the palette closes first, so the action works on the app behind it instead of Nanocast's search
 field.
 
 ### Replace
@@ -54,7 +54,7 @@ A panel shows the result as it comes in. For Fix Grammar and Rewrite, it highlig
 
 Clicking outside the panel also closes it.
 
-If the replacement fails, for example because the app doesn't accept it, **Tinycast copies the
+If the replacement fails, for example because the app doesn't accept it, **Nanocast copies the
 result to your clipboard** and tells you, so you never lose the text.
 
 ## Your own Quick Actions
@@ -63,7 +63,7 @@ result to your clipboard** and tells you, so you never lose the text.
 actions, it gets a launcher row, a shortcut and an alias.
 
 Custom actions show their result in a panel by default. If you trust the prompt, switch it to
-Replace. Tinycast can't tell whether a prompt edits your text or answers a question about it, so it
+Replace. Nanocast can't tell whether a prompt edits your text or answers a question about it, so it
 doesn't decide for you.
 
 Click the pencil button to edit an action. Deleting one asks for confirmation, then frees its
@@ -72,7 +72,7 @@ shortcut.
 ## Changing a built-in prompt
 
 Click the pencil next to **Fix Grammar**, **Rewrite** or **Summarize** to see the exact prompt
-Tinycast uses. If you change it, the action uses your version. **Use Default** restores the original.
+Nanocast uses. If you change it, the action uses your version. **Use Default** restores the original.
 
 Translate has no prompt, because it doesn't use a language model.
 
@@ -112,8 +112,8 @@ language.
 
 ## When an action won't run
 
-- **In Tinycast's own windows.** Pressing a shortcut while Settings is in front does nothing, and
-  Tinycast tells you why.
+- **In Nanocast's own windows.** Pressing a shortcut while Settings is in front does nothing, and
+  Nanocast tells you why.
 - **In a password field**, or anywhere Secure Event Input is on.
 - **While another Quick Action is still running.** Actions run one at a time, so two can't change the
   same selection.
@@ -121,11 +121,11 @@ language.
 
 ## How the selection is read
 
-Tinycast first asks the app for the selected text through Accessibility. Chrome, Electron apps and
+Nanocast first asks the app for the selected text through Accessibility. Chrome, Electron apps and
 VS Code need an extra request first, because they only share their selection once something asks
 for it.
 
-If that doesn't work, Tinycast briefly copies the selection with <kbd>⌘</kbd><kbd>C</kbd>, reads it,
+If that doesn't work, Nanocast briefly copies the selection with <kbd>⌘</kbd><kbd>C</kbd>, reads it,
 and restores your clipboard. If nothing is selected, it tells you instead of using whatever you
 copied last.
 

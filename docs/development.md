@@ -14,7 +14,7 @@ verifying a change is [testing.md](testing.md).
 
 ## First-time setup
 
-Create the `Tinycast Self-Signed` code-signing identity once — builds sign with it, which is what keeps
+Create the `Nanocast Self-Signed` code-signing identity once — builds sign with it, which is what keeps
 macOS from forgetting the Accessibility grant on every rebuild. Follow **[signing.md](signing.md) §1**,
 a few `openssl`/`security` commands.
 
@@ -24,20 +24,20 @@ the section below is a note for anyone who wants it, not a step.
 ## Build & run
 
 ```sh
-open Tinycast.xcodeproj    # then ⌘R
+open Nanocast.xcodeproj    # then ⌘R
 ```
 
 Or from the command line:
 
 ```sh
-xcodebuild -project Tinycast.xcodeproj -scheme Tinycast -configuration Debug build
+xcodebuild -project Nanocast.xcodeproj -scheme Nanocast -configuration Debug build
 ```
 
 `xcodebuild` uses whatever `xcode-select` points at; if that's the Command Line Tools rather than
 Xcode, prefix with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (the SwiftUI
 `@State`/`@FocusState` macros need Xcode's macOS platform).
 
-`Tinycast.xcodeproj` is committed and generated from `project.yml` via XcodeGen — after changing
+`Nanocast.xcodeproj` is committed and generated from `project.yml` via XcodeGen — after changing
 project settings in `project.yml`, run `xcodegen generate` and commit the result. There is no
 `Package.swift`, and `Bundle.module` must never be used.
 
@@ -45,19 +45,19 @@ The app target builds and embeds `ClipboardTextHelper` under `Contents/Helpers`,
 Build the app scheme to include it; copying only the main executable omits OCR support. The helper's
 executable name stays fixed even when release builds override the app's product name for a channel.
 
-Dictation similarly embeds its Swift/Core ML helper, named `Tinycast Dev Dictation` in Debug and
-`Tinycast Dictation` in Release, in an accessory `.app` bundle without a bundled icon. Model weights
+Dictation similarly embeds its Swift/Core ML helper, named `Nanocast Dev Dictation` in Debug and
+`Nanocast Dictation` in Release, in an accessory `.app` bundle without a bundled icon. Model weights
 download on demand; none are app resources.
 
 ### The dev channel
 
-Debug builds are a separate channel: **`Tinycast Dev.app`**, bundle id `com.tinycast.app.dev`. Every
+Debug builds are a separate channel: **`Nanocast Dev.app`**, bundle id `com.nanocast.app.dev`. Every
 persisted thing is keyed by bundle id — `~/Library/Preferences/<id>.plist` (settings and hotkey
 bindings), `~/Library/Application Support/<id>/` (the onboarding marker, Notes, snippets, quicklinks,
 clipboard history, calculator history, launch ranking and frequent emoji; Notes and snippets unless
 a folder is chosen),
 `~/Library/Caches/<id>/` (exchange rates, the update check, staged downloads), the opt-in
-`~/.config/tinycast-dev/settings.json` (`tinycast` on stable), the `SMAppService`
+`~/.config/nanocast-dev/settings.json` (`nanocast` on stable), the `SMAppService`
 login item, and the Accessibility / Input Monitoring (TCC) grants — so a local build can neither read
 nor clobber an installed app's state, and both run side by side.
 
@@ -69,7 +69,7 @@ Consequences worth knowing:
 
 - The dev build asks for Accessibility on its own the first time, and starts with **no** hotkeys bound
   and onboarding unseen. Grant and bind once; it persists across rebuilds, because the fixed build path
-  and the `Tinycast Self-Signed` identity keep the TCC grant alive.
+  and the `Nanocast Self-Signed` identity keep the TCC grant alive.
 - Don't bind the same global hotkey in both — whichever registered first wins.
 - The Hyper Key's Caps Lock remap lives on the keyboards, which are **shared, not per-bundle**:
   enable Hyper in one build at a time so their keyboard owners do not compete. An identical mapping
@@ -86,14 +86,14 @@ and the flag database:
 
 ```sh
 brew install xcode-build-server
-xcodebuild -project Tinycast.xcodeproj -scheme Tinycast -configuration Debug \
-    -derivedDataPath build/DerivedData build 2>&1 | tee /tmp/tinycast-build.log
-./Scripts/sync-lsp.sh /tmp/tinycast-build.log
+xcodebuild -project Nanocast.xcodeproj -scheme Nanocast -configuration Debug \
+    -derivedDataPath build/DerivedData build 2>&1 | tee /tmp/nanocast-build.log
+./Scripts/sync-lsp.sh /tmp/nanocast-build.log
 ```
 
 Both files are git-ignored because they embed absolute paths, and `sourcekit-lsp` looks for
 `buildServer.json` at the workspace root by name, so it cannot live in a subfolder. After this the
-**Build Tinycast.app (debug)** task (⌘⇧B) and **F5** re-run the script on every build, so new and
+**Build Nanocast.app (debug)** task (⌘⇧B) and **F5** re-run the script on every build, so new and
 renamed files keep resolving.
 
 **Do not run `xcode-build-server config`.** It writes `kind: xcode`, and in that mode the server ignores
@@ -160,7 +160,7 @@ To see a language without changing the setting, launch the Debug build with
 ## Formatting
 
 ```sh
-./Scripts/format.sh            # format Tinycast/ and Tests/ in place
+./Scripts/format.sh            # format Nanocast/ and Tests/ in place
 ./Scripts/format.sh --check    # report what would change, write nothing (exit 1 if any)
 ```
 
@@ -196,10 +196,10 @@ Three Swift files are emitted by scripts and must never be hand-edited. Each dow
 run them online, then commit the result:
 
 ```sh
-node Scripts/gen-emoji.js            # -> Tinycast/Features/Emoji/Model/EmojiData.generated.swift
-                                     #    + Tinycast/Resources/EmojiKeywords/<language>.txt
-node Scripts/gen-currencies.js       # -> Tinycast/Features/Calculator/Model/CurrencyData.generated.swift
-node Scripts/gen-countries.js        # -> Tinycast/Features/Calculator/Model/CountryZoneData.generated.swift
+node Scripts/gen-emoji.js            # -> Nanocast/Features/Emoji/Model/EmojiData.generated.swift
+                                     #    + Nanocast/Resources/EmojiKeywords/<language>.txt
+node Scripts/gen-currencies.js       # -> Nanocast/Features/Calculator/Model/CurrencyData.generated.swift
+node Scripts/gen-countries.js        # -> Nanocast/Features/Calculator/Model/CountryZoneData.generated.swift
 ```
 
 `gen-emoji.js` also writes one CLDR keyword pack per language in its `KEYWORD_LOCALES`; adding a

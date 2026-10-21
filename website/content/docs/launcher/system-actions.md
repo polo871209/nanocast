@@ -56,7 +56,7 @@ Dismiss Notifications and Unhide All Hidden Apps.
 ## A few details
 
 **Volume.** Turn Volume Up and Turn Volume Down move in **5% steps**: from 37%, up goes to 40% and
-down goes to 35%. Tinycast shows its own volume indicator, because macOS only shows one for the
+down goes to 35%. Nanocast shows its own volume indicator, because macOS only shows one for the
 hardware media keys. It shows the level as a number, shows `Muted` instead of `0%`, and fades out
 after 1.6 seconds.
 
@@ -65,14 +65,14 @@ dock. It never ejects internal or network volumes.
 
 When you run **Hide All Apps Except Frontmost** or **Quit All Applications** from a shortcut with the
 palette closed, they act on the app that's actually in front. Quit All Applications leaves Finder and
-Tinycast running and asks apps to quit normally, so apps with unsaved work still ask you to save.
+Nanocast running and asks apps to quit normally, so apps with unsaved work still ask you to save.
 
-**Toggle System Appearance** changes the appearance of **macOS itself**, not only Tinycast. Tinycast
+**Toggle System Appearance** changes the appearance of **macOS itself**, not only Nanocast. Nanocast
 follows the change only while its own [theme](/docs/palette#appearance) is set to System.
 
 ## Permissions
 
-Some actions need Automation, Accessibility or Bluetooth access. Tinycast asks the first time you run
+Some actions need Automation, Accessibility or Bluetooth access. Nanocast asks the first time you run
 an action that needs it, never in advance. If you decline, you see a message with a link to the right
 System Settings pane, so the action never fails silently.
 

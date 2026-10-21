@@ -62,14 +62,14 @@ struct LanguageTests {
 
     private static func checkCatalogs() throws {
         let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-languages-\(UUID().uuidString)")
+            .appendingPathComponent("nanocast-languages-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         for catalog in ["Localizable", "InfoPlist"] {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
             process.arguments = [
-                "xcstringstool", "compile", "Tinycast/Resources/\(catalog).xcstrings",
+                "xcstringstool", "compile", "Nanocast/Resources/\(catalog).xcstrings",
                 "--output-directory", root.path
             ]
             try process.run()
@@ -156,7 +156,7 @@ struct LanguageTests {
                 reordered.contains(size) && reordered.contains("2") && !reordered.contains("%@"))
             let privacy = bundle.localizedString(
                 forKey: "NSCameraUsageDescription", value: nil, table: "InfoPlist")
-            check("\(code) camera privacy prompt loads", privacy.contains("Tinycast"))
+            check("\(code) camera privacy prompt loads", privacy.contains("Nanocast"))
 
             if code == "en" || code == "fr" {
                 for (key, french) in [
