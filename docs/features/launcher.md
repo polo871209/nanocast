@@ -448,6 +448,8 @@ CoreAudio work runs off-main, and the message pill reports `Microphone Muted` or
 ignored while a change is pending. An absent input device, unavailable or externally controlled mute,
 or an unconfirmed write reports a failure rather than claiming the microphone was muted.
 
+**Copy Public IP Address** fetches `https://ipv4.icanhazip.com` on a private `.ephemeral` session with `urlCache = nil`, accepts the body only if it parses as an IPv4 address, copies it to the clipboard and reports `Copied <address>`. **Clear DNS Cache** runs `dscacheutil -flushcache` and `killall -HUP mDNSResponder` through AppleScript `do shell script … with administrator privileges`, because mDNSResponder runs as root. macOS shows its own password prompt for this. If the user cancels that prompt (AppleScript error `-128`), the action ends silently.
+
 **Nothing-to-do is an outcome, not a failure.** Empty Trash asks Finder for `count items of trash`
 first and reports `Trash Is Already Empty`, because Finder raises an error when told to empty an empty
 Trash. The count deliberately goes through Finder instead of reading `~/.Trash` directly: that folder
