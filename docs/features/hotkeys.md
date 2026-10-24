@@ -46,7 +46,7 @@ return `OSStatus` synchronously, preserving event order and hold-to-talk release
 - **The private HID SPI lives in `Platform/HIDEventSystem.swift` alone**, resolved at runtime, so a
   macOS without it degrades the Hyper Key to `.remapUnavailable` instead of crashing.
 - **`KeyboardRemapper` only ever removes the Hyper Key's own entries** (`HIDKeyMapping.hyperKeyMappings`),
-  so another tool's mapping for another key always survives Tinycast turning the Hyper Key off.
+  so another tool's mapping for another key always survives Nanocast turning the Hyper Key off.
 - **A raw Caps Lock is never read as Hyper.** Its latch carries no release, so treating one as a press
   leaves the chord on every keystroke until the next press.
 
@@ -69,7 +69,7 @@ System Settings panes use `boundPaneBundleIDs`; custom commands, quicklinks, win
 and custom window sizes use their stable UUIDs in `boundCustomCommandIDs`, `boundQuicklinkIDs`,
 `boundWindowLayoutIDs`, `boundWindowRoomIDs` and `boundCustomWindowSizeIDs`. Those five are the per-item case — unlike a fixed catalog, there is no `allCases` to walk — so each needs an index for `start()`
 to re-register from
-and to prune bindings whose record was deleted while Tinycast wasn't running. That prune is why
+and to prune bindings whose record was deleted while Nanocast wasn't running. That prune is why
 `QuicklinkStore` loads at launch even when the feature is off
 (see [quicklinks.md](quicklinks.md#hotkeys)).
 Apple Shortcuts keep the same kind of index in `boundAppleShortcutIDs`, pruned not at launch but after
@@ -79,7 +79,7 @@ the first successful read of the library, since a failed read looks exactly like
 Snippets index `StoredSnippet.ID`, the file's path, in `boundSnippetIDs`. The store runs only while
 the feature is on, so they are swept not at launch but on every snapshot, by
 `removeSnippetBindings`; a file that fails to parse still counts, since it is mid-edit rather than
-gone. A rename outside Tinycast or a new Snippets Folder therefore drops the shortcut, and none
+gone. A rename outside Nanocast or a new Snippets Folder therefore drops the shortcut, and none
 travels in a backup, where an imported snippet lands at a new path
 (see [snippets.md](snippets.md#shortcuts)).
 
@@ -190,7 +190,7 @@ Hyper+key with no extra registration.
 Which key is chosen persists as a `HyperKeyPhysicalKey` raw value under `hyperKeyPhysicalKey` —
 renaming a case is a migration, and a removed case decodes to `.none`. **F-keys are deliberately not
 candidates:** the top-row media functions fire *below* the tap, and catching them earlier takes a
-raw HID listener, which needs Input Monitoring — a permission Tinycast never asks for.
+raw HID listener, which needs Input Monitoring — a permission Nanocast never asks for.
 
 `HyperKeyManager.apply()` is the one funnel. Settings, sleep, lock, session switches and blocking apps
 all call it, and it converges on what the settings ask for: no key is `.off`, a running blocker is
@@ -224,7 +224,7 @@ installed or repaired.
 `KeyboardRemapper` writes through `HIDEventSystem`, the private IOKit SPI `hidutil` itself drives. It is
 bound with `dlsym` in `Platform/HIDEventSystem.swift`, the only file that touches it, so a macOS that
 drops a symbol reports `.remapUnavailable` instead of crashing. Each keyboard's original Caps Lock
-mapping is preserved. A matching entry already placed by another tool is left unowned; Tinycast only
+mapping is preserved. A matching entry already placed by another tool is left unowned; Nanocast only
 restores an original while the keyboard still carries its own installed mapping. Entries for other
 keys and later replacements by other tools survive teardown. A keyboard that rejects the write is
 skipped and stays plain Caps Lock; only every connected keyboard rejecting it reports
@@ -306,10 +306,10 @@ Carbon hotkeys still fire inside Secure Input, and both remedies are built on th
   `HotKeyManager.setSecureInputEquivalents` registers every Hyper combo again as ⌃ plus its key
   (`KeyShortcut.secureInputEquivalent(of:)`), rebuilt with the bindings and dropped when Secure Input
   ends. The Carbon event's device flags select Right Control without querying mutable keyboard state.
-  Left Control never triggers Hyper. An existing Tinycast Control binding shares the registration and
+  Left Control never triggers Hyper. An existing Nanocast Control binding shares the registration and
   still runs from Left Control; Dictation receives the release for whichever action began the press.
   Rebuilding or pausing registrations cancels an outstanding hold. Carbon reserves these Control
-  combinations during Secure Input even when Left Control has no Tinycast binding.
+  combinations during Secure Input even when Left Control has no Nanocast binding.
 
 The tap still sees a modifier's `flagsChanged` inside Secure Input, but never the key pressed between
 them. So **Quick Press never fires there**: every quick Hyper combo would read as a lone press and

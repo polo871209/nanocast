@@ -5,7 +5,7 @@ description: Save your setup to one file, choose what to export and what to impo
 
 **Settings → Backup**
 
-A backup is a single `.tinycast` file. You choose what goes into it when you export, and separately
+A backup is a single `.nanocast` file. You choose what goes into it when you export, and separately
 choose what to restore when you import. So a backup that contains everything can still restore only
 your snippets.
 
@@ -22,10 +22,10 @@ everything, because there's no room for checkboxes in the launcher.
 
 ## Read this before relying on it
 
-**The backup format can change between versions of Tinycast. A backup is only guaranteed to import
+**The backup format can change between versions of Nanocast. A backup is only guaranteed to import
 into the same version that created it.**
 
-The file records which version created it. If your version of Tinycast doesn't recognize the
+The file records which version created it. If your version of Nanocast doesn't recognize the
 format, it tells you instead of importing part of the file. Use backups to move your setup to
 another Mac or to restore after reinstalling, not as a long-term archive.
 
@@ -33,7 +33,7 @@ another Mac or to restore after reinstalling, not as a long-term archive.
 
 Every import shows a summary of what changed, by category.
 
-If the file contains custom commands, **Tinycast warns you before adding them**, because a file that
+If the file contains custom commands, **Nanocast warns you before adding them**, because a file that
 adds shell commands without telling you is a security risk.
 
 Imports add to what you have instead of overwriting it. Snippets and notes are added next to your
@@ -53,9 +53,9 @@ not just setting a preference:
 
 - **Snippets**: agreeing to keyword matching
 - **Extensions**: agreeing to run third-party code
-- **Calendar**: agreeing to let Tinycast read your calendar
+- **Calendar**: agreeing to let Nanocast read your calendar
 - **Auto Join Meetings** and **Camera Preview**: agreeing to open links and turn on the camera
-- **Quick Actions**: agreeing to let Tinycast type into other apps
+- **Quick Actions**: agreeing to let Nanocast type into other apps
 - **AI** and **MCP servers**: agreeing to send text to a model and run server code
 - **Search text in images and PDFs**: agreeing to text recognition in the background
 - **Fallback order and checkboxes**: these could add a shell command runner to your launcher
@@ -73,7 +73,7 @@ reading what they do. Importing snippets doesn't turn snippets on.
 | Quick Actions model, prompts, language and custom actions       | An import should never change what a shortcut does to your text  |
 | Extension registries, package manager, custom search paths      | They're specific to this Mac, not part of your setup             |
 | Palette position, auto-switch input source, calendar checkboxes | They depend on this Mac's displays and hardware                  |
-| Cached data, like currency rates and update checks              | Tinycast downloads it again as needed                            |
+| Cached data, like currency rates and update checks              | Nanocast downloads it again as needed                            |
 
 Clipboard images are stored inside the backup by name, not by their location on your Mac. The only
 paths a backup includes are the locations of copied files, because that location is what the entry
@@ -85,7 +85,7 @@ the way you had them.
 ## Where your data is stored
 
 Everything a backup includes is also a regular file in
-`~/Library/Application Support/com.tinycast.app/`:
+`~/Library/Application Support/com.nanocast.app/`:
 
 | What                                          | Where                                          |
 | --------------------------------------------- | ---------------------------------------------- |
@@ -96,4 +96,4 @@ Everything a backup includes is also a regular file in
 | [AI chats](/docs/ai)                          | `ai-chats.sqlite3`, never included in a backup |
 
 Snippets and notes are plain Markdown files. Copying those folders works as a backup, and you can
-read the files without Tinycast.
+read the files without Nanocast.

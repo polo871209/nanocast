@@ -83,7 +83,7 @@ command, move the window to a different display, or wait a while.
 Quarter → Restore Window puts the window back where it **started**, not where it was before the last
 command.
 
-Restore Window also works on windows Tinycast hasn't moved before, because it saves the window's
+Restore Window also works on windows Nanocast hasn't moved before, because it saves the window's
 frame before the first change. It remembers up to 64 windows, forgets an app's windows when the app
 quits, and never saves this information to disk.
 
@@ -115,5 +115,5 @@ Minimized windows, sheets, popovers, windows already in native fullscreen, and w
 report a position or size are skipped.
 
 A window that can't be resized, like System Information, is left where it is instead of being
-partly moved. If an app won't let its window shrink, Tinycast aligns the window to the correct side
+partly moved. If an app won't let its window shrink, Nanocast aligns the window to the correct side
 **once** instead of retrying.

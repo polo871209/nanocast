@@ -45,7 +45,7 @@ export function Features() {
       index={1}
       label="Features"
       title="One palette for the things you do all day."
-      intro="Most features are off until you turn them on, so Tinycast only runs what you use."
+      intro="Most features are off until you turn them on, so Nanocast only runs what you use."
     >
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {coreFeatures.map((feature) => (

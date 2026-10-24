@@ -36,7 +36,7 @@ The **Insert…** menu adds placeholders for you.
 
 ## Destinations
 
-Tinycast works out what kind of link you entered from its format:
+Nanocast works out what kind of link you entered from its format:
 
 | You write                                           | It becomes                        |
 | --------------------------------------------------- | --------------------------------- |
@@ -97,8 +97,8 @@ selected and its first empty field ready for typing.
 
 ### When there is no selection
 
-If a link uses `{selection}` and no text is selected, **the quicklink doesn't open**. Tinycast shows
-"Couldn’t get the selected text" instead. If Tinycast doesn't have Accessibility permission, the
+If a link uses `{selection}` and no text is selected, **the quicklink doesn't open**. Nanocast shows
+"Couldn’t get the selected text" instead. If Nanocast doesn't have Accessibility permission, the
 message asks you to allow it in System Settings.
 
 ### Selected text from a shortcut
@@ -115,14 +115,14 @@ What you typed fills in its first argument. See [Fallbacks](/docs/launcher/fallb
 
 ## Opening
 
-**Open With** saves a specific app. If you later uninstall that app, Tinycast shows a message with an
+**Open With** saves a specific app. If you later uninstall that app, Nanocast shows a message with an
 **Open with Default** button instead of silently switching to another app.
 
 **Open in a new window** asks the browser to open a new window. Chrome and Firefox respect it, but
 **Safari ignores it**. With the setting off, the link opens the way macOS normally opens links, which
 usually reuses a tab.
 
-Tinycast checks file and folder links before opening them, so if a folder was deleted, it tells you.
+Nanocast checks file and folder links before opening them, so if a folder was deleted, it tells you.
 
 ## Search Quicklinks
 
@@ -198,6 +198,6 @@ You can also import quicklinks from a [Raycast export](/docs/reference/import-fr
 
 ## Where they're stored
 
-Quicklinks are stored in `quicklinks.sqlite3` in Tinycast's Application Support folder. If that file
-can't be opened, Tinycast **reports the problem and never deletes the file**, because your links
+Quicklinks are stored in `quicklinks.sqlite3` in Nanocast's Application Support folder. If that file
+can't be opened, Nanocast **reports the problem and never deletes the file**, because your links
 can't be rebuilt from anywhere else.
