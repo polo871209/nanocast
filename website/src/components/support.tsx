@@ -42,7 +42,7 @@ export function Support() {
       >
         <Button href={site.support} size="lg">
           <SupportIcon size={18} />
-          Support Tinycast
+          Support Nanocast
         </Button>
         <Button href={site.repo} variant="ghost" size="lg">
           <GitHubLogo size={16} />

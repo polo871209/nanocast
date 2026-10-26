@@ -3,12 +3,12 @@ title: Calendar & meetings
 description: Join your next meeting with one key, see your day, and show the next event in the menu bar.
 ---
 
-Tinycast reads the calendars already on your Mac, finds the join link in each meeting, and lets you
+Nanocast reads the calendars already on your Mac, finds the join link in each meeting, and lets you
 join with one keystroke. It works with any calendar account macOS supports, like iCloud, Google or
 Exchange.
 
-Turn it on in **Settings → Calendar → Join meetings from Tinycast**. It's **off** by default. When
-you turn it on, Tinycast explains what it reads, and then macOS asks for calendar access. See
+Turn it on in **Settings → Calendar → Join meetings from Nanocast**. It's **off** by default. When
+you turn it on, Nanocast explains what it reads, and then macOS asks for calendar access. See
 [Permissions](/docs/permissions#calendars).
 
 Events are read on your Mac and **never leave it**.
@@ -41,7 +41,7 @@ A meeting without a link opens in Calendar instead.
 
 ## Which links it finds
 
-Tinycast checks the event's URL, location and notes, in that order. It recognizes **Zoom**,
+Nanocast checks the event's URL, location and notes, in that order. It recognizes **Zoom**,
 **Google Meet**, **Microsoft Teams**, **Webex**, **Jitsi**, **Whereby**, **Amazon Chime**,
 **GoTo Meeting**, **BlueJeans** and **Skype**, and falls back to any other web link in the event.
 
@@ -76,13 +76,13 @@ card, the menu bar item and your shortcuts keep working.
 
 ### My Schedule
 
-My Schedule lists your remaining events for the days Tinycast reads, grouped by day. Type to filter.
+My Schedule lists your remaining events for the days Nanocast reads, grouped by day. Type to filter.
 <kbd>return</kbd> joins the selected meeting, and <kbd>⌘</kbd><kbd>K</kbd> offers
 **Open in Calendar**.
 
 ## How far ahead it reads
 
-**Days to Show** sets how far ahead Tinycast reads: **Today**, **Today and Tomorrow** (default) or
+**Days to Show** sets how far ahead Nanocast reads: **Today**, **Today and Tomorrow** (default) or
 **Next 7 Days**. My Schedule, the menu bar item and launcher search all use this setting.
 
 ## Auto join
@@ -104,7 +104,7 @@ the preview opens and turns off as soon as it closes. It's the same camera scree
 
 ## The menu bar
 
-The calendar has its **own** menu bar item, separate from the Tinycast icon. You can show either one,
+The calendar has its **own** menu bar item, separate from the Nanocast icon. You can show either one,
 both or neither.
 
 | Setting                        | Options                                                                  | Default                          |

@@ -1,4 +1,4 @@
-# Tinycast
+# Nanocast
 
 **A tiny, fully native macOS launcher. One hotkey, everything you reach for all day, under 100 MB of
 RAM.**
@@ -15,7 +15,7 @@ RAM.**
     <img alt="License: AGPL-3.0"
          src="https://img.shields.io/badge/License-AGPL--3.0-3DA639?style=flat"></a>
   <a href="https://discord.gg/v2Eeb4QQy3">
-    <img alt="Join the Tinycast Discord"
+    <img alt="Join the Nanocast Discord"
          src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat&logo=discord&logoColor=white"></a>
 </p>
 
@@ -25,7 +25,7 @@ real Raycast extensions**, rendered as native SwiftUI. Free, open source, and st
 For anything private, email [iabueammar@gmail.com](mailto:iabueammar@gmail.com).
 
 <p align="center">
-  <img src="docs/screenshot.png" alt="Tinycast command palette" width="720">
+  <img src="docs/screenshot.png" alt="Nanocast command palette" width="720">
 </p>
 
 ## Features
@@ -76,14 +76,14 @@ Then run the one line that matches your Mac:
 
 | Your Mac                         | Install                                  |
 | -------------------------------- | ---------------------------------------- |
-| Apple silicon, macOS 26 or newer | `brew install --cask tinycast`           |
-| Intel, macOS 26                  | `brew install --cask tinycast-universal` |
+| Apple silicon, macOS 26 or newer | `brew install --cask nanocast`           |
+| Intel, macOS 26                  | `brew install --cask nanocast-universal` |
 
 Not sure which Mac you have? **Apple menu → About This Mac.**
 
-- **Early builds:** `brew install --cask tinycast@beta` installs `Tinycast Beta.app` beside the stable app.
+- **Early builds:** `brew install --cask nanocast@beta` installs `Nanocast Beta.app` beside the stable app.
 - **DMG from [Releases](https://github.com/abue-ammar/tinycast/releases)?** It's self-signed, so run
-  `xattr -dr com.apple.quarantine "/Applications/Tinycast.app"` once.
+  `xattr -dr com.apple.quarantine "/Applications/Nanocast.app"` once.
 
 ## Building from source
 
@@ -93,9 +93,9 @@ standards, the design system and one document per feature.
 
 ## Support
 
-Tinycast is **free, and it stays that way**. If you enjoy it, you can support it with crypto: scan a
+Nanocast is **free, and it stays that way**. If you enjoy it, you can support it with crypto: scan a
 code with your wallet, or copy an address. Send only on the network named for that address. If yours
-isn't listed, [email me](mailto:iabueammar@gmail.com?subject=Supporting%20Tinycast).
+isn't listed, [email me](mailto:iabueammar@gmail.com?subject=Supporting%20Nanocast).
 
 <table>
   <tr>
@@ -136,7 +136,7 @@ Prefer a card? Buy the wallpaper pack and get a Discord role.
 
 <p align="center">
   <a href="https://tinycast.dev/support">
-    <img alt="Support Tinycast" width="188" height="44" src="docs/support-button.svg"></a><br>
+    <img alt="Support Nanocast" width="188" height="44" src="docs/support-button.svg"></a><br>
   <sub>Card payments are handled securely by <a href="https://polar.sh">Polar.sh</a>.</sub>
 </p>
 

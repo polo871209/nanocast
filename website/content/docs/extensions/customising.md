@@ -12,7 +12,7 @@ same screen.
 Any settings the extension defines appear as native controls: checkbox, dropdown, text field,
 password field, file picker, folder picker or app picker.
 
-They're saved separately for each extension in Tinycast's own folder and removed when you uninstall
+They're saved separately for each extension in Nanocast's own folder and removed when you uninstall
 the extension.
 
 ## Launcher icon
