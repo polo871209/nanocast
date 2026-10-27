@@ -3,7 +3,7 @@ title: Uninstall an app
 description: Remove an app along with the caches, preferences and containers it leaves behind.
 ---
 
-When you drag an app to the Trash, its support files stay behind in your Library folder. Tinycast's
+When you drag an app to the Trash, its support files stay behind in your Library folder. Nanocast's
 uninstaller finds those files and removes them along with the app.
 
 **Everything is moved to the Trash, and nothing is deleted permanently.** If the uninstaller picks
@@ -31,7 +31,7 @@ location. **Copy Path keeps the screen open**, so you don't have to scan again.
 
 ## How files are matched to the app
 
-Tinycast uses four rules, from most to least certain.
+Nanocast uses four rules, from most to least certain.
 
 **Bundle identifier.** An exact match, or a name inside the app's own namespace.
 `com.apple.iBooksX.CacheDelete` belongs to `com.apple.iBooksX`, but `com.apple.iBooksXtra` doesn't.
@@ -39,7 +39,7 @@ A dash also counts as a separator, so `dev.zed.Zed-Preview.plist` belongs to Zed
 is also installed, in which case it belongs to Zed Preview. A short vendor prefix like `com.adobe`
 never claims everything under it.
 
-**Group container.** Tinycast removes the `group.` prefix and the 10-character team ID, then applies
+**Group container.** Nanocast removes the `group.` prefix and the 10-character team ID, then applies
 the rule above.
 
 **Display name.** This is the weakest rule, so rows matched this way are labeled
@@ -59,7 +59,7 @@ to the app **only if they link into the app bundle**, never because of their nam
 - `/private/var/db/receipts`, `~/Library/Keychains` and `/Library/Extensions`
 - Any of your document folders
 - Anything more than one level deep in a folder it scans
-- Tinycast itself
+- Nanocast itself
 
 ## Locked rows
 
@@ -70,7 +70,7 @@ Access**, in a folder you can't write to, or owned by another user.
 For example, without Full Disk Access, `~/Library/Containers`, `~/Library/Group Containers` and
 `~/Library/Cookies` are locked, but `~/Library/Application Scripts` next to them isn't.
 
-Tinycast **checks** whether it has Full Disk Access but **never asks** for it. See
+Nanocast **checks** whether it has Full Disk Access but **never asks** for it. See
 [Permissions](/docs/permissions#full-disk-access).
 
 `/usr/local/bin/code` stays locked because that folder belongs to the system. Removing it would
@@ -89,7 +89,7 @@ shows 9.45 GB, not the 4.19 GB its compressed files use on disk.
 
 ## Running it
 
-If the app is running, Tinycast quits it first. Then everything you selected moves to the Trash, with
+If the app is running, Nanocast quits it first. Then everything you selected moves to the Trash, with
 the app itself last, so if something fails you can run the uninstaller again.
 
 The app's shortcut, favorite, visibility and learned ranking are removed **only if the app itself

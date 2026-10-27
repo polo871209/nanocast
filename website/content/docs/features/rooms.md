@@ -21,7 +21,7 @@ license.
    its name and select it, and it opens whenever you enter the room. The number shows the window's
    position, and 1 is the main window, which gets the largest space. The preview updates as you
    choose.
-4. Press <kbd>⌘</kbd><kbd>return</kbd> to save. Tinycast switches to the new room right away.
+4. Press <kbd>⌘</kbd><kbd>return</kbd> to save. Nanocast switches to the new room right away.
 
 **Create Room** in the launcher and **New Room** in Settings open the same picker.
 
@@ -55,14 +55,14 @@ display remembers its own choice.
 | Custom      | Your own side-by-side arrangement, snapped to a grid with even gaps   |
 | As Arranged | Exactly where you placed the windows                                  |
 
-To use your own arrangement, place the windows by hand and choose **Remember Arrangement**. Tinycast
-recognizes the layout and tidies it, or keeps your arrangement exactly as it is. Tinycast measures
+To use your own arrangement, place the windows by hand and choose **Remember Arrangement**. Nanocast
+recognizes the layout and tidies it, or keeps your arrangement exactly as it is. Nanocast measures
 apps that won't shrink as you go, so layouts leave enough room for them.
 
 ## Getting everything back
 
-Quitting Tinycast, turning off Window Management, or reopening Tinycast after a crash returns every
-moved window to where it was, because Tinycast saves each window's original position to disk before
+Quitting Nanocast, turning off Window Management, or reopening Nanocast after a crash returns every
+moved window to where it was, because Nanocast saves each window's original position to disk before
 moving it. Turning off Window Management while you're in a room also shows the apps it hid.
 
 Rooms work with regular windows on the current Space. Full-screen windows aren't moved.

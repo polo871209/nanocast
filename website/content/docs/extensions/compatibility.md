@@ -1,11 +1,11 @@
 ---
 title: What works
-description: What Tinycast supports from the Raycast API, how well it works in practice, and the known gaps.
+description: What Nanocast supports from the Raycast API, how well it works in practice, and the known gaps.
 ---
 
 ## How well it works
 
-We tested Tinycast against the 37 extensions installed in Raycast on the development Mac:
+We tested Nanocast against the 37 extensions installed in Raycast on the development Mac:
 
 **32 of 37 extensions, and 114 of 147 view commands, open and render.**
 
@@ -44,10 +44,10 @@ with the palette closed. A `no-view` command with an `interval` can refresh on a
 native menu items and refresh on their manifest interval, without keeping JavaScript in memory
 between runs; see [Menu bar commands](/docs/extensions#menu-bar-commands).
 
-**`raycast://` links** are handled inside Tinycast. Tinycast registers this link type; if Raycast is
+**`raycast://` links** are handled inside Nanocast. Nanocast registers this link type; if Raycast is
 also installed, macOS decides which app receives those links. A link to an installed extension command
 runs that command, whether it comes from another app, the browser or an extension, with its `arguments`,
-`fallbackText` and `launchType` applied. `tinycast://` links work the same way. Any other link
+`fallbackText` and `launchType` applied. `nanocast://` links work the same way. Any other link
 reopens the palette, since passing it on would open Raycast itself.
 
 ## Not supported yet
