@@ -34,7 +34,7 @@ struct DictationKeyTest {
         _ body: (DictationKeyManager, DictationKeyManager, HotKeyManager, HotKeyManager, URL) -> Void
     ) {
         HIDEventSystem.reset()
-        let domain = "tinycast.dictation-key-test.\(UUID())"
+        let domain = "nanocast.dictation-key-test.\(UUID())"
         let ownerDefaults = UserDefaults(suiteName: domain)!
         let waitingDefaults = sharedPreferences ? ownerDefaults : UserDefaults(suiteName: domain + ".dev")!
         let lockURL = FileManager.default.temporaryDirectory.appending(path: "\(domain).lock")

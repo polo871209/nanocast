@@ -21,7 +21,7 @@ jobs:
         with:
           script: |
             const body = [
-              "Thanks for opening this! Tinycast stays small and focused, so new features are chosen",
+              "Thanks for opening this! Nanocast stays small and focused, so new features are chosen",
               "carefully and smaller conveniences are usually closed.",
               "",
               "> [!TIP]",

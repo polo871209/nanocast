@@ -6,7 +6,7 @@ so the codebase never carries a history of its past formats.
 
 ## Invariants
 
-- **Every migration lives in `Tinycast/Migrations/`**, one file and one `<Subject>Migration` type
+- **Every migration lives in `Nanocast/Migrations/`**, one file and one `<Subject>Migration` type
   each. Its call sites name that type, so deleting the file fails the build at every one of them.
 - **One stable release, then gone.** `Scripts/check-migrations.sh` fails `lint.sh` and the Release
   workflow once a stable tag (`vX.Y.Z`) contains the commit that added the file. Beta tags do not

@@ -5,7 +5,7 @@ import Foundation
 struct DeepLinkTests {
     static var failures = 0
     static var passes = 0
-    static let scheme = "tinycast"
+    static let scheme = "nanocast"
 
     static func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
         if condition() {
@@ -26,7 +26,7 @@ struct DeepLinkTests {
     }
 
     static func input(_ query: String) -> DeepLinkInput? {
-        guard case .entry(_, let input)? = parse("tinycast://command/clipboard-history?" + query)
+        guard case .entry(_, let input)? = parse("nanocast://command/clipboard-history?" + query)
         else { return nil }
         return input
     }
@@ -88,17 +88,17 @@ struct DeepLinkTests {
 
         expect(
             DeepLink.url(forEntryID: "command:clipboard-history", scheme: scheme)?.absoluteString
-                == "tinycast://command/clipboard-history",
+                == "nanocast://command/clipboard-history",
             "a command's link reads as its entry ID")
         expect(
-            DeepLink.url(forEntryID: "window-command:left-half", scheme: "tinycast-dev")?
-                .absoluteString == "tinycast-dev://window-command/left-half",
+            DeepLink.url(forEntryID: "window-command:left-half", scheme: "nanocast-dev")?
+                .absoluteString == "nanocast-dev://window-command/left-half",
             "a link is built in the scheme it is given")
         expect(
-            resolve("TINYCAST://Window-Command/left-half") == .windowCommand(id: .leftHalf),
+            resolve("NANOCAST://Window-Command/left-half") == .windowCommand(id: .leftHalf),
             "scheme and kind are case-insensitive")
         expect(
-            resolve("tinycast://quicklink/\(id.uuidString.uppercased())") == .quicklink(id: id),
+            resolve("nanocast://quicklink/\(id.uuidString.uppercased())") == .quicklink(id: id),
             "an uppercase UUID still resolves")
     }
 
@@ -148,37 +148,37 @@ struct DeepLinkTests {
         expect(
             DeepLink.url(forEntryID: "extension:demo/search", scheme: scheme) == nil,
             "extension commands keep their own link")
-        expect(parse("raycast://command/clipboard-history") == nil, "built-in links are Tinycast's alone")
+        expect(parse("raycast://command/clipboard-history") == nil, "built-in links are Nanocast's alone")
         expect(
-            parse("tinycast-dev://command/clipboard-history") == nil,
+            parse("nanocast-dev://command/clipboard-history") == nil,
             "another channel's scheme is not this build's")
         expect(
-            parse("tinycast://command/clipboard-history", scheme: "tinycast-dev") == nil,
+            parse("nanocast://command/clipboard-history", scheme: "nanocast-dev") == nil,
             "a Debug build ignores Release's links")
         expect(
-            parse("tinycast://extensions/demo/search") == nil,
+            parse("nanocast://extensions/demo/search") == nil,
             "extension links fall through to their own router")
         expect(
-            parse("tinycast://extensions/owner/demo/search?arguments=%7B%7D") == nil,
+            parse("nanocast://extensions/owner/demo/search?arguments=%7B%7D") == nil,
             "an extension link with input still falls through")
-        expect(resolve("tinycast://command") == nil, "a kind without an ID is not a command")
-        expect(resolve("tinycast://command/") == nil, "an empty ID is not a command")
-        expect(resolve("tinycast://command/nope") == nil, "an unknown command does not resolve")
+        expect(resolve("nanocast://command") == nil, "a kind without an ID is not a command")
+        expect(resolve("nanocast://command/") == nil, "an empty ID is not a command")
+        expect(resolve("nanocast://command/nope") == nil, "an unknown command does not resolve")
     }
 
     static func routeChecks() {
-        expect(parse("tinycast://") == .launcher(fallbackText: nil), "the bare scheme opens the launcher")
+        expect(parse("nanocast://") == .launcher(fallbackText: nil), "the bare scheme opens the launcher")
         expect(
-            parse("tinycast://search?fallbackText=2%2B2") == .launcher(fallbackText: "2+2"),
+            parse("nanocast://search?fallbackText=2%2B2") == .launcher(fallbackText: "2+2"),
             "search carries its text into the launcher")
-        expect(parse("tinycast://search/more") == nil, "search takes no path")
+        expect(parse("nanocast://search/more") == nil, "search takes no path")
         expect(
-            parse("tinycast://settings/Permissions") == .settings(slug: "permissions"),
+            parse("nanocast://settings/Permissions") == .settings(slug: "permissions"),
             "a settings link names its tab, case-insensitively")
-        expect(parse("tinycast://settings") == nil, "a settings link without a tab is refused")
-        expect(parse("tinycast://settings/ai/providers") == nil, "a settings tab is one segment")
+        expect(parse("nanocast://settings") == nil, "a settings link without a tab is refused")
+        expect(parse("nanocast://settings/ai/providers") == nil, "a settings tab is one segment")
         expect(
-            parse("tinycast://command/clipboard-history") == .entry(.command(.clipboardHistory), .none),
+            parse("nanocast://command/clipboard-history") == .entry(.command(.clipboardHistory), .none),
             "a link without parameters carries no input")
     }
 
@@ -286,32 +286,32 @@ struct DeepLinkTests {
             DeepLink.url(forNote: note, scheme: scheme).flatMap { DeepLink(url: $0, scheme: scheme) }
                 == .note(name: note),
             "a note's link reads back as its file name")
-        expect(parse("tinycast://note/a/b.md") == nil, "a note name is one segment")
+        expect(parse("nanocast://note/a/b.md") == nil, "a note name is one segment")
         for name in [".", "..", "%2E%2E"] {
-            expect(parse("tinycast://note/\(name)") == nil, "\(name) is never a note")
+            expect(parse("nanocast://note/\(name)") == nil, "\(name) is never a note")
         }
         let chat = UUID()
         expect(
             DeepLink.url(forChat: chat, scheme: scheme).flatMap { DeepLink(url: $0, scheme: scheme) }
                 == .chat(id: chat),
             "a chat's link reads back as its ID")
-        expect(parse("tinycast://chat/nope") == nil, "a chat link needs a UUID")
+        expect(parse("nanocast://chat/nope") == nil, "a chat link needs a UUID")
         expect(
-            parse("tinycast://system-action/set-volume?fallbackText=40")
+            parse("nanocast://system-action/set-volume?fallbackText=40")
                 == .entry(
                     .systemAction(id: .setVolume),
                     DeepLinkInput(fallbackText: "40")),
             "set-volume carries its level as input")
         expect(
             DeepLinkSource.outside.mayRun(.quicklink(id: chat)), "a link from outside may open a quicklink")
-        expect(!DeepLinkSource.tinycast.mayRun(.quicklink(id: chat)), "a quicklink may not open a quicklink")
+        expect(!DeepLinkSource.nanocast.mayRun(.quicklink(id: chat)), "a quicklink may not open a quicklink")
         expect(
-            DeepLinkSource.tinycast.mayRun(.command(.searchFiles)),
+            DeepLinkSource.nanocast.mayRun(.command(.searchFiles)),
             "a quicklink may open anything else")
     }
 
     static func windowSizeChecks() {
-        let base = "tinycast://window-size?arguments="
+        let base = "nanocast://window-size?arguments="
         let json = #"{"width":"1200","height":"60%","anchor":"top-left","x":"10","y":"-20"}"#
         let encoded = json.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
         guard case .windowSize(let size)? = parse(base + encoded) else {
@@ -331,7 +331,7 @@ struct DeepLinkTests {
             expect(CustomWindowSize(linkFields: bad) == nil, "\(field)=\(value) is refused, not clamped")
         }
         expect(CustomWindowSize(linkFields: ["width": "800"]) == nil, "a size needs both sides")
-        expect(parse("tinycast://window-size") == nil, "a window-size link with no size is refused")
+        expect(parse("nanocast://window-size") == nil, "a window-size link with no size is refused")
     }
 
     static func consentKeyChecks() {
@@ -363,7 +363,7 @@ struct DeepLinkTests {
     static func consentChecks() {
         expect(
             !DeepLinkConsentPolicy.requiresConsent(.command(.clipboardHistory)),
-            "opening a Tinycast screen runs without asking")
+            "opening a Nanocast screen runs without asking")
         expect(
             !DeepLinkConsentPolicy.requiresConsent(.command(.createQuicklink)),
             "a create editor saves nothing on its own, so it runs without asking")

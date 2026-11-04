@@ -1,6 +1,6 @@
 ---
 title: The palette
-description: Move around Tinycast's floating palette and adjust its appearance and behavior.
+description: Move around Nanocast's floating palette and adjust its appearance and behavior.
 ---
 
 The launcher, search tools and Quick AI share one floating panel. AI Chat, Notes, Camera and command
@@ -31,7 +31,7 @@ Every screen except the launcher has a back arrow in the top-left corner. Hover 
 whether clicking goes back a step or closes the window.
 
 <kbd>⌘</kbd><kbd>esc</kbd> needs the [Accessibility permission](/docs/permissions), because macOS
-uses that shortcut itself unless Tinycast intercepts it first.
+uses that shortcut itself unless Nanocast intercepts it first.
 
 ### Emacs chords
 
@@ -106,10 +106,10 @@ is on. Turn it off to always use the display with the menu bar.
 the search field, the empty space in the header, or the search field itself while it's empty.
 
 While you drag, dotted guides show the default position and light up when you're close enough to
-snap to it. Release there and the palette snaps back. Release anywhere else and Tinycast remembers
+snap to it. Release there and the palette snaps back. Release anywhere else and Nanocast remembers
 that position, even after a restart.
 
-Tinycast forgets a saved position only when no display can show it anymore, for example after you
+Nanocast forgets a saved position only when no display can show it anymore, for example after you
 unplug a monitor. Positions aren't included in backups, since they don't carry over between Macs.
 
 ## Appearance
@@ -126,7 +126,7 @@ unplug a monitor. Positions aren't included in backups, since they don't carry o
 **Appearance.** System follows macOS whenever it changes. Light uses the same design with inverted
 colors, and the layout, type and animations stay the same.
 
-**Show animations.** Turn it off and every Tinycast window opens, closes and changes at once, with no
+**Show animations.** Turn it off and every Nanocast window opens, closes and changes at once, with no
 motion.
 
 **Interface size** makes the palette and its floating windows 10% or 20% larger. The Settings window
@@ -145,7 +145,7 @@ Show Notes, My Schedule and Quick AI. Show Notes opens the Notes window. A disab
 stays configured and marked Off in Settings, then reappears in its place when enabled again.
 
 The [Toggle System Appearance](/docs/launcher/system-actions) action changes the appearance of
-_macOS itself_. Tinycast follows it only while its own Appearance is set to System.
+_macOS itself_. Nanocast follows it only while its own Appearance is set to System.
 
 ## Input source
 
@@ -153,12 +153,12 @@ _macOS itself_. Tinycast follows it only while its own Appearance is set to Syst
 is open.
 
 This helps if you type Japanese or Chinese most of the day but your app names use Latin letters.
-Tinycast switches layouts when the palette opens and switches back when it closes. If you changed
-the layout yourself while the palette was open, Tinycast keeps your choice.
+Nanocast switches layouts when the palette opens and switches back when it closes. If you changed
+the layout yourself while the palette was open, Nanocast keeps your choice.
 
 ## Pop to root
 
-**Settings → General → Pop to Root Search** sets how long after the window closes Tinycast returns
+**Settings → General → Pop to Root Search** sets how long after the window closes Nanocast returns
 to the launcher: **Immediately** (default), or after 5, 15, 30, 60 or 90 seconds.
 
 Use a longer delay if you often close the palette and then come back to the same screen.
@@ -168,7 +168,7 @@ AI Chat has its own setting for reopening a conversation. See
 
 ## The menu bar
 
-The Tinycast menu bar icon has **Open Tinycast**, **Clipboard History** (while clipboard history is
-on), **Check for Updates…**, **Support Tinycast…**, **Settings…** and **Quit Tinycast**.
+The Nanocast menu bar icon has **Open Nanocast**, **Clipboard History** (while clipboard history is
+on), **Check for Updates…**, **Support Nanocast…**, **Settings…** and **Quit Nanocast**.
 
 **Settings → General → Show in menu bar** hides the icon. Your shortcuts still work without it.
