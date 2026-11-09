@@ -56,7 +56,7 @@ Independently of the folder tree, every mature subsystem has converged on the sa
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ published through
 ┌─ OBSERVABLE STATE ───────────────▼─────────────────────────────────────────┐
-│ 53 @MainActor @Observable stores, sessions, indices and State types        │
+│ 55 @MainActor @Observable stores, sessions, indices and State types        │
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ rendered by
 ┌─ VIEW ───────────────────────────▼─────────────────────────────────────────┐
@@ -160,7 +160,8 @@ imperatively from AppKit.
 - **The camera** — a borderless, non-activating `CameraPanel` at `.floating` over one
   `CameraSession`, driven by `CameraCoordinator` on `AppCore` for the `Open Camera` command. See
   [features/camera.md](features/camera.md).
-- **The screenshot overlay** covers each display with one borderless, non-activating `ScreenshotPanel` at `.screenshot`, above the menu bar, for the life of one capture. `ScreenshotCoordinator`, owned by `AppCore`, owns the session and the `ScreenshotOverlayController` that shows it. It also owns `PinController`, whose pins are non-activating `PinPanel`s at `.floating` that outlive the capture, and at most one `ScrollCaptureController`, which replaces the overlay during a scrolling capture with a click-through border and a key bar, both `LiveCapturePanel`s at `.screenshot`. A screen recording replaces the overlay the same way with a `ScreenRecordingController`, whose bar never takes key, so typing still reaches the recorded app. When it ends, a new session and overlay open the long image in one `ScreenshotPanel` with a scroll view. See [features/screenshot.md](features/screenshot.md).
+- **The screenshot overlay** covers each display with one borderless, non-activating `ScreenshotPanel` at `.screenshot`, above the menu bar, for the life of one capture. `ScreenshotCoordinator`, owned by `AppCore`, owns the session and the `ScreenshotOverlayController` that shows it. It also owns `PinController`, whose pins are non-activating `PinPanel`s at `.floating` that outlive the capture, and at most one `ScrollCaptureController`, which replaces the overlay during a scrolling capture with a click-through border and a key bar, both `LiveCapturePanel`s at `.screenshot`. When it ends, a new session and overlay open the long image in one `ScreenshotPanel` with a scroll view. See [features/screenshot.md](features/screenshot.md).
+- **A screen recording** borrows the screenshot overlay to pick an area or a window, then shows a click-through border and a bar, both `LiveCapturePanel`s that never take key, so typing still reaches the recorded app. `ScreenRecordingCoordinator`, owned by `AppCore`, owns at most one `ScreenRecordingController`. See [features/screen-recording.md](features/screen-recording.md).
 - **HUDs** are separate, because a dialog asks and a HUD reports: `MessageHUDController` (the pill) and
   `VolumeHUDController` (the level box), both over a shared `HUDPresenter` that owns the
   one-at-a-time, auto-dismiss and fade policy. See [ui.md](ui.md#dialogs--hud).
@@ -173,7 +174,7 @@ every live `AnimatedPanel` (see [ui.md](ui.md#non-negotiable-invariants)).
 
 ## Observation
 
-53 types are `@MainActor @Observable` (`grep -rln "@Observable" Nanocast --include=*.swift | wc -l`). Nothing uses `ObservableObject` or `@Published`, and views read
+55 types are `@MainActor @Observable` (`grep -rln "@Observable" Nanocast --include=*.swift | wc -l`). Nothing uses `ObservableObject` or `@Published`, and views read
 state through `@Environment` rather than `@EnvironmentObject`.
 
 Three things about this model are easy to get wrong:
@@ -231,7 +232,8 @@ Nanocast/
     PaletteRowIndex.swift   the flat selection index — palette-owned, so it sits at the top
     Launcher/ Clipboard/ Calculator/ Camera/ Dictionary/ Emoji/ FileSearch/ MenuSearch/
     Notes/ Uninstall/ SystemActions/ CustomCommands/ HotKeys/ Backup/
-    WindowManagement/ WindowSwitcher/ Screenshot/ ColorPicker/ Onboarding/ Updates/ Settings/
+    WindowManagement/ WindowSwitcher/ Screenshot/ ScreenRecording/ ColorPicker/ Onboarding/
+    Updates/ Settings/
         Model/      pure — the harness inputs
         Service/    effects — stores, monitors, runners, AppKit glue
         UI/         screens, views, and the feature's coordinator

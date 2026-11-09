@@ -5,7 +5,6 @@ struct ScreenshotSettingsView: View {
     @Environment(AppSettings.self) private var settings
 
     var body: some View {
-        @Bindable var settings = settings
         Form {
             FeatureCommandsSection(owner: .screenshot, anchor: .screenshotCommands)
 
@@ -19,15 +18,10 @@ struct ScreenshotSettingsView: View {
                     SettingsRowTitle(.screenshotSaving, "Save Folder")
                     Text((screenshots.saveFolder.path as NSString).abbreviatingWithTildeInPath)
                 }
-                Picker(selection: $settings.screenshotRecordingFormat) {
-                    ForEach(ScreenRecordingFormat.allCases) { Text($0.title).tag($0) }
-                } label: {
-                    SettingsRowTitle(.screenshotSaving, "Recording Format")
-                }
             } header: {
                 SettingsSectionHeader(.screenshotSaving)
             } footer: {
-                Text("⌘S in a capture saves a PNG here, and Return copies it instead. ⌘R records the screen to a file here.")
+                Text("⌘S in a capture saves a PNG here, and Return copies it instead.")
                     .foregroundStyle(.secondary)
             }
         }

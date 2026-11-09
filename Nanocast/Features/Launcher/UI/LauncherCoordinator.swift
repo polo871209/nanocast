@@ -127,6 +127,8 @@ final class LauncherCoordinator {
             core.colorPickerCoordinator.pick()
         case .captureScreenshot:
             core.screenshotCoordinator.capture()
+        case .recordScreen:
+            core.screenRecordingCoordinator.toggle()
         case .define:
             core.dictionaryCoordinator.show()
         case .openInBrowser:
