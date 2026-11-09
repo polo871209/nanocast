@@ -25,7 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !terminationRequestInFlight else { return .terminateLater }
         terminationRequestInFlight = true
         Task { @MainActor [weak self] in
-            await AppCore.shared.flushNotesForTermination()
+            await AppCore.shared.finishWorkForTermination()
             self?.terminationRequestInFlight = false
             sender.reply(toApplicationShouldTerminate: true)
         }

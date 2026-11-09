@@ -38,7 +38,11 @@ enum SettingsBackupCoverage {
         "notesRendersMarkdown": .notesRendersMarkdown,
         "notesShowsFormattingBar": .notesShowsFormattingBar,
         "notesShowsInMenuBar": .notesShowsInMenuBar,
-        "screenshotRecordingFormat": .screenshotRecordingFormat,
+        "screenRecordingFormat": .screenRecordingFormat,
+        "screenRecordingSystemAudio": .screenRecordingSystemAudio,
+        "screenRecordingMicrophone": .screenRecordingMicrophone,
+        "screenRecordingShowsClicks": .screenRecordingShowsClicks,
+        "screenRecordingCamera": .screenRecordingCamera,
         "customCommandsEnabled": .customCommandsEnabled,
         "customCommandsShowInLauncher": .customCommandsShowInLauncher,
         "navigationEnabled": .navigationEnabled,
@@ -72,6 +76,12 @@ enum SettingsBackupCoverage {
             "Names a folder on this Mac; the one a backup lands on may not have it.",
         AppSettingsKey.screenshotSaveFolder.rawValue:
             "Names a folder on this Mac; the one a backup lands on may not have it.",
+        AppSettingsKey.screenRecordingSaveFolder.rawValue:
+            "Names a folder on this Mac; the one a backup lands on may not have it.",
+        AppSettingsKey.screenRecordingMicrophoneID.rawValue:
+            "Names a microphone attached to this Mac; another Mac may not have it.",
+        AppSettingsKey.screenRecordingCameraID.rawValue:
+            "Names a camera attached to this Mac; another Mac may not have it.",
         AppSettingsKey.fileToolsFinderTab.rawValue:
             "Installs a key tap in Finder on this Mac; an import must not turn it on.",
         AppSettingsKey.settingsFileEnabled.rawValue:

@@ -1,6 +1,6 @@
 import Foundation
 
-enum CameraAccess: Sendable {
+enum CaptureAccess: Sendable {
     case notDetermined
     case granted
     case denied

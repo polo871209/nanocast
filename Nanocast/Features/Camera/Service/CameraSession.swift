@@ -24,12 +24,7 @@ final class CameraSession {
     private var pendingPhoto: PhotoCapture?
 
     func start() async -> Feed {
-        var access = Permissions.cameraAccess()
-        if access == .notDetermined {
-            _ = await Permissions.requestCameraAccess()
-            access = Permissions.cameraAccess()
-        }
-        guard access == .granted else { return .denied }
+        guard await Permissions.ensureCaptureAccess(for: .video) else { return .denied }
         guard let capture = capture ?? configure() else { return .noCamera }
         self.capture = capture
         guard !capture.isRunning else { return .live(capture) }

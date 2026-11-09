@@ -4,6 +4,12 @@ import Observation
 @MainActor
 @Observable
 final class ScreenshotSession {
+    enum Purpose {
+        case capture
+        case longImage
+        case recording
+    }
+
     struct Pointer: Equatable {
         let display: UInt32
         let location: CGPoint
@@ -15,6 +21,7 @@ final class ScreenshotSession {
     private(set) var pointer: Pointer?
     private(set) var isDragging = false
     var showsPixels = false
+    var recordingChoices = RecordingChoices(camera: false, microphone: false)
     private(set) var tool: ScreenshotTool?
     private(set) var style = AnnotationStyle()
     private(set) var board = AnnotationBoard() {
@@ -30,25 +37,34 @@ final class ScreenshotSession {
     @ObservationIgnored private var edit: SelectionEdit?
     @ObservationIgnored private var editDisplay: UInt32?
     @ObservationIgnored private var mosaics: [UInt32: MosaicSource] = [:]
-    let isLongImage: Bool
+    let purpose: Purpose
     @ObservationIgnored private let windows: [ScreenWindow]
     @ObservationIgnored private let lastArea: DisplayArea?
 
-    init(windows: [ScreenWindow], lastArea: DisplayArea?) {
+    init(windows: [ScreenWindow], lastArea: DisplayArea?, purpose: Purpose) {
         self.windows = windows
         self.lastArea = lastArea
-        isLongImage = false
+        self.purpose = purpose
     }
 
     init(longImage display: CapturedDisplay) {
         windows = []
         lastArea = nil
-        isLongImage = true
+        purpose = .longImage
         displays = [display]
         area = DisplayArea(display: display.id, rect: display.bounds)
     }
 
     var editKind: SelectionEdit.Kind? { edit?.kind }
+
+    var primaryIntent: ScreenshotIntent { purpose == .recording ? .record : .copy }
+
+    var recordingWindow: WindowShot? {
+        guard let area, let shot = windowShot, shot.display == area.display, let display = display(area.display),
+            shot.isVisiblePart(area.rect, within: display.bounds)
+        else { return nil }
+        return shot
+    }
 
     var showsLoupe: Bool {
         guard tool == nil else { return false }
