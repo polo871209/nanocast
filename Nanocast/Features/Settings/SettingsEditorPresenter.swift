@@ -336,6 +336,7 @@ extension View {
             .environment(core.customWindowSizes)
             .environment(core.customWindowSizeCoordinator)
             .environment(core.screenshotCoordinator)
+            .environment(core.screenRecordingCoordinator)
             .scrollContentBackground(.hidden)
             .motionScope()
     }
