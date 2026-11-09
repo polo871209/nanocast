@@ -2,11 +2,11 @@
 
 Every launcher row that can take a hotkey can also be run by URL, and so can a note, a saved AI chat
 and a one-off window size. Karabiner-Elements, a Shortcut, a script, a Stream Deck or a web page can
-drive Tinycast without a chord of its own:
+drive Nanocast without a chord of its own:
 
 ```sh
-open -g "tinycast://command/clipboard-history"
-open -g "tinycast://command/search-files?fallbackText=~/Downloads/"
+open -g "nanocast://command/clipboard-history"
+open -g "nanocast://command/search-files?fallbackText=~/Downloads/"
 ```
 
 A link can carry input: text, field values and an editor's contents. **Copy Deeplink** gives the
@@ -42,8 +42,8 @@ Settings shortcut field; only the Settings window sets it.
   or a link opened at login before the first scan, still runs.
 - **A link that launches the app waits for `start`.** `AppCore.handleOpenURL` queues until every
   handler is wired, then runs the queue in order.
-- **The scheme is the channel's own.** Release answers `tinycast://`, Debug `tinycast-dev://`, set by
-  `TINYCAST_URL_SCHEME` in `project.yml` and read through `AppURLScheme`. `raycast://` and
+- **The scheme is the channel's own.** Release answers `nanocast://`, Debug `nanocast-dev://`, set by
+  `NANOCAST_URL_SCHEME` in `project.yml` and read through `AppURLScheme`. `raycast://` and
   `com.raycast:` never reach a built-in.
 - **The built-in router never touches extension types.** `DeepLinkCoordinator.handles(_:)` leaves
   the `extensions` host and every Raycast scheme to the extension branch of
@@ -64,27 +64,27 @@ Settings shortcut field; only the Settings window sets it.
 
 | Link                                        | Does                                                            |
 | ------------------------------------------- | --------------------------------------------------------------- |
-| `tinycast://`                               | Opens the launcher                                              |
-| `tinycast://search?fallbackText=2%2B2`      | Opens the launcher with the text typed                          |
-| `tinycast://command/<slug>`                 | Runs a built-in command                                         |
-| `tinycast://window-command/left-half`       | Runs a window command                                           |
-| `tinycast://system-action/lock-screen`      | Runs a system action                                            |
-| `tinycast://window-size/<uuid>`             | Applies a saved window size                                     |
-| `tinycast://window-size?arguments={…}`      | Applies a size spelled out in the link                          |
-| `tinycast://window-layout/<uuid>`           | Applies a window layout                                         |
-| `tinycast://window-room/<uuid>`             | Enters a room                                                   |
-| `tinycast://quick-action/<uuid>`            | Runs a custom Quick Action                                      |
-| `tinycast://custom-command/<uuid>`          | Runs a custom command                                           |
-| `tinycast://quicklink/<uuid>`               | Opens a quicklink                                               |
-| `tinycast://apple-shortcut/<uuid>`          | Runs an Apple Shortcut                                          |
-| `tinycast://snippet/<percent-encoded path>` | Expands a snippet                                               |
-| `tinycast://note/<file name>`               | Opens that note                                                 |
-| `tinycast://chat/<uuid>`                    | Opens that saved chat in the AI Chat window                     |
-| `tinycast://settings/<tab>`                 | Opens Settings on a tab (`SettingsTab.slug`)                    |
-| `tinycast://extensions/<owner>/<ext>/<cmd>` | Extension command, see [extensions.md](extensions.md#deeplinks) |
+| `nanocast://`                               | Opens the launcher                                              |
+| `nanocast://search?fallbackText=2%2B2`      | Opens the launcher with the text typed                          |
+| `nanocast://command/<slug>`                 | Runs a built-in command                                         |
+| `nanocast://window-command/left-half`       | Runs a window command                                           |
+| `nanocast://system-action/lock-screen`      | Runs a system action                                            |
+| `nanocast://window-size/<uuid>`             | Applies a saved window size                                     |
+| `nanocast://window-size?arguments={…}`      | Applies a size spelled out in the link                          |
+| `nanocast://window-layout/<uuid>`           | Applies a window layout                                         |
+| `nanocast://window-room/<uuid>`             | Enters a room                                                   |
+| `nanocast://quick-action/<uuid>`            | Runs a custom Quick Action                                      |
+| `nanocast://custom-command/<uuid>`          | Runs a custom command                                           |
+| `nanocast://quicklink/<uuid>`               | Opens a quicklink                                               |
+| `nanocast://apple-shortcut/<uuid>`          | Runs an Apple Shortcut                                          |
+| `nanocast://snippet/<percent-encoded path>` | Expands a snippet                                               |
+| `nanocast://note/<file name>`               | Opens that note                                                 |
+| `nanocast://chat/<uuid>`                    | Opens that saved chat in the AI Chat window                     |
+| `nanocast://settings/<tab>`                 | Opens Settings on a tab (`SettingsTab.slug`)                    |
+| `nanocast://extensions/<owner>/<ext>/<cmd>` | Extension command, see [extensions.md](extensions.md#deeplinks) |
 
 A row's path is its `AppEntry.id` with the first `:` turned into `/`: `command:clipboard-history`
-becomes `tinycast://command/clipboard-history`. Built-in commands use their `CommandID` slug. Quick
+becomes `nanocast://command/clipboard-history`. Built-in commands use their `CommandID` slug. Quick
 AI keeps the slug it shipped with, `ai-chat`, and the AI Chat window is `ai-chat-window`. Rows you
 create are keyed by UUID, which survives a rename. A note is known only by its file name, so
 renaming a note breaks its link; the store then reports the missing file.
@@ -137,10 +137,10 @@ row's fields, as a hotkey with no selection does. Any other target ignores its i
 ## Consent
 
 `DeepLinkConsentPolicy.requiresConsent(_:input:)` decides. **A link from outside asks first when it
-carries input, or when its target acts outside Tinycast.** The second half is an exhaustive switch,
+carries input, or when its target acts outside Nanocast.** The second half is an exhaustive switch,
 so a new command fails to build until it is classed:
 
-- **Never asks without input**: anything that only opens a Tinycast screen or editor — search
+- **Never asks without input**: anything that only opens a Nanocast screen or editor — search
   screens, Settings, notes, chats, the create commands, Quick AI.
 - **Always asks**: window commands and sizes, layouts, rooms, system actions, quicklinks, snippets,
   custom commands, Apple Shortcuts, custom Quick Actions, the AI text actions, Paste Sequentially,
@@ -163,8 +163,8 @@ Destructive system actions still ask their own question after it. One question s
 link that arrives meanwhile is logged and dropped. The gate is checked again after the answer, so a
 feature turned off during the question still wins.
 
-A link Tinycast opens itself — a quicklink whose link is the channel's own scheme — runs in-process
-with `source: .tinycast`. It never asks, because the reader chose it in Tinycast. It never goes
+A link Nanocast opens itself — a quicklink whose link is the channel's own scheme — runs in-process
+with `source: .nanocast`. It never asks, because the reader chose it in Nanocast. It never goes
 through LaunchServices either.
 
 ## Copy Deeplink
@@ -177,9 +177,9 @@ through LaunchServices either.
 
 ## Focus
 
-A plain `open` (without `-g`) activates Tinycast before the link arrives. Tinycast is an accessory
+A plain `open` (without `-g`) activates Nanocast before the link arrives. Nanocast is an accessory
 app, so it does not take the menu bar, and the menu-bar owner is still the app the reader was in.
-`FrontmostApp.current` returns that app when Tinycast itself is frontmost with no window of its own
+`FrontmostApp.current` returns that app when Nanocast itself is frontmost with no window of its own
 in key. `PaletteCoordinator.targetApp`, `WindowTarget.current()` and the palette's record of the app
 it covered all use it, so a window command, or a paste from a palette a link opened, reaches the
 right app. Pasting with the palette closed still needs the target app active, so snippets and Paste
@@ -189,7 +189,7 @@ Sequentially want `open -g`.
 
 ```json
 {
-  "description": "Hyper+V opens Tinycast clipboard history",
+  "description": "Hyper+V opens Nanocast clipboard history",
   "manipulators": [
     {
       "type": "basic",
@@ -197,7 +197,7 @@ Sequentially want `open -g`.
         "key_code": "v",
         "modifiers": { "mandatory": ["left_command", "left_control", "left_option", "left_shift"] }
       },
-      "to": [{ "shell_command": "open -g 'tinycast://command/clipboard-history'" }]
+      "to": [{ "shell_command": "open -g 'nanocast://command/clipboard-history'" }]
     }
   ]
 }

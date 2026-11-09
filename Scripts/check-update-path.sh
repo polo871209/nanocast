@@ -18,14 +18,14 @@ fi
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
-ZIP="Tinycast-${TAG#v}.zip"
+ZIP="Nanocast-${TAG#v}.zip"
 gh release download "$TAG" --pattern "$ZIP" --dir "$WORK"
 ditto -x -k "$WORK/$ZIP" "$WORK/expanded"
 OLD="$(find "$WORK/expanded" -maxdepth 1 -name '*.app' | head -n1)"
 [ -n "$OLD" ] || { echo "✗ $ZIP holds no app" >&2 && exit 1; }
 
 update_key() {
-    /usr/libexec/PlistBuddy -c 'Print :TinycastUpdatePublicKey' "$1/Contents/Info.plist" 2>/dev/null || true
+    /usr/libexec/PlistBuddy -c 'Print :NanocastUpdatePublicKey' "$1/Contents/Info.plist" 2>/dev/null || true
 }
 OLD_KEY="$(update_key "$OLD")"
 if [ -n "$OLD_KEY" ] && [ "$OLD_KEY" = "$(update_key "$APP")" ]; then

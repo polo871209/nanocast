@@ -28,7 +28,7 @@ struct OpenCodeMCPTest {
         let auth = server["headers"]!.objectValue!["Authorization"]!.stringValue!
         assert(url.host() == "127.0.0.1")
         assert(server["oauth"] == .bool(false) && server["codemode"] == .bool(false))
-        let permissions = config["agents"]!.objectValue!["tinycast"]!.objectValue!["permissions"]!
+        let permissions = config["agents"]!.objectValue!["nanocast"]!.objectValue!["permissions"]!
             .arrayValue!
         assert(permissions.count == 2)
         assert(permissions[0].objectValue!["action"] == .string("*"))
@@ -187,10 +187,10 @@ struct OpenCodeMCPTest {
             #!/usr/bin/python3
             import json, os, sys, urllib.request
             assert '--standalone' in sys.argv
-            assert sys.argv[sys.argv.index('--agent') + 1] == 'tinycast'
+            assert sys.argv[sys.argv.index('--agent') + 1] == 'nanocast'
             config = json.loads(os.environ['OPENCODE_CONFIG_CONTENT'])
             prompt = sys.stdin.read()
-            rules = config['agents']['tinycast']['permissions']
+            rules = config['agents']['nanocast']['permissions']
             assert rules[0] == {'action': '*', 'resource': '*', 'effect': 'deny'}
             if 'mcp' in config:
                 assert 'The only tools you may use are the MCP tools' in prompt

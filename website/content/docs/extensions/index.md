@@ -1,15 +1,15 @@
 ---
 title: Extensions
-description: Tinycast runs Raycast extensions natively, rendered with SwiftUI.
+description: Nanocast runs Raycast extensions natively, rendered with SwiftUI.
 ---
 
-Tinycast runs Raycast extensions: the same `package.json` and the same built command files, rendered
+Nanocast runs Raycast extensions: the same `package.json` and the same built command files, rendered
 natively in the palette.
 
-Tinycast doesn't run Electron, a browser or Node.js. Extensions run in JavaScriptCore, which is
+Nanocast doesn't run Electron, a browser or Node.js. Extensions run in JavaScriptCore, which is
 already part of macOS, so supporting them adds **nothing to the app's size**.
 
-Turn extensions on in **Settings → Extensions**. They're **off** by default, and Tinycast asks for
+Turn extensions on in **Settings → Extensions**. They're **off** by default, and Nanocast asks for
 confirmation when you turn them on, because extensions are code written by other people.
 
 | Setting           | Default |
@@ -20,7 +20,7 @@ confirmation when you turn them on, because extensions are code written by other
 The switch is never included in [backups](/docs/reference/backup), so importing a backup can't turn
 extensions on.
 
-While extensions are off, Tinycast doesn't scan any folders, nothing appears in the launcher, and no
+While extensions are off, Nanocast doesn't scan any folders, nothing appears in the launcher, and no
 JavaScript engine runs.
 
 ## Memory use

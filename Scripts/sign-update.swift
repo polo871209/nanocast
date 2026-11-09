@@ -19,7 +19,7 @@ guard let encoded = ProcessInfo.processInfo.environment["UPDATE_SIGNING_KEY"],
 else { fail("UPDATE_SIGNING_KEY is missing or is not a base64 Ed25519 private key") }
 
 let info = NSDictionary(contentsOf: app.appending(components: "Contents", "Info.plist"))
-let trusted = info?["TinycastUpdatePublicKey"] as? String
+let trusted = info?["NanocastUpdatePublicKey"] as? String
 guard trusted == key.publicKey.rawRepresentation.base64EncodedString() else {
     fail("\(app.lastPathComponent) trusts another update key and could never install the next release")
 }
