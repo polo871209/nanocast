@@ -156,7 +156,7 @@ final class AppCore {
         }
     }
 
-    func flushNotesForTermination() async {
+    func finishWorkForTermination() async {
         record("flush-start")
         if stage == "first" {
             Task { @MainActor in

@@ -1,3 +1,5 @@
+import AVFoundation
+
 enum ScreenRecordingFormat: String, CaseIterable, Identifiable, Sendable {
     case mov
     case mp4
@@ -12,4 +14,11 @@ enum ScreenRecordingFormat: String, CaseIterable, Identifiable, Sendable {
     }
 
     var fileExtension: String { rawValue }
+
+    var fileType: AVFileType {
+        switch self {
+        case .mov: .mov
+        case .mp4: .mp4
+        }
+    }
 }

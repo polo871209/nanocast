@@ -94,7 +94,7 @@ enum SettingsSearchCatalog {
 
     static let entries: [SettingsSearchEntry] =
         general + applications + systemSettings + systemActions + commands + clipboard
-        + fileSearch + fileTools + screenshot + windowManagement + navigation + notes + emoji
+        + fileSearch + fileTools + screenshot + screenRecording + windowManagement + navigation + notes + emoji
         + permissions + backup + about
 
     private static let general: [SettingsSearchEntry] = [
@@ -393,16 +393,46 @@ enum SettingsSearchCatalog {
     private static let screenshot: [SettingsSearchEntry] = [
         .init(
             pane: .screenshot,
-            keywords: ["capture", "screen", "snip", "grab", "shottr", "annotate", "record", "video"]),
+            keywords: ["capture", "screen", "snip", "grab", "shottr", "annotate"]),
         .init(
             group: .screenshotCommands, "Screenshot commands",
             keywords: ["shortcut", "hotkey", "capture"]),
         .init(
             .screenshotSaving, "Save Folder",
-            keywords: ["desktop", "location", "directory", "png", "mov", "recording"]),
+            keywords: ["desktop", "location", "directory", "png"])
+    ]
+
+    private static let screenRecording: [SettingsSearchEntry] = [
         .init(
-            .screenshotSaving, "Recording Format",
-            keywords: ["video", "screen recording", "mov", "mp4", "file type"])
+            pane: .screenRecording,
+            keywords: ["record", "video", "screencast", "capture", "window"]),
+        .init(
+            group: .screenRecordingCommands, "Screen Recording commands",
+            keywords: ["shortcut", "hotkey", "record"]),
+        .init(
+            .screenRecordingSaving, "Save Folder",
+            keywords: ["desktop", "location", "directory", "mov", "mp4"]),
+        .init(
+            .screenRecordingSaving, "Format",
+            keywords: ["video", "mov", "mp4", "file type", "container"]),
+        .init(
+            .screenRecordingCapture, "Record System Audio",
+            keywords: ["sound", "audio", "speaker", "music"]),
+        .init(
+            .screenRecordingCapture, "Record Microphone",
+            keywords: ["mic", "voice", "narration", "talk", "input"]),
+        .init(
+            .screenRecordingCapture, "Microphone",
+            keywords: ["mic", "input device", "headset"]),
+        .init(
+            .screenRecordingCapture, "Show Camera",
+            keywords: ["camera", "webcam", "face", "yourself", "bubble", "presenter", "facecam"]),
+        .init(
+            .screenRecordingCapture, "Camera",
+            keywords: ["webcam", "continuity camera", "video device"]),
+        .init(
+            .screenRecordingCapture, "Show Clicks",
+            keywords: ["mouse", "cursor", "pointer", "click", "highlight"])
     ]
 
     private static let emoji: [SettingsSearchEntry] = [

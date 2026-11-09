@@ -34,7 +34,10 @@ struct SettingsBackupTest {
             "notesEnabled", "notesRendersMarkdown",
             "notesShowsFormattingBar", "notesShowsInMenuBar", "notesFolder", "customCommandsEnabled",
             "customCommandsShowInLauncher", "screenshotSaveFolder",
-            "screenshotRecordingFormat", "navigationEnabled", "menuSearchDisabledApps",
+            "screenRecordingSaveFolder", "screenRecordingFormat", "screenRecordingSystemAudio",
+            "screenRecordingMicrophone", "screenRecordingMicrophoneID", "screenRecordingShowsClicks",
+            "screenRecordingCamera", "screenRecordingCameraID", "screenRecordingCameraDiameter",
+            "navigationEnabled", "menuSearchDisabledApps",
             "menuSearchShowsAppleMenu", "windowSwitcherExcludedApps", "windowManagementEnabled",
             "windowManagementShowInLauncher", "windowManagementGap", "windowManagementCycleMode",
             "windowManagementWrapDisplays", "windowManagementKeepProportions",
@@ -99,7 +102,7 @@ struct SettingsBackupTest {
             mirrored["clipboardEnabled"] == .clipboardEnabled)
         check(
             "the screen recording format rides the settings backup",
-            mirrored["screenshotRecordingFormat"] == .screenshotRecordingFormat)
+            mirrored["screenRecordingFormat"] == .screenRecordingFormat)
         check(
             "emoji grid density rides the settings backup",
             mirrored["emojiGridColumns"] == .emojiGridColumns)

@@ -58,6 +58,8 @@ private class DragView: NSView {
     private var onClick: (() -> Void)?
     private static let dragSlop: CGFloat = 3
 
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
     func bind(
         onBegan: @escaping () -> Void, onEnded: @escaping () -> Void,
         onClick: (() -> Void)? = nil
