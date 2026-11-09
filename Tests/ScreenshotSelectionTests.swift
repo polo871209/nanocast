@@ -211,23 +211,19 @@ struct ScreenshotSelectionTests {
         let date = Date(timeIntervalSince1970: 1_778_508_202)
         let utc = TimeZone(identifier: "UTC")!
         expect(
-            ScreenshotFileName.name(of: .screenshot, at: date, in: utc) { _ in false }, "Screenshot 2026-05-11 at 14.03.22.png",
+            TimestampedFileName.name("Screenshot", extension: "png", at: date, in: utc) { _ in false },
+            "Screenshot 2026-05-11 at 14.03.22.png",
             "macOS's own spelling")
         var taken: Set<String> = ["Screenshot 2026-05-11 at 14.03.22.png", "Screenshot 2026-05-11 at 14.03.22 (2).png"]
         expect(
-            ScreenshotFileName.name(of: .screenshot, at: date, in: utc) { taken.contains($0) },
+            TimestampedFileName.name("Screenshot", extension: "png", at: date, in: utc) { taken.contains($0) },
             "Screenshot 2026-05-11 at 14.03.22 (3).png", "a taken name is numbered")
         taken.removeAll()
         expect(
-            ScreenshotFileName.name(of: .screenshot, at: date, in: TimeZone(identifier: "Asia/Shanghai")!) { taken.contains($0) },
+            TimestampedFileName.name("Screenshot", extension: "png", at: date, in: TimeZone(identifier: "Asia/Shanghai")!) {
+                taken.contains($0)
+            },
             "Screenshot 2026-05-11 at 22.03.22.png", "the time zone is the caller's")
-        taken = ["Screen Recording 2026-05-11 at 14.03.22.mov"]
-        expect(
-            ScreenshotFileName.name(of: .recording(.mov), at: date, in: utc) { taken.contains($0) },
-            "Screen Recording 2026-05-11 at 14.03.22 (2).mov", "a recording takes macOS's recording spelling")
-        expect(
-            ScreenshotFileName.name(of: .recording(.mp4), at: date, in: utc) { taken.contains($0) },
-            "Screen Recording 2026-05-11 at 14.03.22.mp4", "the recording format names the extension")
     }
 
     static func color() {

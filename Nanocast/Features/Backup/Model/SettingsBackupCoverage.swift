@@ -36,7 +36,11 @@ enum SettingsBackupCoverage {
         "notesRendersMarkdown": .notesRendersMarkdown,
         "notesShowsFormattingBar": .notesShowsFormattingBar,
         "notesShowsInMenuBar": .notesShowsInMenuBar,
-        "screenshotRecordingFormat": .screenshotRecordingFormat,
+        "screenRecordingFormat": .screenRecordingFormat,
+        "screenRecordingSystemAudio": .screenRecordingSystemAudio,
+        "screenRecordingMicrophone": .screenRecordingMicrophone,
+        "screenRecordingShowsClicks": .screenRecordingShowsClicks,
+        "screenRecordingCamera": .screenRecordingCamera,
         "customCommandsEnabled": .customCommandsEnabled,
         "customCommandsShowInLauncher": .customCommandsShowInLauncher,
         "navigationEnabled": .navigationEnabled,
@@ -70,6 +74,14 @@ enum SettingsBackupCoverage {
             "Names a folder on this Mac; the one a backup lands on may not have it.",
         AppSettingsKey.screenshotSaveFolder.rawValue:
             "Names a folder on this Mac; the one a backup lands on may not have it.",
+        AppSettingsKey.screenRecordingSaveFolder.rawValue:
+            "Names a folder on this Mac; the one a backup lands on may not have it.",
+        AppSettingsKey.screenRecordingMicrophoneID.rawValue:
+            "Names a microphone attached to this Mac; another Mac may not have it.",
+        AppSettingsKey.screenRecordingCameraID.rawValue:
+            "Names a camera attached to this Mac; another Mac may not have it.",
+        AppSettingsKey.screenRecordingCameraDiameter.rawValue:
+            "Sizes the camera bubble for this Mac's screens; another Mac's may differ.",
         AppSettingsKey.settingsFileEnabled.rawValue:
             "Lets a file on this Mac change its settings; an import must not hand that to another."
     ]

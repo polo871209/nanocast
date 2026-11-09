@@ -11,7 +11,7 @@ final class ScreenshotCoordinator {
     @ObservationIgnored private var session: ScreenshotSession?
     @ObservationIgnored private var overlay: ScreenshotOverlayController?
     @ObservationIgnored private var scrollCapture: ScrollCaptureController?
-    @ObservationIgnored private var recording: ScreenRecordingController?
+    @ObservationIgnored private var picked: ((RecordingPick?) -> Void)?
     @ObservationIgnored private var capturing: Task<Void, Never>?
     @ObservationIgnored private var capturingWindow: Task<Void, Never>?
     @ObservationIgnored private var readingText: Task<Void, Never>?
@@ -26,18 +26,24 @@ final class ScreenshotCoordinator {
     }
 
     var saveFolder: URL {
-        guard let chosen = core.settings.screenshotSaveFolder, AppPaths.isFolderPath(chosen) else {
-            return Self.desktop
-        }
-        return URL(filePath: (chosen as NSString).expandingTildeInPath, directoryHint: .isDirectory)
+        SaveFolder.url(for: core.settings.screenshotSaveFolder)
     }
 
     func capture() {
-        if let recording { return recording.stop(keeping: true) }
-        guard session == nil, scrollCapture == nil, !core.isShowingDialog else { return }
+        open(for: .capture, picked: nil)
+    }
+
+    /// Calls `picked` once: with the pick, or with nil when the overlay closes without one.
+    func pickRecordingArea(_ picked: @escaping (RecordingPick?) -> Void) -> Bool {
+        open(for: .recording, picked: picked)
+    }
+
+    @discardableResult
+    private func open(for purpose: ScreenshotSession.Purpose, picked: ((RecordingPick?) -> Void)?) -> Bool {
+        guard session == nil, scrollCapture == nil, !core.isShowingDialog else { return false }
         guard Permissions.isScreenRecordingGranted() else {
             Task { await askForScreenRecording() }
-            return
+            return false
         }
         if core.paletteCoordinator.isVisible { core.paletteCoordinator.hidePalette(restoreFocus: false) }
         let cursorScreen = NSScreen.underCursor
@@ -50,13 +56,14 @@ final class ScreenshotCoordinator {
                 displayID: id, pixelWidth: Int(screen.frame.width * screen.backingScaleFactor),
                 pixelHeight: Int(screen.frame.height * screen.backingScaleFactor))
         }
-        let session = ScreenshotSession(windows: WindowFrameProvider.frontToBack(), lastArea: lastArea)
+        let session = ScreenshotSession(windows: WindowFrameProvider.frontToBack(), lastArea: lastArea, purpose: purpose)
         let metrics = core.settings.interfaceSize.metrics
         let overlay = ScreenshotOverlayController(session: session, metrics: metrics) { [weak self] in
             self?.finish($0)
         }
         self.session = session
         self.overlay = overlay
+        self.picked = picked
         capturing = Task { [weak self, places] in
             do {
                 try await DisplayCapture.capture(targets) { id, image in
@@ -73,6 +80,7 @@ final class ScreenshotCoordinator {
             end()
             core.showMessage("Couldn't capture the screen", tone: .danger)
         }
+        return true
     }
 
     func chooseSaveFolder() {
@@ -80,18 +88,11 @@ final class ScreenshotCoordinator {
             let url = FolderPicker.choose(
                 message: "Choose the folder screenshots are saved in.", startingAt: saveFolder)
         else { return }
-        let chosen = url.standardizedFileURL.resolvingSymlinksInPath()
-        core.settings.screenshotSaveFolder =
-            chosen.path == Self.desktop.resolvingSymlinksInPath().path
-            ? nil : (chosen.path as NSString).abbreviatingWithTildeInPath
+        core.settings.screenshotSaveFolder = SaveFolder.setting(for: url)
     }
 
     func resetSaveFolder() {
         core.settings.screenshotSaveFolder = nil
-    }
-
-    private static var desktop: URL {
-        FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask)[0]
     }
 
     private func finish(_ intent: ScreenshotIntent) {
@@ -106,26 +107,24 @@ final class ScreenshotCoordinator {
             ScreenshotOutputRunner.copy(hex)
             core.showMessage("Copied \(hex)")
         case .captureWindow:
-            captureWindow(for: session)
+            if session.purpose != .recording { captureWindow(for: session) }
         case .scroll:
-            guard !session.isLongImage, let area = session.area, let display = session.display(area.display) else {
+            guard session.purpose == .capture, let area = session.area, let display = session.display(area.display) else {
                 return
             }
             lastArea = area
             end()
             scroll(area.rect, on: display)
         case .record:
-            guard !session.isLongImage, !session.isMarked, let area = session.area,
-                let display = session.display(area.display)
-            else { return }
-            let window = session.windowShot.flatMap {
-                $0.display == display.id && $0.isVisiblePart(area.rect, within: display.bounds) ? $0 : nil
-            }
+            guard let picked, let area = session.area, let display = session.display(area.display) else { return }
+            let pick = RecordingPick(display: display, area: area.rect, window: session.recordingWindow)
             lastArea = area
+            self.picked = nil
             end()
-            record(area.rect, on: display, window: window)
+            picked(pick)
         case .copy, .copyText, .save, .pin:
-            guard session.area != nil, intent != .pin || !session.isLongImage else { return }
+            guard session.purpose != .recording, session.area != nil, intent != .pin || session.purpose == .capture
+            else { return }
             isFinishing = true
             let window = capturingWindow
             Task { [weak self] in
@@ -159,7 +158,7 @@ final class ScreenshotCoordinator {
         let image = ScreenshotRenderer.image(
             of: area.rect, on: display, window: window, annotations: annotations,
             painter: AnnotationAppearance.painter(scale: display.scale, mosaic: mosaic))
-        if !session.isLongImage { lastArea = area }
+        if session.purpose == .capture { lastArea = area }
         end()
         guard let image else { return core.showMessage("Couldn't draw the screenshot", tone: .danger) }
         switch intent {
@@ -231,41 +230,6 @@ final class ScreenshotCoordinator {
         }
     }
 
-    private func record(_ area: PixelRect, on display: CapturedDisplay, window: WindowShot?) {
-        let source: ScreenRecordingRunner.Source
-        if let window {
-            let size = window.frame.trimmedToEven
-            source = .window(id: window.windowID, pixelWidth: size.width, pixelHeight: size.height)
-        } else {
-            let pixels = area.trimmedToEven
-            guard !pixels.isEmpty else { return }
-            source = .area(
-                display: display.id, rect: display.points(pixels), pixelWidth: pixels.width,
-                pixelHeight: pixels.height)
-        }
-        let controller = ScreenRecordingController(
-            source, area: display.points(area), on: display, showsBorder: window == nil,
-            metrics: core.settings.interfaceSize.metrics
-        ) { [weak self] outcome in
-            self?.finishRecording(outcome)
-        }
-        recording = controller
-        controller.start(savingIn: saveFolder, as: core.settings.screenshotRecordingFormat)
-    }
-
-    private func finishRecording(_ outcome: ScreenRecordingController.Outcome) {
-        recording = nil
-        switch outcome {
-        case .saved(let url):
-            core.showMessage("Saved \(url.lastPathComponent)")
-        case .discarded:
-            return
-        case .failed(let error):
-            Self.logger.error("Screen recording failed: \(String(describing: error), privacy: .public)")
-            core.showMessage("Couldn't record the screen", tone: .danger)
-        }
-    }
-
     private func editLongImage(_ image: CGImage, scale: CGFloat, over screen: CGRect) {
         let size = CGSize(width: CGFloat(image.width) / scale, height: CGFloat(image.height) / scale)
         let display = CapturedDisplay(
@@ -290,6 +254,9 @@ final class ScreenshotCoordinator {
         overlay?.close()
         overlay = nil
         session = nil
+        let unpicked = picked
+        picked = nil
+        unpicked?(nil)
     }
 
     private func deliver(_ image: CGImage, scale: CGFloat, saving: Bool) async {
