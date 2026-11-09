@@ -10,6 +10,7 @@ enum CommandID: String, CaseIterable, Sendable {
     case openCamera = "command:open-camera"
     case pickColor = "command:pick-color"
     case captureScreenshot = "command:capture-screenshot"
+    case recordScreen = "command:record-screen"
     case openInBrowser = "command:open-in-browser"
     case createCustomCommand = "command:create-custom-command"
     case searchCustomCommands = "command:search-custom-commands"
@@ -62,6 +63,7 @@ enum CommandID: String, CaseIterable, Sendable {
         case .openCamera: return "Open Camera"
         case .pickColor: return "Pick Color"
         case .captureScreenshot: return "Capture Screenshot"
+        case .recordScreen: return "Record Screen"
         case .openInBrowser: return "Open in Browser"
         case .createCustomCommand: return "Create Custom Command"
         case .searchCustomCommands: return "Search Custom Commands"
@@ -94,6 +96,7 @@ enum CommandID: String, CaseIterable, Sendable {
         case .openCamera: return "camera.fill"
         case .pickColor: return "eyedropper.full"
         case .captureScreenshot: return "camera.viewfinder"
+        case .recordScreen: return "record.circle.fill"
         case .openInBrowser: return "globe"
         case .createCustomCommand, .searchCustomCommands: return "terminal.fill"
         case .define: return "book.closed.fill"
@@ -125,6 +128,7 @@ enum CommandID: String, CaseIterable, Sendable {
         case .define: return .brown
         case .captureScreenshot: return .purple
         case .pickColor: return .pink
+        case .recordScreen: return .red
         case .quit: return .red
         case .showNotes, .createNote, .searchNotes: return .yellow
         case .createWindowLayout, .captureWindowLayout, .switchRoom, .createRoom: return .mint

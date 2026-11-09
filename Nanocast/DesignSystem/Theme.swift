@@ -206,6 +206,9 @@ enum Theme {
         static let scrollStatusWidth: CGFloat = 140
         static let recordingStatusWidth: CGFloat = 72
         static let recordingDot: CGFloat = 8
+        static let recordingPickerCard = CGSize(width: 220, height: 138)
+        static let recordingPickerColumns = 4
+        static let recordingPickerIcon: CGFloat = 16
         static let levelText: [CGFloat] = [10, 13, 16]
     }
 

@@ -48,21 +48,8 @@ enum ScreenshotOutputRunner {
     @concurrent
     static func save(_ png: Data, in folder: URL, at date: Date) async throws -> URL {
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let url = freeURL(for: .screenshot, in: folder, at: date)
+        let url = TimestampedFileName.freeURL("Screenshot", extension: "png", in: folder, at: date)
         try png.write(to: url, options: .withoutOverwriting)
         return url
-    }
-
-    @concurrent
-    static func recordingURL(in folder: URL, at date: Date, as format: ScreenRecordingFormat) async throws -> URL {
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        return freeURL(for: .recording(format), in: folder, at: date)
-    }
-
-    private static func freeURL(for kind: ScreenshotFileName.Kind, in folder: URL, at date: Date) -> URL {
-        let name = ScreenshotFileName.name(of: kind, at: date, in: .current) { candidate in
-            FileManager.default.fileExists(atPath: folder.appending(path: candidate, directoryHint: .notDirectory).path)
-        }
-        return folder.appending(path: name, directoryHint: .notDirectory)
     }
 }

@@ -192,7 +192,7 @@ final class CaptureCanvasView: NSView {
         } else if session.tool != nil {
             pressMarkup(at: point, clickCount: event.clickCount)
         } else if event.clickCount == 2, isInsideArea(point) {
-            return run(.copy)
+            return run(session.primaryIntent)
         } else {
             session.press(
                 at: point, on: display.id, reach: Theme.Size.captureHandleReach, slop: Theme.Size.captureClickSlop)
@@ -245,10 +245,10 @@ final class CaptureCanvasView: NSView {
         let step = modifiers.contains(.shift) ? 10 : 1
         switch event.keyCode {
         case Key.escape:
-            run(session.area == nil ? .cancel : .copy)
+            run(session.area == nil || session.purpose == .recording ? .cancel : .copy)
         case Key.returnKey, Key.enter:
             if session.area != nil {
-                run(.copy)
+                run(session.primaryIntent)
             } else if session.restoreLastArea() {
                 changed()
             }
@@ -267,7 +267,9 @@ final class CaptureCanvasView: NSView {
             }
             changed()
         default:
-            guard modifiers.subtracting(.shift).isEmpty, let key = character(of: event)?.first else { return }
+            guard session.purpose != .recording, modifiers.subtracting(.shift).isEmpty,
+                let key = character(of: event)?.first
+            else { return }
             if session.area != nil, modifiers.isEmpty, let tool = ScreenshotTool(key: key) {
                 apply(.choose(tool))
             } else if key == "c", session.tool == nil, let color = session.colorUnderPointer() {
@@ -287,13 +289,11 @@ final class CaptureCanvasView: NSView {
         if let textEditor { return Self.performTextCommand(key, shift: modifiers.contains(.shift), in: textEditor) }
         switch (key, modifiers.contains(.shift)) {
         case ("c", false):
-            if session.area != nil { run(.copy) }
+            if session.area != nil, session.purpose != .recording { run(.copy) }
         case ("s", false):
-            if session.area != nil { run(.save) }
+            if session.area != nil, session.purpose != .recording { run(.save) }
         case ("t", true):
-            if session.area != nil { run(.copyText) }
-        case ("r", false):
-            if session.area != nil { run(.record) }
+            if session.area != nil, session.purpose != .recording { run(.copyText) }
         case ("a", false):
             guard session.tool == nil else { return true }
             session.selectWholeDisplay()
