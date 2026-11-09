@@ -127,7 +127,7 @@ run menu-search-test       $L/SearchRelevance.swift \
                            Nanocast/Features/MenuSearch/Service/*.swift
 run window-switch-test     Nanocast/Features/WindowSwitcher/Model/*.swift
 run index file-search-performance $FS/Model/*.swift $FILE_INDEX
-run screenshot-selection-test Nanocast/Features/Screenshot/Model/*.swift
+run screenshot-selection-test Nanocast/Features/Screenshot/Model/*.swift Nanocast/Platform/TimestampedFileName.swift
 run screenshot-annotation-test Nanocast/Features/Screenshot/Model/*.swift
 run screenshot-render-test Nanocast/Features/Screenshot/Model/*.swift \
                            Nanocast/Features/Screenshot/Service/AnnotationPainter.swift \
@@ -138,6 +138,10 @@ run screenshot-render-test Nanocast/Features/Screenshot/Model/*.swift \
 run screenshot-stitch-test Nanocast/Features/Screenshot/Model/*.swift \
                            Nanocast/Features/Screenshot/Service/ScrollFrame.swift \
                            Nanocast/Features/Screenshot/Service/ScrollStitchFile.swift
+run screen-recording-test  Nanocast/Features/ScreenRecording/Model/ScreenRecordingFormat.swift \
+                           Nanocast/Features/ScreenRecording/Model/ScreenRecordingOptions.swift \
+                           Nanocast/Features/ScreenRecording/Service/ScreenRecordingRunner.swift \
+                           Nanocast/Features/ScreenRecording/Service/RecordingJoinService.swift
 run slow -O screenshot-text-test Nanocast/Features/Screenshot/Service/ScreenshotTextExtractor.swift \
                            Nanocast/Features/Clipboard/Service/ClipboardTextExtractor.swift
 run ranking-test           $L/SearchRelevance.swift $L/ScriptRomanization.swift \

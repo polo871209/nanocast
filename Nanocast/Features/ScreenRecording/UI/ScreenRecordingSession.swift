@@ -5,10 +5,16 @@ import Observation
 @Observable
 final class ScreenRecordingSession {
     enum Status: Equatable {
+        case ready
         case starting
         case recording(since: Date)
+        case paused(recorded: TimeInterval)
         case saving
     }
 
-    var status = Status.starting
+    var status: Status
+
+    init(status: Status) {
+        self.status = status
+    }
 }
