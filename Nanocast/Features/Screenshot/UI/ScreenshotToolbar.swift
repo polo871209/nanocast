@@ -8,42 +8,57 @@ struct ScreenshotToolbar: View {
 
     var body: some View {
         HStack(spacing: metrics.spacing.xxs) {
-            ForEach(ScreenshotTool.allCases, id: \.self) { tool in
-                if tool.startsGroup { ScreenshotToolbarDivider() }
-                ScreenshotToolbarButton(
-                    symbol: tool.symbol, title: "\(tool.title)  \(tool.key.uppercased())",
-                    isSelected: session.tool == tool
-                ) { edit(.choose(tool)) }
-            }
-            if !session.isLongImage {
-                ScreenshotToolbarButton(symbol: "ScreenshotPin", title: "Pin to screen") { perform(.pin) }
-                ScreenshotToolbarButton(
-                    symbol: "ScreenshotScroll",
-                    title: session.isMarked ? "Scrolling capture needs an unmarked area" : "Scrolling capture",
-                    isEnabled: !session.isMarked
-                ) { perform(.scroll) }
-                ScreenshotToolbarButton(
-                    symbol: "record.circle",
-                    title: session.isMarked ? "Recording needs an unmarked area" : "Record the screen  ⌘R",
-                    isEnabled: !session.isMarked
-                ) { perform(.record) }
-            }
-            ScreenshotToolbarButton(symbol: "text.viewfinder", title: "Copy text  ⇧⌘T") { perform(.copyText) }
-            ScreenshotToolbarDivider()
-            ScreenshotToolbarButton(symbol: "arrow.uturn.backward", title: "Undo  ⌘Z", isEnabled: session.canUndo) {
-                edit(.undo)
-            }
-            ScreenshotToolbarButton(symbol: "arrow.down.to.line", title: "Save  ⌘S") { perform(.save) }
-            ScreenshotToolbarButton(symbol: "xmark", title: "Discard", tint: Theme.Colors.destructive) {
-                perform(.cancel)
-            }
-            ScreenshotToolbarButton(symbol: "checkmark", title: "Copy  ↩ or Esc", tint: Theme.Colors.success) {
-                perform(.copy)
+            if session.purpose == .recording {
+                recordingButtons
+            } else {
+                captureButtons
             }
         }
         .padding(metrics.spacing.xs)
         .screenshotChrome(metrics)
-        .accessibilityLabel("Screenshot")
+        .accessibilityLabel(session.purpose == .recording ? "Recording area" : "Screenshot")
+    }
+
+    @ViewBuilder
+    private var recordingButtons: some View {
+        ScreenshotToolbarButton(symbol: "xmark", title: "Cancel  Esc", tint: Theme.Colors.destructive) {
+            perform(.cancel)
+        }
+        ScreenshotToolbarButton(
+            symbol: "checkmark",
+            title: session.recordingWindow == nil ? "Use the area  ↩" : "Use the window  ↩"
+        ) { perform(.record) }
+    }
+
+    @ViewBuilder
+    private var captureButtons: some View {
+        ForEach(ScreenshotTool.allCases, id: \.self) { tool in
+            if tool.startsGroup { ScreenshotToolbarDivider() }
+            ScreenshotToolbarButton(
+                symbol: tool.symbol, title: "\(tool.title)  \(tool.key.uppercased())",
+                isSelected: session.tool == tool
+            ) { edit(.choose(tool)) }
+        }
+        if session.purpose == .capture {
+            ScreenshotToolbarButton(symbol: "ScreenshotPin", title: "Pin to screen") { perform(.pin) }
+            ScreenshotToolbarButton(
+                symbol: "ScreenshotScroll",
+                title: session.isMarked ? "Scrolling capture needs an unmarked area" : "Scrolling capture",
+                isEnabled: !session.isMarked
+            ) { perform(.scroll) }
+        }
+        ScreenshotToolbarButton(symbol: "text.viewfinder", title: "Copy text  ⇧⌘T") { perform(.copyText) }
+        ScreenshotToolbarDivider()
+        ScreenshotToolbarButton(symbol: "arrow.uturn.backward", title: "Undo  ⌘Z", isEnabled: session.canUndo) {
+            edit(.undo)
+        }
+        ScreenshotToolbarButton(symbol: "arrow.down.to.line", title: "Save  ⌘S") { perform(.save) }
+        ScreenshotToolbarButton(symbol: "xmark", title: "Discard", tint: Theme.Colors.destructive) {
+            perform(.cancel)
+        }
+        ScreenshotToolbarButton(symbol: "checkmark", title: "Copy  ↩ or Esc", tint: Theme.Colors.success) {
+            perform(.copy)
+        }
     }
 }
 

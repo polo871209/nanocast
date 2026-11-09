@@ -54,7 +54,11 @@ struct SettingsBackup: Codable {
         var notesShowsInMenuBar: Bool?
         var customCommandsEnabled: Bool?
         var customCommandsShowInLauncher: Bool?
-        var screenshotRecordingFormat: String?
+        var screenRecordingFormat: String?
+        var screenRecordingSystemAudio: Bool?
+        var screenRecordingMicrophone: Bool?
+        var screenRecordingShowsClicks: Bool?
+        var screenRecordingCamera: Bool?
         var navigationEnabled: Bool?
         var menuSearchDisabledApps: [String]?
         var menuSearchShowsAppleMenu: Bool?
@@ -141,7 +145,11 @@ extension SettingsBackup {
             notesShowsInMenuBar: s.notesShowsInMenuBar,
             customCommandsEnabled: s.customCommandsEnabled,
             customCommandsShowInLauncher: s.customCommandsShowInLauncher,
-            screenshotRecordingFormat: s.screenshotRecordingFormat.rawValue,
+            screenRecordingFormat: s.screenRecordingFormat.rawValue,
+            screenRecordingSystemAudio: s.screenRecordingSystemAudio,
+            screenRecordingMicrophone: s.screenRecordingMicrophone,
+            screenRecordingShowsClicks: s.screenRecordingShowsClicks,
+            screenRecordingCamera: s.screenRecordingCamera,
             navigationEnabled: s.navigationEnabled,
             menuSearchDisabledApps: s.menuSearchDisabledApps,
             menuSearchShowsAppleMenu: s.menuSearchShowsAppleMenu,
@@ -409,8 +417,24 @@ extension SettingsBackup {
             settings.customCommandsShowInLauncher = flag
             count += 1
         }
-        if let raw = s.screenshotRecordingFormat, let format = ScreenRecordingFormat(rawValue: raw) {
-            settings.screenshotRecordingFormat = format
+        if let raw = s.screenRecordingFormat, let format = ScreenRecordingFormat(rawValue: raw) {
+            settings.screenRecordingFormat = format
+            count += 1
+        }
+        if let flag = s.screenRecordingSystemAudio {
+            settings.screenRecordingSystemAudio = flag
+            count += 1
+        }
+        if let flag = s.screenRecordingMicrophone {
+            settings.screenRecordingMicrophone = flag
+            count += 1
+        }
+        if let flag = s.screenRecordingShowsClicks {
+            settings.screenRecordingShowsClicks = flag
+            count += 1
+        }
+        if let flag = s.screenRecordingCamera {
+            settings.screenRecordingCamera = flag
             count += 1
         }
         if let flag = s.navigationEnabled {
