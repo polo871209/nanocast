@@ -135,6 +135,7 @@ final class AppCore {
     @ObservationIgnored private(set) lazy var cameraCoordinator = CameraCoordinator(core: self)
     @ObservationIgnored private(set) lazy var colorPickerCoordinator = ColorPickerCoordinator(core: self)
     @ObservationIgnored private(set) lazy var screenshotCoordinator = ScreenshotCoordinator(core: self)
+    @ObservationIgnored private(set) lazy var screenRecordingCoordinator = ScreenRecordingCoordinator(core: self)
     @ObservationIgnored private(set) lazy var dictionaryCoordinator = DictionaryCoordinator(
         paletteCoordinator: paletteCoordinator)
     @ObservationIgnored private(set) lazy var updateCoordinator = UpdateCoordinator(
@@ -323,7 +324,8 @@ final class AppCore {
         }
     }
 
-    func flushNotesForTermination() async {
+    func finishWorkForTermination() async {
+        await screenRecordingCoordinator.stopRecording()
         await notesCoordinator.prepareForTermination()
     }
 

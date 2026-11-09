@@ -49,16 +49,20 @@ enum Permissions {
         NSWorkspace.shared.open(url)
     }
 
-    static func cameraAccess() -> CameraAccess {
-        switch AVCaptureDevice.authorizationStatus(for: .video) {
+    static func captureAccess(for media: AVMediaType) -> CaptureAccess {
+        switch AVCaptureDevice.authorizationStatus(for: media) {
         case .authorized: return .granted
         case .notDetermined: return .notDetermined
         default: return .denied
         }
     }
 
-    nonisolated static func requestCameraAccess() async -> Bool {
-        await AVCaptureDevice.requestAccess(for: .video)
+    static func ensureCaptureAccess(for media: AVMediaType) async -> Bool {
+        switch captureAccess(for: media) {
+        case .granted: return true
+        case .denied: return false
+        case .notDetermined: return await AVCaptureDevice.requestAccess(for: media)
+        }
     }
 
     static func isScreenRecordingGranted() -> Bool {

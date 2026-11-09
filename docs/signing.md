@@ -85,6 +85,7 @@ Accessibility grant. Each entitlement in `Nanocast/Nanocast.entitlements` earns 
 | --- | --- |
 | `com.apple.security.automation.apple-events` | Every Apple event is refused with `-1743` and no prompt — Get Info and the System Events–driven system actions all die silently |
 | `com.apple.security.device.camera` | The camera prompt never appears and access resolves as denied |
+| `com.apple.security.device.audio-input` | The microphone prompt never appears, and a screen recording with the microphone on has no voice |
 
 **A usage string is not enough under the hardened runtime.** `tccd` checks the matching entitlement
 *before* it prompts, and without it logs "requires entitlement … but it is missing" and denies on the

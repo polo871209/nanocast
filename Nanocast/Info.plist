@@ -51,6 +51,8 @@
 	<string>Nanocast uses automation to perform system actions you explicitly run.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Nanocast shows a camera preview so you can check yourself, and take a photo to the clipboard.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Nanocast records your voice with a screen recording when you turn on the microphone.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Nanocast uses Bluetooth access only when you run the Toggle Bluetooth action.</string>
 	<key>NSHumanReadableCopyright</key>

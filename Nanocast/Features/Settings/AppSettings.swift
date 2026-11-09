@@ -266,8 +266,40 @@ final class AppSettings {
         didSet { defaults.set(screenshotSaveFolder, forKey: Key.screenshotSaveFolder.rawValue) }
     }
 
-    var screenshotRecordingFormat: ScreenRecordingFormat {
-        didSet { defaults.set(screenshotRecordingFormat.rawValue, forKey: Key.screenshotRecordingFormat.rawValue) }
+    var screenRecordingSaveFolder: String? {
+        didSet { defaults.set(screenRecordingSaveFolder, forKey: Key.screenRecordingSaveFolder.rawValue) }
+    }
+
+    var screenRecordingFormat: ScreenRecordingFormat {
+        didSet { defaults.set(screenRecordingFormat.rawValue, forKey: Key.screenRecordingFormat.rawValue) }
+    }
+
+    var screenRecordingSystemAudio: Bool {
+        didSet { defaults.set(screenRecordingSystemAudio, forKey: Key.screenRecordingSystemAudio.rawValue) }
+    }
+
+    var screenRecordingMicrophone: Bool {
+        didSet { defaults.set(screenRecordingMicrophone, forKey: Key.screenRecordingMicrophone.rawValue) }
+    }
+
+    var screenRecordingMicrophoneID: String? {
+        didSet { defaults.set(screenRecordingMicrophoneID, forKey: Key.screenRecordingMicrophoneID.rawValue) }
+    }
+
+    var screenRecordingShowsClicks: Bool {
+        didSet { defaults.set(screenRecordingShowsClicks, forKey: Key.screenRecordingShowsClicks.rawValue) }
+    }
+
+    var screenRecordingCamera: Bool {
+        didSet { defaults.set(screenRecordingCamera, forKey: Key.screenRecordingCamera.rawValue) }
+    }
+
+    var screenRecordingCameraID: String? {
+        didSet { defaults.set(screenRecordingCameraID, forKey: Key.screenRecordingCameraID.rawValue) }
+    }
+
+    var screenRecordingCameraDiameter: Double? {
+        didSet { defaults.set(screenRecordingCameraDiameter, forKey: Key.screenRecordingCameraDiameter.rawValue) }
     }
 
     var navigationEnabled: Bool {
@@ -442,8 +474,16 @@ final class AppSettings {
             defaults.object(forKey: Key.customCommandsShowInLauncher.rawValue) == nil
             || defaults.bool(forKey: Key.customCommandsShowInLauncher.rawValue)
         screenshotSaveFolder = defaults.string(forKey: Key.screenshotSaveFolder.rawValue)
-        screenshotRecordingFormat =
-            defaults.string(forKey: Key.screenshotRecordingFormat.rawValue).flatMap(ScreenRecordingFormat.init) ?? .mov
+        screenRecordingSaveFolder = defaults.string(forKey: Key.screenRecordingSaveFolder.rawValue)
+        screenRecordingFormat =
+            defaults.string(forKey: Key.screenRecordingFormat.rawValue).flatMap(ScreenRecordingFormat.init) ?? .mov
+        screenRecordingSystemAudio = defaults.bool(forKey: Key.screenRecordingSystemAudio.rawValue)
+        screenRecordingMicrophone = defaults.bool(forKey: Key.screenRecordingMicrophone.rawValue)
+        screenRecordingMicrophoneID = defaults.string(forKey: Key.screenRecordingMicrophoneID.rawValue)
+        screenRecordingShowsClicks = defaults.bool(forKey: Key.screenRecordingShowsClicks.rawValue)
+        screenRecordingCamera = defaults.bool(forKey: Key.screenRecordingCamera.rawValue)
+        screenRecordingCameraID = defaults.string(forKey: Key.screenRecordingCameraID.rawValue)
+        screenRecordingCameraDiameter = defaults.object(forKey: Key.screenRecordingCameraDiameter.rawValue) as? Double
         navigationEnabled = defaults.bool(forKey: Key.navigationEnabled.rawValue)
         menuSearchDisabledApps =
             defaults.stringArray(forKey: Key.menuSearchDisabledApps.rawValue) ?? []
