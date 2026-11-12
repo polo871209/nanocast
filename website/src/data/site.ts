@@ -4,12 +4,12 @@
 // The page title and meta description, shared by the layout and /llms.txt. Google truncates a
 // description near 160 characters, so `summary` is written to land under it rather than be cut.
 export const pageTitle =
-  "Tinycast: a native macOS launcher for everyday productivity";
+  "Nanocast: a native macOS launcher for everyday productivity";
 export const summary =
   "A lightweight, open source macOS launcher with app search, clipboard history, snippets, window management, your own AI keys and Raycast extensions.";
 
 export const site = {
-  name: "Tinycast",
+  name: "Nanocast",
   repo: "https://github.com/abue-ammar/tinycast",
   intelTap: "https://github.com/abue-ammar/homebrew-tinycast",
   url: "https://tinycast.dev",
@@ -52,7 +52,7 @@ export const nav = [
 
 // The hero's line. Every other channel lives in docs/install.md, which is
 // where both install CTAs point.
-export const brewInstallCommand = "brew install --cask tinycast";
+export const brewInstallCommand = "brew install --cask nanocast";
 
 // The logo wall under the hero, in render order. The track starts at the first
 // entry with the left edge under the mask, so the two least-known names lead
@@ -98,7 +98,7 @@ export const badges: Badge[] = [
     height: 64,
   },
   {
-    href: "https://usefulshelf.co/apps/tinycast?utm_source=tinycast.dev&utm_medium=referral&utm_campaign=badge&utm_content=light",
+    href: "https://usefulshelf.co/apps/nanocast?utm_source=tinycast.dev&utm_medium=referral&utm_campaign=badge&utm_content=light",
     alt: "Featured on UsefulShelf",
     src: "/badges/usefulshelf.svg",
     darkSrc: "/badges/usefulshelf-lime.svg",
@@ -106,7 +106,7 @@ export const badges: Badge[] = [
     height: 66,
   },
   {
-    href: "https://www.trymacapps.com/app/tinycast",
+    href: "https://www.trymacapps.com/app/nanocast",
     alt: "Featured on TryMacApps",
     src: "/badges/trymacapps.png",
     width: 200,

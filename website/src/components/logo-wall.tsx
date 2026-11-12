@@ -8,7 +8,7 @@ const track = [...companies, ...companies];
 export function LogoWall() {
   return (
     <section
-      aria-label="Companies whose people have starred Tinycast"
+      aria-label="Companies whose people have starred Nanocast"
       className="border-y border-border bg-tint/2"
     >
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-10">

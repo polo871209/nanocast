@@ -24,7 +24,7 @@ and only appear while the feature is on. The rest are in **Settings → Commands
 | [Window Management](/docs/features/window-layouts) | Create Window Layout · Create Layout from Current Windows · Switch Room · Create Room                                                                                                              |
 | [Quicklinks](/docs/launcher/quicklinks)            | Create Quicklink · Search Quicklinks · Import Quicklinks · Export Quicklinks                                                                                                                       |
 | [Snippets](/docs/features/snippets)                | Search Snippets · Create Snippet                                                                                                                                                                   |
-| Commands                                           | Calculator History · [Define Word](/docs/features/dictionary) · [Open Camera](/docs/features/camera) · Export Backup · Import Backup · Import from Raycast · Check for Updates · Tinycast Settings · About Tinycast · Support Tinycast · Quit Tinycast |
+| Commands                                           | Calculator History · [Define Word](/docs/features/dictionary) · [Open Camera](/docs/features/camera) · Export Backup · Import Backup · Import from Raycast · Check for Updates · Nanocast Settings · About Nanocast · Support Nanocast · Quit Nanocast |
 
 **Create Custom Command** and **Search Custom Commands** are also in **Settings → Commands**, under
 Custom Commands. They follow **Enable custom commands**.
@@ -36,7 +36,7 @@ Each listed command has a launcher checkbox and an alias field. Commands that su
 shortcut also have a recorder.
 
 You can give any built-in command a global shortcut, with three exceptions. Open in Browser and Run
-Shell Command need text to act on, and Quit Tinycast has no shortcut so a stray key press can't quit
+Shell Command need text to act on, and Quit Nanocast has no shortcut so a stray key press can't quit
 the app.
 
 Most commands that open a screen work as toggles: press the shortcut again to close.
@@ -91,13 +91,13 @@ on in its editor to bring it back.
 | Shell       | `/bin/zsh -lc <command>`                            |
 | Folder      | Its Run In folder, or your home folder              |
 | Input       | None; anything that reads input gets an end-of-file |
-| Environment | Inherited, plus `TINYCAST=1`                        |
+| Environment | Inherited, plus `NANOCAST=1`                        |
 
-**Commands run without a Terminal window and without a timeout.** Tinycast never stops a running
-command by itself, and a command keeps running if Tinycast quits. The only way to stop one is the
+**Commands run without a Terminal window and without a timeout.** Nanocast never stops a running
+command by itself, and a command keeps running if Nanocast quits. The only way to stop one is the
 **Stop** button in the output window.
 
-If the Run In folder no longer exists, the command doesn't run, and Tinycast tells you which folder
+If the Run In folder no longer exists, the command doesn't run, and Nanocast tells you which folder
 is missing instead of running it somewhere else.
 
 ### Arguments
@@ -129,10 +129,10 @@ the command exits with code **127**.
 Turning the setting on uses `-ilc`, which reads `.zshrc`. That also runs everything else in your
 shell startup, like oh-my-zsh's auto-update or a theme's background helpers.
 
-Tinycast sets `TINYCAST=1`, so your `.zshrc` can skip that work:
+Nanocast sets `NANOCAST=1`, so your `.zshrc` can skip that work:
 
 ```bash
-[[ -n $TINYCAST ]] && return
+[[ -n $NANOCAST ]] && return
 ```
 
 With a typical `.zshrc`, a command starts in about 10 ms with the setting off and about 65 ms with it
@@ -161,7 +161,7 @@ The window keeps the last 256 KB of output. If you scroll up, it stops following
 back to the bottom and it follows again.
 
 With **Load shell environment** on, anything your `.zshrc` prints also appears here. The
-`TINYCAST=1` check above keeps it quiet.
+`NANOCAST=1` check above keeps it quiet.
 
 ### Needs confirmation
 
@@ -179,14 +179,14 @@ one dialog.
 - **Failure:** a dialog shows the error output, up to the last 8 KB.
 - **With Show output on:** the output window shows the result instead, so you're only told once.
 
-**Tinycast never writes the command text to its logs.**
+**Nanocast never writes the command text to its logs.**
 
 ### Editing and backups
 
 Editing a command keeps its favorite, visibility and shortcut. Deleting it removes all three.
 
 Custom commands and their shortcuts are included in [backups](/docs/reference/backup). When you
-import a backup, Tinycast **warns you before adding any commands**, so a backup can't add shell
+import a backup, Nanocast **warns you before adding any commands**, so a backup can't add shell
 commands without you knowing.
 
 ## Importing Raycast script commands
@@ -207,5 +207,5 @@ helper scripts in the folder are skipped.
 | `@raycast.currentDirectoryPath` | **Run In**; otherwise the script's own folder      |
 
 Raycast icons aren't imported. Imported commands use the terminal symbol, and you can choose a
-different one. Tinycast warns you before importing and skips any name you already have, so importing
+different one. Nanocast warns you before importing and skips any name you already have, so importing
 the same folder again only adds new scripts.

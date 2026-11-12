@@ -82,8 +82,8 @@ export function SupportLink() {
   return (
     <Link
       href={site.support}
-      aria-label="Support Tinycast"
-      title="Support Tinycast"
+      aria-label="Support Nanocast"
+      title="Support Nanocast"
       className="flex h-8 items-center gap-1.5 rounded-full px-2 text-small text-fg-muted transition-colors hover:bg-tint/5 hover:text-fg sm:px-2.5"
     >
       <SupportIcon size={17} className="text-violet-bright" />

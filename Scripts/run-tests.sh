@@ -7,7 +7,7 @@ set -uo pipefail
 SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 cd "$(dirname "$0")/.." || exit 1
 
-BIN="${TMPDIR:-/tmp}/tinycast-harness"
+BIN="${TMPDIR:-/tmp}/nanocast-harness"
 mkdir -p "$BIN"
 
 # `--exec` is the worker half: xargs re-enters here once per queued harness.
@@ -31,10 +31,10 @@ if [ "${1:-}" = "--exec" ]; then
     # macOS ships no `timeout`, so the worker polls; a wedged harness must fail, not stall.
     ticks=0
     while kill -0 "$pid" 2>/dev/null; do
-        if [ "$ticks" -ge $((TINYCAST_TEST_TIMEOUT * 5)) ]; then
+        if [ "$ticks" -ge $((NANOCAST_TEST_TIMEOUT * 5)) ]; then
             { pkill -KILL -P "$pid"; kill -KILL "$pid"; wait "$pid"; } 2>/dev/null
-            printf '\n[run-tests] killed after %ss without finishing\n' "$TINYCAST_TEST_TIMEOUT" >> "$BIN/$name.log"
-            fail "timed out after ${TINYCAST_TEST_TIMEOUT}s"
+            printf '\n[run-tests] killed after %ss without finishing\n' "$NANOCAST_TEST_TIMEOUT" >> "$BIN/$name.log"
+            fail "timed out after ${NANOCAST_TEST_TIMEOUT}s"
         fi
         ticks=$((ticks + 1))
         sleep 0.2
@@ -54,7 +54,7 @@ only="${1:-}"
 
 # `--index` feeds harness compile commands to .compile, as xcodebuild never compiles Tests/.
 emit_db=0
-DB="${TMPDIR:-/tmp}/tinycast-compile-db.json"
+DB="${TMPDIR:-/tmp}/nanocast-compile-db.json"
 if [ "$only" = "--index" ]; then
     emit_db=1
     only=""
@@ -65,8 +65,8 @@ QUEUE="$BIN/queue"
 # `--index` queues nothing, so it must never reset the state of a suite already running.
 if [ "$emit_db" -eq 0 ]; then
     # Queue, logs and verdicts are shared by path, so a second suite in this $TMPDIR waits its turn.
-    if [ -z "${TINYCAST_SUITE_LOCKED:-}" ]; then
-        export TINYCAST_SUITE_LOCKED=1
+    if [ -z "${NANOCAST_SUITE_LOCKED:-}" ]; then
+        export NANOCAST_SUITE_LOCKED=1
         lockf -k -t 0 "$BIN/suite.lock" true 2>/dev/null || echo "Waiting for the suite already running…" >&2
         exec lockf -k "$BIN/suite.lock" "$SELF" "$@"
     fi
@@ -112,604 +112,604 @@ run() {
     printf '%s %s %s %s\n' "$pri" "$name" "$opt" "$*" >> "$QUEUE"
 }
 
-L=Tinycast/Features/Launcher/Model
+L=Nanocast/Features/Launcher/Model
 run slow -O FuzzTests      $L/SearchRelevance.swift $L/ScriptRomanization.swift \
                            $L/LauncherMatch.swift $L/EntryNaming.swift $L/LauncherOrder.swift \
                            $L/LauncherRankingStore.swift $L/LauncherSuggestions.swift
-FS=Tinycast/Features/FileSearch
+FS=Nanocast/Features/FileSearch
 FILE_INDEX="$FS/Service/FileIndex.swift $FS/Service/FileIndexSnapshot.swift $FS/Service/FileIndexCrawler.swift"
 run FileSearchTests        $FS/Model/*.swift
 run FileIndexTests         $FS/Model/*.swift $FILE_INDEX
 run FileSearchSessionTests $FS/Model/*.swift $FS/Service/FileSearchSession.swift $FILE_INDEX
 run MenuSearchTests        $L/SearchRelevance.swift \
-                           Tinycast/Features/MenuSearch/Model/*.swift \
-                           Tinycast/Features/MenuSearch/Service/*.swift
+                           Nanocast/Features/MenuSearch/Model/*.swift \
+                           Nanocast/Features/MenuSearch/Service/*.swift
 run WindowSwitchTests      $L/SearchRelevance.swift \
-                           Tinycast/Features/WindowSwitcher/Model/*.swift
+                           Nanocast/Features/WindowSwitcher/Model/*.swift
 run index FileSearchPerformanceTests $FS/Model/*.swift $FILE_INDEX
 run RankingTests           $L/SearchRelevance.swift $L/ScriptRomanization.swift \
                            $L/LauncherMatch.swift $L/LauncherRankingStore.swift
 run ScopesTests            $L/SearchScopes.swift
-run AppNameTests           Tinycast/Platform/AppDisplayName.swift \
-                           Tinycast/Platform/BundleLocalization.swift \
+run AppNameTests           Nanocast/Platform/AppDisplayName.swift \
+                           Nanocast/Platform/BundleLocalization.swift \
                            $L/SearchRelevance.swift
 run FavoritesTests         $L/FavoriteSlots.swift
 run AppInstallationTests   $L/SearchRelevance.swift $L/ScriptRomanization.swift \
                            $L/LauncherMatch.swift $L/EntryNaming.swift $L/LauncherOrder.swift \
                            $L/LauncherRankingStore.swift $L/LauncherSuggestions.swift $L/SearchScopes.swift \
-                           Tinycast/Features/Launcher/Service/AppIndex.swift \
-                           Tinycast/Features/Launcher/Service/AppLauncher.swift \
-                           Tinycast/Features/Launcher/Service/RunningAppsMonitor.swift \
-                           Tinycast/Features/Launcher/Service/FavoritesStore.swift \
+                           Nanocast/Features/Launcher/Service/AppIndex.swift \
+                           Nanocast/Features/Launcher/Service/AppLauncher.swift \
+                           Nanocast/Features/Launcher/Service/RunningAppsMonitor.swift \
+                           Nanocast/Features/Launcher/Service/FavoritesStore.swift \
                            $FS/Model/FileSearchResult.swift \
-                           Tinycast/Features/Launcher/Service/AliasStore.swift \
-                           Tinycast/Features/Launcher/Service/VisibilityStore.swift \
-                           Tinycast/Features/Launcher/Service/BundleNameCache.swift \
-                           Tinycast/Platform/AppDisplayName.swift Tinycast/Platform/BundleLocalization.swift \
-                           Tinycast/Platform/SystemLanguages.swift \
-                           Tinycast/Platform/Images/FileIconStamp.swift Tinycast/Platform/Memo.swift \
-                           Tinycast/Platform/Signposts.swift Tinycast/Platform/NotificationToken.swift \
-                           Tinycast/Platform/LocalizedResource.swift
+                           Nanocast/Features/Launcher/Service/AliasStore.swift \
+                           Nanocast/Features/Launcher/Service/VisibilityStore.swift \
+                           Nanocast/Features/Launcher/Service/BundleNameCache.swift \
+                           Nanocast/Platform/AppDisplayName.swift Nanocast/Platform/BundleLocalization.swift \
+                           Nanocast/Platform/SystemLanguages.swift \
+                           Nanocast/Platform/Images/FileIconStamp.swift Nanocast/Platform/Memo.swift \
+                           Nanocast/Platform/Signposts.swift Nanocast/Platform/NotificationToken.swift \
+                           Nanocast/Platform/LocalizedResource.swift
 run LauncherFileTests      $L/LauncherFileFormat.swift \
-                           Tinycast/Features/Settings/Model/SettingsFileJSON.swift
+                           Nanocast/Features/Settings/Model/SettingsFileJSON.swift
 run LauncherSettingsFileTests \
                            $L/LauncherFileFormat.swift $L/CommandID.swift $L/CommandCatalog.swift \
-                           Tinycast/Features/Launcher/Service/LauncherSettingsFile.swift \
-                           Tinycast/Features/Launcher/Service/AliasStore.swift \
-                           Tinycast/Features/Launcher/Service/VisibilityStore.swift \
-                           Tinycast/Features/Settings/SettingsTab.swift \
-                           Tinycast/Features/Settings/Model/*.swift \
-                           Tinycast/Features/HotKeys/Service/HotKeySettingsFile.swift \
-                           Tinycast/Features/HotKeys/Service/KeyShortcut.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyAction.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyBinding.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeySpelling.swift \
-                           Tinycast/Features/HotKeys/Model/DoubleTapModifier.swift \
-                           Tinycast/Features/HotKeys/Model/ModifierKey.swift \
-                           Tinycast/Features/HotKeys/Model/HyperKey.swift \
-                           Tinycast/Features/HotKeys/Model/HIDKeyMapping.swift \
-                           Tinycast/Platform/ASCIIKeyboardLayout.swift \
-                           Tinycast/Features/QuickActions/Model/BuiltInQuickAction.swift \
-                           Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/SystemActions/Model/SystemAction.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Tinycast/Features/Snippets/Model/Snippet.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run AppleShortcutTests     Tinycast/Features/AppleShortcuts/Model/*.swift
-run CalcTests              Tinycast/Features/Calculator/Model/*.swift
-run index CalcPerformanceTests Tinycast/Features/Calculator/Model/*.swift
-run CalendarTests          Tinycast/Features/Calendar/Model/*.swift \
-                           Tinycast/Features/Calendar/UI/EventEditorSession.swift
-run ClipboardTests         Tinycast/Features/Clipboard/Model/ClipboardStore.swift \
-                           Tinycast/Platform/Images/ImageDerivative.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFilter.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFileKind.swift \
-                           Tinycast/Features/Clipboard/Model/ColorValue.swift \
-                           Tinycast/Features/Clipboard/Model/ColorFormat.swift \
-                           Tinycast/Features/Clipboard/Model/ColorSpaces.swift
-run ClipboardCoordinatorTests Tinycast/Features/Clipboard/UI/ClipboardCoordinator.swift \
-                           Tinycast/Features/Clipboard/Model/*.swift \
-                           Tinycast/Platform/Images/ImageDerivative.swift \
-                           Tinycast/Palette/PaletteState.swift Tinycast/Palette/PaletteMode.swift \
-                           Tinycast/Palette/HoverArming.swift \
-                           Tinycast/Features/Emoji/Model/EmojiCatalog.swift \
-                           Tinycast/Features/FileSearch/Model/FileSearchFilter.swift \
-                           Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/CustomCommands/Model/CustomCommand.swift
-run ClipboardThumbnailTests Tinycast/Features/Clipboard/Model/ClipboardStore.swift \
-                           Tinycast/Platform/Images/ImageDerivative.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFilter.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFileKind.swift \
-                           Tinycast/Features/Clipboard/Model/ColorValue.swift \
-                           Tinycast/Features/Clipboard/Model/ColorFormat.swift \
-                           Tinycast/Features/Clipboard/Model/ColorSpaces.swift \
-                           Tinycast/Platform/ProcessExit.swift \
-                           Tinycast/Platform/Images/ImageThumbnail.swift \
-                           Tinycast/Platform/Images/ThumbnailCache.swift
+                           Nanocast/Features/Launcher/Service/LauncherSettingsFile.swift \
+                           Nanocast/Features/Launcher/Service/AliasStore.swift \
+                           Nanocast/Features/Launcher/Service/VisibilityStore.swift \
+                           Nanocast/Features/Settings/SettingsTab.swift \
+                           Nanocast/Features/Settings/Model/*.swift \
+                           Nanocast/Features/HotKeys/Service/HotKeySettingsFile.swift \
+                           Nanocast/Features/HotKeys/Service/KeyShortcut.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyAction.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyBinding.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeySpelling.swift \
+                           Nanocast/Features/HotKeys/Model/DoubleTapModifier.swift \
+                           Nanocast/Features/HotKeys/Model/ModifierKey.swift \
+                           Nanocast/Features/HotKeys/Model/HyperKey.swift \
+                           Nanocast/Features/HotKeys/Model/HIDKeyMapping.swift \
+                           Nanocast/Platform/ASCIIKeyboardLayout.swift \
+                           Nanocast/Features/QuickActions/Model/BuiltInQuickAction.swift \
+                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/SystemActions/Model/SystemAction.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
+                           Nanocast/Features/Snippets/Model/Snippet.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run AppleShortcutTests     Nanocast/Features/AppleShortcuts/Model/*.swift
+run CalcTests              Nanocast/Features/Calculator/Model/*.swift
+run index CalcPerformanceTests Nanocast/Features/Calculator/Model/*.swift
+run CalendarTests          Nanocast/Features/Calendar/Model/*.swift \
+                           Nanocast/Features/Calendar/UI/EventEditorSession.swift
+run ClipboardTests         Nanocast/Features/Clipboard/Model/ClipboardStore.swift \
+                           Nanocast/Platform/Images/ImageDerivative.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFilter.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFileKind.swift \
+                           Nanocast/Features/Clipboard/Model/ColorValue.swift \
+                           Nanocast/Features/Clipboard/Model/ColorFormat.swift \
+                           Nanocast/Features/Clipboard/Model/ColorSpaces.swift
+run ClipboardCoordinatorTests Nanocast/Features/Clipboard/UI/ClipboardCoordinator.swift \
+                           Nanocast/Features/Clipboard/Model/*.swift \
+                           Nanocast/Platform/Images/ImageDerivative.swift \
+                           Nanocast/Palette/PaletteState.swift Nanocast/Palette/PaletteMode.swift \
+                           Nanocast/Palette/HoverArming.swift \
+                           Nanocast/Features/Emoji/Model/EmojiCatalog.swift \
+                           Nanocast/Features/FileSearch/Model/FileSearchFilter.swift \
+                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/CustomCommands/Model/CustomCommand.swift
+run ClipboardThumbnailTests Nanocast/Features/Clipboard/Model/ClipboardStore.swift \
+                           Nanocast/Platform/Images/ImageDerivative.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFilter.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFileKind.swift \
+                           Nanocast/Features/Clipboard/Model/ColorValue.swift \
+                           Nanocast/Features/Clipboard/Model/ColorFormat.swift \
+                           Nanocast/Features/Clipboard/Model/ColorSpaces.swift \
+                           Nanocast/Platform/ProcessExit.swift \
+                           Nanocast/Platform/Images/ImageThumbnail.swift \
+                           Nanocast/Platform/Images/ThumbnailCache.swift
 # `Q` is the URL detector a drag payload builds its link with, rather than a second one.
-Q=Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift
-run ClipboardSearchTests   Tinycast/Features/Clipboard/Model/*.swift Tinycast/Platform/Images/ImageDerivative.swift $Q
-run PasteSequenceTests     Tinycast/Features/Clipboard/Model/*.swift Tinycast/Platform/Images/ImageDerivative.swift $Q
-run ClipboardTextTests     Tinycast/Features/Clipboard/Model/*.swift Tinycast/Platform/Images/ImageDerivative.swift $Q \
-                           Tinycast/Features/Clipboard/Service/ClipboardTextExtractor.swift \
-                           Tinycast/Features/Clipboard/Service/ClipboardTextIndexer.swift \
-                           Tinycast/Features/Clipboard/Service/ClipboardTextWorker.swift \
-                           Tinycast/Platform/ProcessExit.swift
-run PasteboardTests        Tinycast/Platform/PasteboardFiles.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardStore.swift \
-                           Tinycast/Platform/Images/ImageDerivative.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFilter.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFileKind.swift \
-                           Tinycast/Features/Clipboard/Model/ColorValue.swift \
-                           Tinycast/Features/Clipboard/Model/ColorFormat.swift \
-                           Tinycast/Features/Clipboard/Model/ColorSpaces.swift \
-                           Tinycast/Features/Clipboard/Service/ClipboardManager.swift \
-                           Tinycast/Features/Clipboard/Service/Paster.swift
+Q=Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift
+run ClipboardSearchTests   Nanocast/Features/Clipboard/Model/*.swift Nanocast/Platform/Images/ImageDerivative.swift $Q
+run PasteSequenceTests     Nanocast/Features/Clipboard/Model/*.swift Nanocast/Platform/Images/ImageDerivative.swift $Q
+run ClipboardTextTests     Nanocast/Features/Clipboard/Model/*.swift Nanocast/Platform/Images/ImageDerivative.swift $Q \
+                           Nanocast/Features/Clipboard/Service/ClipboardTextExtractor.swift \
+                           Nanocast/Features/Clipboard/Service/ClipboardTextIndexer.swift \
+                           Nanocast/Features/Clipboard/Service/ClipboardTextWorker.swift \
+                           Nanocast/Platform/ProcessExit.swift
+run PasteboardTests        Nanocast/Platform/PasteboardFiles.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardStore.swift \
+                           Nanocast/Platform/Images/ImageDerivative.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFilter.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFileKind.swift \
+                           Nanocast/Features/Clipboard/Model/ColorValue.swift \
+                           Nanocast/Features/Clipboard/Model/ColorFormat.swift \
+                           Nanocast/Features/Clipboard/Model/ColorSpaces.swift \
+                           Nanocast/Features/Clipboard/Service/ClipboardManager.swift \
+                           Nanocast/Features/Clipboard/Service/Paster.swift
 run index ClipboardFilePerformanceTests \
-                           Tinycast/Platform/PasteboardFiles.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardStore.swift \
-                           Tinycast/Platform/Images/ImageDerivative.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFilter.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFileKind.swift \
-                           Tinycast/Features/Clipboard/Model/ColorValue.swift \
-                           Tinycast/Features/Clipboard/Model/ColorFormat.swift \
-                           Tinycast/Features/Clipboard/Model/ColorSpaces.swift \
-                           Tinycast/Features/Clipboard/Service/ClipboardManager.swift
+                           Nanocast/Platform/PasteboardFiles.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardStore.swift \
+                           Nanocast/Platform/Images/ImageDerivative.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFilter.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFileKind.swift \
+                           Nanocast/Features/Clipboard/Model/ColorValue.swift \
+                           Nanocast/Features/Clipboard/Model/ColorFormat.swift \
+                           Nanocast/Features/Clipboard/Model/ColorSpaces.swift \
+                           Nanocast/Features/Clipboard/Service/ClipboardManager.swift
 run index ClipboardThumbnailPerformanceTests \
-                           Tinycast/Platform/ProcessExit.swift \
-                           Tinycast/Platform/Images/ImageThumbnail.swift \
-                           Tinycast/Platform/Images/ImageDerivative.swift \
-                           Tinycast/Platform/Images/ThumbnailCache.swift
-run EmojiTests             Tinycast/Features/Emoji/Model/EmojiCatalog.swift \
-                           Tinycast/Features/Emoji/Model/EmojiGridGeometry.swift \
-                           Tinycast/Features/Emoji/Model/EmojiData.generated.swift
-run EmojiSearchTests       Tinycast/Features/Emoji/Model/EmojiCatalog.swift \
-                           Tinycast/Features/Emoji/Model/EmojiData.generated.swift \
-                           Tinycast/Features/Emoji/Service/EmojiIndex.swift \
-                           Tinycast/Features/Emoji/Service/FrequentEmojiStore.swift \
-                           Tinycast/Features/Emoji/Service/PinnedEmojiStore.swift \
-                           Tinycast/Features/Launcher/Model/SearchRelevance.swift \
-                           Tinycast/Platform/AppPaths.swift Tinycast/Platform/Memo.swift
+                           Nanocast/Platform/ProcessExit.swift \
+                           Nanocast/Platform/Images/ImageThumbnail.swift \
+                           Nanocast/Platform/Images/ImageDerivative.swift \
+                           Nanocast/Platform/Images/ThumbnailCache.swift
+run EmojiTests             Nanocast/Features/Emoji/Model/EmojiCatalog.swift \
+                           Nanocast/Features/Emoji/Model/EmojiGridGeometry.swift \
+                           Nanocast/Features/Emoji/Model/EmojiData.generated.swift
+run EmojiSearchTests       Nanocast/Features/Emoji/Model/EmojiCatalog.swift \
+                           Nanocast/Features/Emoji/Model/EmojiData.generated.swift \
+                           Nanocast/Features/Emoji/Service/EmojiIndex.swift \
+                           Nanocast/Features/Emoji/Service/FrequentEmojiStore.swift \
+                           Nanocast/Features/Emoji/Service/PinnedEmojiStore.swift \
+                           Nanocast/Features/Launcher/Model/SearchRelevance.swift \
+                           Nanocast/Platform/AppPaths.swift Nanocast/Platform/Memo.swift
 run index EmojiSearchPerformanceTests \
-                           Tinycast/Features/Emoji/Model/EmojiCatalog.swift \
-                           Tinycast/Features/Emoji/Model/EmojiData.generated.swift \
-                           Tinycast/Features/Emoji/Service/EmojiIndex.swift \
-                           Tinycast/Features/Emoji/Service/FrequentEmojiStore.swift \
-                           Tinycast/Features/Launcher/Model/SearchRelevance.swift \
-                           Tinycast/Platform/AppPaths.swift Tinycast/Platform/Memo.swift
-run PaletteSelectionTests  Tinycast/Features/PaletteRowIndex.swift \
-                           Tinycast/Features/Emoji/Model/EmojiGridGeometry.swift
-run AppearanceTests        Tinycast/Platform/Appearance.swift \
-                           Tinycast/DesignSystem/Theme.swift \
-                           Tinycast/DesignSystem/InterfaceMetrics.swift \
-                           Tinycast/Features/Settings/AppAppearance.swift
-run LanguageTests          Tinycast/Features/Settings/AppLanguage.swift
-run LocalizedResourceTests Tinycast/Platform/LocalizedResource.swift
-run RelaunchTests          Tinycast/App/AppDelegate.swift Tinycast/Platform/RelaunchRunner.swift
-run InterfaceSizeTests     Tinycast/Platform/Appearance.swift \
-                           Tinycast/DesignSystem/Theme.swift \
-                           Tinycast/DesignSystem/InterfaceMetrics.swift \
-                           Tinycast/Features/Settings/InterfaceSize.swift \
-                           Tinycast/Features/Extensions/Model/ExtensionFormMetrics.swift
-run PalettePlacementTests  Tinycast/Platform/Appearance.swift \
-                           Tinycast/DesignSystem/Theme.swift \
-                           Tinycast/DesignSystem/InterfaceMetrics.swift \
-                           Tinycast/Features/Settings/InterfaceSize.swift \
-                           Tinycast/Palette/PalettePlacement.swift
-run PaletteMenuClickTests  Tinycast/Platform/Appearance.swift \
-                           Tinycast/DesignSystem/Theme.swift \
-                           Tinycast/Platform/WindowLevel.swift \
-                           Tinycast/Platform/NotificationToken.swift \
-                           Tinycast/DesignSystem/Interaction/KeyboardFocus.swift \
-                           Tinycast/DesignSystem/Interaction/Motion.swift \
-                           Tinycast/DesignSystem/Interaction/AnimatedPanel.swift \
-                           Tinycast/Palette/PalettePanel.swift
-run FormInputTests         Tinycast/Platform/Appearance.swift \
-                           Tinycast/DesignSystem/Theme.swift \
-                           Tinycast/DesignSystem/InterfaceMetrics.swift \
-                           Tinycast/DesignSystem/FormTextInput.swift \
-                           Tinycast/DesignSystem/FormTextArea.swift
-run ScrollRevealTests      Tinycast/DesignSystem/Scrolling/SelectionReveal.swift
-run RedactionTests         Tinycast/DesignSystem/RedactedPlaceholder.swift
-run KeyboardFocusTests     Tinycast/DesignSystem/Interaction/KeyboardFocus.swift
-run CommandEscapeTapTests  Tinycast/Palette/CommandEscapeTap.swift
-run PaletteEscapeTests     Tinycast/Palette/PaletteMode.swift \
-                           Tinycast/Palette/PaletteEscapeAction.swift \
-                           Tinycast/Palette/CommandEscapeTap.swift \
-                           Tinycast/Features/Settings/EscapeKeyBehavior.swift \
-                           Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/CustomCommands/Model/CustomCommand.swift
-run PaletteNavigationTests Tinycast/Palette/PaletteState.swift \
-                           Tinycast/Palette/PaletteMode.swift \
-                           Tinycast/Palette/HoverArming.swift \
-                           Tinycast/Features/Emoji/Model/EmojiCatalog.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardStore.swift \
-                           Tinycast/Platform/Images/ImageDerivative.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFilter.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFileKind.swift \
-                           Tinycast/Features/FileSearch/Model/FileSearchFilter.swift \
-                           Tinycast/Features/Clipboard/Model/ColorValue.swift \
-                           Tinycast/Features/Clipboard/Model/ColorFormat.swift \
-                           Tinycast/Features/Clipboard/Model/ColorSpaces.swift \
-                           Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/CustomCommands/Model/CustomCommand.swift
-run PaletteFilterTests     Tinycast/Palette/PaletteMode.swift \
-                           Tinycast/Palette/PaletteFilterAction.swift \
-                           Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/CustomCommands/Model/CustomCommand.swift
-run ActionMenuSearchTests  Tinycast/Palette/ActionMenuSearchQuery.swift \
-                            Tinycast/Features/Launcher/Model/SearchRelevance.swift
-run PaletteShortcutTests   Tinycast/Palette/PaletteShortcut.swift
-run ASCIILayoutTests       Tinycast/Platform/ASCIIKeyboardLayout.swift
-run PaletteTabTests        Tinycast/Palette/PaletteMode.swift \
-                           Tinycast/Palette/PaletteTabAction.swift \
-                           Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/CustomCommands/Model/CustomCommand.swift
-run CompactBarTests        Tinycast/Features/Launcher/Model/CompactBarSelection.swift \
-                           Tinycast/Features/Settings/AppSettingsKey.swift \
-                           Tinycast/Features/Settings/Model/*.swift \
-                           Tinycast/Features/Launcher/Model/CommandID.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyAction.swift \
-                           Tinycast/Features/QuickActions/Model/QuickAction.swift \
-                           Tinycast/Features/QuickActions/Model/BuiltInQuickAction.swift \
-                           Tinycast/Features/QuickActions/Model/CustomQuickAction.swift \
-                           Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/SystemActions/Model/SystemAction.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Tinycast/Features/Snippets/Model/Snippet.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run FallbackTests          Tinycast/Features/Launcher/Model/Fallback.swift \
-                           Tinycast/Features/Launcher/Model/CommandID.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyAction.swift \
-                           Tinycast/Features/QuickActions/Model/QuickAction.swift \
-                           Tinycast/Features/QuickActions/Model/BuiltInQuickAction.swift \
-                           Tinycast/Features/QuickActions/Model/CustomQuickAction.swift \
-                           Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/SystemActions/Model/SystemAction.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Tinycast/Features/Snippets/Model/Snippet.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run DictionaryTests        Tinycast/Features/Dictionary/Model/DictionaryEntry.swift \
-                           Tinycast/Features/Dictionary/Model/DictionaryMarkup.swift
-run DictationTests         Tinycast/Features/Dictation/Model/DictationModel.swift Tinycast/Features/Dictation/Model/DictationIdleRelease.swift Tinycast/Features/Dictation/Model/DictationLanguage.swift Tinycast/Features/Dictation/Model/DictationTextFormatter.swift
-run DictationCueTests      Tinycast/Features/Dictation/Service/DictationCueRunner.swift
-run DictationFieldTests    Tinycast/Features/Dictation/Model/DictationModel.swift \
-                           Tinycast/Features/Dictation/Model/DictationAudioChunks.swift \
-                           Tinycast/Features/Dictation/Model/DictationMode.swift \
-                           Tinycast/Features/Dictation/Model/DictationDestination.swift \
-                           Tinycast/Features/Dictation/Model/DictationTextFormatter.swift \
-                           Tinycast/Features/Dictation/Service/DictationCoordinator.swift \
-                           Tinycast/Features/Dictation/Service/DictationInsertionContext.swift \
-                           Tinycast/Features/AI/UI/ChatComposerTextView.swift \
-                           Tinycast/Features/TextInjection/Service/*.swift \
-                           Tinycast/Features/Snippets/Model/*.swift \
-                           Tinycast/Platform/AccessibilityText.swift \
-                           Tinycast/Platform/PasteboardFiles.swift \
-                           Tinycast/Platform/Appearance.swift Tinycast/DesignSystem/Theme.swift
-run DictationVolumeTests   Tinycast/Features/Dictation/Model/DictationVolumeSnapshot.swift \
-                           Tinycast/Features/Dictation/Service/DictationAudioDucker.swift \
-                           Tinycast/Platform/AppPaths.swift
-run index -O DictationPerformanceTests Tinycast/Platform/ProcessExit.swift \
-                           Tinycast/Features/Dictation/Model/DictationModel.swift \
-                           Tinycast/Features/Dictation/Service/DictationWire.swift
-run DictationInferenceTests Tinycast/Features/Dictation/Model/DictationAudioChunks.swift \
-    Tinycast/Features/Dictation/Service/DictationSpectrum.swift \
-    Tinycast/Features/Dictation/Helper/DictationTensor.swift Tinycast/Features/Dictation/Helper/DictationTokenizer.swift \
-    Tinycast/Features/Dictation/Helper/DictationMel.swift
-run DictationWorkerTests   Tinycast/Features/Dictation/Model/DictationModel.swift \
-                           Tinycast/Features/Dictation/Model/DictationIdleRelease.swift \
-                           Tinycast/Features/Dictation/Service/DictationWire.swift \
-                           Tinycast/Features/Dictation/Service/DictationWorker.swift \
-                           Tinycast/Features/Dictation/Service/DictationModelStore.swift \
-                           Tinycast/Features/Dictation/Service/DictationModelDownloader.swift \
-                           Tinycast/Platform/ProcessExit.swift Tinycast/Platform/AppPaths.swift
-run HotKeyTests            Tinycast/Features/HotKeys/Model/DoubleTapModifier.swift \
-                           Tinycast/Features/HotKeys/Model/ModifierKey.swift \
-                           Tinycast/Features/HotKeys/Model/ModifierKeyDetector.swift \
-                           Tinycast/Features/HotKeys/Model/DoubleTapDetector.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyBinding.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeySpelling.swift \
-                           Tinycast/Features/HotKeys/Model/HyperKey.swift \
-                           Tinycast/Features/HotKeys/Model/HIDKeyMapping.swift \
-                           Tinycast/Platform/ASCIIKeyboardLayout.swift \
-                           Tinycast/Features/HotKeys/Service/KeyShortcut.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyAction.swift \
-                           Tinycast/Features/QuickActions/Model/QuickAction.swift \
-                           Tinycast/Features/QuickActions/Model/BuiltInQuickAction.swift \
-                           Tinycast/Features/QuickActions/Model/CustomQuickAction.swift \
-                           Tinycast/Features/Launcher/Model/CommandID.swift \
-                           Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/SystemActions/Model/SystemAction.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Tinycast/Features/Snippets/Model/Snippet.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run CalloutTests           Tinycast/Platform/Appearance.swift \
-                           Tinycast/DesignSystem/Theme.swift \
-                           Tinycast/DesignSystem/InterfaceMetrics.swift \
-                           Tinycast/Features/HotKeys/UI/CalloutPlacement.swift
-run IconCacheTests         Tinycast/Platform/Appearance.swift \
-                           Tinycast/Platform/Images/IconCache.swift
-run EntryIconTests         Tinycast/Platform/Appearance.swift \
-                           Tinycast/Platform/Images/IconCache.swift \
-                           Tinycast/Platform/Images/FileIconStamp.swift
-run ExtensionIconTests     Tinycast/Platform/Appearance.swift \
-                           Tinycast/Platform/AppDisplayName.swift \
-                           Tinycast/Platform/Images/IconCache.swift \
-                           Tinycast/Platform/Compression/Zlib.swift \
-                           Tinycast/DesignSystem/Theme.swift \
-                           Tinycast/DesignSystem/InterfaceMetrics.swift \
-                           Tinycast/Features/Extensions/Model/ExtensionBootConfig.swift \
-                           Tinycast/Features/Extensions/Model/ExtensionLaunchType.swift \
-                           Tinycast/Features/Extensions/Model/ExtensionManifest.swift \
-                           Tinycast/Features/Extensions/Model/ExtensionRefreshPolicy.swift \
-                           Tinycast/Features/Extensions/Model/ExtensionRefreshState.swift \
-                           Tinycast/Features/Extensions/Model/RenderNode.swift \
-                           Tinycast/Features/Extensions/Service/ExtensionCatalog.swift \
-                           Tinycast/Features/Extensions/Service/ExtensionFetcher.swift \
-                           Tinycast/Platform/ProcessExit.swift \
-                           Tinycast/Features/Extensions/Service/ExtensionNodeShims.swift \
-                           Tinycast/Features/Extensions/Service/ExtensionRuntime.swift \
-                           Tinycast/Features/Extensions/Service/ExtensionIconCache.swift \
-                           Tinycast/Features/Extensions/UI/ExtensionAnimatedImage.swift \
-                           Tinycast/Features/Extensions/UI/ExtensionImage.swift \
-                           Tinycast/Features/Clipboard/Model/ColorValue.swift \
-                           Tinycast/Features/Clipboard/Model/ColorSpaces.swift
-run SystemActionTests      Tinycast/Features/SystemActions/Model/SystemAction.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run MicrophoneMuteTests    Tinycast/Features/SystemActions/Service/SystemActionFailure.swift \
-                           Tinycast/Features/SystemActions/Service/SystemActionRunner+Microphone.swift
-run VolumeTests            Tinycast/Features/SystemActions/Model/VolumeLevel.swift
-run WindowCommandTests     Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowCycle.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowActionMemory.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run WindowPresetTests      Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowShortcutPreset.swift \
-                           Tinycast/Features/HotKeys/Model/DoubleTapModifier.swift \
-                           Tinycast/Features/HotKeys/Model/ModifierKey.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyBinding.swift \
-                           Tinycast/Features/HotKeys/Model/HyperKey.swift \
-                           Tinycast/Features/HotKeys/Model/HIDKeyMapping.swift \
-                           Tinycast/Platform/ASCIIKeyboardLayout.swift \
-                           Tinycast/Features/HotKeys/Service/KeyShortcut.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run SpaceGestureTests      Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Tinycast/Features/WindowManagement/Model/SpaceGesture.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run WindowLayoutTests      Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowCycle.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutAnchor.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutDisplay.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayout.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutGeometry.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutPlan.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutStore.swift \
-                           Tinycast/Features/WindowManagement/Model/CustomWindowSize.swift \
-                           Tinycast/Features/WindowManagement/Model/CustomWindowSizeStore.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run DeepLinkTests          Tinycast/Features/DeepLinks/Model/DeepLink.swift \
-                           Tinycast/Features/DeepLinks/Model/DeepLinkInput.swift \
-                           Tinycast/Features/DeepLinks/Model/DeepLinkConsentPolicy.swift \
-                           Tinycast/Features/DeepLinks/Model/DeepLinkSource.swift \
-                           Tinycast/Features/DeepLinks/Model/CustomWindowSize+DeepLink.swift \
-                           Tinycast/Features/Settings/SettingsTab.swift \
-                           Tinycast/Features/Launcher/Model/CommandID.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyAction.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyAction+EntryID.swift \
-                           Tinycast/Features/QuickActions/Model/QuickAction.swift \
-                           Tinycast/Features/QuickActions/Model/BuiltInQuickAction.swift \
-                           Tinycast/Features/QuickActions/Model/CustomQuickAction.swift \
-                           Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/SystemActions/Model/SystemAction.swift \
-                           Tinycast/Features/CustomCommands/Model/CustomCommand.swift \
-                           Tinycast/Features/AppleShortcuts/Model/AppleShortcut.swift \
-                           Tinycast/Features/Snippets/Model/Snippet.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowCycle.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutAnchor.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutDisplay.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayout.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutGeometry.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomLayoutKind.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomLayoutEngine.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomGrid.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomWindow.swift \
-                           Tinycast/Features/WindowManagement/Model/Room.swift \
-                           Tinycast/Features/WindowManagement/Model/CustomWindowSize.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run WindowRoomTests        Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowCycle.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutAnchor.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutDisplay.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayout.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutGeometry.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutPlan.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomLayoutKind.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomLayoutEngine.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomGrid.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomWindow.swift \
-                           Tinycast/Features/WindowManagement/Model/Room.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomWindowMatcher.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomParking.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomPlan.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomArrangement.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomStore.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomMinimumSizeStore.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomParkingLedger.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run WindowFileTests        Tinycast/Features/WindowManagement/Model/WindowCommand.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowCycle.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutAnchor.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutDisplay.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayout.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowLayoutGeometry.swift \
-                           Tinycast/Features/WindowManagement/Model/CustomWindowSize.swift \
-                           Tinycast/Features/WindowManagement/Model/Room.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomWindow.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomLayoutKind.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomGrid.swift \
-                           Tinycast/Features/WindowManagement/Model/RoomLayoutEngine.swift \
-                           Tinycast/Features/WindowManagement/Model/WindowManagementFileFormat.swift \
-                           Tinycast/Features/Settings/Model/SettingsFileJSON.swift \
-                           Tinycast/Features/Settings/Model/SettingsFileIdentity.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run CustomCommandTests     Tinycast/Platform/PseudoTerminal.swift \
-                           Tinycast/Platform/ProcessExit.swift \
-                           Tinycast/Features/CustomCommands/Model/CustomCommand.swift \
-                           Tinycast/Features/CustomCommands/Model/RaycastScriptImport.swift \
-                           Tinycast/Features/CustomCommands/UI/CustomCommandEditorSession.swift \
-                           Tinycast/Features/CustomCommands/Service/ShellCommandRunner.swift
-run CustomCommandListTests Tinycast/Features/CustomCommands/Model/CustomCommand.swift \
-                             Tinycast/Features/CustomCommands/UI/CustomCommandListScreen.swift
-run UninstallCoordinatorTests Tinycast/Features/Uninstall/Model/*.swift \
-                           Tinycast/Features/Uninstall/UI/UninstallCoordinator.swift
-run UninstallTests         Tinycast/Features/Uninstall/Model/UninstallTarget.swift \
-                           Tinycast/Features/Uninstall/Model/UninstallSearchRoot.swift \
-                           Tinycast/Features/Uninstall/Model/UninstallRules.swift \
-                           Tinycast/Features/Uninstall/Model/UninstallProtection.swift \
-                           Tinycast/Features/Uninstall/Model/UninstallPlan.swift
-run QuicklinkTests         Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkStore.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkArchive.swift \
-                           Tinycast/Features/Quicklinks/Model/RaycastQuicklinkImport.swift \
-                           Tinycast/Features/Quicklinks/UI/QuicklinkEditorSession.swift
-run QuicklinkCoordinatorTests Tinycast/Features/Quicklinks/Model/Quicklink.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkDestination.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkStore.swift \
-                           Tinycast/Features/Quicklinks/Model/QuicklinkArchive.swift \
-                           Tinycast/Features/Quicklinks/UI/QuicklinkCoordinator.swift \
-                           Tinycast/Features/Quicklinks/UI/QuicklinkEditorSession.swift \
-                           Tinycast/Features/Quicklinks/UI/QuicklinkArgumentsAccessory.swift \
-                           Tinycast/Features/Snippets/Model/Snippet.swift \
-                           Tinycast/Features/Snippets/Model/SnippetTemplateEngine.swift
-run slow SnippetsTests     Tinycast/Platform/NotificationToken.swift \
-                           Tinycast/Platform/HealthTicker.swift \
-                           Tinycast/Platform/AccessibilityText.swift \
-                           Tinycast/Features/Snippets/Model/*.swift \
-                           Tinycast/Features/Snippets/Service/*.swift \
-                           Tinycast/Features/Snippets/UI/SnippetEditorSession.swift \
-                           Tinycast/Features/TextInjection/Service/*.swift
-run NotesTests             Tinycast/Platform/Signposts.swift \
+                           Nanocast/Features/Emoji/Model/EmojiCatalog.swift \
+                           Nanocast/Features/Emoji/Model/EmojiData.generated.swift \
+                           Nanocast/Features/Emoji/Service/EmojiIndex.swift \
+                           Nanocast/Features/Emoji/Service/FrequentEmojiStore.swift \
+                           Nanocast/Features/Launcher/Model/SearchRelevance.swift \
+                           Nanocast/Platform/AppPaths.swift Nanocast/Platform/Memo.swift
+run PaletteSelectionTests  Nanocast/Features/PaletteRowIndex.swift \
+                           Nanocast/Features/Emoji/Model/EmojiGridGeometry.swift
+run AppearanceTests        Nanocast/Platform/Appearance.swift \
+                           Nanocast/DesignSystem/Theme.swift \
+                           Nanocast/DesignSystem/InterfaceMetrics.swift \
+                           Nanocast/Features/Settings/AppAppearance.swift
+run LanguageTests          Nanocast/Features/Settings/AppLanguage.swift
+run LocalizedResourceTests Nanocast/Platform/LocalizedResource.swift
+run RelaunchTests          Nanocast/App/AppDelegate.swift Nanocast/Platform/RelaunchRunner.swift
+run InterfaceSizeTests     Nanocast/Platform/Appearance.swift \
+                           Nanocast/DesignSystem/Theme.swift \
+                           Nanocast/DesignSystem/InterfaceMetrics.swift \
+                           Nanocast/Features/Settings/InterfaceSize.swift \
+                           Nanocast/Features/Extensions/Model/ExtensionFormMetrics.swift
+run PalettePlacementTests  Nanocast/Platform/Appearance.swift \
+                           Nanocast/DesignSystem/Theme.swift \
+                           Nanocast/DesignSystem/InterfaceMetrics.swift \
+                           Nanocast/Features/Settings/InterfaceSize.swift \
+                           Nanocast/Palette/PalettePlacement.swift
+run PaletteMenuClickTests  Nanocast/Platform/Appearance.swift \
+                           Nanocast/DesignSystem/Theme.swift \
+                           Nanocast/Platform/WindowLevel.swift \
+                           Nanocast/Platform/NotificationToken.swift \
+                           Nanocast/DesignSystem/Interaction/KeyboardFocus.swift \
+                           Nanocast/DesignSystem/Interaction/Motion.swift \
+                           Nanocast/DesignSystem/Interaction/AnimatedPanel.swift \
+                           Nanocast/Palette/PalettePanel.swift
+run FormInputTests         Nanocast/Platform/Appearance.swift \
+                           Nanocast/DesignSystem/Theme.swift \
+                           Nanocast/DesignSystem/InterfaceMetrics.swift \
+                           Nanocast/DesignSystem/FormTextInput.swift \
+                           Nanocast/DesignSystem/FormTextArea.swift
+run ScrollRevealTests      Nanocast/DesignSystem/Scrolling/SelectionReveal.swift
+run RedactionTests         Nanocast/DesignSystem/RedactedPlaceholder.swift
+run KeyboardFocusTests     Nanocast/DesignSystem/Interaction/KeyboardFocus.swift
+run CommandEscapeTapTests  Nanocast/Palette/CommandEscapeTap.swift
+run PaletteEscapeTests     Nanocast/Palette/PaletteMode.swift \
+                           Nanocast/Palette/PaletteEscapeAction.swift \
+                           Nanocast/Palette/CommandEscapeTap.swift \
+                           Nanocast/Features/Settings/EscapeKeyBehavior.swift \
+                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/CustomCommands/Model/CustomCommand.swift
+run PaletteNavigationTests Nanocast/Palette/PaletteState.swift \
+                           Nanocast/Palette/PaletteMode.swift \
+                           Nanocast/Palette/HoverArming.swift \
+                           Nanocast/Features/Emoji/Model/EmojiCatalog.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardStore.swift \
+                           Nanocast/Platform/Images/ImageDerivative.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFilter.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFileKind.swift \
+                           Nanocast/Features/FileSearch/Model/FileSearchFilter.swift \
+                           Nanocast/Features/Clipboard/Model/ColorValue.swift \
+                           Nanocast/Features/Clipboard/Model/ColorFormat.swift \
+                           Nanocast/Features/Clipboard/Model/ColorSpaces.swift \
+                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/CustomCommands/Model/CustomCommand.swift
+run PaletteFilterTests     Nanocast/Palette/PaletteMode.swift \
+                           Nanocast/Palette/PaletteFilterAction.swift \
+                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/CustomCommands/Model/CustomCommand.swift
+run ActionMenuSearchTests  Nanocast/Palette/ActionMenuSearchQuery.swift \
+                            Nanocast/Features/Launcher/Model/SearchRelevance.swift
+run PaletteShortcutTests   Nanocast/Palette/PaletteShortcut.swift
+run ASCIILayoutTests       Nanocast/Platform/ASCIIKeyboardLayout.swift
+run PaletteTabTests        Nanocast/Palette/PaletteMode.swift \
+                           Nanocast/Palette/PaletteTabAction.swift \
+                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/CustomCommands/Model/CustomCommand.swift
+run CompactBarTests        Nanocast/Features/Launcher/Model/CompactBarSelection.swift \
+                           Nanocast/Features/Settings/AppSettingsKey.swift \
+                           Nanocast/Features/Settings/Model/*.swift \
+                           Nanocast/Features/Launcher/Model/CommandID.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyAction.swift \
+                           Nanocast/Features/QuickActions/Model/QuickAction.swift \
+                           Nanocast/Features/QuickActions/Model/BuiltInQuickAction.swift \
+                           Nanocast/Features/QuickActions/Model/CustomQuickAction.swift \
+                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/SystemActions/Model/SystemAction.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
+                           Nanocast/Features/Snippets/Model/Snippet.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run FallbackTests          Nanocast/Features/Launcher/Model/Fallback.swift \
+                           Nanocast/Features/Launcher/Model/CommandID.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyAction.swift \
+                           Nanocast/Features/QuickActions/Model/QuickAction.swift \
+                           Nanocast/Features/QuickActions/Model/BuiltInQuickAction.swift \
+                           Nanocast/Features/QuickActions/Model/CustomQuickAction.swift \
+                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/SystemActions/Model/SystemAction.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
+                           Nanocast/Features/Snippets/Model/Snippet.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run DictionaryTests        Nanocast/Features/Dictionary/Model/DictionaryEntry.swift \
+                           Nanocast/Features/Dictionary/Model/DictionaryMarkup.swift
+run DictationTests         Nanocast/Features/Dictation/Model/DictationModel.swift Nanocast/Features/Dictation/Model/DictationIdleRelease.swift Nanocast/Features/Dictation/Model/DictationLanguage.swift Nanocast/Features/Dictation/Model/DictationTextFormatter.swift
+run DictationCueTests      Nanocast/Features/Dictation/Service/DictationCueRunner.swift
+run DictationFieldTests    Nanocast/Features/Dictation/Model/DictationModel.swift \
+                           Nanocast/Features/Dictation/Model/DictationAudioChunks.swift \
+                           Nanocast/Features/Dictation/Model/DictationMode.swift \
+                           Nanocast/Features/Dictation/Model/DictationDestination.swift \
+                           Nanocast/Features/Dictation/Model/DictationTextFormatter.swift \
+                           Nanocast/Features/Dictation/Service/DictationCoordinator.swift \
+                           Nanocast/Features/Dictation/Service/DictationInsertionContext.swift \
+                           Nanocast/Features/AI/UI/ChatComposerTextView.swift \
+                           Nanocast/Features/TextInjection/Service/*.swift \
+                           Nanocast/Features/Snippets/Model/*.swift \
+                           Nanocast/Platform/AccessibilityText.swift \
+                           Nanocast/Platform/PasteboardFiles.swift \
+                           Nanocast/Platform/Appearance.swift Nanocast/DesignSystem/Theme.swift
+run DictationVolumeTests   Nanocast/Features/Dictation/Model/DictationVolumeSnapshot.swift \
+                           Nanocast/Features/Dictation/Service/DictationAudioDucker.swift \
+                           Nanocast/Platform/AppPaths.swift
+run index -O DictationPerformanceTests Nanocast/Platform/ProcessExit.swift \
+                           Nanocast/Features/Dictation/Model/DictationModel.swift \
+                           Nanocast/Features/Dictation/Service/DictationWire.swift
+run DictationInferenceTests Nanocast/Features/Dictation/Model/DictationAudioChunks.swift \
+    Nanocast/Features/Dictation/Service/DictationSpectrum.swift \
+    Nanocast/Features/Dictation/Helper/DictationTensor.swift Nanocast/Features/Dictation/Helper/DictationTokenizer.swift \
+    Nanocast/Features/Dictation/Helper/DictationMel.swift
+run DictationWorkerTests   Nanocast/Features/Dictation/Model/DictationModel.swift \
+                           Nanocast/Features/Dictation/Model/DictationIdleRelease.swift \
+                           Nanocast/Features/Dictation/Service/DictationWire.swift \
+                           Nanocast/Features/Dictation/Service/DictationWorker.swift \
+                           Nanocast/Features/Dictation/Service/DictationModelStore.swift \
+                           Nanocast/Features/Dictation/Service/DictationModelDownloader.swift \
+                           Nanocast/Platform/ProcessExit.swift Nanocast/Platform/AppPaths.swift
+run HotKeyTests            Nanocast/Features/HotKeys/Model/DoubleTapModifier.swift \
+                           Nanocast/Features/HotKeys/Model/ModifierKey.swift \
+                           Nanocast/Features/HotKeys/Model/ModifierKeyDetector.swift \
+                           Nanocast/Features/HotKeys/Model/DoubleTapDetector.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyBinding.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeySpelling.swift \
+                           Nanocast/Features/HotKeys/Model/HyperKey.swift \
+                           Nanocast/Features/HotKeys/Model/HIDKeyMapping.swift \
+                           Nanocast/Platform/ASCIIKeyboardLayout.swift \
+                           Nanocast/Features/HotKeys/Service/KeyShortcut.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyAction.swift \
+                           Nanocast/Features/QuickActions/Model/QuickAction.swift \
+                           Nanocast/Features/QuickActions/Model/BuiltInQuickAction.swift \
+                           Nanocast/Features/QuickActions/Model/CustomQuickAction.swift \
+                           Nanocast/Features/Launcher/Model/CommandID.swift \
+                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/SystemActions/Model/SystemAction.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
+                           Nanocast/Features/Snippets/Model/Snippet.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run CalloutTests           Nanocast/Platform/Appearance.swift \
+                           Nanocast/DesignSystem/Theme.swift \
+                           Nanocast/DesignSystem/InterfaceMetrics.swift \
+                           Nanocast/Features/HotKeys/UI/CalloutPlacement.swift
+run IconCacheTests         Nanocast/Platform/Appearance.swift \
+                           Nanocast/Platform/Images/IconCache.swift
+run EntryIconTests         Nanocast/Platform/Appearance.swift \
+                           Nanocast/Platform/Images/IconCache.swift \
+                           Nanocast/Platform/Images/FileIconStamp.swift
+run ExtensionIconTests     Nanocast/Platform/Appearance.swift \
+                           Nanocast/Platform/AppDisplayName.swift \
+                           Nanocast/Platform/Images/IconCache.swift \
+                           Nanocast/Platform/Compression/Zlib.swift \
+                           Nanocast/DesignSystem/Theme.swift \
+                           Nanocast/DesignSystem/InterfaceMetrics.swift \
+                           Nanocast/Features/Extensions/Model/ExtensionBootConfig.swift \
+                           Nanocast/Features/Extensions/Model/ExtensionLaunchType.swift \
+                           Nanocast/Features/Extensions/Model/ExtensionManifest.swift \
+                           Nanocast/Features/Extensions/Model/ExtensionRefreshPolicy.swift \
+                           Nanocast/Features/Extensions/Model/ExtensionRefreshState.swift \
+                           Nanocast/Features/Extensions/Model/RenderNode.swift \
+                           Nanocast/Features/Extensions/Service/ExtensionCatalog.swift \
+                           Nanocast/Features/Extensions/Service/ExtensionFetcher.swift \
+                           Nanocast/Platform/ProcessExit.swift \
+                           Nanocast/Features/Extensions/Service/ExtensionNodeShims.swift \
+                           Nanocast/Features/Extensions/Service/ExtensionRuntime.swift \
+                           Nanocast/Features/Extensions/Service/ExtensionIconCache.swift \
+                           Nanocast/Features/Extensions/UI/ExtensionAnimatedImage.swift \
+                           Nanocast/Features/Extensions/UI/ExtensionImage.swift \
+                           Nanocast/Features/Clipboard/Model/ColorValue.swift \
+                           Nanocast/Features/Clipboard/Model/ColorSpaces.swift
+run SystemActionTests      Nanocast/Features/SystemActions/Model/SystemAction.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run MicrophoneMuteTests    Nanocast/Features/SystemActions/Service/SystemActionFailure.swift \
+                           Nanocast/Features/SystemActions/Service/SystemActionRunner+Microphone.swift
+run VolumeTests            Nanocast/Features/SystemActions/Model/VolumeLevel.swift
+run WindowCommandTests     Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowActionMemory.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run WindowPresetTests      Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowShortcutPreset.swift \
+                           Nanocast/Features/HotKeys/Model/DoubleTapModifier.swift \
+                           Nanocast/Features/HotKeys/Model/ModifierKey.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyBinding.swift \
+                           Nanocast/Features/HotKeys/Model/HyperKey.swift \
+                           Nanocast/Features/HotKeys/Model/HIDKeyMapping.swift \
+                           Nanocast/Platform/ASCIIKeyboardLayout.swift \
+                           Nanocast/Features/HotKeys/Service/KeyShortcut.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run SpaceGestureTests      Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
+                           Nanocast/Features/WindowManagement/Model/SpaceGesture.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run WindowLayoutTests      Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutAnchor.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutDisplay.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayout.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutGeometry.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutPlan.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutStore.swift \
+                           Nanocast/Features/WindowManagement/Model/CustomWindowSize.swift \
+                           Nanocast/Features/WindowManagement/Model/CustomWindowSizeStore.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run DeepLinkTests          Nanocast/Features/DeepLinks/Model/DeepLink.swift \
+                           Nanocast/Features/DeepLinks/Model/DeepLinkInput.swift \
+                           Nanocast/Features/DeepLinks/Model/DeepLinkConsentPolicy.swift \
+                           Nanocast/Features/DeepLinks/Model/DeepLinkSource.swift \
+                           Nanocast/Features/DeepLinks/Model/CustomWindowSize+DeepLink.swift \
+                           Nanocast/Features/Settings/SettingsTab.swift \
+                           Nanocast/Features/Launcher/Model/CommandID.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyAction.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyAction+EntryID.swift \
+                           Nanocast/Features/QuickActions/Model/QuickAction.swift \
+                           Nanocast/Features/QuickActions/Model/BuiltInQuickAction.swift \
+                           Nanocast/Features/QuickActions/Model/CustomQuickAction.swift \
+                           Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/SystemActions/Model/SystemAction.swift \
+                           Nanocast/Features/CustomCommands/Model/CustomCommand.swift \
+                           Nanocast/Features/AppleShortcuts/Model/AppleShortcut.swift \
+                           Nanocast/Features/Snippets/Model/Snippet.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutAnchor.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutDisplay.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayout.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutGeometry.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomLayoutKind.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomLayoutEngine.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomGrid.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomWindow.swift \
+                           Nanocast/Features/WindowManagement/Model/Room.swift \
+                           Nanocast/Features/WindowManagement/Model/CustomWindowSize.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run WindowRoomTests        Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutAnchor.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutDisplay.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayout.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutGeometry.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutPlan.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomLayoutKind.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomLayoutEngine.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomGrid.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomWindow.swift \
+                           Nanocast/Features/WindowManagement/Model/Room.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomWindowMatcher.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomParking.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomPlan.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomArrangement.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomStore.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomMinimumSizeStore.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomParkingLedger.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run WindowFileTests        Nanocast/Features/WindowManagement/Model/WindowCommand.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowCycle.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowPlacementEngine.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutAnchor.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutDisplay.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayout.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowLayoutGeometry.swift \
+                           Nanocast/Features/WindowManagement/Model/CustomWindowSize.swift \
+                           Nanocast/Features/WindowManagement/Model/Room.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomWindow.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomLayoutKind.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomGrid.swift \
+                           Nanocast/Features/WindowManagement/Model/RoomLayoutEngine.swift \
+                           Nanocast/Features/WindowManagement/Model/WindowManagementFileFormat.swift \
+                           Nanocast/Features/Settings/Model/SettingsFileJSON.swift \
+                           Nanocast/Features/Settings/Model/SettingsFileIdentity.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run CustomCommandTests     Nanocast/Platform/PseudoTerminal.swift \
+                           Nanocast/Platform/ProcessExit.swift \
+                           Nanocast/Features/CustomCommands/Model/CustomCommand.swift \
+                           Nanocast/Features/CustomCommands/Model/RaycastScriptImport.swift \
+                           Nanocast/Features/CustomCommands/UI/CustomCommandEditorSession.swift \
+                           Nanocast/Features/CustomCommands/Service/ShellCommandRunner.swift
+run CustomCommandListTests Nanocast/Features/CustomCommands/Model/CustomCommand.swift \
+                             Nanocast/Features/CustomCommands/UI/CustomCommandListScreen.swift
+run UninstallCoordinatorTests Nanocast/Features/Uninstall/Model/*.swift \
+                           Nanocast/Features/Uninstall/UI/UninstallCoordinator.swift
+run UninstallTests         Nanocast/Features/Uninstall/Model/UninstallTarget.swift \
+                           Nanocast/Features/Uninstall/Model/UninstallSearchRoot.swift \
+                           Nanocast/Features/Uninstall/Model/UninstallRules.swift \
+                           Nanocast/Features/Uninstall/Model/UninstallProtection.swift \
+                           Nanocast/Features/Uninstall/Model/UninstallPlan.swift
+run QuicklinkTests         Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkStore.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkArchive.swift \
+                           Nanocast/Features/Quicklinks/Model/RaycastQuicklinkImport.swift \
+                           Nanocast/Features/Quicklinks/UI/QuicklinkEditorSession.swift
+run QuicklinkCoordinatorTests Nanocast/Features/Quicklinks/Model/Quicklink.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkDestination.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkStore.swift \
+                           Nanocast/Features/Quicklinks/Model/QuicklinkArchive.swift \
+                           Nanocast/Features/Quicklinks/UI/QuicklinkCoordinator.swift \
+                           Nanocast/Features/Quicklinks/UI/QuicklinkEditorSession.swift \
+                           Nanocast/Features/Quicklinks/UI/QuicklinkArgumentsAccessory.swift \
+                           Nanocast/Features/Snippets/Model/Snippet.swift \
+                           Nanocast/Features/Snippets/Model/SnippetTemplateEngine.swift
+run slow SnippetsTests     Nanocast/Platform/NotificationToken.swift \
+                           Nanocast/Platform/HealthTicker.swift \
+                           Nanocast/Platform/AccessibilityText.swift \
+                           Nanocast/Features/Snippets/Model/*.swift \
+                           Nanocast/Features/Snippets/Service/*.swift \
+                           Nanocast/Features/Snippets/UI/SnippetEditorSession.swift \
+                           Nanocast/Features/TextInjection/Service/*.swift
+run NotesTests             Nanocast/Platform/Signposts.swift \
                            $L/SearchRelevance.swift \
-                           Tinycast/Features/Notes/Model/*.swift \
-                           Tinycast/Features/Notes/Service/*.swift
-run NotesEditorTests       Tinycast/Platform/Signposts.swift \
-                           Tinycast/Platform/Appearance.swift \
-                           Tinycast/DesignSystem/Theme.swift \
-                           Tinycast/DesignSystem/InterfaceMetrics.swift \
-                           Tinycast/Platform/NotificationToken.swift \
-                           Tinycast/Features/TextInjection/Service/InjectableTextView.swift \
-                           Tinycast/Features/Notes/Model/NoteDocument.swift \
-                           Tinycast/Features/Notes/Model/NoteTitle.swift \
-                           Tinycast/Features/Notes/Model/NoteMarkdown.swift \
-                           Tinycast/Features/Notes/Model/NoteMarkdownParser.swift \
-                           Tinycast/Features/Notes/Model/NoteInlineScanner.swift \
-                           Tinycast/Features/Notes/Model/NoteEditPlan.swift \
-                           Tinycast/Features/Notes/Model/NoteEditAction.swift \
-                           Tinycast/Features/Notes/Model/NoteFormatting.swift \
-                           Tinycast/Features/Notes/Model/NoteMarkdownEditing.swift \
-                           Tinycast/Features/Notes/Model/NoteRevealPolicy.swift \
-                           Tinycast/Features/Notes/UI/NoteMarkdownTypography.swift \
-                           Tinycast/Features/Notes/UI/NoteBlockDecoration.swift \
-                           Tinycast/Features/Notes/UI/NoteMarkdownStyler.swift \
-                           Tinycast/Features/Notes/UI/NoteMarkdownRenderer.swift \
-                           Tinycast/Features/Notes/UI/NoteCheckboxGeometry.swift \
-                           Tinycast/Features/Notes/UI/NoteBlockLayoutFragment.swift \
-                           Tinycast/Features/Notes/UI/NoteLayoutFragmentProvider.swift \
-                           Tinycast/Features/Notes/UI/NoteTextViewEditing.swift \
-                           Tinycast/Features/Notes/UI/NoteTextView.swift \
-                           Tinycast/Features/Notes/UI/NoteEditorView.swift
+                           Nanocast/Features/Notes/Model/*.swift \
+                           Nanocast/Features/Notes/Service/*.swift
+run NotesEditorTests       Nanocast/Platform/Signposts.swift \
+                           Nanocast/Platform/Appearance.swift \
+                           Nanocast/DesignSystem/Theme.swift \
+                           Nanocast/DesignSystem/InterfaceMetrics.swift \
+                           Nanocast/Platform/NotificationToken.swift \
+                           Nanocast/Features/TextInjection/Service/InjectableTextView.swift \
+                           Nanocast/Features/Notes/Model/NoteDocument.swift \
+                           Nanocast/Features/Notes/Model/NoteTitle.swift \
+                           Nanocast/Features/Notes/Model/NoteMarkdown.swift \
+                           Nanocast/Features/Notes/Model/NoteMarkdownParser.swift \
+                           Nanocast/Features/Notes/Model/NoteInlineScanner.swift \
+                           Nanocast/Features/Notes/Model/NoteEditPlan.swift \
+                           Nanocast/Features/Notes/Model/NoteEditAction.swift \
+                           Nanocast/Features/Notes/Model/NoteFormatting.swift \
+                           Nanocast/Features/Notes/Model/NoteMarkdownEditing.swift \
+                           Nanocast/Features/Notes/Model/NoteRevealPolicy.swift \
+                           Nanocast/Features/Notes/UI/NoteMarkdownTypography.swift \
+                           Nanocast/Features/Notes/UI/NoteBlockDecoration.swift \
+                           Nanocast/Features/Notes/UI/NoteMarkdownStyler.swift \
+                           Nanocast/Features/Notes/UI/NoteMarkdownRenderer.swift \
+                           Nanocast/Features/Notes/UI/NoteCheckboxGeometry.swift \
+                           Nanocast/Features/Notes/UI/NoteBlockLayoutFragment.swift \
+                           Nanocast/Features/Notes/UI/NoteLayoutFragmentProvider.swift \
+                           Nanocast/Features/Notes/UI/NoteTextViewEditing.swift \
+                           Nanocast/Features/Notes/UI/NoteTextView.swift \
+                           Nanocast/Features/Notes/UI/NoteEditorView.swift
 run -O index NotesEditorPerformanceTests \
-                           Tinycast/Platform/Signposts.swift \
-                           Tinycast/Platform/Appearance.swift \
-                           Tinycast/DesignSystem/Theme.swift \
-                           Tinycast/DesignSystem/InterfaceMetrics.swift \
-                           Tinycast/Platform/NotificationToken.swift \
-                           Tinycast/Features/TextInjection/Service/InjectableTextView.swift \
-                           Tinycast/Features/Notes/Model/NoteDocument.swift \
-                           Tinycast/Features/Notes/Model/NoteTitle.swift \
-                           Tinycast/Features/Notes/Model/NoteMarkdown.swift \
-                           Tinycast/Features/Notes/Model/NoteMarkdownParser.swift \
-                           Tinycast/Features/Notes/Model/NoteInlineScanner.swift \
-                           Tinycast/Features/Notes/Model/NoteEditPlan.swift \
-                           Tinycast/Features/Notes/Model/NoteEditAction.swift \
-                           Tinycast/Features/Notes/Model/NoteFormatting.swift \
-                           Tinycast/Features/Notes/Model/NoteMarkdownEditing.swift \
-                           Tinycast/Features/Notes/Model/NoteRevealPolicy.swift \
-                           Tinycast/Features/Notes/UI/NoteMarkdownTypography.swift \
-                           Tinycast/Features/Notes/UI/NoteBlockDecoration.swift \
-                           Tinycast/Features/Notes/UI/NoteMarkdownStyler.swift \
-                           Tinycast/Features/Notes/UI/NoteMarkdownRenderer.swift \
-                           Tinycast/Features/Notes/UI/NoteCheckboxGeometry.swift \
-                           Tinycast/Features/Notes/UI/NoteBlockLayoutFragment.swift \
-                           Tinycast/Features/Notes/UI/NoteLayoutFragmentProvider.swift \
-                           Tinycast/Features/Notes/UI/NoteTextViewEditing.swift \
-                           Tinycast/Features/Notes/UI/NoteTextView.swift \
-                           Tinycast/Features/Notes/UI/NoteEditorView.swift
-run slow -O RaycastTests   Tinycast/Features/Backup/Model/RaycastImportError.swift \
-                           Tinycast/Features/Backup/Service/RaycastDecoder.swift \
-                           Tinycast/Features/Backup/Service/Scrypt.swift \
-                           Tinycast/Platform/Compression/Zlib.swift \
-                           Tinycast/Features/Clipboard/Model/RaycastClipboardImport.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardStore.swift \
-                           Tinycast/Platform/Images/ImageDerivative.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFilter.swift \
-                           Tinycast/Features/Clipboard/Model/ClipboardFileKind.swift \
-                           Tinycast/Features/Clipboard/Model/ColorValue.swift \
-                           Tinycast/Features/Clipboard/Model/ColorFormat.swift \
-                           Tinycast/Features/Clipboard/Model/ColorSpaces.swift
-run SettingsBackupTests    Tinycast/Features/Settings/AppSettingsKey.swift \
-                           Tinycast/Features/Backup/Model/SettingsBackupCoverage.swift
-run HyperKeyEngineTests    Tinycast/Features/HotKeys/Model/HyperKeyEngine.swift \
-                           Tinycast/Features/HotKeys/Model/HyperKey.swift \
-                           Tinycast/Features/HotKeys/Model/HIDKeyMapping.swift \
-                           Tinycast/Features/HotKeys/Model/ModifierKey.swift \
-                           Tinycast/Features/HotKeys/Model/DoubleTapModifier.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyBinding.swift \
-                           Tinycast/Features/HotKeys/Service/KeyShortcut.swift \
-                           Tinycast/Platform/ASCIIKeyboardLayout.swift
-run HyperKeyTests          Tinycast/Features/HotKeys/Model/HIDKeyMapping.swift \
-                           Tinycast/Features/HotKeys/Model/HyperKeyConflictPolicy.swift \
-                           Tinycast/Features/HotKeys/Service/KeyboardRemapper.swift \
-                           Tinycast/Features/HotKeys/Service/RemapInstanceLock.swift \
+                           Nanocast/Platform/Signposts.swift \
+                           Nanocast/Platform/Appearance.swift \
+                           Nanocast/DesignSystem/Theme.swift \
+                           Nanocast/DesignSystem/InterfaceMetrics.swift \
+                           Nanocast/Platform/NotificationToken.swift \
+                           Nanocast/Features/TextInjection/Service/InjectableTextView.swift \
+                           Nanocast/Features/Notes/Model/NoteDocument.swift \
+                           Nanocast/Features/Notes/Model/NoteTitle.swift \
+                           Nanocast/Features/Notes/Model/NoteMarkdown.swift \
+                           Nanocast/Features/Notes/Model/NoteMarkdownParser.swift \
+                           Nanocast/Features/Notes/Model/NoteInlineScanner.swift \
+                           Nanocast/Features/Notes/Model/NoteEditPlan.swift \
+                           Nanocast/Features/Notes/Model/NoteEditAction.swift \
+                           Nanocast/Features/Notes/Model/NoteFormatting.swift \
+                           Nanocast/Features/Notes/Model/NoteMarkdownEditing.swift \
+                           Nanocast/Features/Notes/Model/NoteRevealPolicy.swift \
+                           Nanocast/Features/Notes/UI/NoteMarkdownTypography.swift \
+                           Nanocast/Features/Notes/UI/NoteBlockDecoration.swift \
+                           Nanocast/Features/Notes/UI/NoteMarkdownStyler.swift \
+                           Nanocast/Features/Notes/UI/NoteMarkdownRenderer.swift \
+                           Nanocast/Features/Notes/UI/NoteCheckboxGeometry.swift \
+                           Nanocast/Features/Notes/UI/NoteBlockLayoutFragment.swift \
+                           Nanocast/Features/Notes/UI/NoteLayoutFragmentProvider.swift \
+                           Nanocast/Features/Notes/UI/NoteTextViewEditing.swift \
+                           Nanocast/Features/Notes/UI/NoteTextView.swift \
+                           Nanocast/Features/Notes/UI/NoteEditorView.swift
+run slow -O RaycastTests   Nanocast/Features/Backup/Model/RaycastImportError.swift \
+                           Nanocast/Features/Backup/Service/RaycastDecoder.swift \
+                           Nanocast/Features/Backup/Service/Scrypt.swift \
+                           Nanocast/Platform/Compression/Zlib.swift \
+                           Nanocast/Features/Clipboard/Model/RaycastClipboardImport.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardStore.swift \
+                           Nanocast/Platform/Images/ImageDerivative.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFilter.swift \
+                           Nanocast/Features/Clipboard/Model/ClipboardFileKind.swift \
+                           Nanocast/Features/Clipboard/Model/ColorValue.swift \
+                           Nanocast/Features/Clipboard/Model/ColorFormat.swift \
+                           Nanocast/Features/Clipboard/Model/ColorSpaces.swift
+run SettingsBackupTests    Nanocast/Features/Settings/AppSettingsKey.swift \
+                           Nanocast/Features/Backup/Model/SettingsBackupCoverage.swift
+run HyperKeyEngineTests    Nanocast/Features/HotKeys/Model/HyperKeyEngine.swift \
+                           Nanocast/Features/HotKeys/Model/HyperKey.swift \
+                           Nanocast/Features/HotKeys/Model/HIDKeyMapping.swift \
+                           Nanocast/Features/HotKeys/Model/ModifierKey.swift \
+                           Nanocast/Features/HotKeys/Model/DoubleTapModifier.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyBinding.swift \
+                           Nanocast/Features/HotKeys/Service/KeyShortcut.swift \
+                           Nanocast/Platform/ASCIIKeyboardLayout.swift
+run HyperKeyTests          Nanocast/Features/HotKeys/Model/HIDKeyMapping.swift \
+                           Nanocast/Features/HotKeys/Model/HyperKeyConflictPolicy.swift \
+                           Nanocast/Features/HotKeys/Service/KeyboardRemapper.swift \
+                           Nanocast/Features/HotKeys/Service/RemapInstanceLock.swift \
                            Tests/HyperKeyFixtures.swift
-run DictationKeyTests      Tinycast/Features/HotKeys/Model/HIDKeyMapping.swift \
-                           Tinycast/Features/HotKeys/Model/HyperKeyConflictPolicy.swift \
-                           Tinycast/Features/HotKeys/Service/KeyboardRemapper.swift \
-                           Tinycast/Features/HotKeys/Service/RemapInstanceLock.swift \
-                           Tinycast/Features/HotKeys/Service/DictationKeyManager.swift \
-                           Tinycast/Platform/HealthTicker.swift \
-                           Tinycast/Platform/NotificationToken.swift \
+run DictationKeyTests      Nanocast/Features/HotKeys/Model/HIDKeyMapping.swift \
+                           Nanocast/Features/HotKeys/Model/HyperKeyConflictPolicy.swift \
+                           Nanocast/Features/HotKeys/Service/KeyboardRemapper.swift \
+                           Nanocast/Features/HotKeys/Service/RemapInstanceLock.swift \
+                           Nanocast/Features/HotKeys/Service/DictationKeyManager.swift \
+                           Nanocast/Platform/HealthTicker.swift \
+                           Nanocast/Platform/NotificationToken.swift \
                            Tests/HyperKeyFixtures.swift \
                            Tests/DictationKeyFixtures.swift
-run HotKeyDispatchTests    Tinycast/Features/HotKeys/Model/DoubleTapModifier.swift \
-                           Tinycast/Features/HotKeys/Model/ModifierKey.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyBinding.swift \
-                           Tinycast/Features/HotKeys/Model/HyperKey.swift \
-                           Tinycast/Features/HotKeys/Model/HIDKeyMapping.swift \
-                           Tinycast/Features/HotKeys/Model/HotKeyAction.swift \
-                           Tinycast/Features/HotKeys/Service/KeyShortcut.swift \
-                           Tinycast/Features/HotKeys/Service/HotKeyManager.swift \
-                           Tinycast/Platform/ASCIIKeyboardLayout.swift \
+run HotKeyDispatchTests    Nanocast/Features/HotKeys/Model/DoubleTapModifier.swift \
+                           Nanocast/Features/HotKeys/Model/ModifierKey.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyBinding.swift \
+                           Nanocast/Features/HotKeys/Model/HyperKey.swift \
+                           Nanocast/Features/HotKeys/Model/HIDKeyMapping.swift \
+                           Nanocast/Features/HotKeys/Model/HotKeyAction.swift \
+                           Nanocast/Features/HotKeys/Service/KeyShortcut.swift \
+                           Nanocast/Features/HotKeys/Service/HotKeyManager.swift \
+                           Nanocast/Platform/ASCIIKeyboardLayout.swift \
                            Tests/HotKeyDispatchFixtures.swift
-run SettingsFileTests      Tinycast/Features/Settings/Model/*.swift \
-                           Tinycast/Features/Settings/Service/SettingsFileMonitor.swift \
-                           Tinycast/Features/Settings/Service/SettingsFileRepository.swift \
-                           Tinycast/Platform/AppPaths.swift
-run BackupArchiveTests     Tinycast/Platform/AppPaths.swift \
-                           Tinycast/Features/Backup/Model/BackupArchive.swift \
-                           Tinycast/Features/Backup/Model/BackupBundle.swift \
-                           Tinycast/Features/Backup/Model/BackupCategory.swift \
-                           Tinycast/Features/Backup/Model/BackupClipboardItem.swift \
-                           Tinycast/Features/Backup/Model/BackupManifest.swift \
-                           Tinycast/Features/Backup/Service/BackupStaging.swift
-E=Tinycast/Features/Extensions
+run SettingsFileTests      Nanocast/Features/Settings/Model/*.swift \
+                           Nanocast/Features/Settings/Service/SettingsFileMonitor.swift \
+                           Nanocast/Features/Settings/Service/SettingsFileRepository.swift \
+                           Nanocast/Platform/AppPaths.swift
+run BackupArchiveTests     Nanocast/Platform/AppPaths.swift \
+                           Nanocast/Features/Backup/Model/BackupArchive.swift \
+                           Nanocast/Features/Backup/Model/BackupBundle.swift \
+                           Nanocast/Features/Backup/Model/BackupCategory.swift \
+                           Nanocast/Features/Backup/Model/BackupClipboardItem.swift \
+                           Nanocast/Features/Backup/Model/BackupManifest.swift \
+                           Nanocast/Features/Backup/Service/BackupStaging.swift
+E=Nanocast/Features/Extensions
 run SymbolsTests           $E/Service/SymbolCatalog.swift
 run ExtensionCleanupTests  $E/Service/ExtensionCleanup.swift \
                            $E/Service/ExtensionCatalog.swift \
-                           Tinycast/Platform/AppDisplayName.swift \
+                           Nanocast/Platform/AppDisplayName.swift \
                            $E/Model/ExtensionManifest.swift \
                            $E/Model/ExtensionLaunchType.swift \
                            $E/Model/ExtensionRefreshPolicy.swift \
                            $E/Model/ExtensionRefreshState.swift
 run ExtensionRefreshTests  $E/Model/ExtensionManifest.swift \
-                           Tinycast/Platform/AppDisplayName.swift \
+                           Nanocast/Platform/AppDisplayName.swift \
                            $E/Model/ExtensionLaunchType.swift \
                            $E/Model/ExtensionRefreshPolicy.swift \
                            $E/Model/ExtensionRefreshState.swift
@@ -745,11 +745,11 @@ run slow ExtensionTests    -parse-as-library \
                            $E/Service/ExtensionCommandMetadataStore.swift \
                            $E/UI/ExtensionMenuBarController.swift \
                            $E/UI/ExtensionMenuBarImage.swift \
-                           Tinycast/Platform/Appearance.swift \
-                           Tinycast/Platform/AppDisplayName.swift \
-                           Tinycast/Platform/Images/IconCache.swift \
-                           Tinycast/DesignSystem/Theme.swift \
-                           Tinycast/DesignSystem/InterfaceMetrics.swift \
+                           Nanocast/Platform/Appearance.swift \
+                           Nanocast/Platform/AppDisplayName.swift \
+                           Nanocast/Platform/Images/IconCache.swift \
+                           Nanocast/DesignSystem/Theme.swift \
+                           Nanocast/DesignSystem/InterfaceMetrics.swift \
                            $E/Model/ExtensionBootConfig.swift \
                            $E/Model/ExtensionDeepLink.swift \
                            $E/Model/ExtensionLaunchType.swift \
@@ -764,7 +764,7 @@ run slow ExtensionTests    -parse-as-library \
                            $E/Model/ExtensionSearchAccessory.swift \
                            $E/Service/ExtensionCatalog.swift \
                            $E/Service/ExtensionFetcher.swift \
-                           Tinycast/Platform/ProcessExit.swift \
+                           Nanocast/Platform/ProcessExit.swift \
                            $E/Service/ExtensionIconCache.swift \
                            $E/Service/ExtensionNodeShims.swift \
                            $E/Service/ExtensionRuntime.swift \
@@ -774,168 +774,168 @@ run slow ExtensionTests    -parse-as-library \
                            $E/UI/ExtensionImage.swift \
                            $E/UI/ExtensionScreen.swift \
                            $L/SearchRelevance.swift \
-                           Tinycast/Platform/Compression/Zlib.swift \
-                           Tinycast/Features/Clipboard/Model/ColorValue.swift \
-                           Tinycast/Features/Clipboard/Model/ColorSpaces.swift
-run SettingsHistoryTests   Tinycast/Features/Settings/SettingsTab.swift \
-                           Tinycast/Features/Settings/SettingsHistory.swift \
-                           Tinycast/Features/Settings/SettingsAnchor.swift \
-                           Tinycast/Features/Settings/SettingsNavigationState.swift \
-                           Tinycast/Features/Settings/SettingsSearchCatalog.swift \
+                           Nanocast/Platform/Compression/Zlib.swift \
+                           Nanocast/Features/Clipboard/Model/ColorValue.swift \
+                           Nanocast/Features/Clipboard/Model/ColorSpaces.swift
+run SettingsHistoryTests   Nanocast/Features/Settings/SettingsTab.swift \
+                           Nanocast/Features/Settings/SettingsHistory.swift \
+                           Nanocast/Features/Settings/SettingsAnchor.swift \
+                           Nanocast/Features/Settings/SettingsNavigationState.swift \
+                           Nanocast/Features/Settings/SettingsSearchCatalog.swift \
                            $L/SearchRelevance.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run UpdatesTests           Tinycast/Features/Updates/Model/*.swift \
-                           Tinycast/Features/Updates/Service/BundleSignature.swift \
-                           Tinycast/Features/Updates/Service/UpdateSignature.swift
-run UpdateCheckTests       Tinycast/Features/Updates/Model/*.swift \
-                           Tinycast/Features/Updates/Service/UpdateCheckStore.swift \
-                           Tinycast/Platform/AppPaths.swift
-run SupportTests           Tinycast/Features/Support/Model/*.swift
-run AIProviderTests        Tinycast/Features/Settings/AppSettingsKey.swift \
-                           Tinycast/Features/AI/Model/*.swift \
-                           Tinycast/Features/AI/Settings/AISettingsStore.swift \
-                           Tinycast/Features/AI/Service/CodexAppServerClient.swift \
-                           Tinycast/Features/AI/Service/InstalledAIProbe.swift \
-                           Tinycast/Platform/ExecutableLocator.swift Tinycast/Platform/ProcessExit.swift
-run OpenCodeMCPTests       Tinycast/Features/AI/Model/*.swift \
-                           Tinycast/Platform/ExecutableLocator.swift Tinycast/Platform/ProcessExit.swift \
-                           Tinycast/Features/AI/Service/AIProvider.swift \
-                           Tinycast/Features/AI/Service/AIToolLoopProvider.swift \
-                           Tinycast/Features/AI/Service/InstalledCLIProvider.swift \
-                           Tinycast/Features/AI/Service/OpenCodeMCPBridge.swift
-run AIChatTests            Tinycast/Features/AI/Model/AIRequest.swift \
-                           Tinycast/Features/AI/Model/AIConnection.swift \
-                           Tinycast/Features/AI/Model/AIConversationOpenPolicy.swift \
-                           Tinycast/Features/AI/Model/AppleIntelligence.swift \
-                           Tinycast/Features/AI/Model/AIAttachmentPolicy.swift \
-                           Tinycast/Features/AI/Model/AIRetention.swift \
-                           Tinycast/Features/AI/Model/AITool.swift \
-                           Tinycast/Features/AI/Model/JSONValue.swift \
-                           Tinycast/Features/AI/Model/ChatMessage.swift \
-                           Tinycast/Features/AI/Model/ChatSession.swift \
-                           Tinycast/Features/AI/Model/ChatPreset.swift \
-                           Tinycast/Features/AI/Model/ChatChoices.swift \
-                           Tinycast/Features/AI/Model/ChatReferences.swift \
-                           Tinycast/Features/AI/Model/ChatTitle.swift \
-                           Tinycast/Features/AI/Model/ChatFind.swift \
-                           Tinycast/Features/AI/Model/ChatCitations.swift \
-                           Tinycast/Features/AI/Model/ChatToolScope.swift \
-                           Tinycast/Features/AI/Model/MarkdownBlock.swift \
-                           Tinycast/Features/AI/Model/MarkdownMath.swift \
-                           Tinycast/Features/AI/Model/MathFormula.swift \
-                           Tinycast/Features/AI/Model/MathNode.swift \
-                           Tinycast/Features/AI/Model/MathSymbolCatalog.swift \
-                           Tinycast/Features/AI/Service/AIProvider.swift \
-                           Tinycast/Features/AI/Service/ChatHistoryStore.swift \
-                           Tinycast/Features/AI/Service/AIToolLoopProvider.swift \
-                           Tinycast/Features/AI/UI/AIChatState.swift \
-                           Tinycast/Features/AI/UI/AIChatSurfacesState.swift \
-                           Tinycast/Features/AI/UI/ChatFindState.swift
-run AIResponsesTests       Tinycast/Features/AI/Model/AIConnection.swift \
-                           Tinycast/Features/AI/Model/AppleIntelligence.swift \
-                           Tinycast/Features/AI/Model/AIModelDiscovery.swift \
-                           Tinycast/Features/AI/Model/AIRequest.swift \
-                           Tinycast/Features/AI/Model/AIRequestBody.swift \
-                           Tinycast/Features/AI/Model/AIStreamDecoder.swift \
-                           Tinycast/Features/AI/Model/AIResponsesDecoder.swift \
-                           Tinycast/Features/AI/Model/ChatReferences.swift \
-                           Tinycast/Features/AI/Model/AIThinkTagDecoder.swift \
-                           Tinycast/Features/AI/Model/AIProviderFailure.swift \
-                           Tinycast/Features/AI/Model/AITool.swift \
-                           Tinycast/Features/AI/Model/JSONValue.swift \
-                           Tinycast/Features/AI/Service/AIProvider.swift \
-                           Tinycast/Features/AI/Service/AIToolLoopProvider.swift
-run ChatMarkdownTests      Tinycast/Platform/Appearance.swift \
-                           Tinycast/DesignSystem/Theme.swift \
-                           Tinycast/DesignSystem/InterfaceMetrics.swift \
-                           Tinycast/Features/Settings/InterfaceSize.swift \
-                           Tinycast/Features/AI/Model/AIRequest.swift \
-                           Tinycast/Features/AI/Model/AITool.swift \
-                           Tinycast/Features/AI/Model/JSONValue.swift \
-                           Tinycast/Features/AI/Model/ChatMessage.swift \
-                           Tinycast/Features/AI/Model/ChatChoices.swift \
-                           Tinycast/Features/AI/Model/ChatReferences.swift \
-                           Tinycast/Features/AI/Model/ChatCitations.swift \
-                           Tinycast/Features/AI/Model/ChatFind.swift \
-                           Tinycast/Features/AI/Model/MarkdownBlock.swift \
-                           Tinycast/Features/AI/Model/MarkdownMath.swift \
-                           Tinycast/Features/AI/Model/MathFormula.swift \
-                           Tinycast/Features/AI/Model/MathNode.swift \
-                           Tinycast/Features/AI/Model/MathSymbolCatalog.swift \
-                           Tinycast/Features/AI/Model/SyntaxGrammar.swift \
-                           Tinycast/Features/AI/Model/SyntaxHighlighter.swift \
-                           Tinycast/Features/AI/Model/SyntaxStructuredLexers.swift \
-                           Tinycast/Features/AI/UI/ChatTextHighlight.swift \
-                           Tinycast/Features/AI/UI/ChatMarkdownRenderer.swift \
-                           Tinycast/Features/AI/UI/MathAttachmentCell.swift \
-                           Tinycast/Features/AI/UI/MathBox.swift \
-                           Tinycast/Features/AI/UI/MathFont.swift \
-                           Tinycast/Features/AI/UI/MathLayoutEngine.swift
-run SyntaxHighlightTests   Tinycast/Features/AI/Model/SyntaxGrammar.swift \
-                           Tinycast/Features/AI/Model/SyntaxHighlighter.swift \
-                           Tinycast/Features/AI/Model/SyntaxStructuredLexers.swift
-run MCPTests               Tinycast/Features/Settings/AppSettingsKey.swift \
-                           Tinycast/Features/AI/Model/AIConnection.swift \
-                           Tinycast/Features/AI/Model/AppleIntelligence.swift \
-                           Tinycast/Features/AI/Model/AITool.swift \
-                           Tinycast/Features/AI/Model/AIToolServer.swift \
-                           Tinycast/Features/AI/Model/JSONValue.swift \
-                           Tinycast/Features/MCP/Model/*.swift \
-                           Tinycast/Features/MCP/Settings/MCPSettingsStore.swift
-run -O TextDiffTests       Tinycast/Features/QuickActions/Model/TextDiffEngine.swift
-run index TextDiffPerformanceTests Tinycast/Features/QuickActions/Model/TextDiffEngine.swift
-run QuickActionTests       Tinycast/Features/Settings/AppSettingsKey.swift \
-                           Tinycast/Features/AI/Model/AIConnection.swift \
-                           Tinycast/Features/AI/Model/AppleIntelligence.swift \
-                           Tinycast/Features/AI/Model/ChatGPTSubscription.swift \
-                           Tinycast/Features/AI/Model/InstalledAI.swift \
-                           Tinycast/Features/QuickActions/Model/BuiltInQuickAction.swift \
-                           Tinycast/Features/QuickActions/Model/CustomQuickAction.swift \
-                           Tinycast/Features/QuickActions/Model/CustomQuickActionStore.swift \
-                           Tinycast/Features/QuickActions/Model/QuickAction.swift \
-                           Tinycast/Features/QuickActions/Model/QuickActionFailure.swift \
-                           Tinycast/Features/QuickActions/Model/QuickActionPrompt.swift \
-                           Tinycast/Features/QuickActions/Model/QuickActionSettings.swift \
-                           Tinycast/Features/QuickActions/Settings/QuickActionSettingsStore.swift \
-                           Tinycast/Platform/LocalizedResource.swift
-run AppleIntelligenceTests Tinycast/Features/Settings/AppSettingsKey.swift \
-                           Tinycast/Features/AI/Model/*.swift \
-                           Tinycast/Features/AI/Service/AIProvider.swift \
-                           Tinycast/Features/AI/Service/AppleIntelligenceProvider.swift
-run MCPOAuthTests          Tinycast/Platform/ExecutableLocator.swift \
-                           Tinycast/Platform/ProcessExit.swift \
-                           Tinycast/Platform/KeychainSecretStore.swift \
-                           Tinycast/Features/Settings/AppSettingsKey.swift \
-                           Tinycast/Features/AI/Model/AIConnection.swift \
-                           Tinycast/Features/AI/Model/AppleIntelligence.swift \
-                           Tinycast/Features/AI/Model/AITool.swift \
-                           Tinycast/Features/AI/Model/AIToolServer.swift \
-                           Tinycast/Features/AI/Model/AIStreamDecoder.swift \
-                           Tinycast/Features/AI/Model/AIResponsesDecoder.swift \
-                           Tinycast/Features/AI/Model/ChatReferences.swift \
-                           Tinycast/Features/AI/Model/AIProviderFailure.swift \
-                           Tinycast/Features/AI/Model/AIThinkTagDecoder.swift \
-                           Tinycast/Features/AI/Model/AIRequest.swift \
-                           Tinycast/Features/AI/Model/JSONValue.swift \
-                           Tinycast/Features/MCP/Model/*.swift \
-                           Tinycast/Features/MCP/Service/*.swift
-run slow MCPStdioTests     Tinycast/Platform/ExecutableLocator.swift \
-                           Tinycast/Platform/ProcessExit.swift \
-                           Tinycast/Platform/KeychainSecretStore.swift \
-                           Tinycast/Features/Settings/AppSettingsKey.swift \
-                           Tinycast/Features/AI/Model/AIConnection.swift \
-                           Tinycast/Features/AI/Model/AppleIntelligence.swift \
-                           Tinycast/Features/AI/Model/AITool.swift \
-                           Tinycast/Features/AI/Model/AIToolServer.swift \
-                           Tinycast/Features/AI/Model/AIStreamDecoder.swift \
-                           Tinycast/Features/AI/Model/AIResponsesDecoder.swift \
-                           Tinycast/Features/AI/Model/ChatReferences.swift \
-                           Tinycast/Features/AI/Model/AIProviderFailure.swift \
-                           Tinycast/Features/AI/Model/AIThinkTagDecoder.swift \
-                           Tinycast/Features/AI/Model/AIRequest.swift \
-                           Tinycast/Features/AI/Model/JSONValue.swift \
-                           Tinycast/Features/MCP/Model/*.swift \
-                           Tinycast/Features/MCP/Service/*.swift
+                           Nanocast/Platform/LocalizedResource.swift
+run UpdatesTests           Nanocast/Features/Updates/Model/*.swift \
+                           Nanocast/Features/Updates/Service/BundleSignature.swift \
+                           Nanocast/Features/Updates/Service/UpdateSignature.swift
+run UpdateCheckTests       Nanocast/Features/Updates/Model/*.swift \
+                           Nanocast/Features/Updates/Service/UpdateCheckStore.swift \
+                           Nanocast/Platform/AppPaths.swift
+run SupportTests           Nanocast/Features/Support/Model/*.swift
+run AIProviderTests        Nanocast/Features/Settings/AppSettingsKey.swift \
+                           Nanocast/Features/AI/Model/*.swift \
+                           Nanocast/Features/AI/Settings/AISettingsStore.swift \
+                           Nanocast/Features/AI/Service/CodexAppServerClient.swift \
+                           Nanocast/Features/AI/Service/InstalledAIProbe.swift \
+                           Nanocast/Platform/ExecutableLocator.swift Nanocast/Platform/ProcessExit.swift
+run OpenCodeMCPTests       Nanocast/Features/AI/Model/*.swift \
+                           Nanocast/Platform/ExecutableLocator.swift Nanocast/Platform/ProcessExit.swift \
+                           Nanocast/Features/AI/Service/AIProvider.swift \
+                           Nanocast/Features/AI/Service/AIToolLoopProvider.swift \
+                           Nanocast/Features/AI/Service/InstalledCLIProvider.swift \
+                           Nanocast/Features/AI/Service/OpenCodeMCPBridge.swift
+run AIChatTests            Nanocast/Features/AI/Model/AIRequest.swift \
+                           Nanocast/Features/AI/Model/AIConnection.swift \
+                           Nanocast/Features/AI/Model/AIConversationOpenPolicy.swift \
+                           Nanocast/Features/AI/Model/AppleIntelligence.swift \
+                           Nanocast/Features/AI/Model/AIAttachmentPolicy.swift \
+                           Nanocast/Features/AI/Model/AIRetention.swift \
+                           Nanocast/Features/AI/Model/AITool.swift \
+                           Nanocast/Features/AI/Model/JSONValue.swift \
+                           Nanocast/Features/AI/Model/ChatMessage.swift \
+                           Nanocast/Features/AI/Model/ChatSession.swift \
+                           Nanocast/Features/AI/Model/ChatPreset.swift \
+                           Nanocast/Features/AI/Model/ChatChoices.swift \
+                           Nanocast/Features/AI/Model/ChatReferences.swift \
+                           Nanocast/Features/AI/Model/ChatTitle.swift \
+                           Nanocast/Features/AI/Model/ChatFind.swift \
+                           Nanocast/Features/AI/Model/ChatCitations.swift \
+                           Nanocast/Features/AI/Model/ChatToolScope.swift \
+                           Nanocast/Features/AI/Model/MarkdownBlock.swift \
+                           Nanocast/Features/AI/Model/MarkdownMath.swift \
+                           Nanocast/Features/AI/Model/MathFormula.swift \
+                           Nanocast/Features/AI/Model/MathNode.swift \
+                           Nanocast/Features/AI/Model/MathSymbolCatalog.swift \
+                           Nanocast/Features/AI/Service/AIProvider.swift \
+                           Nanocast/Features/AI/Service/ChatHistoryStore.swift \
+                           Nanocast/Features/AI/Service/AIToolLoopProvider.swift \
+                           Nanocast/Features/AI/UI/AIChatState.swift \
+                           Nanocast/Features/AI/UI/AIChatSurfacesState.swift \
+                           Nanocast/Features/AI/UI/ChatFindState.swift
+run AIResponsesTests       Nanocast/Features/AI/Model/AIConnection.swift \
+                           Nanocast/Features/AI/Model/AppleIntelligence.swift \
+                           Nanocast/Features/AI/Model/AIModelDiscovery.swift \
+                           Nanocast/Features/AI/Model/AIRequest.swift \
+                           Nanocast/Features/AI/Model/AIRequestBody.swift \
+                           Nanocast/Features/AI/Model/AIStreamDecoder.swift \
+                           Nanocast/Features/AI/Model/AIResponsesDecoder.swift \
+                           Nanocast/Features/AI/Model/ChatReferences.swift \
+                           Nanocast/Features/AI/Model/AIThinkTagDecoder.swift \
+                           Nanocast/Features/AI/Model/AIProviderFailure.swift \
+                           Nanocast/Features/AI/Model/AITool.swift \
+                           Nanocast/Features/AI/Model/JSONValue.swift \
+                           Nanocast/Features/AI/Service/AIProvider.swift \
+                           Nanocast/Features/AI/Service/AIToolLoopProvider.swift
+run ChatMarkdownTests      Nanocast/Platform/Appearance.swift \
+                           Nanocast/DesignSystem/Theme.swift \
+                           Nanocast/DesignSystem/InterfaceMetrics.swift \
+                           Nanocast/Features/Settings/InterfaceSize.swift \
+                           Nanocast/Features/AI/Model/AIRequest.swift \
+                           Nanocast/Features/AI/Model/AITool.swift \
+                           Nanocast/Features/AI/Model/JSONValue.swift \
+                           Nanocast/Features/AI/Model/ChatMessage.swift \
+                           Nanocast/Features/AI/Model/ChatChoices.swift \
+                           Nanocast/Features/AI/Model/ChatReferences.swift \
+                           Nanocast/Features/AI/Model/ChatCitations.swift \
+                           Nanocast/Features/AI/Model/ChatFind.swift \
+                           Nanocast/Features/AI/Model/MarkdownBlock.swift \
+                           Nanocast/Features/AI/Model/MarkdownMath.swift \
+                           Nanocast/Features/AI/Model/MathFormula.swift \
+                           Nanocast/Features/AI/Model/MathNode.swift \
+                           Nanocast/Features/AI/Model/MathSymbolCatalog.swift \
+                           Nanocast/Features/AI/Model/SyntaxGrammar.swift \
+                           Nanocast/Features/AI/Model/SyntaxHighlighter.swift \
+                           Nanocast/Features/AI/Model/SyntaxStructuredLexers.swift \
+                           Nanocast/Features/AI/UI/ChatTextHighlight.swift \
+                           Nanocast/Features/AI/UI/ChatMarkdownRenderer.swift \
+                           Nanocast/Features/AI/UI/MathAttachmentCell.swift \
+                           Nanocast/Features/AI/UI/MathBox.swift \
+                           Nanocast/Features/AI/UI/MathFont.swift \
+                           Nanocast/Features/AI/UI/MathLayoutEngine.swift
+run SyntaxHighlightTests   Nanocast/Features/AI/Model/SyntaxGrammar.swift \
+                           Nanocast/Features/AI/Model/SyntaxHighlighter.swift \
+                           Nanocast/Features/AI/Model/SyntaxStructuredLexers.swift
+run MCPTests               Nanocast/Features/Settings/AppSettingsKey.swift \
+                           Nanocast/Features/AI/Model/AIConnection.swift \
+                           Nanocast/Features/AI/Model/AppleIntelligence.swift \
+                           Nanocast/Features/AI/Model/AITool.swift \
+                           Nanocast/Features/AI/Model/AIToolServer.swift \
+                           Nanocast/Features/AI/Model/JSONValue.swift \
+                           Nanocast/Features/MCP/Model/*.swift \
+                           Nanocast/Features/MCP/Settings/MCPSettingsStore.swift
+run -O TextDiffTests       Nanocast/Features/QuickActions/Model/TextDiffEngine.swift
+run index TextDiffPerformanceTests Nanocast/Features/QuickActions/Model/TextDiffEngine.swift
+run QuickActionTests       Nanocast/Features/Settings/AppSettingsKey.swift \
+                           Nanocast/Features/AI/Model/AIConnection.swift \
+                           Nanocast/Features/AI/Model/AppleIntelligence.swift \
+                           Nanocast/Features/AI/Model/ChatGPTSubscription.swift \
+                           Nanocast/Features/AI/Model/InstalledAI.swift \
+                           Nanocast/Features/QuickActions/Model/BuiltInQuickAction.swift \
+                           Nanocast/Features/QuickActions/Model/CustomQuickAction.swift \
+                           Nanocast/Features/QuickActions/Model/CustomQuickActionStore.swift \
+                           Nanocast/Features/QuickActions/Model/QuickAction.swift \
+                           Nanocast/Features/QuickActions/Model/QuickActionFailure.swift \
+                           Nanocast/Features/QuickActions/Model/QuickActionPrompt.swift \
+                           Nanocast/Features/QuickActions/Model/QuickActionSettings.swift \
+                           Nanocast/Features/QuickActions/Settings/QuickActionSettingsStore.swift \
+                           Nanocast/Platform/LocalizedResource.swift
+run AppleIntelligenceTests Nanocast/Features/Settings/AppSettingsKey.swift \
+                           Nanocast/Features/AI/Model/*.swift \
+                           Nanocast/Features/AI/Service/AIProvider.swift \
+                           Nanocast/Features/AI/Service/AppleIntelligenceProvider.swift
+run MCPOAuthTests          Nanocast/Platform/ExecutableLocator.swift \
+                           Nanocast/Platform/ProcessExit.swift \
+                           Nanocast/Platform/KeychainSecretStore.swift \
+                           Nanocast/Features/Settings/AppSettingsKey.swift \
+                           Nanocast/Features/AI/Model/AIConnection.swift \
+                           Nanocast/Features/AI/Model/AppleIntelligence.swift \
+                           Nanocast/Features/AI/Model/AITool.swift \
+                           Nanocast/Features/AI/Model/AIToolServer.swift \
+                           Nanocast/Features/AI/Model/AIStreamDecoder.swift \
+                           Nanocast/Features/AI/Model/AIResponsesDecoder.swift \
+                           Nanocast/Features/AI/Model/ChatReferences.swift \
+                           Nanocast/Features/AI/Model/AIProviderFailure.swift \
+                           Nanocast/Features/AI/Model/AIThinkTagDecoder.swift \
+                           Nanocast/Features/AI/Model/AIRequest.swift \
+                           Nanocast/Features/AI/Model/JSONValue.swift \
+                           Nanocast/Features/MCP/Model/*.swift \
+                           Nanocast/Features/MCP/Service/*.swift
+run slow MCPStdioTests     Nanocast/Platform/ExecutableLocator.swift \
+                           Nanocast/Platform/ProcessExit.swift \
+                           Nanocast/Platform/KeychainSecretStore.swift \
+                           Nanocast/Features/Settings/AppSettingsKey.swift \
+                           Nanocast/Features/AI/Model/AIConnection.swift \
+                           Nanocast/Features/AI/Model/AppleIntelligence.swift \
+                           Nanocast/Features/AI/Model/AITool.swift \
+                           Nanocast/Features/AI/Model/AIToolServer.swift \
+                           Nanocast/Features/AI/Model/AIStreamDecoder.swift \
+                           Nanocast/Features/AI/Model/AIResponsesDecoder.swift \
+                           Nanocast/Features/AI/Model/ChatReferences.swift \
+                           Nanocast/Features/AI/Model/AIProviderFailure.swift \
+                           Nanocast/Features/AI/Model/AIThinkTagDecoder.swift \
+                           Nanocast/Features/AI/Model/AIRequest.swift \
+                           Nanocast/Features/AI/Model/JSONValue.swift \
+                           Nanocast/Features/MCP/Model/*.swift \
+                           Nanocast/Features/MCP/Service/*.swift
 
 if [ "$emit_db" -eq 1 ]; then
     printf ']\n' >> "$DB"
@@ -958,8 +958,8 @@ if [ "$ran" -eq 0 ]; then
 fi
 
 # `sort -s` is stable, so the slow harnesses lead and everything else keeps its declaration order.
-JOBS="${TINYCAST_TEST_JOBS:-4}"
-export TINYCAST_TEST_TIMEOUT="${TINYCAST_TEST_TIMEOUT:-300}"
+JOBS="${NANOCAST_TEST_JOBS:-4}"
+export NANOCAST_TEST_TIMEOUT="${NANOCAST_TEST_TIMEOUT:-300}"
 started=$SECONDS
 
 # Numbers each result, and names what is still running whenever the output goes quiet.

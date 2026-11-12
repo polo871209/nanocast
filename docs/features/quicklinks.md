@@ -49,9 +49,9 @@ Services read — which is what keeps it pure and covered by `Tests/QuicklinkTes
 | a bare host with a letter-led TLD (`github.com/a?b=c`) | `.web`, `https://` prepended                                      |
 | anything else                                          | nothing — the link is rejected                                    |
 
-A `.deeplink` in Tinycast's own scheme never leaves the process: `QuicklinkCoordinator` hands it to
-`DeepLinkCoordinator` as `source: .tinycast`, so it runs without asking and without activating
-Tinycast. See [deeplinks.md](deeplinks.md).
+A `.deeplink` in Nanocast's own scheme never leaves the process: `QuicklinkCoordinator` hands it to
+`DeepLinkCoordinator` as `source: .nanocast`, so it runs without asking and without activating
+Nanocast. See [deeplinks.md](deeplinks.md).
 
 Two false positives are excluded deliberately, because both are commoner than the schemes they would
 shadow: a one-letter "scheme" is a Windows drive letter, and a `scheme:` whose remainder is all
@@ -65,7 +65,7 @@ before the placeholders are resolved.
 
 ## Placeholders
 
-Quicklinks reuse Tinycast's one template engine — the same
+Quicklinks reuse Nanocast's one template engine — the same
 [`SnippetTemplateEngine`](snippets.md#template-tokens) snippets use, so every token and every modifier
 is available and there is no second parser to keep in sync. `{cursor}` and `{snippet:…}` are text
 concerns with nothing to resolve against in a destination, so they are left literal.
@@ -122,7 +122,7 @@ every owed argument is in, through the two tiers in
 [quick-actions.md](quick-actions.md#reading-the-selection): Accessibility, then a ⌘C. The ⌘C is sent
 at most once per open, only when the expansion reads `{selection}`, and with the palette hidden
 first, since it holds key. When neither tier yields text, nothing opens: the HUD says "Couldn’t get
-the selected text", or names the Accessibility permission when Tinycast lacks it.
+the selected text", or names the Accessibility permission when Nanocast lacks it.
 
 `openQuicklink(id:forcingDefaultApp:values:)` and `openQuicklinkFromHotKey(id:)` share one private
 funnel, which captures the expansion context on **every** call rather than holding one across a
@@ -168,7 +168,7 @@ frontmost tab; that is what "prefer existing tabs" means, so it is the same swit
 second one.
 
 Every failure — unresolvable link, missing file, missing app, refused open — reports through
-Tinycast's own dialog and leaves no partial state.
+Nanocast's own dialog and leaves no partial state.
 
 ## Search and pinning
 
@@ -288,7 +288,7 @@ Unlike `snippetsEnabled`, `quicklinksEnabled` grants no permission class and ena
 excluding it would be cargo-culting.
 
 The encrypted `.rayconfig` flow in **Settings → Backup** can import Raycast's quicklinks as an
-independently selectable category. Tinycast reads `name`, `link`, `createdAt` and the optional
+independently selectable category. Nanocast reads `name`, `link`, `createdAt` and the optional
 `openWith` / `applicationId` from the export's `quicklinks.quicklinks` collection, resolving an app
 path through `openWithPlatforms` when the field is a platform id. Invalid entries are skipped; valid
 entries merge into the existing library the same way **Import Quicklinks** does. Importing at least

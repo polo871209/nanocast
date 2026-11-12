@@ -27,7 +27,7 @@ The list groups windows by app, with the app whose window is frontmost first. **
 - A minimized window is restored first.
 - A window on another Space switches you to that Space.
 
-If the app quit after the list opened, Tinycast tells you instead of doing nothing.
+If the app quit after the list opened, Nanocast tells you instead of doing nothing.
 
 | Action (<kbd>⌘</kbd><kbd>K</kbd>) | Key                                  | What it does                                            |
 | --------------------------------- | ------------------------------------ | ------------------------------------------------------- |
@@ -64,7 +64,7 @@ clicks the selected item.
   doesn't change the target.
 - **Only items you could click are listed.** Disabled items, separators and hidden items are left
   out.
-- **Tinycast never opens menus to read them.** Some apps only build a submenu when you open it, so
+- **Nanocast never opens menus to read them.** Some apps only build a submenu when you open it, so
   those items may be missing. Opening menus in the background would make the app's interface flash
   every time.
 - Very large menus are limited to 4,000 items, and reading stops after about a second.
@@ -74,9 +74,9 @@ clicks the selected item.
 | Setting               | Default | What it does                                        |
 | --------------------- | ------- | --------------------------------------------------- |
 | Show Apple menu items | **Off** | Adds the Apple menu, which is the same in every app |
-| Excluded Applications | Empty   | Apps whose menus Tinycast never reads               |
+| Excluded Applications | Empty   | Apps whose menus Nanocast never reads               |
 
-Tinycast checks the Excluded Applications list before reading any menus, so it never reads those
+Nanocast checks the Excluded Applications list before reading any menus, so it never reads those
 apps' menus at all.
 
 When there's nothing to search, you see a short explanation instead of an empty list, like

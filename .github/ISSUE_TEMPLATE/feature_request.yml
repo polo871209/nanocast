@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        **Check this first.** Many ideas have already been declined on purpose. Read [What Tinycast Won't Do](https://github.com/abue-ammar/tinycast/blob/main/docs/not-planned.md) before you open this.
+        **Check this first.** Many ideas have already been declined on purpose. Read [What Nanocast Won't Do](https://github.com/abue-ammar/tinycast/blob/main/docs/not-planned.md) before you open this.
   - type: textarea
     id: what
     attributes:
@@ -16,9 +16,9 @@ body:
   - type: textarea
     id: why
     attributes:
-      label: Why does it belong in Tinycast?
+      label: Why does it belong in Nanocast?
       description: >
-        Tinycast stays small on purpose — quality over quantity. It has already borrowed what it
+        Nanocast stays small on purpose — quality over quantity. It has already borrowed what it
         wanted from Raycast, so "Raycast has it" is not a reason. Tell us why this is worth its
         weight.
     validations:

@@ -26,9 +26,9 @@ import * as fs from "node:fs";
 import * as zlib from "node:zlib";
 
 const runtimePath = [
-  resolve("Tinycast/Resources/RaycastRuntime.generated.js"),
-  resolve("../../Tinycast/Resources/RaycastRuntime.generated.js"),
-  fileURLToPath(new URL("../../Tinycast/Resources/RaycastRuntime.generated.js", import.meta.url)),
+  resolve("Nanocast/Resources/RaycastRuntime.generated.js"),
+  resolve("../../Nanocast/Resources/RaycastRuntime.generated.js"),
+  fileURLToPath(new URL("../../Nanocast/Resources/RaycastRuntime.generated.js", import.meta.url)),
 ].find(existsSync);
 
 const runtime = readFileSync(runtimePath, "utf8");
@@ -60,7 +60,7 @@ export function createHarness({ onRender, onFail, verbose = false, stubs = {} } 
     },
     fieldCommand() {},
     startTimer(id, ms, repeats) {
-      const fire = () => runInContext(`__tinycast.fireTimer(${JSON.stringify(id)})`, context);
+      const fire = () => runInContext(`__nanocast.fireTimer(${JSON.stringify(id)})`, context);
       timers.set(id, repeats ? setInterval(fire, Math.max(ms, 1)) : setTimeout(fire, ms));
     },
     clearTimer(id) {
@@ -93,14 +93,14 @@ export function createHarness({ onRender, onFail, verbose = false, stubs = {} } 
 
   function settle(callId, ok, value) {
     runInContext(
-      `__tinycast.settle(${JSON.stringify(String(callId))}, ${ok}, ${JSON.stringify(value === undefined ? "" : JSON.stringify(value))})`,
+      `__nanocast.settle(${JSON.stringify(String(callId))}, ${ok}, ${JSON.stringify(value === undefined ? "" : JSON.stringify(value))})`,
       context,
     );
   }
 
-  context.__tinycastHost = host;
+  context.__nanocastHost = host;
   // Mirrors what Swift installs: compile the extension's CJS body in global scope.
-  context.__tinycastCompile = (code, filename) =>
+  context.__nanocastCompile = (code, filename) =>
     runInContext(
       `(function (exports, require, module, __filename, __dirname) {\n${code}\n})`,
       context,
@@ -116,22 +116,22 @@ export function createHarness({ onRender, onFail, verbose = false, stubs = {} } 
       return runInContext(expression, context);
     },
     boot(config) {
-      return runInContext(`__tinycast.boot(${JSON.stringify(JSON.stringify(config))})`, context);
+      return runInContext(`__nanocast.boot(${JSON.stringify(JSON.stringify(config))})`, context);
     },
     start(sessionId, code, filename, dirname, mode, ctx) {
       return runInContext(
-        `__tinycast.start(${JSON.stringify(sessionId)}, ${JSON.stringify(code)}, ${JSON.stringify(filename)}, ${JSON.stringify(dirname)}, ${JSON.stringify(mode)}, ${JSON.stringify(JSON.stringify(ctx))})`,
+        `__nanocast.start(${JSON.stringify(sessionId)}, ${JSON.stringify(code)}, ${JSON.stringify(filename)}, ${JSON.stringify(dirname)}, ${JSON.stringify(mode)}, ${JSON.stringify(JSON.stringify(ctx))})`,
         context,
       );
     },
     dispatch(sessionId, handlerId, args = []) {
       return runInContext(
-        `__tinycast.dispatch(${JSON.stringify(sessionId)}, ${JSON.stringify(handlerId)}, ${JSON.stringify(JSON.stringify(args))})`,
+        `__nanocast.dispatch(${JSON.stringify(sessionId)}, ${JSON.stringify(handlerId)}, ${JSON.stringify(JSON.stringify(args))})`,
         context,
       );
     },
     stop(sessionId) {
-      runInContext(`__tinycast.stop(${JSON.stringify(sessionId)})`, context);
+      runInContext(`__nanocast.stop(${JSON.stringify(sessionId)})`, context);
       for (const id of [...timers.keys()]) host.clearTimer(id);
     },
   };

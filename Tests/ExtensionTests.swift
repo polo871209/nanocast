@@ -104,10 +104,10 @@ struct ExtensionTests {
     static func runtimeURL() -> URL {
         let candidates = [
             URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-                .appendingPathComponent("Tinycast/Resources/RaycastRuntime.generated.js"),
+                .appendingPathComponent("Nanocast/Resources/RaycastRuntime.generated.js"),
             URL(fileURLWithPath: #filePath)
                 .deletingLastPathComponent().deletingLastPathComponent()
-                .appendingPathComponent("Tinycast/Resources/RaycastRuntime.generated.js")
+                .appendingPathComponent("Nanocast/Resources/RaycastRuntime.generated.js")
         ]
         return candidates.first { FileManager.default.fileExists(atPath: $0.path) } ?? candidates[0]
     }
@@ -914,22 +914,22 @@ struct ExtensionTests {
             String(describing: canonical?.extensionCandidates))
 
         let tiny = ExtensionDeepLink.parse(
-            url: URL(string: "tinycast://extensions/linear/linear/create-issue")!)
-        check("deeplink mirrors raycast:// as tinycast://", tiny == canonical)
+            url: URL(string: "nanocast://extensions/linear/linear/create-issue")!)
+        check("deeplink mirrors raycast:// as nanocast://", tiny == canonical)
         let copied = ExtensionDeepLink.url(
-            extensionName: "linear/linear", commandName: "create-issue", arguments: [:], scheme: "tinycast")
+            extensionName: "linear/linear", commandName: "create-issue", arguments: [:], scheme: "nanocast")
         check(
             "a copied scoped deeplink parses back to its command",
             copied.flatMap(ExtensionDeepLink.parse) == canonical, String(describing: copied))
         let copiedBare = ExtensionDeepLink.url(
-            extensionName: "demo", commandName: "search", arguments: [:], scheme: "tinycast-dev")
+            extensionName: "demo", commandName: "search", arguments: [:], scheme: "nanocast-dev")
         check(
             "a copied bare deeplink parses back to its command",
             copiedBare.flatMap(ExtensionDeepLink.parse)?.extensionCandidates == ["demo"],
             String(describing: copiedBare))
         let typed = ["query": "a & b = c + d", "tag": "café ✓"]
         let copiedTyped = ExtensionDeepLink.url(
-            extensionName: "demo", commandName: "search", arguments: typed, scheme: "tinycast")
+            extensionName: "demo", commandName: "search", arguments: typed, scheme: "nanocast")
         check(
             "a copied deeplink carries the arguments typed into the row",
             copiedTyped.flatMap(ExtensionDeepLink.parse)?.arguments == typed, String(describing: copiedTyped))
@@ -947,9 +947,9 @@ struct ExtensionTests {
             ExtensionDeepLink.route(url: installURL) == install)
         check("store Install is never parsed as a command", ExtensionDeepLink.parse(url: installURL) == nil)
         check(
-            "store Install accepts the Tinycast scheme",
+            "store Install accepts the Nanocast scheme",
             ExtensionDeepLink.route(
-                url: URL(string: "tinycast://extensions/linear/linear?source=webstore")!) == install)
+                url: URL(string: "nanocast://extensions/linear/linear?source=webstore")!) == install)
         check(
             "store Install accepts the path-based scheme",
             ExtensionDeepLink.route(
@@ -1224,7 +1224,7 @@ struct ExtensionTests {
                 try { callback(); return "none"; } catch (error) { return error.message; }
               };
               const filePaths = [
-                fileURLToPath("file:///Applications/Tinycast%20Beta.app"),
+                fileURLToPath("file:///Applications/Nanocast%20Beta.app"),
                 fileURLToPath(pathToFileURL("/tmp/a#b.png")),
                 pathToFileURL("/tmp/My Image.png").href,
                 errorCode(() => fileURLToPath("file:///tmp/a%2Fb")),
@@ -1345,7 +1345,7 @@ struct ExtensionTests {
             "fileURLToPath decodes a path and rejects an unusable URL",
             ExtensionAccessoriesView_labelForTest(
                 screen.items.first?.node.array("accessories").dropFirst(2).first)
-                == "/Applications/Tinycast Beta.app\n/tmp/a#b.png\n"
+                == "/Applications/Nanocast Beta.app\n/tmp/a#b.png\n"
                 + "file:///tmp/My%20Image.png\n"
                 + "ERR_INVALID_FILE_URL_PATH\nERR_INVALID_FILE_URL_HOST\n"
                 + "ERR_INVALID_URL_SCHEME",
@@ -1631,7 +1631,7 @@ struct ExtensionTests {
 
         for (id, value) in [("format", "{word}-{number:4}" as Any), ("scratch", "typed"), ("remember", true)]
         {
-            guard let handler = field(id, in: recorder.trees.last)?.handler("onTinycastChange") else {
+            guard let handler = field(id, in: recorder.trees.last)?.handler("onNanocastChange") else {
                 check("form field \(id) exposes a change handler", false)
                 return
             }
@@ -1693,7 +1693,7 @@ struct ExtensionTests {
     @MainActor
     static func nodeContractChecks() async {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-archive-\(UUID().uuidString)")
+            .appendingPathComponent("nanocast-archive-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let (runtime, host, recorder) = makeRuntime()
@@ -2031,7 +2031,7 @@ struct ExtensionTests {
     @MainActor
     static func swiftHelperChecks() async {
         let helper = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-helper-\(UUID().uuidString)")
+            .appendingPathComponent("nanocast-helper-\(UUID().uuidString)")
         try? Data("#!/bin/sh\necho '{\"hex\":\"#FF0000\"}'\n".utf8).write(to: helper)
         defer { try? FileManager.default.removeItem(at: helper) }
 
@@ -2077,7 +2077,7 @@ struct ExtensionTests {
     @MainActor
     static func processKillChecks() async {
         let marker = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-rang-\(UUID().uuidString)")
+            .appendingPathComponent("nanocast-rang-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: marker) }
 
         let (runtime, _, recorder) = makeRuntime()
@@ -2112,7 +2112,7 @@ struct ExtensionTests {
             "a killed exec child never runs the rest of its script",
             !FileManager.default.fileExists(atPath: marker.path))
         check(
-            "exec returns a live pid and process.kill guards Tinycast itself",
+            "exec returns a live pid and process.kill guards Nanocast itself",
             recorder.trees.last?.activeRoot?.string("markdown")
                 == "true,failed,false,EPERM,ESRCH,ERR_UNKNOWN_SIGNAL",
             recorder.trees.last?.activeRoot?.string("markdown") ?? "no tree")
@@ -2122,7 +2122,7 @@ struct ExtensionTests {
     @MainActor
     static func stdioDescriptorChecks() async {
         let file = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-stdio-\(UUID().uuidString)")
+            .appendingPathComponent("nanocast-stdio-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: file) }
 
         let (runtime, _, recorder) = makeRuntime()
@@ -2176,7 +2176,7 @@ struct ExtensionTests {
 
     /// `zlib` is the one node shim with no JS-side implementation to lean on.
     static func zlibChecks() {
-        let payload = Data(String(repeating: "tinycast extensions ", count: 64).utf8)
+        let payload = Data(String(repeating: "nanocast extensions ", count: 64).utf8)
         do {
             check("gzip round-trips", try Zlib.gunzip(Zlib.gzip(payload)) == payload)
             check("zlib round-trips", try Zlib.inflate(Zlib.deflate(payload)) == payload)

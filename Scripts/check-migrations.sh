@@ -4,7 +4,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 
 shopt -s nullglob
-files=(Tinycast/Migrations/*.swift)
+files=(Nanocast/Migrations/*.swift)
 [ ${#files[@]} -eq 0 ] && exit 0
 
 # A shallow clone has no tags to compare against, so every migration would pass.
