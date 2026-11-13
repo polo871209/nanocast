@@ -30,7 +30,7 @@ Independently of the folder tree, every mature subsystem has converged on the sa
 │ HotKeySpelling · WindowManagementFileFormat ·                              │
 │ MenuSearch{Item,Shortcut,Query,TreeNode,SnapshotPolicy,Target} ·           │
 │ WindowSwitch{Entry,Order,Chord,Grid,FallbackPolicy} ·                      │
-│ Screenshot/Model/*                                                         │
+│ Screenshot/Model/* · ScreenDraw/Model/*                                    │
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ consumed by
 ┌─ EFFECT ─────────────────────────▼─────────────────────────────────────────┐
@@ -55,7 +55,7 @@ Independently of the folder tree, every mature subsystem has converged on the sa
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ published through
 ┌─ OBSERVABLE STATE ───────────────▼─────────────────────────────────────────┐
-│ 54 @MainActor @Observable stores, sessions, indices and State types        │
+│ 55 @MainActor @Observable stores, sessions, indices and State types        │
 └──────────────────────────────────┬─────────────────────────────────────────┘
                                    │ rendered by
 ┌─ VIEW ───────────────────────────▼─────────────────────────────────────────┐
@@ -159,6 +159,7 @@ imperatively from AppKit.
   [features/camera.md](features/camera.md).
 - **The screenshot overlay** covers each display with one borderless, non-activating `ScreenshotPanel` at `.screenshot`, above the menu bar, for the life of one capture. `ScreenshotCoordinator`, owned by `AppCore`, owns the session and the `ScreenshotOverlayController` that shows it. It also owns `PinController`, whose pins are non-activating `PinPanel`s at `.floating` that outlive the capture, and at most one `ScrollCaptureController`, which replaces the overlay during a scrolling capture with a click-through border and a key bar, both `LiveCapturePanel`s at `.screenshot`. When it ends, a new session and overlay open the long image in one `ScreenshotPanel` with a scroll view. See [features/screenshot.md](features/screenshot.md).
 - **A screen recording** borrows the screenshot overlay to pick an area or a window, then shows a click-through border and a bar, both `LiveCapturePanel`s that never take key, so typing still reaches the recorded app. `ScreenRecordingCoordinator`, owned by `AppCore`, owns at most one `ScreenRecordingController`. See [features/screen-recording.md](features/screen-recording.md).
+- **Draw on Screen** covers each display with a transparent `LiveCapturePanel` canvas at `.screenshot` that takes key without activating Nanocast, plus a bar one level higher. `ScreenDrawCoordinator`, owned by `AppCore`, owns at most one `ScreenDrawController`. See [features/screen-draw.md](features/screen-draw.md).
 - **HUDs** are separate, because a dialog asks and a HUD reports: `MessageHUDController` (the pill) and
   `VolumeHUDController` (the level box), both over a shared `HUDPresenter` that owns the
   one-at-a-time, auto-dismiss and fade policy. See [ui.md](ui.md#dialogs--hud).
@@ -171,7 +172,7 @@ every live `AnimatedPanel` (see [ui.md](ui.md#non-negotiable-invariants)).
 
 ## Observation
 
-54 types are `@MainActor @Observable`. Nothing uses `ObservableObject` or `@Published`, and views read
+55 types are `@MainActor @Observable`. Nothing uses `ObservableObject` or `@Published`, and views read
 state through `@Environment` rather than `@EnvironmentObject`.
 
 Three things about this model are easy to get wrong:
@@ -223,7 +224,7 @@ Nanocast/
     PaletteRowIndex.swift   the flat selection index — palette-owned, so it sits at the top
     Launcher/ Clipboard/ Calculator/ Camera/ Dictionary/ Emoji/ FileSearch/ MenuSearch/
     Notes/ Uninstall/ SystemActions/ CustomCommands/ HotKeys/ Backup/
-    WindowManagement/ WindowSwitcher/ Screenshot/ ScreenRecording/ ColorPicker/ Onboarding/
+    WindowManagement/ WindowSwitcher/ Screenshot/ ScreenRecording/ ScreenDraw/ ColorPicker/ Onboarding/
     Updates/ Settings/
         Model/      pure — the harness inputs
         Service/    effects — stores, monitors, runners, AppKit glue
@@ -231,7 +232,7 @@ Nanocast/
         Settings/   the feature's own panes
     Settings/       the Settings shell only: SettingsCoordinator, the root/sidebar/detail views, the chrome,
                     navigation types, SettingsTab, AppSettings, AppSettingsKey, the settings file
-                    (Model/, Service/, SettingsFileSchema), and Panes/ for the two panes no feature
+                    (Model/, Service/, SettingsFileSchema), and Panes/ for the panes no single feature
                     owns
 Tests/              the standalone harnesses, one Swift file each
 Scripts/            run-tests.sh, the two data generators, packaging, formatting, editor setup
@@ -242,7 +243,7 @@ shell rather than the feature.
 
 Every `SettingsTab` maps to one `…SettingsView`, and each is a stock `Form` with
 `.formStyle(.grouped)` — see [ui.md](ui.md#settings). A pane lives with its feature; only a pane no
-feature owns (General, Permissions) lives in `Settings/Panes/`. The four launcher-category panes —
+feature owns (General, Permissions) lives in `Settings/Panes/`. So does a pane that several features share: Navigation, and Screen, which composes the screenshot and recording sections. The four launcher-category panes —
 Applications, System Settings, System Actions, Commands — are thin wrappers over the shared
 `LauncherItemsSection`.
 

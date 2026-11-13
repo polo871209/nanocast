@@ -127,6 +127,8 @@ final class LauncherCoordinator {
             core.screenshotCoordinator.capture()
         case .recordScreen:
             core.screenRecordingCoordinator.toggle()
+        case .drawOnScreen:
+            core.screenDrawCoordinator.toggle()
         case .define:
             core.dictionaryCoordinator.show()
         case .openInBrowser:

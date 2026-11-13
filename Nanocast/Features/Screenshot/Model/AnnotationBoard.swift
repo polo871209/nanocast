@@ -7,6 +7,7 @@ struct AnnotationBoard: Sendable {
         case move(id: Int, from: CGPoint, original: Annotation, before: [Annotation], opensTextOnClick: Bool)
         case resize(handle: AnnotationGrip.Handle, from: CGPoint, original: Annotation, before: [Annotation])
         case moveEditing(from: CGPoint, origin: CGPoint)
+        case erase(last: CGPoint, before: [Annotation])
     }
 
     private struct Placed {
@@ -29,7 +30,7 @@ struct AnnotationBoard: Sendable {
     var isMoving: Bool {
         switch drag {
         case .move, .moveEditing: return true
-        case .create, .resize, nil: return false
+        case .create, .resize, .erase, nil: return false
         }
     }
 
@@ -100,8 +101,42 @@ struct AnnotationBoard: Sendable {
         return false
     }
 
+    /// Starts a new mark at `point`, even over an existing one, for a live drawing.
+    mutating func beginStroke(at point: CGPoint, tool: ScreenshotTool, style: AnnotationStyle) {
+        draft = nil
+        selectedID = nil
+        drag = .create(tool, start: point, points: [point], style: style)
+    }
+
+    /// Opens a new empty text at `point` for typing, even over an existing mark.
+    mutating func beginText(at point: CGPoint, style: AnnotationStyle) {
+        draft = nil
+        selectedID = nil
+        drag = nil
+        editing = Annotation(id: makeID(), shape: .text("", origin: point), style: style)
+        editingOriginal = nil
+    }
+
+    /// Removes every mark the drag passes over, as one undo step.
+    mutating func beginErasing(at point: CGPoint, metrics: AnnotationMetrics) {
+        draft = nil
+        selectedID = nil
+        drag = .erase(last: point, before: annotations)
+        erase(along: Annotation.Segment(start: point, end: point), metrics: metrics)
+    }
+
+    mutating func clear() {
+        guard !annotations.isEmpty else { return }
+        history.record(annotations)
+        annotations.removeAll()
+        selectedID = nil
+    }
+
     mutating func drag(to point: CGPoint, constrained: Bool, metrics: AnnotationMetrics) {
         switch drag {
+        case .erase(let last, let before):
+            erase(along: Annotation.Segment(start: last, end: point), metrics: metrics)
+            drag = .erase(last: point, before: before)
         case .move(let id, let from, let original, _, _):
             guard let index = annotations.firstIndex(where: { $0.id == id }) else { return }
             let offset = CGVector(dx: point.x - from.x, dy: point.y - from.y)
@@ -151,6 +186,8 @@ struct AnnotationBoard: Sendable {
             }
         case .moveEditing:
             return
+        case .erase(_, let before):
+            if annotations != before { history.record(before) }
         case .create:
             defer { self.draft = nil }
             guard let draft, Self.hasExtent(draft.shape) else { return }
@@ -234,6 +271,17 @@ struct AnnotationBoard: Sendable {
         guard let next = history.redo(from: annotations) else { return }
         annotations = next
         selectedID = nil
+    }
+
+    private mutating func erase(along segment: Annotation.Segment, metrics: AnnotationMetrics) {
+        let samples = Int((segment.length / max(metrics.hitSlop, 1)).rounded(.up))
+        let points = (0...samples).map { index in
+            let t = samples == 0 ? 0 : CGFloat(index) / CGFloat(samples)
+            return CGPoint(
+                x: segment.start.x + (segment.end.x - segment.start.x) * t,
+                y: segment.start.y + (segment.end.y - segment.start.y) * t)
+        }
+        annotations.removeAll { mark in points.contains { AnnotationGeometry.hits(mark, at: $0, metrics: metrics) } }
     }
 
     private mutating func beginEditing(_ id: Int) {
