@@ -126,6 +126,19 @@ run MenuSearchTests        $L/SearchRelevance.swift \
                            Nanocast/Features/MenuSearch/Service/*.swift
 run WindowSwitchTests      Nanocast/Features/WindowSwitcher/Model/*.swift
 run index FileSearchPerformanceTests $FS/Model/*.swift $FILE_INDEX
+run ScreenshotSelectionTests Nanocast/Features/Screenshot/Model/*.swift
+run ScreenshotAnnotationTests Nanocast/Features/Screenshot/Model/*.swift
+run ScreenshotRenderTests  Nanocast/Features/Screenshot/Model/*.swift \
+                           Nanocast/Features/Screenshot/Service/AnnotationPainter.swift \
+                           Nanocast/Features/Screenshot/Service/AnnotationText.swift \
+                           Nanocast/Features/Screenshot/Service/MosaicSource.swift \
+                           Nanocast/Features/Screenshot/Service/ScreenshotRenderer.swift \
+                           Nanocast/Features/Screenshot/Service/CGContext+Upright.swift
+run ScreenshotStitchTests  Nanocast/Features/Screenshot/Model/*.swift \
+                           Nanocast/Features/Screenshot/Service/ScrollFrame.swift \
+                           Nanocast/Features/Screenshot/Service/ScrollStitchFile.swift
+run slow -O ScreenshotTextTests Nanocast/Features/Screenshot/Service/ScreenshotTextExtractor.swift \
+                           Nanocast/Features/Clipboard/Service/ClipboardTextExtractor.swift
 run RankingTests           $L/SearchRelevance.swift $L/ScriptRomanization.swift \
                            $L/LauncherMatch.swift $L/LauncherRankingStore.swift
 run ScopesTests            $L/SearchScopes.swift

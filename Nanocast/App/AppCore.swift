@@ -133,6 +133,7 @@ final class AppCore {
     @ObservationIgnored private lazy var windowSwitchCoordinator = WindowSwitchCoordinator(
         settings: settings, hotKeys: hotKeys, healthTicker: healthTicker)
     @ObservationIgnored private(set) lazy var cameraCoordinator = CameraCoordinator(core: self)
+    @ObservationIgnored private(set) lazy var screenshotCoordinator = ScreenshotCoordinator(core: self)
     @ObservationIgnored private(set) lazy var dictionaryCoordinator = DictionaryCoordinator(
         paletteCoordinator: paletteCoordinator)
     @ObservationIgnored private(set) lazy var updateCoordinator = UpdateCoordinator(
@@ -298,7 +299,7 @@ final class AppCore {
         if settingsCoordinator.focusExisting() { return }
         if onboardingCoordinator.focusExisting() { return }
         if customCommandCoordinator.focusOutputWindow() { return }
-        paletteCoordinator.showPalette(mode: .launcher, restoreAnyMode: true)
+        paletteCoordinator.showPalette(mode: .launcher)
     }
 
     private func hotKeyDisplayName(for action: HotKeyAction) -> String? {

@@ -27,6 +27,14 @@ the section below is a note for anyone who wants it, not a step.
 open Nanocast.xcodeproj    # then ⌘R
 ```
 
+Or build the dev channel and restart it in one step, with [just](https://github.com/casey/just) (`brew install just`):
+
+```sh
+just dev
+```
+
+`just dev` builds to the fixed `build/DerivedData` path that keeps the TCC grants, quits a running `Nanocast Dev`, and opens the new build.
+
 Or from the command line:
 
 ```sh
