@@ -60,4 +60,23 @@ enum Permissions {
     nonisolated static func requestCameraAccess() async -> Bool {
         await AVCaptureDevice.requestAccess(for: .video)
     }
+
+    static func isScreenRecordingGranted() -> Bool {
+        CGPreflightScreenCaptureAccess()
+    }
+
+    /// macOS shows its own prompt only the first time, and lists Nanocast in Privacy & Security.
+    static func requestScreenRecording() {
+        guard !isScreenRecordingGranted() else { return }
+        CGRequestScreenCaptureAccess()
+    }
+
+    @MainActor
+    static func openScreenRecordingSettings() {
+        guard
+            let url = URL(
+                string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+        else { return }
+        NSWorkspace.shared.open(url)
+    }
 }

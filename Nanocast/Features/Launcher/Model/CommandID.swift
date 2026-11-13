@@ -8,6 +8,7 @@ enum CommandID: String, CaseIterable, Sendable {
     case searchFiles = "command:search-files"
     case searchMenuItems = "command:search-menu-items"
     case openCamera = "command:open-camera"
+    case captureScreenshot = "command:capture-screenshot"
     case openInBrowser = "command:open-in-browser"
     case createCustomCommand = "command:create-custom-command"
     case searchCustomCommands = "command:search-custom-commands"
@@ -58,6 +59,7 @@ enum CommandID: String, CaseIterable, Sendable {
         case .searchFiles: return "Search Files"
         case .searchMenuItems: return "Search Menu Bar Items"
         case .openCamera: return "Open Camera"
+        case .captureScreenshot: return "Capture Screenshot"
         case .openInBrowser: return "Open in Browser"
         case .createCustomCommand: return "Create Custom Command"
         case .searchCustomCommands: return "Search Custom Commands"
@@ -88,6 +90,7 @@ enum CommandID: String, CaseIterable, Sendable {
         case .searchFiles: return "doc.text.magnifyingglass"
         case .searchMenuItems: return "menubar.rectangle"
         case .openCamera: return "camera.fill"
+        case .captureScreenshot: return "camera.viewfinder"
         case .openInBrowser: return "globe"
         case .createCustomCommand, .searchCustomCommands: return "terminal.fill"
         case .define: return "book.closed.fill"
@@ -117,6 +120,7 @@ enum CommandID: String, CaseIterable, Sendable {
         case .searchMenuItems, .createCustomCommand, .searchCustomCommands: return .graphite
         case .openCamera, .settings, .about: return .gray
         case .define: return .brown
+        case .captureScreenshot: return .purple
         case .quit: return .red
         case .showNotes, .createNote, .searchNotes: return .yellow
         case .createWindowLayout, .captureWindowLayout, .switchRoom, .createRoom: return .mint

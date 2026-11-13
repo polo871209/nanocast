@@ -43,6 +43,7 @@ Nanocast is my personal fork of [Tinycast](https://github.com/abue-ammar/tinycas
 - **Notes** — an unlimited collection of plain Markdown files in one floating editor, searchable from
   the palette and rendered as you write.
 - **Emoji picker** — a searchable emoji grid, one keystroke away.
+- **Screenshot** — freeze the screen, pick a window or a pixel-exact area with a loupe, mark it up with shapes, a highlighter, text, numbered steps and mosaic, then copy, save or pin it. A scrolling capture scrolls a long page by itself, stitches it into one image and opens it in the editor.
 - **Backup and import** — export your settings to a file, or import your setup from Raycast.
 
 ## Install
@@ -62,9 +63,11 @@ Nanocast is self-signed, so clear the flag once:
 
 ## Permissions
 
-**Accessibility** — needed when Nanocast pastes clipboard items or dictated text into another app.
+**Accessibility** — needed when Nanocast pastes clipboard items or dictated text into another app or scrolls a page for a scrolling capture.
 You're prompted when you first use a feature that needs it; grant access in **System Settings →
 Privacy & Security → Accessibility**.
+
+**Screen Recording** — needed by Capture Screenshot and the window switcher's previews. Nanocast asks the first time you capture. Grant access in **System Settings → Privacy & Security → Screen & System Audio Recording**.
 
 ## Using it
 

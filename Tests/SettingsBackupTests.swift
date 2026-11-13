@@ -33,7 +33,8 @@ struct SettingsBackupTests {
             "fileSearchIncludesHiddenFiles",
             "notesEnabled", "notesRendersMarkdown",
             "notesShowsFormattingBar", "notesShowsInMenuBar", "notesFolder", "customCommandsEnabled",
-            "customCommandsShowInLauncher", "navigationEnabled", "menuSearchDisabledApps",
+            "customCommandsShowInLauncher", "screenshotSaveFolder",
+            "screenshotRecordingFormat", "navigationEnabled", "menuSearchDisabledApps",
             "menuSearchShowsAppleMenu", "windowSwitcherExcludedApps", "windowManagementEnabled",
             "windowManagementShowInLauncher", "windowManagementGap", "windowManagementCycleMode",
             "windowManagementWrapDisplays", "windowManagementKeepProportions",
@@ -96,6 +97,9 @@ struct SettingsBackupTests {
         check(
             "clipboard enablement rides the settings backup",
             mirrored["clipboardEnabled"] == .clipboardEnabled)
+        check(
+            "the screen recording format rides the settings backup",
+            mirrored["screenshotRecordingFormat"] == .screenshotRecordingFormat)
         check(
             "emoji grid density rides the settings backup",
             mirrored["emojiGridColumns"] == .emojiGridColumns)

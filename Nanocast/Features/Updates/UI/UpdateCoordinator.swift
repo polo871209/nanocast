@@ -161,7 +161,7 @@ final class UpdateCoordinator {
 
     private func showPill() {
         guard !core.paletteCoordinator.isVisible else { return }
-        core.paletteCoordinator.showPalette(mode: .launcher, restoreAnyMode: true)
+        core.paletteCoordinator.showPalette(mode: .launcher)
     }
 
     private func report(_ phase: UpdateInstaller.Phase, for release: AvailableRelease) {

@@ -40,6 +40,7 @@ open with an `## Invariants` section; read it before changing anything in that a
 [custom commands](features/custom-commands.md) ·
 [uninstall](features/uninstall.md) ·
 [backup](features/backup.md) ·
+[screenshot](features/screenshot.md) ·
 [settings file](features/settings-file.md) ·
 [Raycast import](features/raycast-import.md) ·
 [updates](features/updates.md)

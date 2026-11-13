@@ -39,6 +39,7 @@ targets:
         excludes:
           - Features/Clipboard/Service/ClipboardTextExtractor.swift
           - Features/Clipboard/Service/ClipboardTextHelper.swift
+          - Features/Screenshot/Service/ScreenshotTextExtractor.swift
           - Features/FileSearch/Helper
       # The MIT mark's licence asks the notice to travel with the binary, not just the repo.
       - path: NOTICE.md
@@ -78,6 +79,7 @@ targets:
     sources:
       - Nanocast/Features/Clipboard/Service/ClipboardTextExtractor.swift
       - Nanocast/Features/Clipboard/Service/ClipboardTextHelper.swift
+      - Nanocast/Features/Screenshot/Service/ScreenshotTextExtractor.swift
     settings:
       base:
         EXECUTABLE_NAME: ClipboardTextHelper
