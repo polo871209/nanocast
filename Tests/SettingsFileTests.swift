@@ -58,9 +58,9 @@ struct SettingsFileTests {
             "windowManagement.customSizes", "windowManagement.layouts", "windowManagement.rooms",
             "windowManagement.commands", "clipboard.enabled", "clipboard.retentionDays",
             "clipboard.defaultAction", "clipboard.disabledApps", "clipboard.commands",
-            "screenshot.saveFolder", "screenshot.commands", "screenRecording.saveFolder",
-            "screenRecording.format", "screenRecording.systemAudio", "screenRecording.microphone",
-            "screenRecording.showsClicks", "screenRecording.camera", "screenRecording.commands",
+            "screen.screenshotFolder", "screen.recordingFolder", "screen.recordingFormat",
+            "screen.recordingSystemAudio", "screen.recordingMicrophone", "screen.recordingShowsClicks",
+            "screen.recordingCamera", "screen.commands",
             "emoji.skinTone", "emoji.gridColumns", "emoji.commands"
         ]
         check(
@@ -81,7 +81,7 @@ struct SettingsFileTests {
             SettingsFileKey.sections == [
                 "general", "appearance", "hyperKey", "calculator", "search", "applications",
                 "systemSettings", "systemActions", "commands", "fileSearch", "notes",
-                "navigation", "windowManagement", "clipboard", "screenshot", "screenRecording", "emoji"
+                "navigation", "windowManagement", "clipboard", "screen", "emoji"
             ])
 
         check(

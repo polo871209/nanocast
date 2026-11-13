@@ -3,7 +3,7 @@ import SwiftUI
 
 @MainActor
 enum AnnotationAppearance {
-    static func metrics(scale: CGFloat) -> AnnotationMetrics {
+    static func metrics(scale: CGFloat, face: AnnotationText.Face = .standard) -> AnnotationMetrics {
         let markup = Theme.Markup.self
         return AnnotationMetrics(
             scale: scale,
@@ -12,18 +12,20 @@ enum AnnotationAppearance {
                 brushes: markup.brushes, stepInset: markup.stepInset, mosaicBlock: markup.mosaicBlock,
                 blurBlock: markup.blurBlock, hitSlop: markup.hitSlop, dragSlop: markup.dragSlop,
                 selectionOutset: markup.selectionOutset, handleReach: Theme.Size.captureHandleReach),
-            measureText: { AnnotationText.size(of: $0, fontSize: $1) })
+            measureText: { AnnotationText.size(of: $0, fontSize: $1, face: face) })
     }
 
-    static func painter(scale: CGFloat, mosaic: MosaicSource?) -> AnnotationPainter {
+    static func painter(
+        scale: CGFloat, mosaic: MosaicSource?, face: AnnotationText.Face = .standard
+    ) -> AnnotationPainter {
         let inks = Dictionary(uniqueKeysWithValues: AnnotationStyle.Ink.allCases.map { ($0, cgColor(color($0))) })
         return AnnotationPainter(
-            metrics: metrics(scale: scale),
+            metrics: metrics(scale: scale, face: face),
             palette: AnnotationPainter.Palette(
                 inks: inks, highlighterAlpha: Theme.Markup.highlighterOpacity,
                 lightText: cgColor(Theme.Colors.markupWhite), darkText: cgColor(Theme.Colors.markupBlack),
                 rim: cgColor(Theme.Colors.markupWhite)),
-            mosaic: mosaic)
+            mosaic: mosaic, textFace: face)
     }
 
     static func color(_ ink: AnnotationStyle.Ink) -> Color {

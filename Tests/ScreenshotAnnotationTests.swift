@@ -132,7 +132,7 @@ struct ScreenshotAnnotationTests {
         var board = AnnotationBoard()
         draw(.rectangle, on: &board, from: p(100, 100), to: p(200, 150))
         _ = board.press(at: p(101, 110), tool: .arrow, style: AnnotationStyle(), metrics: metrics)
-        expect(board.selectedID, board.annotations.first?.id, "a press on a mark selects it, whatever the tool")
+        expect(board.selected?.id, board.annotations.first?.id, "a press on a mark selects it, whatever the tool")
         board.drag(to: p(111, 115), constrained: false, metrics: metrics)
         expect(board.isMoving, true, "dragging a selected mark moves it")
         board.release()
@@ -153,7 +153,7 @@ struct ScreenshotAnnotationTests {
     static func resizing() {
         var board = AnnotationBoard()
         draw(.rectangle, on: &board, from: p(100, 100), to: p(200, 150))
-        expect(board.selectedID, board.annotations.first?.id, "a drawn box is selected, so its handles show")
+        expect(board.selected?.id, board.annotations.first?.id, "a drawn box is selected, so its handles show")
         expect(board.resizeDirection(at: p(203, 152), metrics: metrics), .bottomRight, "a handle is reached near it")
         expect(board.resizeDirection(at: p(150, 125), metrics: metrics), nil, "the middle of a box is no handle")
         _ = board.press(at: p(201, 151), tool: .rectangle, style: AnnotationStyle(), metrics: metrics)
@@ -211,7 +211,7 @@ struct ScreenshotAnnotationTests {
         board.release()
         expect(board.annotations.first?.shape, .highlighter([p(0, 0), p(200, 0)]), "a straight highlighter stretches")
         draw(.pen, on: &board, from: p(0, 100), to: p(50, 150))
-        expect(board.selectedID, nil, "a pen stroke has no handles, so drawing one selects nothing")
+        expect(board.selected?.id, nil, "a pen stroke has no handles, so drawing one selects nothing")
     }
 
     static func editing() {

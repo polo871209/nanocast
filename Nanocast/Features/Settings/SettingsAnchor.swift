@@ -54,12 +54,10 @@ extension SettingsAnchor {
     static let clipboardDisabledApplications = Self(
         tab: .clipboard, title: "Excluded Applications")
 
-    static let screenshotCommands = Self(tab: .screenshot, title: "Commands")
-    static let screenshotSaving = Self(tab: .screenshot, title: "Saving")
-
-    static let screenRecordingCommands = Self(tab: .screenRecording, title: "Commands")
-    static let screenRecordingSaving = Self(tab: .screenRecording, title: "Saving")
-    static let screenRecordingCapture = Self(tab: .screenRecording, title: "Capture")
+    static let screenCommands = Self(tab: .screen, title: "Commands")
+    static let screenshotSaving = Self(tab: .screen, title: "Screenshots")
+    static let screenRecordingSaving = Self(tab: .screen, title: "Recordings")
+    static let screenRecordingCapture = Self(tab: .screen, title: "Recording Options")
 
     static let emojiCommands = Self(tab: .emoji, title: "Commands")
     static let emojiAppearance = Self(tab: .emoji, title: "Appearance")

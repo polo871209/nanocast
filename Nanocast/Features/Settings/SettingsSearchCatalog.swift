@@ -94,7 +94,7 @@ enum SettingsSearchCatalog {
 
     static let entries: [SettingsSearchEntry] =
         general + applications + systemSettings + systemActions + commands + clipboard
-        + fileSearch + screenshot + screenRecording + windowManagement + navigation + notes + emoji
+        + fileSearch + screen + windowManagement + navigation + notes + emoji
         + permissions + backup + about
 
     private static let general: [SettingsSearchEntry] = [
@@ -375,28 +375,22 @@ enum SettingsSearchCatalog {
             keywords: ["delete", "erase", "wipe"])
     ]
 
-    private static let screenshot: [SettingsSearchEntry] = [
+    private static let screen: [SettingsSearchEntry] = [
         .init(
-            pane: .screenshot,
-            keywords: ["capture", "screen", "snip", "grab", "shottr", "annotate"]),
+            pane: .screen,
+            keywords: [
+                "screenshot", "capture", "snip", "grab", "shottr", "annotate", "record", "video", "screencast",
+                "draw", "pen", "highlighter", "excalidraw"
+            ]),
         .init(
-            group: .screenshotCommands, "Screenshot commands",
-            keywords: ["shortcut", "hotkey", "capture"]),
+            group: .screenCommands, "Screen commands",
+            keywords: ["shortcut", "hotkey", "capture", "record", "draw"]),
         .init(
             .screenshotSaving, "Save Folder",
-            keywords: ["desktop", "location", "directory", "png"])
-    ]
-
-    private static let screenRecording: [SettingsSearchEntry] = [
-        .init(
-            pane: .screenRecording,
-            keywords: ["record", "video", "screencast", "capture", "window"]),
-        .init(
-            group: .screenRecordingCommands, "Screen Recording commands",
-            keywords: ["shortcut", "hotkey", "record"]),
+            keywords: ["desktop", "location", "directory", "png", "screenshot"]),
         .init(
             .screenRecordingSaving, "Save Folder",
-            keywords: ["desktop", "location", "directory", "mov", "mp4"]),
+            keywords: ["desktop", "location", "directory", "mov", "mp4", "recording"]),
         .init(
             .screenRecordingSaving, "Format",
             keywords: ["video", "mov", "mp4", "file type", "container"]),

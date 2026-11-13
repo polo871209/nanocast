@@ -210,6 +210,7 @@ enum Theme {
         static let recordingPickerColumns = 4
         static let recordingPickerIcon: CGFloat = 16
         static let levelText: [CGFloat] = [10, 13, 16]
+        static let keyHint: CGFloat = 8
     }
 
     enum Duration {
@@ -360,6 +361,7 @@ enum Theme {
         static let progress = Color.blue
         static let captureDim = Color(nsColor: .srgbInk(0, alpha: 0.45))
         static let captureHandleRim = Color(nsColor: .srgbInk(1, alpha: 1))
+        static let captureMarquee = Color.blue.opacity(0.12)
         static let loupeSurface = adaptive(
             dark: .srgbInk(0.12, alpha: 0.94), light: .srgbInk(0.98, alpha: 0.94))
         static let loupeGrid = Color(nsColor: .srgbInk(0, alpha: 0.18))

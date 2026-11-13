@@ -42,6 +42,13 @@ final class ScreenRecordingCoordinator {
             .devices
     }
 
+    var drawingWindows: [CGWindowID] { core.screenDrawCoordinator.canvasWindows }
+
+    // A segment's content filter fixes its windows, so the canvas joins with a new segment.
+    func drawingChanged() {
+        recording?.restartSegment()
+    }
+
     func stopRecording() async {
         await recording?.stopAndWait()
     }
