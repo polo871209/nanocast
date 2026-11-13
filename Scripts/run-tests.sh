@@ -124,8 +124,7 @@ run FileSearchSessionTests $FS/Model/*.swift $FS/Service/FileSearchSession.swift
 run MenuSearchTests        $L/SearchRelevance.swift \
                            Nanocast/Features/MenuSearch/Model/*.swift \
                            Nanocast/Features/MenuSearch/Service/*.swift
-run WindowSwitchTests      $L/SearchRelevance.swift \
-                           Nanocast/Features/WindowSwitcher/Model/*.swift
+run WindowSwitchTests      Nanocast/Features/WindowSwitcher/Model/*.swift
 run index FileSearchPerformanceTests $FS/Model/*.swift $FILE_INDEX
 run RankingTests           $L/SearchRelevance.swift $L/ScriptRomanization.swift \
                            $L/LauncherMatch.swift $L/LauncherRankingStore.swift
