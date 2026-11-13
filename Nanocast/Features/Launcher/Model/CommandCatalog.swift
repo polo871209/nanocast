@@ -47,7 +47,7 @@ extension SettingsTab {
         case .commands: [.createCustomCommand, .searchCustomCommands]
         case .fileSearch: [.searchFiles]
         case .notes: [.showNotes, .createNote, .searchNotes]
-        case .navigation: [.switchWindows, .switchWindowsBackwards, .searchMenuItems]
+        case .navigation: [.searchMenuItems]
         case .windowManagement:
             [.createWindowLayout, .captureWindowLayout, .switchRoom, .createRoom]
         case .clipboard: [.clipboardHistory, .pasteSequentially]
