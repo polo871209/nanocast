@@ -115,8 +115,8 @@ leaves it off.
 lets a later launch take the front back; focusing each app in turn would flicker across displays
 and Spaces. The cost is that a layout waiting on a slow launch focuses only when that wait ends,
 up to the deadline below. A cancelled run focuses nothing, and neither does a run whose frontmost
-app, when the wait ends, is neither the one it started with nor one it opened; the user has moved
-on. `AXWindowAccess.focus` is the same raise-and-activate sequence Switch Windows uses.
+app, when the wait ends, is neither the one it started with nor one it opened — the user has moved
+on. `AXWindowAccess.focus` is the same raise-and-activate sequence the ⌘Tab window switcher uses.
 
 ### The launch wait
 
@@ -194,7 +194,7 @@ mark rather than refusing, because the draft holds one ID, not a flag per entry.
   `AppIndex.setWindowLayouts(_:)` immediately **before** the window-command slice.
   `LauncherList.rows` mirrors that position; the slice order is the flat-selection invariant, and its
   `assert` proves membership but **not** order, so the two arrays must move together.
-- **`HotKeyAction.windowLayout(id:)`**: persisted under `hotkey.windowLayout.<uuid>` with a
+- **`HotKeyAction.windowLayout(id:)`** — persisted under `hotkey.windowLayout.<uuid>` with a
   `boundWindowLayoutIDs` index, the shape custom commands use. `WindowLayoutStore`
   decodes in `init`, so its live IDs are known by the time `hotKeys.start` prunes.
 - **Settings**: one new key, `windowLayoutsShowInLauncher` (on). Its own flag rather than sharing

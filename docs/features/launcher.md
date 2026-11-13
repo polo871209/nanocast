@@ -48,7 +48,7 @@ reports notification-dependent checks as skipped when the session cannot deliver
   names the app slice on its own, off-main: transliterating a CJK index is ICU work, and
   `publishEntries` runs on the main actor whenever any unrelated slice changes.
 - **Nanocast never translates a name it did not write.** Apps and panes read the way their source names them in English. Nanocast is English only, so a built-in command has one name.
-- **The fields stay separate.** Which field matched is half of what the comparator reads: an exact
+- **The fields stay separate.** Which field matched is half of what the comparator reads — an exact
   subtitle, an exact alternate title and a keyword hit are three different rules.
 - **`Model/SearchScopes.swift` and `Model/LauncherRankingStore.swift` are pure too**: the ranking store
   takes its clock via `now` and its path via `fileURL`, for `ScopesTests` and `RankingTests`.
@@ -95,9 +95,9 @@ refreshes collapse into a single trailing scan.
 
 ## Search fields
 
-| Field            | What lands in it                                                                                                                          | Compared against          | Ranks                              |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ---------------------------------- |
-| title            | the display name                                                                                                                          | the query read into Latin | yes                                |
+| Field | What lands in it | Compared against | Ranks |
+| --- | --- | --- | --- |
+| title | the display name | the query read into Latin | yes |
 | alternate titles | the bundle's other English names, a renamed bundle's file name, `CFBundleAlternateNames` | the query as typed | yes |
 | subtitle | a row's own subtitle | the query read into Latin | yes |
 | keywords | the declared Info.plist name, and the title and subtitle joined both ways | the query read into Latin | no — they only make an entry appear |
@@ -165,7 +165,7 @@ The first rule that separates two entries decides:
 
 Two entries that both meet rule 2 go by search-term strength, then frecency; both meeting rule 3 go by
 frecency; both meeting rule 4 go by frecency, then the title's own score. The tiebreak settles the rest —
-(what the empty list sorts by too) and is frecency, then having an alias, then kind priority, then the
+what the empty list sorts by too — and is frecency, then having an alias, then kind priority, then the
 name. Rule 4 applies at any length, because rule 2 only protects an exact title past three characters.
 
 ### Kind priority
@@ -210,7 +210,7 @@ routes per script and keeps one space between words, which is what lets both `wx
 | everything else | ICU `.toLatin`                                              | `Ελληνικά` → `ellenika` |
 
 It fires only when transliteration actually changes the letters: `Adobe — Creative Cloud` and
-`Café Noir` are Latin already. **Kanji readings are not solved, only routed**: a Japanese app whose
+`Café Noir` are Latin already. **Kanji readings are not solved, only routed** — a Japanese app whose
 name is pure kanji gets a Mandarin reading.
 
 **Only an entry's English names are indexed.** Spotlight's `kMDItemAlternateNames` merges every language a bundle ships. Safari's lists `浏览器` and `사파리`, so romanizing them would let `ll` and `sap` find Safari. Nothing reads Spotlight: English names come from `BundleEnglishName`, and an app's other names come from its own Info.plist.
@@ -262,7 +262,7 @@ handler through `AppLauncher.open`.
 
 The shape a query has to have is `LinkDestination.detect` returning `.web`, the same detector the
 clipboard and window layouts use, so `github.com` and `https://…` mean the same thing everywhere. The
-entry is an ordinary `.command`, so `VisibilityStore` still gates it (Commands off hides the row),
+entry is an ordinary `.command`, so `VisibilityStore` still gates it — Commands off hides the row —
 and its `url` carries the destination instead of the catalog's `nanocast://` placeholder. Nothing
 learns from it and nothing pins it: `LauncherCoordinator.launch` records no visit for a contextual
 row, since a pasted URL is not a term any row should rank under; and ⇧⌘F and ⇧⌘H are both refused,
@@ -300,7 +300,7 @@ would move the row being edited out from under its own field editor. A pane with
 hands `AliasField` the key itself: Settings ▸ Commands passes `CustomCommand.entryID`, Settings ▸ Window Management passes each command, custom size, layout and room's `AppEntry`, and each
 dims the field when the entry is hidden from launcher search, whose entry the ranker never sees.
 
-Aliases ride along in a settings backup (`launcherAliases`), and deleting what an alias points at
+Aliases ride along in a settings backup (`launcherAliases`), and deleting what an alias points at —
 uninstalling an app, deleting a custom command — removes it
 with the entry's other per-entry preferences.
 
@@ -314,7 +314,7 @@ alternate titles, read from the **raw** `infoDictionary`: `object(forInfoDiction
 carries and the untranslated `ALTERNATE_NAME_1` placeholders several ship.
 
 **A row is labelled the way an English Finder labels it: the English name if the bundle ships one, and
-otherwise the file name.** `CFBundleDisplayName` is deliberately _not_ the label: LaunchServices
+otherwise the file name.** `CFBundleDisplayName` is deliberately *not* the label — LaunchServices
 ignores one that disagrees with the file name, so an app cannot present itself under a name its
 folder does not carry, and neither should a launcher row. Visual Studio Code is the case that shows
 it: `Code.app` would be labelled `Code`, but the folder, Finder, the Dock and the user all say
@@ -354,8 +354,8 @@ stale habit stop overriding the alignment.
 Every pick through `LauncherCoordinator.launch` is a visit, with the query as it was typed: a list
 click, a result, a favorite by ⌘-digit, the ⌘K Open row. A global shortcut
 is not a visit, and neither is a query-driven row. A category listing records the visit
-and not the word. `rank` reads the store once per pass through `snapshot()` (one clock read, not one
-per candidate), and the memos key on the ranking, alias, visibility, favorites and shortcut revisions
+and not the word. `rank` reads the store once per pass through `snapshot()` — one clock read, not one
+per candidate — and the memos key on the ranking, alias, visibility, favorites and shortcut revisions
 and the sensitivity, so a launch or a reset invalidates them.
 
 Learned data stays on device in `launcher-ranking.json`; a result that has learned ranking offers a
@@ -509,7 +509,7 @@ feature is enabled. Activation hides the palette without restoring focus and cal
 `NotesCoordinator` action; each `HotKeyAction` reaches that same boundary and rechecks enablement.
 
 `AppIndex` projects the three commands together from `notesEnabled`, independently of File Search. They represent collection actions rather than individual notes, so Notes adds no
-`AppEntry.Kind` or launcher section; it owns them through `SettingsTab.ownedCommands` instead, which
+`AppEntry.Kind` or launcher section — it owns them through `SettingsTab.ownedCommands` instead, which
 is what keeps them out of Settings › Commands while they stay in the launcher's Commands section. See
 [notes.md](notes.md).
 
@@ -533,12 +533,7 @@ value), so a command may be moved between owners without migrating anything.
 
 ## Navigation commands
 
-`CommandID.switchWindows` opens every running app's windows as a palette screen,
-`CommandID.switchWindowsBackwards` opens the same screen and steps it the other way, and
-`CommandID.searchMenuItems` does the same for the front app's menu bar. All three are plain command
-entries (no new `AppEntry.Kind` and no `VisibilityStore` category), owned by Settings › Navigation
-through `SettingsTab.ownedCommands`, so `navigationEnabled` is their switch. Their invariants and
-internals live in [navigation.md](navigation.md) and [menu-search.md](menu-search.md).
+`CommandID.searchMenuItems` opens the front app's menu bar as a palette screen. It is a plain command entry, with no new `AppEntry.Kind` and no `VisibilityStore` category, owned by Settings › Navigation through `SettingsTab.ownedCommands`, so `navigationEnabled` is its switch. The same switch turns on the ⌘Tab window switcher, which is not a command and has no palette screen. Their internals live in [navigation.md](navigation.md) and [menu-search.md](menu-search.md).
 
 > **Invariant:** `Tests/FuzzTests.swift` compiles the real `Launcher/Model/LauncherMatch.swift` and
 > `LauncherOrder.swift`, so both must stay Foundation-only and pure. There is no copy of the ranking
@@ -627,7 +622,7 @@ favorite, alias and learned ranking survive the round trip, and its shortcut kee
 `allowsHotKey` gates by category and never by item.
 
 The row is offered only where Settings can undo it, and `KindDescriptor.canHideFromSearch` is that
-rule: per kind, and a new `Kind` case has to answer it to compile. Applications, System Settings,
+rule — per kind, and a new `Kind` case has to answer it to compile. Applications, System Settings,
 Commands, System Actions, Window Commands, Window Layouts and Rooms each
 draw a per-row checkbox in their pane, so they carry it. Custom commands differ: their editor has its
 own **Show in root search** switch, so the row offers **Hide from Root Search** and `hideFromSearch(at:)` clears that
@@ -664,7 +659,7 @@ and every new kind has to say so to build.
 
 The row uses `onRowTap(drag:)` from `DesignSystem/Interaction/RowClick.swift`, the tap-shaped sibling
 of the clipboard's `onRowClick(drag:)`. A launcher click launches rather than
-selects, so the press **activates on the release**, the one moment a press is known not to have
+selects, so the press **activates on the release** — the one moment a press is known not to have
 become a drag. A row that cannot drag gets plain `onTapGesture`, so every other kind and the lead card keep SwiftUI's own gesture. The operation is **copy only**, as
 [clipboard.md](clipboard.md#dragging-out) explains: on the boot volume a file-URL drag would default
 to a move, and moving an app out of `/Applications` is never what a launcher should do. The image is

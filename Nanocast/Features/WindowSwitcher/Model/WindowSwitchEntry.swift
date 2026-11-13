@@ -2,21 +2,18 @@ import Foundation
 
 struct WindowSwitchEntry: Identifiable, Hashable, Sendable {
     let handle: Int
+    let windowID: UInt32?
+    let pid: Int32
     let appName: String
-    let bundleID: String
     let iconURL: URL?
     let iconStamp: Int
     let title: String
-    var isMinimized: Bool
-    let appRank: Int
 
-    var id: String { String(handle) }
+    var id: Int { handle }
 
-    var displayTitle: String {
-        title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? appName : title
-    }
-
-    func searchFields() -> SearchFields {
-        [SearchAlias.name(displayTitle), SearchAlias.owner(appName)]
+    var label: String {
+        let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty, title != appName else { return appName }
+        return "\(appName) — \(title)"
     }
 }

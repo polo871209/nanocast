@@ -34,9 +34,10 @@ struct SettingsBackupTests {
             "notesEnabled", "notesRendersMarkdown",
             "notesShowsFormattingBar", "notesShowsInMenuBar", "notesFolder", "customCommandsEnabled",
             "customCommandsShowInLauncher", "navigationEnabled", "menuSearchDisabledApps",
-            "menuSearchShowsAppleMenu", "windowManagementEnabled", "windowManagementShowInLauncher",
-            "windowManagementGap", "windowManagementCycleMode", "windowManagementWrapDisplays",
-            "windowManagementKeepProportions", "windowLayoutsShowInLauncher",
+            "menuSearchShowsAppleMenu", "windowSwitcherExcludedApps", "windowManagementEnabled",
+            "windowManagementShowInLauncher", "windowManagementGap", "windowManagementCycleMode",
+            "windowManagementWrapDisplays", "windowManagementKeepProportions",
+            "windowLayoutsShowInLauncher",
             "windowRoomsShowInLauncher", "settingsFileEnabled"
         ]
         check(

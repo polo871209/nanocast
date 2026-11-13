@@ -79,6 +79,9 @@ enum SettingsFileSchema {
         case .navigationEnabled: return bind(settings, \.navigationEnabled)
         case .menuSearchShowsAppleMenu: return bind(settings, \.menuSearchShowsAppleMenu)
         case .menuSearchDisabledApps: return bind(settings, \.menuSearchDisabledApps)
+        case .windowSwitcherShortcut:
+            return shortcuts.binding(for: key, action: .windowSwitcher, name: "Window Switcher")
+        case .windowSwitcherExcludedApps: return bind(settings, \.windowSwitcherExcludedApps)
         case .navigationCommands: return launcher.commandsBinding(for: key, owner: .navigation)
         case .windowManagementEnabled: return bind(settings, \.windowManagementEnabled)
         case .windowManagementShowInLauncher:

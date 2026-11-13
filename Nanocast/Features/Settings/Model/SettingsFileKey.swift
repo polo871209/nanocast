@@ -48,6 +48,8 @@ enum SettingsFileKey: String, CaseIterable, Sendable {
     case navigationEnabled = "navigation.enabled"
     case menuSearchShowsAppleMenu = "navigation.menuSearchShowsAppleMenu"
     case menuSearchDisabledApps = "navigation.menuSearchDisabledApps"
+    case windowSwitcherShortcut = "navigation.windowSwitcherShortcut"
+    case windowSwitcherExcludedApps = "navigation.windowSwitcherExcludedApps"
     case navigationCommands = "navigation.commands"
     case windowManagementEnabled = "windowManagement.enabled"
     case windowManagementShowInLauncher = "windowManagement.showInLauncher"
