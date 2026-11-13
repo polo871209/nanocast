@@ -149,7 +149,7 @@ private struct TextSizeGlyph: View {
     }
 }
 
-private struct InkSwatch: View {
+struct InkSwatch: View {
     let ink: AnnotationStyle.Ink
     @Environment(\.metrics) private var metrics
 

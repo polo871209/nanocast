@@ -128,6 +128,7 @@ run WindowSwitchTests      Nanocast/Features/WindowSwitcher/Model/*.swift
 run index FileSearchPerformanceTests $FS/Model/*.swift $FILE_INDEX
 run ScreenshotSelectionTests Nanocast/Features/Screenshot/Model/*.swift Nanocast/Platform/TimestampedFileName.swift
 run ScreenshotAnnotationTests Nanocast/Features/Screenshot/Model/*.swift
+run ScreenDrawTests        Nanocast/Features/Screenshot/Model/*.swift Nanocast/Features/ScreenDraw/Model/*.swift
 run ScreenshotRenderTests  Nanocast/Features/Screenshot/Model/*.swift \
                            Nanocast/Features/Screenshot/Service/AnnotationPainter.swift \
                            Nanocast/Features/Screenshot/Service/AnnotationText.swift \

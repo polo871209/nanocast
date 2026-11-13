@@ -1,15 +1,13 @@
 import AVFoundation
 import SwiftUI
 
-struct ScreenRecordingSettingsView: View {
+struct ScreenRecordingSettingsSections: View {
     @Environment(ScreenRecordingCoordinator.self) private var recordings
     @Environment(AppSettings.self) private var settings
 
     var body: some View {
         @Bindable var settings = settings
-        Form {
-            FeatureCommandsSection(owner: .screenRecording, anchor: .screenRecordingCommands)
-
+        Group {
             Section {
                 LabeledContent {
                     if settings.screenRecordingSaveFolder != nil {
@@ -73,7 +71,5 @@ struct ScreenRecordingSettingsView: View {
                 SettingsSectionHeader(.screenRecordingCapture)
             }
         }
-        .formStyle(.grouped)
-        .settingsScrollTarget(.screenRecording)
     }
 }

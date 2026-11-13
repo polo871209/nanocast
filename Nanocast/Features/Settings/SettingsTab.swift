@@ -2,7 +2,7 @@ import Foundation
 
 enum SettingsTab: CaseIterable, Identifiable {
     case general, applications, systemSettings, systemActions, commands, clipboard, fileSearch,
-        screenshot, screenRecording, windowManagement, navigation, notes, emoji, permissions, backup, about
+        screen, windowManagement, navigation, notes, emoji, permissions, backup, about
     var id: Self { self }
 
     var title: String {
@@ -17,8 +17,7 @@ enum SettingsTab: CaseIterable, Identifiable {
         case .navigation: return "Navigation"
         case .windowManagement: return "Window Management"
         case .clipboard: return "Clipboard"
-        case .screenshot: return "Screenshot"
-        case .screenRecording: return "Screen Recording"
+        case .screen: return "Screen"
         case .emoji: return "Emoji & Symbols"
         case .permissions: return "Permissions"
         case .backup: return "Backup"
@@ -38,8 +37,7 @@ enum SettingsTab: CaseIterable, Identifiable {
         case .navigation: return "arrow.left.arrow.right"
         case .windowManagement: return "macwindow"
         case .clipboard: return "list.clipboard.fill"
-        case .screenshot: return "camera.viewfinder"
-        case .screenRecording: return "record.circle.fill"
+        case .screen: return "display"
         case .emoji: return "face.smiling.inverse"
         case .permissions: return "lock.shield.fill"
         case .backup: return "arrow.up.arrow.down.circle.fill"
@@ -57,8 +55,7 @@ enum SettingsTab: CaseIterable, Identifiable {
         case .notes: return .yellow
         case .systemActions, .emoji: return .orange
         case .clipboard: return .indigo
-        case .screenshot: return .purple
-        case .screenRecording: return .red
+        case .screen: return .purple
         }
     }
 }
@@ -83,7 +80,7 @@ enum SettingsSection: CaseIterable, Identifiable {
             return [.applications, .systemSettings, .systemActions, .commands]
         case .features:
             return [
-                .clipboard, .fileSearch, .screenshot, .screenRecording, .windowManagement, .navigation, .notes,
+                .clipboard, .fileSearch, .screen, .windowManagement, .navigation, .notes,
                 .emoji
             ]
         case .advanced: return [.backup, .about]

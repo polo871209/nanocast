@@ -29,7 +29,7 @@
 | `UI/ScreenRecordingCoordinator.swift`        | the command, the save folder, and at most one recording                   |
 | `UI/ScreenRecordingController.swift`         | the border, the bar, the segments, and the file's fate when it ends       |
 | `UI/ScreenRecordingView.swift`               | the bar: target, microphone, camera, time, record or pause, stop, discard |
-| `Settings/ScreenRecordingSettingsView.swift` | the pane: commands, save folder and format                                |
+| `Settings/ScreenRecordingSettingsSections.swift` | the Recordings and Recording Options sections of the Screen pane      |
 
 The area choice opens the screenshot overlay with `ScreenshotSession.Purpose.recording`. See [screenshot.md](screenshot.md#picking-an-area-for-a-recording). The border, the bar and their placement reuse the screenshot feature's `LiveCapturePanel`, `FirstMouseHostingView`, `ChromePlacement` and toolbar buttons.
 
@@ -49,7 +49,7 @@ Running `Record Screen` again starts the recording when the bar is still in setu
 
 ## What gets recorded
 
-- A display or an area records that part of the display, with a red border around an area. Every Nanocast window except the camera bubble is left out.
+- A display or an area records that part of the display, with a red border around an area. Every Nanocast window except the camera bubble and the [Draw on Screen](screen-draw.md) canvas is left out. Starting or ending Draw on Screen during a recording starts a new segment, because a segment's content filter fixes its windows.
 - A window records that window alone with `SCContentFilter(desktopIndependentWindow:)`. The window stays whole when another window covers it or when you switch to another app, and the recording follows it when it moves. The red border follows the window too. A window records at the pixel size it had when the recording started.
 - If the camera is on for a window, Nanocast records it in place instead, with `SCContentFilter(display:including:)` cropped to the window's frame. The filter includes only the window and the camera bubble, so the window still stays whole under another window. When the window moves, the bubble moves with it, and once the window holds still for 0.4 s, a new segment starts at the new frame.
 
@@ -79,4 +79,4 @@ The microphone needs its own grant. Turning the microphone on asks for it throug
 
 ## Where it is reachable from
 
-The launcher, as `CommandID.recordScreen`, which takes aliases and a global shortcut like any other command. There is no default shortcut. The Screen Recording pane in Settings lists the command, the save folder and the format. In `settings.json` they are `screenRecording.commands`, `screenRecording.saveFolder`, `screenRecording.format`, `screenRecording.systemAudio`, `screenRecording.microphone`, `screenRecording.showsClicks` and `screenRecording.camera`. The chosen microphone, the chosen camera and the bubble size are machine state, so they have no key. A settings backup carries the format and the four switches, and leaves the folder, the microphone, the camera and the bubble size out, because each belongs to this Mac.
+The launcher, as `CommandID.recordScreen`, which takes aliases and a global shortcut like any other command. There is no default shortcut. The Screen pane in Settings lists the command with `Capture Screenshot` and `Draw on Screen`, then the save folder, the format and the recording options. In `settings.json` they are `screen.commands`, `screen.recordingFolder`, `screen.recordingFormat`, `screen.recordingSystemAudio`, `screen.recordingMicrophone`, `screen.recordingShowsClicks` and `screen.recordingCamera`. The chosen microphone, the chosen camera and the bubble size are machine state, so they have no key. A settings backup carries the format and the four switches, and leaves the folder, the microphone, the camera and the bubble size out, because each belongs to this Mac.

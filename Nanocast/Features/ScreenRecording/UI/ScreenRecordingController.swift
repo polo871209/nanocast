@@ -195,7 +195,7 @@ final class ScreenRecordingController {
         enqueue { [self] in await recordSegment() }
     }
 
-    private func restartSegment() {
+    func restartSegment() {
         guard session.isCapturing else { return }
         runner?.stop()
         capture(from: session.recorded(at: .now))
@@ -230,7 +230,8 @@ final class ScreenRecordingController {
             try FileManager.default.createDirectory(at: segmentsFolder, withIntermediateDirectories: true)
             try await runner.record(
                 source, with: coordinator.options(microphone: session.microphone),
-                showing: [bubble?.windowID].compactMap(\.self), to: url, as: coordinator.format)
+                showing: [bubble?.windowID].compactMap(\.self) + coordinator.drawingWindows, to: url,
+                as: coordinator.format)
             segments.append(url)
             let endedOutsideNanocast = !runner.isStopRequested
             if endedOutsideNanocast { stop(keeping: true) }

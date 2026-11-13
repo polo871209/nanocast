@@ -11,6 +11,7 @@ enum CommandID: String, CaseIterable, Sendable {
     case pickColor = "command:pick-color"
     case captureScreenshot = "command:capture-screenshot"
     case recordScreen = "command:record-screen"
+    case drawOnScreen = "command:draw-on-screen"
     case openInBrowser = "command:open-in-browser"
     case createCustomCommand = "command:create-custom-command"
     case searchCustomCommands = "command:search-custom-commands"
@@ -64,6 +65,7 @@ enum CommandID: String, CaseIterable, Sendable {
         case .pickColor: return "Pick Color"
         case .captureScreenshot: return "Capture Screenshot"
         case .recordScreen: return "Record Screen"
+        case .drawOnScreen: return "Draw on Screen"
         case .openInBrowser: return "Open in Browser"
         case .createCustomCommand: return "Create Custom Command"
         case .searchCustomCommands: return "Search Custom Commands"
@@ -97,6 +99,7 @@ enum CommandID: String, CaseIterable, Sendable {
         case .pickColor: return "eyedropper.full"
         case .captureScreenshot: return "camera.viewfinder"
         case .recordScreen: return "record.circle.fill"
+        case .drawOnScreen: return "pencil.and.scribble"
         case .openInBrowser: return "globe"
         case .createCustomCommand, .searchCustomCommands: return "terminal.fill"
         case .define: return "book.closed.fill"
@@ -126,9 +129,8 @@ enum CommandID: String, CaseIterable, Sendable {
         case .searchMenuItems, .createCustomCommand, .searchCustomCommands: return .graphite
         case .openCamera, .settings, .about: return .gray
         case .define: return .brown
-        case .captureScreenshot: return .purple
+        case .captureScreenshot, .recordScreen, .drawOnScreen: return .purple
         case .pickColor: return .pink
-        case .recordScreen: return .red
         case .quit: return .red
         case .showNotes, .createNote, .searchNotes: return .yellow
         case .createWindowLayout, .captureWindowLayout, .switchRoom, .createRoom: return .mint

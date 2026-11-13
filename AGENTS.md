@@ -2,7 +2,7 @@
 
 A native macOS menu-bar launcher: fuzzy app launcher, global and per-app hotkeys, a text/image
 clipboard history, an inline calculator, a floating note, file search, window management, an emoji
-picker and a screenshot tool.
+picker, a screenshot tool and on-screen drawing.
 SwiftUI + AppKit, running as an accessory with no Dock icon (`LSUIElement`). Zero third-party
 dependencies.
 

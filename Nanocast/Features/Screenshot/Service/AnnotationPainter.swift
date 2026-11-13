@@ -12,6 +12,7 @@ struct AnnotationPainter {
     let metrics: AnnotationMetrics
     let palette: Palette
     let mosaic: MosaicSource?
+    var textFace = AnnotationText.Face.standard
 
     func paint(_ annotations: [Annotation], in context: CGContext, area: CGRect, hiddenText: Int? = nil) {
         context.saveGState()
@@ -100,7 +101,8 @@ struct AnnotationPainter {
         case .text(let text, let origin):
             guard showsText else { return }
             AnnotationText.draw(
-                text, fontSize: metrics.textSize(annotation.style.textSize), color: color, at: origin, in: context)
+                text, fontSize: metrics.textSize(annotation.style.textSize), face: textFace, color: color, at: origin,
+                in: context)
         case .step(let center):
             paintStep(annotation, number: step, center: center, in: context)
         case .mosaicBox, .mosaicStroke:

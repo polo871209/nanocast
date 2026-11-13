@@ -43,6 +43,7 @@ open with an `## Invariants` section; read it before changing anything in that a
 [backup](features/backup.md) ·
 [screenshot](features/screenshot.md) ·
 [screen recording](features/screen-recording.md) ·
+[draw on screen](features/screen-draw.md) ·
 [settings file](features/settings-file.md) ·
 [Raycast import](features/raycast-import.md) ·
 [updates](features/updates.md)
