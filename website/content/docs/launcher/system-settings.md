@@ -3,7 +3,7 @@ title: System Settings
 description: Search every macOS Settings pane from the launcher.
 ---
 
-Tinycast lists System Settings panes as regular launcher entries. Type `bluetooth` or `display` and
+Nanocast lists System Settings panes as regular launcher entries. Type `bluetooth` or `display` and
 the pane opens directly, without opening System Settings and looking for it.
 
 Panes have their own **System Settings** section, right after Applications. Pane names use your

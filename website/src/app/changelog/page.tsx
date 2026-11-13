@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: changelogCopy.description,
   alternates: { canonical: "/changelog/" },
   openGraph: {
-    title: "Tinycast Changelog",
+    title: "Nanocast Changelog",
     description: changelogCopy.description,
     url: "/changelog/",
   },

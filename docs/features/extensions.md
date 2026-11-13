@@ -1,6 +1,6 @@
 # Raycast extensions
 
-Tinycast runs Raycast extensions: the same `package.json` + prebuilt CommonJS bundles Raycast itself
+Nanocast runs Raycast extensions: the same `package.json` + prebuilt CommonJS bundles Raycast itself
 produces, rendered natively into the palette. No Electron, no browser, no Node.js.
 
 - [How it works](#how-it-works) · [The JS runtime](#the-js-runtime) ·
@@ -44,7 +44,7 @@ produces, rendered natively into the palette. No Electron, no browser, no Node.j
 ## How it works
 
 A Raycast extension command is a **prebuilt CommonJS file** that keeps `react`,
-`react/jsx-runtime`, `@raycast/api` and the Node built-ins external. Tinycast supplies those and
+`react/jsx-runtime`, `@raycast/api` and the Node built-ins external. Nanocast supplies those and
 resolves any third-party packages shipped under `node_modules/`, then renders the React tree:
 
 ```
@@ -87,13 +87,13 @@ timers, `fetch`, `URL`, `URLSearchParams`, `Blob`/`File`/`FormData`, `DOMExcepti
 
 ## The JS runtime
 
-`Tinycast/Resources/RaycastRuntime.generated.js` (~200 KB minified) is **generated and committed**, the
-same arrangement as `EmojiData.generated.swift`: building Tinycast never needs Node. Sources live in
+`Nanocast/Resources/RaycastRuntime.generated.js` (~200 KB minified) is **generated and committed**, the
+same arrangement as `EmojiData.generated.swift`: building Nanocast never needs Node. Sources live in
 [`Scripts/raycast-runtime/`](../../Scripts/raycast-runtime):
 
 | File                                             | What it is                                                                                                             |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `src/index.js`                                   | the `__tinycast` object Swift calls into (`boot`, `start`, `dispatch`, `popNavigation`, `settle`, `fireTimer`, `stop`) |
+| `src/index.js`                                   | the `__nanocast` object Swift calls into (`boot`, `start`, `dispatch`, `popNavigation`, `settle`, `fireTimer`, `stop`) |
 | `src/host.js`                                    | the JS→Swift seam: async `hostCall`, blocking `hostCallSync`, logging                                                  |
 | `src/reconciler.js`                              | `react-reconciler` host config that commits into a JSON tree                                                           |
 | `src/api/components.js`                          | every `@raycast/api` component                                                                                         |
@@ -107,7 +107,7 @@ same arrangement as `EmojiData.generated.swift`: building Tinycast never needs N
 Two host-call flavours:
 
 - **Async** (`invoke`) for anything that needs the main actor — clipboard, toasts, window control,
-  `fetch`, `exec`. Swift answers later through `__tinycast.settle`, so the JS thread never blocks on the
+  `fetch`, `exec`. Swift answers later through `__nanocast.settle`, so the JS thread never blocks on the
   UI.
 - **Blocking** (`invokeSync`) for the synchronous Node shims only — `fs.readFileSync`,
   `execSync`, `createHash`, `gunzipSync`. Safe because Swift services these entirely on the JS queue;
@@ -122,7 +122,7 @@ than shared-memory coordination. If native shared buffers are available, both gl
 
 ## The Swift host
 
-`Tinycast/Features/Extensions/`, split the same way as every other feature:
+`Nanocast/Features/Extensions/`, split the same way as every other feature:
 
 | File                                          | Role                                                                                                       |
 | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -259,7 +259,7 @@ screens hold (see [palette.md](palette.md)).
   `ExtensionSearchAccessoryButton` at the header's trailing edge and drop `ExtensionPickerList` as one
   of the palette's `OpenMenu` cases, so the arrows, ↵, Escape and the click-away come from the one menu
   path and no second key handler exists to disagree with it. `PaletteFilterAction` routes ⌘P, so a
-  command's own dropdown answers before Tinycast's clipboard filter can. The list is
+  command's own dropdown answers before Nanocast's clipboard filter can. The list is
   `listWidth` (240) rather than a form picker's field width: it hangs off a chip, not a field.
   Its native search field sits above the choices and uses the palette menu's fuzzy matcher.
   **Swift owns the selection** — the runtime keeps `makeSearchDropdown` hook-free so an extension may
@@ -307,7 +307,7 @@ screens hold (see [palette.md](palette.md)).
   its `.task` on `ExtensionImage.LoadKey`, since the URL alone no longer says what will be drawn.
   The feature's own fills live in `ExtensionColors` — never in `Theme`.
 - **Form** — label-left/control-right rows. Field values live in the extension (React owns them); every
-  edit dispatches `onTinycastChange` and the resulting re-render is what updates the control, so
+  edit dispatches `onNanocastChange` and the resulting re-render is what updates the control, so
   `defaultValue`, a controlled `value`, and `ref.reset()` all behave. `Action.SubmitForm` saves each
   `storeValue` field to `ExtensionStorage.formValues`, keyed by command and field id, and the launch
   context hands them back so the field starts from the saved value on its first render; a controlled
@@ -490,7 +490,7 @@ Settings → Extensions offers four routes, under **Install New**:
 2. **Install from GitHub** — builds one extension from its source on this Mac. See below.
 3. **Import from Raycast** — copies the already-built bundles out of a local Raycast. Nothing is
    compiled, so no Node, npm or network is involved. The pane also scans whenever it opens, and says
-   so when Raycast has something Tinycast doesn't — installing in Raycast otherwise leaves no trace
+   so when Raycast has something Nanocast doesn't — installing in Raycast otherwise leaves no trace
    here. **Both channels are searched**: `~/.config/raycast` and `~/.config/raycast-x`, the latter
    being Raycast Beta v2. Checking only the first reported "no Raycast install" to every Beta user,
    whose stable directory is present but empty. The same extension in both is offered once.
@@ -612,8 +612,8 @@ global Show in launcher switch, or this extension's — because the ranker never
 
 ## Deeplinks
 
-Tinycast registers `raycast`, `com.raycast` and its own scheme to receive extension links. The own
-scheme is `tinycast`, or `tinycast-dev` in Debug; `ExtensionDeepLink.claims` accepts both, and Copy
+Nanocast registers `raycast`, `com.raycast` and its own scheme to receive extension links. The own
+scheme is `nanocast`, or `nanocast-dev` in Debug; `ExtensionDeepLink.claims` accepts both, and Copy
 Deeplink builds an extension row's link in the running channel's scheme. An installed Raycast
 competes for its schemes, and macOS chooses which app receives a link.
 
@@ -623,20 +623,20 @@ or Reinstall action. Nothing installs or runs until asked. When extensions are d
 opens their Settings pane so they can be enabled through the usual consent flow.
 
 `raycast://extensions/<owner>/<extension>/<command>` runs an installed command from outside the app —
-a browser link, another app, a Shortcut — and `tinycast://` mirrors it so our own links never depend
+a browser link, another app, a Shortcut — and `nanocast://` mirrors it so our own links never depend
 on Raycast winning the scheme. Both accept Raycast's query parameters: `arguments` as URL-encoded
 JSON, `fallbackText`, `context` (or `launchContext`) as a URL-encoded JSON object that arrives as
 `props.launchContext`, and `launchType=background`, which only a no-view command receives — a view
 command always takes over the palette, so it launches as `userInitiated`. The owner is a hint: a
 scoped install matches by `owner/extension` first and falls back to the bare slug, so short links
 keep working. Anything else on a Raycast scheme just reopens the palette, and an unknown command says
-so rather than failing silently. Every other `tinycast://` link is a built-in's, and never reaches
+so rather than failing silently. Every other `nanocast://` link is a built-in's, and never reaches
 `ExtensionDeepLink`. `ExtensionDeepLink` owns the claimed schemes and the parsing,
 covered by `Tests/ExtensionTests.swift`. Two-segment links without `source=webstore` keep running commands
 as `<extension>/<command>`; three-segment command links keep running even with that parameter.
 An extension's own `open("raycast://…")` resolves through the same
 `ExtensionManager.resolve(_:)` instead of launching Raycast. Copy Deeplink on a command's launcher
-row, or on its Settings shortcut field, writes the `tinycast://extensions/…` form, with any typed
+row, or on its Settings shortcut field, writes the `nanocast://extensions/…` form, with any typed
 arguments as `arguments`; built-in rows have their own links, in [deeplinks.md](deeplinks.md).
 
 For view commands, nonempty `fallbackText` also prefills the search field: lists and grids filter
@@ -699,7 +699,7 @@ interval floor instead of sixty.
 
 **`raycast://` URLs** — extensions address Raycast by scheme; the most common is a bare
 `open("raycast://")` to bring the window back after something stole focus (1Password's auth flow does
-this). `ExtensionHostBridge` keeps those inside Tinycast: `raycast://extensions/<author>/<extension>/<command>`
+this). `ExtensionHostBridge` keeps those inside Nanocast: `raycast://extensions/<author>/<extension>/<command>`
 runs that command when it's installed, anything else reopens the palette. Handing them to the workspace
 would launch Raycast itself.
 
@@ -761,7 +761,7 @@ than waiting for room on its readable side, so only a transform nobody reads fro
 
 `url.fileURLToPath` decodes percent-escapes the way Node does on darwin, so an asset path carrying a
 space resolves to a file the image loader can open, and it rejects an encoded separator or a non-local
-host rather than returning a wrong path. Node's `windows` override is absent: Tinycast only runs on
+host rather than returning a wrong path. Node's `windows` override is absent: Nanocast only runs on
 macOS, so drive-letter and UNC output would be unreachable. `url.pathToFileURL` escapes `?` and `#`
 so a filename holding either survives the round trip.
 
@@ -859,7 +859,7 @@ extensions / 114 of 147 view commands** boot and render. `Scripts/raycast-runtim
 cd Scripts/raycast-runtime
 pnpm install
 node gen-enums.mjs        # only after bumping the @raycast/api devDependency
-node build.mjs            # → Tinycast/Resources/RaycastRuntime.generated.js (commit it)
+node build.mjs            # → Nanocast/Resources/RaycastRuntime.generated.js (commit it)
 node build.mjs --dev       # unminified, React in development mode (better error messages)
 ```
 
@@ -874,7 +874,7 @@ node test.mjs ~/.config/raycast/extensions/<uuid> [command]
 
 # 3. the real Swift engine, against JavaScriptCore
 Scripts/run-tests.sh ExtensionTests
-"${TMPDIR:-/tmp}"/tinycast-harness/ExtensionTests ~/Library/Application\ Support/com.tinycast.app.dev/extensions/<name> [command]
+"${TMPDIR:-/tmp}"/nanocast-harness/ExtensionTests ~/Library/Application\ Support/com.nanocast.app.dev/extensions/<name> [command]
 ```
 
 `ExtensionTests` compiles the real engine sources — there is no copy to keep in sync. `EXT_TEST_VERBOSE=1`
@@ -888,8 +888,8 @@ round-trips and the Provider Usage action, with live fetches but a recorded `lau
 status items stay hidden so a test run cannot interfere with the running app's menus:
 
 ```sh
-EXT_TEST_MENU_BAR=1 "${TMPDIR:-/tmp}/tinycast-harness/ExtensionTests" \
-  "$HOME/Library/Application Support/com.tinycast.app.dev/extensions/opencodex-usage" usage-menu-bar
+EXT_TEST_MENU_BAR=1 "${TMPDIR:-/tmp}/nanocast-harness/ExtensionTests" \
+  "$HOME/Library/Application Support/com.nanocast.app.dev/extensions/opencodex-usage" usage-menu-bar
 ```
 
 ### Debugging a failing extension
@@ -931,7 +931,7 @@ The last four rows are pruned by `ExtensionCoordinator.removeExtensionReferences
 bundle id, so `extension:<name>/<command>` is what those stores are keyed by. `CustomCommandCoordinator`
 and `QuicklinkCoordinator` prune the same stores the same way; extensions are not a special case.
 
-**Builds happen in `$TMPDIR/tinycast-install-<UUID>/`**, named by `ExtensionCleanup.workspace` so the
+**Builds happen in `$TMPDIR/nanocast-install-<UUID>/`**, named by `ExtensionCleanup.workspace` so the
 sweep below cannot disagree about what a workspace is called. A `defer` removes it on every exit an
 install can take. A crash mid-build is the one it cannot cover, so `ExtensionManager.start` sweeps
 strays once at launch — deliberately not gated on `extensionsEnabled`, because a stranded

@@ -1,7 +1,7 @@
 import { readRepoJson, repoApiUrl } from "./github";
 
 // Scripts/release-notes.sh puts the install text below this line; only the half above is notes.
-const INSTALL_MARKER = "<!-- tinycast:install -->";
+const INSTALL_MARKER = "<!-- nanocast:install -->";
 // The updater's own rule: anything else (a beta, a one-off build) is not a stable release.
 const STABLE_TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
 const PAGE_SIZE = 100;

@@ -38,19 +38,19 @@ The title bar has three buttons: **Create**, **Browse** and **Open Folder**.
 | <kbd>esc</kbd>                | Close Find or the switcher, then hide       |
 | <kbd>⌘</kbd><kbd>delete</kbd> | Move the selected switcher row to the Trash |
 
-<kbd>⌘</kbd><kbd>Q</kbd> does nothing in Notes, so you can't quit Tinycast by accident while
+<kbd>⌘</kbd><kbd>Q</kbd> does nothing in Notes, so you can't quit Nanocast by accident while
 writing.
 
 ## Files
 
-By default, notes are stored in Tinycast's Application Support folder:
+By default, notes are stored in Nanocast's Application Support folder:
 
 ```
-~/Library/Application Support/com.tinycast.app/Notes/
+~/Library/Application Support/com.nanocast.app/Notes/
 ```
 
 To keep notes in another folder, click **Choose…** next to **Notes Folder** in **Settings → Notes**.
-Tinycast uses that folder as it is and doesn't move notes out of the old one. **Use Default** goes
+Nanocast uses that folder as it is and doesn't move notes out of the old one. **Use Default** goes
 back. The folder choice isn't included in [backups](/docs/reference/backup).
 
 **Each note is one `.md` file, and the file name is the note's title.** There's no frontmatter,
@@ -109,7 +109,7 @@ in any plain text field.
 There's a round button at the bottom right of each note. Click it, or press
 <kbd>⌥</kbd><kbd>⌘</kbd><kbd>T</kbd>, and a button for each of the shortcuts above appears, along
 with a heading menu. Click a button to format the selection or the word at the cursor, and click a
-highlighted button to remove that formatting. Hover over a button to see its shortcut. Tinycast
+highlighted button to remove that formatting. Hover over a button to see its shortcut. Nanocast
 remembers whether you left the bar open. When the window is narrow, the character count moves aside
 to make room for the buttons.
 
@@ -135,18 +135,18 @@ Each row has VoiceOver actions to open, rename and move that note to the Trash.
 
 Changes are saved automatically 300 ms after you stop typing.
 
-**Saving overwrites the file on disk.** Tinycast doesn't watch the folder for changes, so if you
-edit the note that's _open in Tinycast_ in another app, that edit is lost at the next autosave.
+**Saving overwrites the file on disk.** Nanocast doesn't watch the folder for changes, so if you
+edit the note that's _open in Nanocast_ in another app, that edit is lost at the next autosave.
 
 <kbd>⌘</kbd><kbd>O</kbd> makes this easy to do by accident. It's the tradeoff for storing notes as
 plain files instead of in a database.
 
-When you reopen the window, Tinycast reads the folder again and reloads the active note if it has no
+When you reopen the window, Nanocast reads the folder again and reloads the active note if it has no
 unsaved changes. Notes you add or edit elsewhere appear as expected. An unsaved draft is kept,
 including after a failed save. Reloading changed contents clears that note's undo history; reopening
 unchanged contents keeps it.
 
-When you quit, Tinycast waits for the last save to finish, but it never stops the app from quitting.
+When you quit, Nanocast waits for the last save to finish, but it never stops the app from quitting.
 
 ## The window
 

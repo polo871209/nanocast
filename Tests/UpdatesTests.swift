@@ -100,9 +100,9 @@ struct UpdatesTests {
     // MARK: - ReleaseChannel
 
     static func derivesChannels() {
-        let stable = ReleaseChannel(bundleID: "com.tinycast.app")
-        let beta = ReleaseChannel(bundleID: "com.tinycast.app.beta")
-        let dev = ReleaseChannel(bundleID: "com.tinycast.app.dev")
+        let stable = ReleaseChannel(bundleID: "com.nanocast.app")
+        let beta = ReleaseChannel(bundleID: "com.nanocast.app.beta")
+        let dev = ReleaseChannel(bundleID: "com.nanocast.app.dev")
 
         expect(stable == .stable, "the stable bundle id is the stable channel")
         expect(beta == .beta, "the beta bundle id is the beta channel")
@@ -129,7 +129,7 @@ struct UpdatesTests {
     }
 
     static func entry(
-        tag: String, prerelease: Bool, draft: Bool = false, assets: [String] = ["Tinycast-x.zip"]
+        tag: String, prerelease: Bool, draft: Bool = false, assets: [String] = ["Nanocast-x.zip"]
     ) -> String {
         let list = assets.map {
             """
@@ -192,7 +192,7 @@ struct UpdatesTests {
             "a release with no assets is skipped")
         expect(
             ReleaseFeed.newest(
-                from: feed(entry(tag: "v0.3.0", prerelease: false, assets: ["Tinycast-x.dmg"])),
+                from: feed(entry(tag: "v0.3.0", prerelease: false, assets: ["Nanocast-x.dmg"])),
                 channel: .stable, architecture: .appleSilicon) == nil,
             "a DMG-only release is not installable, so it is not offered")
         expect(
@@ -219,7 +219,7 @@ struct UpdatesTests {
         let both = feed(
             entry(
                 tag: "v0.3.0", prerelease: false,
-                assets: ["Tinycast-0.3.0.zip", "Tinycast-Universal-0.3.0.zip"]))
+                assets: ["Nanocast-0.3.0.zip", "Nanocast-Universal-0.3.0.zip"]))
         expect(
             ReleaseFeed.newest(from: both, channel: .stable, architecture: .intel)?
                 .assetURL.absoluteString.contains("-Universal-") == true,
@@ -229,13 +229,13 @@ struct UpdatesTests {
                 .assetURL.absoluteString.contains("-Universal-") == false,
             "Apple silicon prefers the thin zip, and never pays for the Intel slice")
 
-        let thinOnly = feed(entry(tag: "v0.3.0", prerelease: false, assets: ["Tinycast-0.3.0.zip"]))
+        let thinOnly = feed(entry(tag: "v0.3.0", prerelease: false, assets: ["Nanocast-0.3.0.zip"]))
         expect(
             ReleaseFeed.newest(from: thinOnly, channel: .stable, architecture: .intel) == nil,
             "Intel is offered nothing rather than an arm64 build it cannot launch")
 
         let universalOnly = feed(
-            entry(tag: "v0.3.0", prerelease: false, assets: ["Tinycast-Universal-0.3.0.zip"]))
+            entry(tag: "v0.3.0", prerelease: false, assets: ["Nanocast-Universal-0.3.0.zip"]))
         expect(
             ReleaseFeed.newest(from: universalOnly, channel: .stable, architecture: .appleSilicon)?
                 .version == AppVersion("0.3.0"),
@@ -272,19 +272,19 @@ struct UpdatesTests {
             entry(
                 tag: "v1.0.0", prerelease: false,
                 assets: [
-                    "Tinycast-1.0.0.dmg", "Tinycast-1.0.0.zip", "Tinycast-1.0.0.zip.sig",
-                    "Tinycast-Universal-1.0.0.zip", "Tinycast-Universal-1.0.0.zip.sig"
+                    "Nanocast-1.0.0.dmg", "Nanocast-1.0.0.zip", "Nanocast-1.0.0.zip.sig",
+                    "Nanocast-Universal-1.0.0.zip", "Nanocast-Universal-1.0.0.zip.sig"
                 ]))
         expect(
             ReleaseFeed.newest(from: signed, channel: .stable, architecture: .appleSilicon)?
-                .signatureURL?.lastPathComponent == "Tinycast-1.0.0.zip.sig",
+                .signatureURL?.lastPathComponent == "Nanocast-1.0.0.zip.sig",
             "the thin zip carries its own signature")
         expect(
             ReleaseFeed.newest(from: signed, channel: .stable, architecture: .intel)?
-                .signatureURL?.lastPathComponent == "Tinycast-Universal-1.0.0.zip.sig",
+                .signatureURL?.lastPathComponent == "Nanocast-Universal-1.0.0.zip.sig",
             "and the universal zip carries the universal one")
 
-        let unsigned = feed(entry(tag: "v1.0.0", prerelease: false, assets: ["Tinycast-1.0.0.zip"]))
+        let unsigned = feed(entry(tag: "v1.0.0", prerelease: false, assets: ["Nanocast-1.0.0.zip"]))
         let release = ReleaseFeed.newest(from: unsigned, channel: .stable, architecture: .appleSilicon)
         expect(
             release != nil && release?.signatureURL == nil,

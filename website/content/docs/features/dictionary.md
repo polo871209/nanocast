@@ -36,7 +36,7 @@ Dictionary** opens the word in Dictionary.app.
 
 ## Which dictionaries
 
-Tinycast uses the dictionaries turned on in Dictionary.app's settings, in the order listed there.
+Nanocast uses the dictionaries turned on in Dictionary.app's settings, in the order listed there.
 The first one that knows the word answers. To add a language or change the order, change it in
 Dictionary.app. **Open in Dictionary** shows the word in every dictionary you turned on.
 

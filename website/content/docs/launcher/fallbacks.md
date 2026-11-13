@@ -3,7 +3,7 @@ title: Fallbacks
 description: Send what you typed to Quick AI, file search, the dictionary, the shell or a quicklink.
 ---
 
-Below every search, Tinycast shows a few rows under **Use "…" with**. Each one sends what you typed
+Below every search, Nanocast shows a few rows under **Use "…" with**. Each one sends what you typed
 somewhere else. They always appear at the bottom, below the real results.
 
 ## The built-in fallbacks

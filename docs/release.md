@@ -6,28 +6,28 @@ the signing identity itself is in [signing.md](signing.md).
 ## Packaging a DMG locally
 
 ```sh
-./Scripts/build-dmg.sh            # -> build/Tinycast-<version>.dmg (version from project.yml)
-./Scripts/build-dmg.sh 0.5.7      # -> build/Tinycast-0.5.7.dmg
+./Scripts/build-dmg.sh            # -> build/Nanocast-<version>.dmg (version from project.yml)
+./Scripts/build-dmg.sh 0.5.7      # -> build/Nanocast-0.5.7.dmg
 ```
 
-It builds a Release `Tinycast.app` signed with `Tinycast Self-Signed` and packs it with an
+It builds a Release `Nanocast.app` signed with `Nanocast Self-Signed` and packs it with an
 `/Applications` symlink. Official per-channel releases are built by CI, below.
 
 ## Signing & Gatekeeper
 
 CI releases are signed with the team's Developer ID, notarized and stapled, so a downloaded DMG
 opens without a Gatekeeper warning. Local builds, `build-dmg.sh` included, keep signing with
-`Tinycast Self-Signed` and are never notarized. Full details in [signing.md](signing.md).
+`Nanocast Self-Signed` and are never notarized. Full details in [signing.md](signing.md).
 
 ## How the in-app updater consumes a release
 
-Every release publishes three assets from one build: `Tinycast-<version>.dmg`, which people download
-by hand and which the cask installs, `Tinycast-<version>.zip`, which the in-app updater installs, and
-`Tinycast-<version>.zip.sig`, the zip's signature by the release key. The zip is produced with
+Every release publishes three assets from one build: `Nanocast-<version>.dmg`, which people download
+by hand and which the cask installs, `Nanocast-<version>.zip`, which the in-app updater installs, and
+`Nanocast-<version>.zip.sig`, the zip's signature by the release key. The zip is produced with
 `ditto -c -k --keepParent --sequesterRsrc` — the only zip that leaves the code signature verifiable,
 which matters because the updater refuses any bundle it cannot prove is ours.
 
-A stable release publishes two more from the `universal` job, `Tinycast-Universal-<version>.dmg` and
+A stable release publishes two more from the `universal` job, `Nanocast-Universal-<version>.dmg` and
 `.zip`, built from the same commit at the same version and bundle id but with both slices. They are
 uploaded _after_ the thin pair, which keeps the thin zip first in the asset list so builds predating
 architecture-aware selection keep choosing it.
@@ -42,7 +42,7 @@ Three things a release must keep true, or the updater skips it:
 
 **Every cask declares `auto_updates true`.** That is Homebrew's flag for an app that manages its own
 version, and it is what keeps `brew update && brew upgrade` from fighting an app that updated itself:
-brew never reports Tinycast outdated, never re-downloads it, and never rolls a self-updated copy back.
+brew never reports Nanocast outdated, never re-downloads it, and never rolls a self-updated copy back.
 Removing that line would reintroduce exactly those three problems. See
 [features/updates.md](features/updates.md).
 
@@ -56,8 +56,8 @@ There is no CI workflow and no automated reviewer, so the whole bar in
 `.github/workflows/release.yml` builds and publishes a DMG from GitHub Actions, no local machine
 needed. Run it from the **Actions** tab (`Release` → **Run workflow**) and pick:
 
-- **channel** — `beta` or `stable`. Each builds a distinct app (`Tinycast Beta.app` / `Tinycast.app`)
-  with its own bundle id, alongside the local `Tinycast Dev.app`. Beta gets an auto-incrementing
+- **channel** — `beta` or `stable`. Each builds a distinct app (`Nanocast Beta.app` / `Nanocast.app`)
+  with its own bundle id, alongside the local `Nanocast Dev.app`. Beta gets an auto-incrementing
   `-beta.N` suffix (`N` = the Actions run number) so re-running never collides; stable ships the
   version as-is.
 - **version** — base semver, e.g. `0.2.0`.
@@ -73,10 +73,10 @@ the site reads the latest version and the [changelog](https://tinycast.dev/chang
 build time.
 
 A stable run then fans out to a second job, `universal`, which rebuilds the same commit with
-`ARCHS="arm64 x86_64"` and attaches `Tinycast-Universal-<version>.dmg` / `.zip` to the release the
-first job created, then bumps `tinycast-universal`. macOS 26 is the last release that boots on Intel,
+`ARCHS="arm64 x86_64"` and attaches `Nanocast-Universal-<version>.dmg` / `.zip` to the release the
+first job created, then bumps `nanocast-universal`. macOS 26 is the last release that boots on Intel,
 and those Macs need both slices. Both jobs pin `ARCHS` explicitly and assert the slices on _every_
-shipping binary — the app, `ClipboardTextHelper`, `FileIndexHelper` and `Tinycast Dictation`:
+shipping binary — the app, `ClipboardTextHelper`, `FileIndexHelper` and `Nanocast Dictation`:
 trusting `ARCHS_STANDARD` is what shipped a thin arm64 build to Intel users once already, and it
 also keeps the Apple silicon download from silently gaining a slice it never needs. A thin helper
 inside a universal app is the quiet form of the same bug: the app boots on Intel and only clipboard
@@ -91,7 +91,7 @@ Any status but `Accepted` prints Apple's log and stops the run before anything i
 update key. `Scripts/check-update-path.sh` runs just before notarizing, and fails the run unless the
 last release on the channel would install this build ([signing.md](signing.md#update-trust)).
 
-Channel builds override `TINYCAST_BUNDLE_IDENTIFIER`, not the target-wide `PRODUCT_BUNDLE_IDENTIFIER`.
+Channel builds override `NANOCAST_BUNDLE_IDENTIFIER`, not the target-wide `PRODUCT_BUNDLE_IDENTIFIER`.
 The Dictation helper derives its own identifier with a `.dictation` suffix; signature verification
 checks that its bundle and signing identifiers agree and remain distinct from the main app.
 
@@ -114,7 +114,7 @@ Two details the script exists for:
 - **The previous tag is picked per channel.** Beta and stable tags interleave on `main` — the same
   commit can carry both — so "the previous release" is only ever right within one channel. A stable
   release therefore spans every beta since the last stable.
-- **The body is split by `<!-- tinycast:install -->`.** Everything above it is the changelog;
+- **The body is split by `<!-- nanocast:install -->`.** Everything above it is the changelog;
   everything below is the install text, which only a download page needs. The website's changelog
   cuts at that marker in `website/src/lib/changelog.ts`. Full PR URLs are shortened to `#304`, which
   still autolinks on the web.
@@ -124,13 +124,13 @@ pings `@everyone`.
 
 ### Homebrew casks
 
-`tinycast` and `tinycast@beta` are in [homebrew/cask](https://github.com/Homebrew/homebrew-cask),
+`nanocast` and `nanocast@beta` are in [homebrew/cask](https://github.com/Homebrew/homebrew-cask),
 where Homebrew's autobump bot bumps each one after a release.
 
-`tinycast-universal` is the only cask left in the
-[`homebrew-tinycast`](https://github.com/abue-ammar/homebrew-tinycast) tap, and the `universal` job
+`nanocast-universal` is the only cask left in the
+[`homebrew-nanocast`](https://github.com/abue-ammar/homebrew-tinycast) tap, and the `universal` job
 is the only job that touches it: its last step rewrites the cask's `version` + `sha256` and pushes.
-The tap's `tap_migrations.json` hands anyone who installed `tinycast` or `tinycast@beta` from the tap
+The tap's `tap_migrations.json` hands anyone who installed `nanocast` or `nanocast@beta` from the tap
 to homebrew/cask on `brew update`.
 
 The step needs a `HOMEBREW_TAP_TOKEN` repo secret — a fine-grained PAT with **Contents: read/write**
@@ -138,6 +138,6 @@ on the tap repo. Without the secret the step logs a warning and skips; the relea
 The `sed` is anchored to `^  version` / `^  sha256`, so a cask's two-space indent on those lines is
 load-bearing.
 
-Both stable casks install `Tinycast.app` under `com.tinycast.app`, so `tinycast-universal` declares
-`conflicts_with cask: "tinycast"`. `tinycast` requires `arch: :arm64`; `tinycast-universal` installs
+Both stable casks install `Nanocast.app` under `com.nanocast.app`, so `nanocast-universal` declares
+`conflicts_with cask: "nanocast"`. `nanocast` requires `arch: :arm64`; `nanocast-universal` installs
 on any Mac.

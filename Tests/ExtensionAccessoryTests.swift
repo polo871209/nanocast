@@ -156,7 +156,7 @@ struct ExtensionAccessoryTests {
 
     static func storageIsolation() {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-ext-accessory-\(UUID().uuidString)")
+            .appendingPathComponent("nanocast-ext-accessory-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directory) }
         let storage = ExtensionStorage(directory: directory)
         storage.setLocalStorage(extension: "sample", key: "filter", value: .string("extension-data"))
@@ -204,7 +204,7 @@ struct ExtensionAccessoryTests {
 
     static func formValueStorage() {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("tinycast-ext-form-\(UUID().uuidString)")
+            .appendingPathComponent("nanocast-ext-form-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directory) }
         let storage = ExtensionStorage(directory: directory)
         storage.setFormValues(extension: "sample", command: "generate", values: ["a": "1", "b": "2"])

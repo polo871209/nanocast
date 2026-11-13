@@ -5,7 +5,7 @@ description: Save your setup to one file, choose what to export and what to impo
 
 **Settings → Backup**
 
-A backup is a single `.tinycast` file. You choose what goes into it when you export, and separately
+A backup is a single `.nanocast` file. You choose what goes into it when you export, and separately
 choose what to restore when you import. So a backup that contains everything can still restore only
 your snippets.
 
@@ -22,10 +22,10 @@ everything, because there's no room for checkboxes in the launcher.
 
 ## Read this before relying on it
 
-**The backup format can change between versions of Tinycast. A backup is only guaranteed to import
+**The backup format can change between versions of Nanocast. A backup is only guaranteed to import
 into the same version that created it.**
 
-The file records which version created it. If your version of Tinycast doesn't recognize the
+The file records which version created it. If your version of Nanocast doesn't recognize the
 format, it tells you instead of importing part of the file. Use backups to move your setup to
 another Mac or to restore after reinstalling, not as a long-term archive.
 
@@ -33,7 +33,7 @@ another Mac or to restore after reinstalling, not as a long-term archive.
 
 Every import shows a summary of what changed, by category.
 
-If the file contains custom commands, **Tinycast warns you before adding them**, because a file that
+If the file contains custom commands, **Nanocast warns you before adding them**, because a file that
 adds shell commands without telling you is a security risk.
 
 Imports add to what you have instead of overwriting it. Snippets and notes are added next to your
@@ -53,12 +53,12 @@ not just setting a preference:
 
 - **Snippets**: agreeing to keyword matching
 - **Extensions**: agreeing to run third-party code
-- **Calendar**: agreeing to let Tinycast read your calendar
+- **Calendar**: agreeing to let Nanocast read your calendar
 - **Auto Join Meetings** and **Camera Preview**: agreeing to open links and turn on the camera
-- **Quick Actions**: agreeing to let Tinycast type into other apps
+- **Quick Actions**: agreeing to let Nanocast type into other apps
 - **AI** and **MCP servers**: agreeing to send text to a model and run server code
 - **Search text in images and PDFs**: agreeing to text recognition in the background
-- **Dictation**: agreeing to let Tinycast use your microphone
+- **Dictation**: agreeing to let Nanocast use your microphone
 - **Sync settings file**: agreeing to let a file on this Mac change your settings
 - **Fallback order and checkboxes**: these could add a shell command runner to your launcher
 
@@ -76,7 +76,7 @@ yourself, in the app, after reading what they do. Importing snippets doesn't tur
 | Extension package manager and custom search paths                                                                          | They're specific to this Mac, not part of your setup             |
 | Dictation settings, its shortcut and downloaded models                                                                     | They belong to this Mac's microphone and disk                    |
 | Palette position, auto-switch input source, calendar checkboxes, the browser for meeting links, Snippets and Notes folders | They name things on this Mac that another Mac may not have       |
-| Cached data, like currency rates and update checks                                                                         | Tinycast downloads it again as needed                            |
+| Cached data, like currency rates and update checks                                                                         | Nanocast downloads it again as needed                            |
 
 Clipboard images are stored inside the backup by name, not by their location on your Mac. The only
 paths a backup includes are the locations of copied files, because that location is what the entry
@@ -88,11 +88,11 @@ the way you had them.
 ## Settings file
 
 The **Sync settings file** switch in **Settings → Backup → Settings File** keeps a copy of your
-settings in `~/.config/tinycast/settings.json`. It's off by default. The beta uses
-`~/.config/tinycast-beta/`.
+settings in `~/.config/nanocast/settings.json`. It's off by default. The beta uses
+`~/.config/nanocast-beta/`.
 
 While it's on, a change you make in Settings is written to the file, and an edit you save in the
-file applies in Tinycast right away. If the file is a symlink, it stays one, so it can live in a
+file applies in Nanocast right away. If the file is a symlink, it stays one, so it can live in a
 dotfiles repository.
 
 The file holds your preferences, the shortcuts and aliases of apps, System Settings panes, system
@@ -100,8 +100,8 @@ actions and built-in commands, and all of window management, including custom si
 rooms. It never holds your snippets, notes, quicklinks, custom commands, MCP servers or AI
 connections.
 
-If the file already exists when you turn sync on, Tinycast asks whether to **Import** it or
-**Replace** it with your current settings. A value Tinycast can't use keeps the current one, and a
+If the file already exists when you turn sync on, Nanocast asks whether to **Import** it or
+**Replace** it with your current settings. A value Nanocast can't use keeps the current one, and a
 message tells you what was wrong. Turning sync off leaves the file where it is.
 
 Like a backup, the file can't turn on Snippets, Extensions, Calendar, Auto Join Meetings, Camera
@@ -110,7 +110,7 @@ Preview, Quick Actions, MCP servers, Dictation or text recognition.
 ## Where your data is stored
 
 Everything a backup includes is also a regular file. By default, it's in
-`~/Library/Application Support/com.tinycast.app/`:
+`~/Library/Application Support/com.nanocast.app/`:
 
 | What                                          | Where                                             |
 | --------------------------------------------- | ------------------------------------------------- |
@@ -121,4 +121,4 @@ Everything a backup includes is also a regular file. By default, it's in
 | [AI chats](/docs/ai)                          | `ai-chats.sqlite3`, never included in a backup    |
 
 Snippets and notes are plain Markdown files. Copying those folders works as a backup, and you can
-read the files without Tinycast.
+read the files without Nanocast.
