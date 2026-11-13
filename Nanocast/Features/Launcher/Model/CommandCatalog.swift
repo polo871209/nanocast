@@ -51,7 +51,7 @@ extension SettingsTab {
         case .windowManagement:
             [.createWindowLayout, .captureWindowLayout, .switchRoom, .createRoom]
         case .clipboard: [.clipboardHistory, .pasteSequentially]
-        case .screenshot: [.captureScreenshot]
+        case .screenshot: [.captureScreenshot, .drawOnScreen]
         case .screenRecording: [.recordScreen]
         case .emoji: [.searchEmoji]
         default: []

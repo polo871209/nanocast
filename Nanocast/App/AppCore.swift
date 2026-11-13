@@ -136,6 +136,7 @@ final class AppCore {
     @ObservationIgnored private(set) lazy var colorPickerCoordinator = ColorPickerCoordinator(core: self)
     @ObservationIgnored private(set) lazy var screenshotCoordinator = ScreenshotCoordinator(core: self)
     @ObservationIgnored private(set) lazy var screenRecordingCoordinator = ScreenRecordingCoordinator(core: self)
+    @ObservationIgnored private(set) lazy var screenDrawCoordinator = ScreenDrawCoordinator(core: self)
     @ObservationIgnored private(set) lazy var dictionaryCoordinator = DictionaryCoordinator(
         paletteCoordinator: paletteCoordinator)
     @ObservationIgnored private(set) lazy var updateCoordinator = UpdateCoordinator(

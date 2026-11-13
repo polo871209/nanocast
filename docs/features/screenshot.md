@@ -1,6 +1,6 @@
 # Screenshot
 
-`Capture Screenshot` is a launcher command that freezes every display, lets the user pick an area or a window with pixel precision, annotate it, and then copy, save or pin it as PNG, or copy the text in it. The scroll button scrolls the content under the area and stitches a long image. `Record Screen` borrows the same overlay to pick what it records, as described in [screen-recording.md](screen-recording.md). The look follows Lark's screenshot tool and the precision follows Shottr.
+`Capture Screenshot` is a launcher command that freezes every display, lets the user pick an area or a window with pixel precision, annotate it, and then copy, save or pin it as PNG, or copy the text in it. The scroll button scrolls the content under the area and stitches a long image. `Record Screen` borrows the same overlay to pick what it records, as described in [screen-recording.md](screen-recording.md). `Draw on Screen` reuses the annotation board and painter on the live screen, as described in [screen-draw.md](screen-draw.md). The look follows Lark's screenshot tool and the precision follows Shottr.
 
 ## Invariants
 
@@ -137,4 +137,4 @@ Pin opens the rendered image in a floating panel over the area it came from. Dra
 
 ## Where it is reachable from
 
-The launcher, as `CommandID.captureScreenshot`, which takes aliases and a global shortcut like any other command. There is no default shortcut. The Screenshot pane in Settings lists the command and the save folder. The folder is `screenshot.saveFolder` in `settings.json` and the command's shortcut is under `screenshot.commands`. A settings backup leaves the folder out, because it names a folder on this Mac. Tools, inks and sizes are not preferences, so they stay out of `settings.json`.
+The launcher, as `CommandID.captureScreenshot`, which takes aliases and a global shortcut like any other command. There is no default shortcut. The Screenshot pane in Settings lists the command, [Draw on Screen](screen-draw.md) and the save folder. The folder is `screenshot.saveFolder` in `settings.json` and the commands' shortcuts are under `screenshot.commands`. A settings backup leaves the folder out, because it names a folder on this Mac. Tools, inks and sizes are not preferences, so they stay out of `settings.json`.

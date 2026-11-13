@@ -210,6 +210,7 @@ enum Theme {
         static let recordingPickerColumns = 4
         static let recordingPickerIcon: CGFloat = 16
         static let levelText: [CGFloat] = [10, 13, 16]
+        static let keyHint: CGFloat = 8
     }
 
     enum Duration {

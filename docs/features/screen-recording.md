@@ -49,7 +49,7 @@ Running `Record Screen` again starts the recording when the bar is still in setu
 
 ## What gets recorded
 
-- A display or an area records that part of the display, with a red border around an area. Every Nanocast window except the camera bubble is left out.
+- A display or an area records that part of the display, with a red border around an area. Every Nanocast window except the camera bubble and the [Draw on Screen](screen-draw.md) canvas is left out. Starting or ending Draw on Screen during a recording starts a new segment, because a segment's content filter fixes its windows.
 - A window records that window alone with `SCContentFilter(desktopIndependentWindow:)`. The window stays whole when another window covers it or when you switch to another app, and the recording follows it when it moves. The red border follows the window too. A window records at the pixel size it had when the recording started.
 - If the camera is on for a window, Nanocast records it in place instead, with `SCContentFilter(display:including:)` cropped to the window's frame. The filter includes only the window and the camera bubble, so the window still stays whole under another window. When the window moves, the bubble moves with it, and once the window holds still for 0.4 s, a new segment starts at the new frame.
 
