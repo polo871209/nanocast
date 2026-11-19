@@ -1,6 +1,6 @@
 cask "nanocast" do
-  version "0.12.12-3"
-  sha256 "d13f3c5802e794aab8dabf8ba7ff6a163dd8823617c4d00a176f9744aea2ff52"
+  version "0.12.15-1"
+  sha256 "e07ac361737310fd0038d4113d9064db0d71de09d86881670b1e1e0f58bbcad4"
 
   url "https://github.com/polo871209/nanocast/releases/download/v#{version}/Nanocast-#{version}.dmg"
   name "Nanocast"
