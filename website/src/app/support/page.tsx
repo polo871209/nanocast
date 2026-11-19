@@ -6,13 +6,13 @@ import { SupporterCount } from "../../components/support/supporter-count";
 import { supportHero } from "../../data/support";
 
 const description =
-  "Enjoying Tinycast? Buy the wallpaper pack and get an exclusive Discord role, or support Tinycast with crypto. Tinycast remains free and open source.";
+  "Enjoying Nanocast? Buy the wallpaper pack and get an exclusive Discord role, or support Nanocast with crypto. Nanocast remains free and open source.";
 
 export const metadata: Metadata = {
-  title: "Enjoying Tinycast?",
+  title: "Enjoying Nanocast?",
   description,
   alternates: { canonical: "/support/" },
-  openGraph: { title: "Enjoying Tinycast?", description, url: "/support/" },
+  openGraph: { title: "Enjoying Nanocast?", description, url: "/support/" },
 };
 
 function Intro() {

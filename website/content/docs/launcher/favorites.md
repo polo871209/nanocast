@@ -22,7 +22,7 @@ order and number keys.
 
 - A favorite file is found by its name at any length, even with File Search's **Show in launcher**
   off. It shows in the **Files** section, above other matches.
-- Tinycast keeps the path you saved. If you move or rename the file, add it again from its new
+- Nanocast keeps the path you saved. If you move or rename the file, add it again from its new
   place.
 - Turning off File Search hides favorite files and folders, but keeps them for when you turn it back
   on.
@@ -60,7 +60,7 @@ same numbers still open them. Press <kbd>↓</kbd> to open the full list.
 ## Favorites and ranking
 
 Opening a favorite with nothing typed, or by its number, counts as a use in
-[learned ranking](/docs/launcher#learned-ranking). It doesn't teach Tinycast a search word, since you
+[learned ranking](/docs/launcher#learned-ranking). It doesn't teach Nanocast a search word, since you
 didn't type one.
 
 Favorites are included in [backups](/docs/reference/backup), and the

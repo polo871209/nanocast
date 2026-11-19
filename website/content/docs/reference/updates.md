@@ -1,29 +1,29 @@
 ---
 title: Updates
-description: How Tinycast finds, verifies and installs new versions.
+description: How Nanocast finds, verifies and installs new versions.
 ---
 
-Tinycast keeps itself up to date, and there's nothing to set up.
+Nanocast keeps itself up to date, and there's nothing to set up.
 
 ## How it works
 
-1. **Once a day**, Tinycast checks GitHub for a newer release on its channel. If a check fails, it
+1. **Once a day**, Nanocast checks GitHub for a newer release on its channel. If a check fails, it
    tries again two hours later. The first check runs 30 seconds after launch, so it doesn't slow
    down login.
 2. When there's a new release, a window shows **what changed**, taken from the release notes.
 3. One click downloads it, with a progress bar and a **Cancel** button that stops the download.
-4. Tinycast verifies the download, installs it and offers to **relaunch**.
+4. Nanocast verifies the download, installs it and offers to **relaunch**.
 
-If you choose **Later**, Tinycast stops offering that version. It still offers newer ones.
+If you choose **Later**, Nanocast stops offering that version. It still offers newer ones.
 
-The first time the new version opens, it shows **Updated to Tinycast** and the version number.
+The first time the new version opens, it shows **Updated to Nanocast** and the version number.
 
 **Check for Updates** always looks for a newer version, including one you skipped. It's in the
-launcher, the Tinycast menu bar menu and **Settings → About**.
+launcher, the Nanocast menu bar menu and **Settings → About**.
 
 ## Turning off automatic checks
 
-**Settings → General → Automatically check for updates** is on by default. Turn it off, and Tinycast
+**Settings → General → Automatically check for updates** is on by default. Turn it off, and Nanocast
 stops checking in the background and never opens the update window by itself. **Check for Updates**
 still works.
 
@@ -46,10 +46,10 @@ separate apps, and an update never switches you from one to the other.
 Nothing is installed unless every check passes. If any check fails, the app you're running stays
 exactly as it was.
 
-- **The signature must show that the download is Tinycast**, signed the same way as the copy you're
+- **The signature must show that the download is Nanocast**, signed the same way as the copy you're
   running.
 - The app identifier and version must match what's expected.
-- Tinycast never asks for an administrator password. If it can't write to
+- Nanocast never asks for an administrator password. If it can't write to
   `/Applications`, it tells you instead of working around it.
 
 Updating never changes your settings, clipboard history, notes, snippets or anything else you
@@ -57,16 +57,16 @@ created.
 
 ## Homebrew
 
-Tinycast's Homebrew casks tell Homebrew that the app updates itself, so `brew upgrade`
-**skips Tinycast**. It never reports Tinycast as outdated, never downloads it again, and never rolls
+Nanocast's Homebrew casks tell Homebrew that the app updates itself, so `brew upgrade`
+**skips Nanocast**. It never reports Nanocast as outdated, never downloads it again, and never rolls
 back a copy that updated itself.
 
 `brew install`, `brew uninstall` and `brew list` work as usual.
 
-## Supporting Tinycast
+## Supporting Nanocast
 
-Tinycast is free and open source. **Support Tinycast**, in the launcher, the menu bar and
+Nanocast is free and open source. **Support Nanocast**, in the launcher, the menu bar and
 **Settings → About**, opens a small window with a link to support the project.
 
-About once a month, this window may open by itself, but never on the day you install Tinycast and
+About once a month, this window may open by itself, but never on the day you install Nanocast and
 never while you're busy. To stop it, clear the reminder checkbox in the window.

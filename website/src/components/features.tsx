@@ -9,7 +9,7 @@ function MoreFeatures() {
   return (
     <div className="mt-16">
       <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-border pb-4">
-        <h3 className="text-title font-semibold text-fg">Also in Tinycast</h3>
+        <h3 className="text-title font-semibold text-fg">Also in Nanocast</h3>
         <Link
           href="/docs"
           className="inline-flex items-center gap-1 text-small font-medium text-violet-bright transition-colors hover:text-fg"
@@ -49,7 +49,7 @@ export function Features() {
       index={1}
       label="Features"
       title="One palette for the things you do all day."
-      intro="Most features are off until you turn them on, so Tinycast only runs what you use."
+      intro="Most features are off until you turn them on, so Nanocast only runs what you use."
     >
       <FeatureShowcase features={coreFeatures} />
       <MoreFeatures />

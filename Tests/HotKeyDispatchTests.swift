@@ -20,7 +20,7 @@ struct HotKeyDispatchTests {
     }
 
     static func dispatch(includesShift: Bool) {
-        let domain = "tinycast.hotkey-dispatch-test.\(UUID())"
+        let domain = "nanocast.hotkey-dispatch-test.\(UUID())"
         let defaults = UserDefaults(suiteName: domain)!
         defer { defaults.removePersistentDomain(forName: domain) }
         let manager = HotKeyManager(defaults: defaults)
@@ -67,7 +67,7 @@ struct HotKeyDispatchTests {
         shared.onKeyDown(CGEventFlags.maskControl.rawValue | 1)
         shared.onKeyUp?()
         check(
-            "Left Control retains its ordinary Tinycast binding",
+            "Left Control retains its ordinary Nanocast binding",
             palette == 1 && presses == 3 && releases == 3)
         shared.onKeyDown(CGEventFlags.maskControl.rawValue | 0x2000)
         shared.onKeyUp?()
@@ -123,7 +123,7 @@ struct HotKeyDispatchTests {
     }
 
     static func allowance() {
-        let domain = "tinycast.hotkey-allowance-test.\(UUID())"
+        let domain = "nanocast.hotkey-allowance-test.\(UUID())"
         let defaults = UserDefaults(suiteName: domain)!
         defer { defaults.removePersistentDomain(forName: domain) }
         let manager = HotKeyManager(defaults: defaults)

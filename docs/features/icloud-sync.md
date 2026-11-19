@@ -40,7 +40,7 @@ What syncs, and how the pane presents it, follows Raycast's Cloud Sync. The feat
   Every `stateUpdate` is persisted, and the ledger, not the engine, is the record of what still
   has to upload, so a hard failure is re-queued on the next pass.
 - **A newer format pauses sync.** A record with a higher `schemaVersion` stops this Mac with
-  "update Tinycast" and is never rewritten.
+  "update Nanocast" and is never rewritten.
 - **Deletions from another Mac go to the Trash** for notes and snippets.
 - **`iCloudSyncEnabled` and the category choices never ride a backup or `settings.json`.** Sync
   sends this Mac's data off it, so only the pane may turn it on.
@@ -88,7 +88,7 @@ chat presets, quick actions and MCP servers.
 
 ## CloudKit
 
-One zone, `Tinycast`, and one record type, `SyncItem`, for everything, so a new kind of data never
+One zone, `Nanocast`, and one record type, `SyncItem`, for everything, so a new kind of data never
 changes `Config/CloudKit/schema.ckdb`. A record's name is its source plus a hash of its key; the key
 and payload are encrypted fields. Each channel has its own container, `iCloud.<bundle id>`, so
 stable, beta and Dev never share data.

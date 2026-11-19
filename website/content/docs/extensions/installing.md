@@ -10,17 +10,17 @@ description: The four ways to install, how updates work, and when you need a too
 **Search…** searches the Raycast Store and installs the extension it has already built. This is the
 usual way to install, and **it doesn't need Node or a package manager**.
 
-The **Install** buttons on the Raycast Store website open the same search in Tinycast, on that
+The **Install** buttons on the Raycast Store website open the same search in Nanocast, on that
 extension. Nothing installs until you click **Install**. If Raycast is also installed, macOS decides
 which app receives those links.
 
 ## Install from GitHub
 
 **Install…** builds one extension from its source on this Mac. Enter `owner/repo`, or paste the link
-your browser shows for one extension's folder, such as a folder inside `raycast/extensions`. Tinycast
+your browser shows for one extension's folder, such as a folder inside `raycast/extensions`. Nanocast
 only downloads that folder, not the whole repository.
 
-Building needs Node and a [package manager](#package-managers). Tinycast runs
+Building needs Node and a [package manager](#package-managers). Nanocast runs
 `<package manager> install --ignore-scripts`, then builds the extension. **Install scripts are
 skipped**, because they run code you didn't choose to run. If an extension doesn't build, it fails at
 the build step instead of being installed half-broken.
@@ -35,21 +35,21 @@ Copy the extensions you already have in Raycast on this Mac.
 **This doesn't need Node, a package manager or a network connection**, because the extensions are
 already built.
 
-Tinycast checks both `~/.config/raycast` and `~/.config/raycast-x`, and an extension found in both
+Nanocast checks both `~/.config/raycast` and `~/.config/raycast-x`, and an extension found in both
 is only listed once. You can use **Import All** to import everything. The pane checks again each time
-you open it and tells you when Raycast has extensions that Tinycast doesn't.
+you open it and tells you when Raycast has extensions that Nanocast doesn't.
 
 ## Add from folder
 
 Choose any folder that contains a manifest and built command files, like a project you just built
 yourself.
 
-Tinycast only copies `package.json`, the built commands, `assets/` and any packages the build
+Nanocast only copies `package.json`, the built commands, `assets/` and any packages the build
 bundled in `node_modules`. It never copies source maps.
 
 ## Updates
 
-Each time you open **Settings → Extensions**, Tinycast checks the Raycast Store for newer versions of
+Each time you open **Settings → Extensions**, Nanocast checks the Raycast Store for newer versions of
 the extensions you installed from it or imported from Raycast. An extension with an update shows
 **Update** on its row, and **Update All** above the list updates every one. Updating keeps the
 extension's preferences, storage and icon.
@@ -63,14 +63,14 @@ The **Install from GitHub** panel has a **Package manager** menu.
 **Automatic** (default) uses the first one you have from this list: **pnpm → Bun → Yarn → npm**. The
 fastest and most disk-efficient come first, and npm, which is almost always installed, comes last.
 
-Apps opened from the Dock don't get your terminal's `PATH`, so Tinycast checks the usual install
+Apps opened from the Dock don't get your terminal's `PATH`, so Nanocast checks the usual install
 locations itself: Homebrew, Volta, asdf, mise, fnm, nvm and Yarn. The panel shows what it found, like
 "Found pnpm at /opt/homebrew/bin/pnpm.", or tells you that none is installed.
 
 ### Custom search paths
 
 For other locations, like Nix, the same panel has **Custom search paths**: a list of folders
-separated by colons, like `PATH`, that Tinycast checks **before** the usual locations.
+separated by colons, like `PATH`, that Nanocast checks **before** the usual locations.
 
 ```
 ~/.local/share/mise/shims
@@ -92,7 +92,7 @@ Mac_:
 
 ## Storage
 
-Everything is stored in Tinycast's Application Support folder, and **uninstalling an extension
+Everything is stored in Nanocast's Application Support folder, and **uninstalling an extension
 removes all of it**: the extension, its storage and cache, its preferences and sign-ins, its support
 folder, its icon choice, and its command shortcuts, favorites, aliases and learned ranking.
 
@@ -100,4 +100,4 @@ folder, its icon choice, and its command shortcuts, favorites, aliases and learn
 those a crashed install can leave behind, and **Clean Up…** removes them. It works even while
 extensions are off, and it's normally empty.
 
-Tinycast never touches your own `~/Library/pnpm` or `~/.npm`.
+Nanocast never touches your own `~/Library/pnpm` or `~/.npm`.

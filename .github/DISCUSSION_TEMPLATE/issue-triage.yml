@@ -4,7 +4,7 @@ body:
     attributes:
       value: |
         > [!IMPORTANT]
-        > Read the pinned **[READ ME FIRST]: Discussion Rules** and [What Tinycast Won't Do](https://github.com/abue-ammar/tinycast/blob/main/docs/not-planned.md) first. Some behaviour is a choice, not a bug.
+        > Read the pinned **[READ ME FIRST]: Discussion Rules** and [What Nanocast Won't Do](https://github.com/abue-ammar/tinycast/blob/main/docs/not-planned.md) first. Some behaviour is a choice, not a bug.
         >
         > **Hotkey or Hyper key not working?** Check that no other app grabs the same key before you post.
   - type: checkboxes
@@ -43,7 +43,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: Tinycast version + channel
+      label: Nanocast version + channel
       placeholder: 0.1.0 stable
     validations:
       required: true

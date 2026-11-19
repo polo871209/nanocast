@@ -1026,7 +1026,7 @@ struct WindowCommandTests {
             cycleLength: 1, now: clock, isFullScreen: true)
         expect(
             external.restoresFullScreen && external.lastTileCommand == nil,
-            "fullscreen entered outside Tinycast starts a new chain there")
+            "fullscreen entered outside Nanocast starts a new chain there")
         expectRect(external.restoreFrame, fullScreen, "and refreshes the restore point")
     }
 

@@ -7,11 +7,11 @@ Dictation records your voice while you hold or press a shortcut, turns it into t
 and pastes the text where you were typing.
 
 Turn it on in **Settings → Dictation → Enable Dictation**. It's **off** by default. When you turn
-it on, Tinycast explains what it needs, then macOS asks for microphone access.
+it on, Nanocast explains what it needs, then macOS asks for microphone access.
 
 Two more steps before your first dictation, both in the same pane:
 
-1. Under **Model**, click **Download**. No model comes with Tinycast.
+1. Under **Model**, click **Download**. No model comes with Nanocast.
 2. Under **Commands**, record a **Shortcut**. Dictation has none until you do.
 
 ## Dictating
@@ -33,18 +33,18 @@ hold it, pressing another key or clicking cancels the recording. Double-tap shor
 You can also use the 🎤 key on your keyboard as the shortcut. See
 [Hotkeys](/docs/reference/hotkeys).
 
-While Tinycast listens, a small capsule near the bottom of the screen shows bars that move with your
+While Nanocast listens, a small capsule near the bottom of the screen shows bars that move with your
 voice. While it transcribes, a wave runs across the capsule. A recording stops by itself after
 **5 minutes** and is transcribed as usual.
 
-Tinycast records from the **System default** microphone unless you choose another under
+Nanocast records from the **System default** microphone unless you choose another under
 **Microphone**.
 
 **Play sounds** (on by default) plays the macOS dictation sounds when recording starts and stops.
 Cancelling is silent.
 
-While you record, Tinycast turns your Mac's output volume down to a tenth, and turns it back up
-when you finish or cancel. If you change the volume yourself in the meantime, Tinycast leaves it as
+While you record, Nanocast turns your Mac's output volume down to a tenth, and turns it back up
+when you finish or cancel. If you change the volume yourself in the meantime, Nanocast leaves it as
 you set it.
 
 ## Where the text goes
@@ -57,7 +57,7 @@ you set it.
 | **Copy to clipboard**             | Copies the text and pastes nothing                  |
 | **Paste and copy**                | Pastes the text and also leaves it on the clipboard |
 
-When it pastes, Tinycast reads the text around the cursor and adds a space before or after the
+When it pastes, Nanocast reads the text around the cursor and adds a space before or after the
 dictation where one is needed. **Adapt capitalization** (on by default) capitalizes the first
 letter at the start of a field, paragraph or sentence, and lowercases it in the middle of a
 sentence. If an app doesn't share the text around its cursor, the text goes in as the model wrote
@@ -91,7 +91,7 @@ language. Parakeet has no language setting.
 
 ### Memory
 
-The model runs in a separate process, **Tinycast Dictation**, which you can see in Activity Monitor.
+The model runs in a separate process, **Nanocast Dictation**, which you can see in Activity Monitor.
 **Release model from memory** quits it after the time you choose: **1 minute** by default, up to
 1 hour, or **Never**. A released model takes a moment longer to load the next time you dictate.
 
@@ -109,7 +109,7 @@ Audio stays in memory. It's never saved to disk or sent over the network.
 - **Microphone.** Asked when you turn Dictation on. If it isn't granted, the pane shows
   **Microphone access required** with a button to grant it or open System Settings.
   **Settings → Permissions** shows it too.
-- **Accessibility.** Needed to paste into other apps and read the text around the cursor. Tinycast
+- **Accessibility.** Needed to paste into other apps and read the text around the cursor. Nanocast
   asks for it when you turn Dictation on. **Copy to clipboard** works without it.
 
 Dictation's settings and shortcut aren't included in [backups](/docs/reference/backup), so an
@@ -124,4 +124,4 @@ import can't turn on the microphone.
 | Couldn't paste dictation into this app                    | The app refused the paste. With **Paste and copy**, the text is on the clipboard |
 | Couldn't paste some dictation into this app               | With **Insert while recording**, one of the pieces didn't paste                  |
 | Hold to talk needs a key combination or a single modifier | **Hold to talk** is selected, but the shortcut is a double tap                   |
-| Allow Tinycast to use the microphone in System Settings   | Microphone access is off                                                         |
+| Allow Nanocast to use the microphone in System Settings   | Microphone access is off                                                         |

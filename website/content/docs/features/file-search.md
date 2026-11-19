@@ -3,7 +3,7 @@ title: File search
 description: Find files and folders instantly from a private index on your Mac. Needs Full Disk Access.
 ---
 
-Search file and folder names in the folders you choose. Tinycast builds its own index of those
+Search file and folder names in the folders you choose. Nanocast builds its own index of those
 folders and keeps it current as files change, so results appear as you type. Spotlight isn't used.
 
 Turn it on in **Settings → File Search**. It's **off** by default. While it's off, there's no
@@ -15,14 +15,14 @@ typed.
 
 ## Full Disk Access
 
-**File Search needs Full Disk Access, and indexes nothing without it.** Tinycast reads your folders
+**File Search needs Full Disk Access, and indexes nothing without it.** Nanocast reads your folders
 directly to build the index, and macOS protects many of them, so it needs this access to list them.
 
-Tinycast **checks** for access but **never asks** for it. **Settings → File Search** shows
+Nanocast **checks** for access but **never asks** for it. **Settings → File Search** shows
 **Granted** or **Required**, with a button that opens System Settings → Privacy & Security → Full Disk
-Access. Turn on Tinycast there. If it isn't listed, click **+** and choose Tinycast from
+Access. Turn on Nanocast there. If it isn't listed, click **+** and choose Nanocast from
 Applications. Indexing starts on its own once access is granted. If the pane still says
-**Required**, quit and reopen Tinycast.
+**Required**, quit and reopen Nanocast.
 
 What the index holds, and where it goes:
 
@@ -104,7 +104,7 @@ indexed.** By default, that's your home folder.
 Everything inside a scope is indexed, including hidden files and the contents of app bundles. Those
 rank below your own files, and [ignore patterns](#ignore-patterns) leave out what you never want.
 
-**An empty scope list indexes nothing.** Tinycast doesn't fall back to your home folder. A folder
+**An empty scope list indexes nothing.** Nanocast doesn't fall back to your home folder. A folder
 inside another scope is already covered, so you don't need to add it. Other disks are never entered
 unless you add them as a scope.
 
@@ -141,7 +141,7 @@ is ready.
 **Settings → File Search → Indexed Items** shows how many items are indexed and when the index was
 built. **Rebuild Index** builds it again from scratch.
 
-The first build reads every folder in your scopes once. After that, Tinycast watches those folders
+The first build reads every folder in your scopes once. After that, Nanocast watches those folders
 and updates only what changed. The build runs in a separate helper process, so it uses extra memory
 only while it runs.
 
@@ -158,7 +158,7 @@ results are shown.
 
 | You see                          | It means                                                         |
 | -------------------------------- | ---------------------------------------------------------------- |
-| Full Disk Access required        | Tinycast can't index yet. Press return to open the settings pane |
+| Full Disk Access required        | Nanocast can't index yet. Press return to open the settings pane |
 | Indexing your disk…              | The first build is running. Results appear when it finishes      |
 | Couldn't build the file index    | The build failed. Try **Rebuild Index** in Settings              |
 | Type to search files and folders | Nothing recent in your search scopes                             |

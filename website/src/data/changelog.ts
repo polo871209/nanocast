@@ -3,11 +3,11 @@
 export const changelogHero = {
   eyebrow: "Changelog",
   title: "What's new",
-  intro: "What changed in each release of Tinycast, and who contributed.",
+  intro: "What changed in each release of Nanocast, and who contributed.",
 } as const;
 
 export const changelogCopy = {
-  description: "What changed in each Tinycast release, and who contributed.",
+  description: "What changed in each Nanocast release, and who contributed.",
   jumpTo: "Versions",
   latest: "Latest",
   releaseNotes: "View on GitHub",
@@ -24,5 +24,5 @@ export const changelogCopy = {
     body: "GitHub didn't respond when this page was built. You can still find every release on GitHub.",
   },
   allReleases: "All releases on GitHub",
-  install: "Get Tinycast",
+  install: "Get Nanocast",
 } as const;

@@ -7,7 +7,7 @@ Apple Shortcuts lists the shortcuts from Apple's Shortcuts app in the launcher, 
 by name or with its own global shortcut.
 
 Turn it on in **Settings → Apple Shortcuts → Enable Apple Shortcuts**. It's **off** by default.
-Tinycast only lists and runs your shortcuts. To create or edit one, use the Shortcuts app.
+Nanocast only lists and runs your shortcuts. To create or edit one, use the Shortcuts app.
 **Open Shortcuts**, below the list in the pane, opens it.
 
 ## In the launcher
@@ -26,7 +26,7 @@ The launcher closes before the shortcut runs, so a shortcut that works on the fr
 the app you were using.
 
 A shortcut can take as long as it needs, including waiting on a dialog of its own. When it
-succeeds, Tinycast shows nothing. When it fails, Tinycast shows **Couldn’t Run** with the
+succeeds, Nanocast shows nothing. When it fails, Nanocast shows **Couldn’t Run** with the
 shortcut's name and the last lines of the error.
 
 ## Settings
@@ -39,18 +39,18 @@ While it's on, **Settings → Apple Shortcuts** lists every shortcut under **Sho
 - a checkbox for each shortcut, which only hides it from launcher search. Its global shortcut keeps
   working.
 
-Tinycast reads your shortcuts again each time you open the launcher or this pane, so a new one
+Nanocast reads your shortcuts again each time you open the launcher or this pane, so a new one
 shows up without a restart.
 
-Tinycast needs no permissions for this. It runs shortcuts through Apple's own `shortcuts` tool.
+Nanocast needs no permissions for this. It runs shortcuts through Apple's own `shortcuts` tool.
 
 ## Renaming and deleting
 
-Tinycast follows each shortcut by its identifier, not its name. **Rename a shortcut in the
+Nanocast follows each shortcut by its identifier, not its name. **Rename a shortcut in the
 Shortcuts app and its alias, global shortcut and favorite stay with it.**
 
-When you delete a shortcut, Tinycast removes its alias, global shortcut, favorite and ranking the
-next time it reads the list. That includes shortcuts you deleted while Tinycast wasn't running.
+When you delete a shortcut, Nanocast removes its alias, global shortcut, favorite and ranking the
+next time it reads the list. That includes shortcuts you deleted while Nanocast wasn't running.
 
 ## Turning it off
 

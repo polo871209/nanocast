@@ -1,4 +1,4 @@
-// Drives the "Tinycast in action" gallery + lightbox. Each item is a tile in
+// Drives the "Nanocast in action" gallery + lightbox. Each item is a tile in
 // the grid and a slide in the lightbox. `src`/`thumb`/`poster` are URLs as
 // rendered — root-absolute for `public/`, absolute for anything on R2.
 // `width`/`height` are the media's real pixel size (used for lightbox aspect);

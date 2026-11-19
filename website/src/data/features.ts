@@ -21,7 +21,7 @@ export type Feature = {
 
 export type MinorFeature = Pick<Feature, "icon" | "title" | "href">;
 
-// Everything Tinycast does, in plain language. Kept true to what the app
+// Everything Nanocast does, in plain language. Kept true to what the app
 // actually ships — each maps to a real feature in the source, and each links
 // to the docs page that covers it. Order is the showcase's tab order.
 export const coreFeatures: Feature[] = [

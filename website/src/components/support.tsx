@@ -21,7 +21,7 @@ export function Support() {
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         <Button href={site.support} size="md">
           <SupportIcon size={16} />
-          Support Tinycast
+          Support Nanocast
         </Button>
         <Button href={site.repo} variant="outline" size="md">
           <GitHubLogo size={15} />

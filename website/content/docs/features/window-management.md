@@ -48,7 +48,7 @@ command, clear its shortcut and its checkbox. There's no separate switch for eac
 
 **Shortcut preset** fills in the window shortcuts of **Rectangle / Magnet** or **Spectacle**. Choose
 one and click **Apply**. Commands the preset doesn't cover keep their shortcuts, and if it would
-replace a shortcut you recorded, Tinycast asks first. A key that something else in Tinycast already
+replace a shortcut you recorded, Nanocast asks first. A key that something else in Nanocast already
 uses is skipped. Every shortcut stays editable afterward.
 
 ## How sizes are calculated
@@ -103,9 +103,9 @@ different command, or move the window to a different display. Waiting between pr
 Quarter → Restore Window puts the window back where it **started**, not where it was before the last
 command.
 
-Tinycast saves the starting position before its first change. Restore Window does nothing until
-Tinycast has moved that window. Moving or resizing the window yourself gives the next command a
-new starting position. Tinycast remembers up to 64 windows, forgets an app's windows when the app
+Nanocast saves the starting position before its first change. Restore Window does nothing until
+Nanocast has moved that window. Moving or resizing the window yourself gives the next command a
+new starting position. Nanocast remembers up to 64 windows, forgets an app's windows when the app
 quits, and never saves this information to disk.
 
 ## Fullscreen
@@ -136,5 +136,5 @@ Minimized windows, sheets, popovers, windows already in native fullscreen, and w
 report a position or size are skipped.
 
 A window that can move but can't be resized keeps its size and moves to the command's position.
-A window that can't move is left untouched. If an app won't let its window shrink, Tinycast aligns
+A window that can't move is left untouched. If an app won't let its window shrink, Nanocast aligns
 the window to the correct side **once** instead of retrying.

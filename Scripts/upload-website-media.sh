@@ -2,7 +2,7 @@
 # Mirror website/media/ into the R2 bucket behind cdn.tinycast.dev. Usage: upload-website-media.sh
 set -euo pipefail
 
-BUCKET="tinycast-cdn"
+BUCKET="nanocast-cdn"
 WEBSITE="$(cd "$(dirname "$0")/../website" && pwd)"
 
 shopt -s nullglob

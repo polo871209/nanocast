@@ -1,9 +1,9 @@
 ---
 title: Getting started
-description: What Tinycast is and how to set it up.
+description: What Nanocast is and how to set it up.
 ---
 
-Tinycast is a small, native launcher for macOS that lives in your menu bar. Press your shortcut and a
+Nanocast is a small, native launcher for macOS that lives in your menu bar. Press your shortcut and a
 palette opens over whatever you're doing. Type what you want, press return, and the palette closes.
 
 It's built with SwiftUI and AppKit, has no third-party dependencies, and uses less than 100 MB of
@@ -11,13 +11,13 @@ memory. It doesn't use Electron, and there's no account, sign-in or telemetry.
 
 ## Set it up
 
-The first time you open Tinycast, a short welcome walks you through these steps. You can skip any of
+The first time you open Nanocast, a short welcome walks you through these steps. You can skip any of
 them and come back later.
 
 ### 1. Pick a shortcut
 
-Tinycast doesn't come with a shortcut, so it can't take over a key combination you already use.
-Until you choose one, open the launcher from the menu bar icon, or open Tinycast again from Finder or
+Nanocast doesn't come with a shortcut, so it can't take over a key combination you already use.
+Until you choose one, open the launcher from the menu bar icon, or open Nanocast again from Finder or
 Spotlight.
 
 The welcome screen asks for a shortcut. To change it later, go to
@@ -27,11 +27,11 @@ want. Many people use <kbd>⌥</kbd><kbd>Space</kbd>.
 You can also double-tap a modifier key, like pressing <kbd>⌘</kbd> twice. See
 [Hotkeys](/docs/reference/hotkeys).
 
-This step also has a **Launch at login** switch, so Tinycast is ready after you restart your Mac.
+This step also has a **Launch at login** switch, so Nanocast is ready after you restart your Mac.
 
 ### 2. Allow pasting (optional)
 
-Tinycast asks for Accessibility access so it can paste a clip or an emoji into the app you were
+Nanocast asks for Accessibility access so it can paste a clip or an emoji into the app you were
 using. The launcher itself doesn't need any permissions. See [Permissions](/docs/permissions).
 
 ### 3. Bring your Raycast setup (optional)
@@ -42,12 +42,12 @@ clipboard history and a few settings. See [Import from Raycast](/docs/reference/
 
 When you finish, **Get Started** opens the launcher.
 
-Tinycast uses your Mac's language if it has a translation for it, and English otherwise. To change
+Nanocast uses your Mac's language if it has a translation for it, and English otherwise. To change
 it, go to **Settings → General → Language**.
 
 ## Turn on what you want
 
-Most features are off when you install Tinycast. A feature that's off does nothing: it doesn't scan,
+Most features are off when you install Nanocast. A feature that's off does nothing: it doesn't scan,
 index or use memory. That's how the app stays small with a long feature list.
 
 | Feature                                               | Where to turn it on          |
@@ -77,5 +77,5 @@ press <kbd>⌘</kbd><kbd>K</kbd> to see every other action, and press <kbd>esc</
 <kbd>⌘</kbd><kbd>K</kbd> is the one to remember. Every screen lists all of its actions there, each
 with its shortcut, so it's the fastest way to learn the app.
 
-Next, read about [the palette](/docs/palette), or [install Tinycast](/docs/install) if you haven't
+Next, read about [the palette](/docs/palette), or [install Nanocast](/docs/install) if you haven't
 yet.

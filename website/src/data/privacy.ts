@@ -54,4 +54,4 @@ export const defaultSwitches: DefaultSwitch[] = [
 ];
 
 export const permissionNote =
-  "Tinycast asks for a permission only when a feature first needs it, never at launch. Restoring a settings backup can't turn on extensions or snippets.";
+  "Nanocast asks for a permission only when a feature first needs it, never at launch. Restoring a settings backup can't turn on extensions or snippets.";

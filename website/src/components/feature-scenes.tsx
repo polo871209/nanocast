@@ -442,7 +442,7 @@ function ClipboardScene() {
     { label: "brew install --cask…", tint: "fill-tint/10", isMono: true },
     { label: "#863BFF", tint: "fill-violet", isMono: true },
     { label: "Screenshot.png", tint: "fill-cyan/70", isMono: false },
-    { label: "tinycast.app", tint: "fill-tint/10", isMono: false },
+    { label: "nanocast.app", tint: "fill-tint/10", isMono: false },
   ];
   const previewLeft = listRight + 25;
   return (
@@ -505,7 +505,7 @@ function ClipboardScene() {
         className="scene-out fill-(--glass-fg-muted) font-mono"
         style={at(1500)}
       >
-        brew install --cask tinycast
+        brew install --cask nanocast
       </text>
       <rect
         x={previewLeft}

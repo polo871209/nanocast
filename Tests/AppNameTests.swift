@@ -5,7 +5,7 @@ struct AppNameTests {
     static func main() {
         let fm = FileManager.default
         let root = fm.temporaryDirectory
-            .appendingPathComponent("tinycast-app-name-\(UUID().uuidString)")
+            .appendingPathComponent("nanocast-app-name-\(UUID().uuidString)")
 
         var failures = 0
 

@@ -5,12 +5,12 @@
 export const migration = {
   title: "Bring your Raycast setup.",
   intro:
-    "Tinycast reads Raycast's .rayconfig export. Choose the file, enter its passphrase, and your shortcuts, favorites and snippets come with it.",
+    "Nanocast reads Raycast's .rayconfig export. Choose the file, enter its passphrase, and your shortcuts, favorites and snippets come with it.",
   // Stated up front rather than in the docs alone: a 1.x file is the one thing
   // that will not work, and finding that out mid-import is the bad outcome.
   requirement: {
     title: "Raycast v2.0 and newer only",
-    body: "Tinycast reads .rayconfig files from Raycast v2.0 and later. Support for Raycast v1.x files was removed in Tinycast v0.10.5.",
+    body: "Nanocast reads .rayconfig files from Raycast v2.0 and later. Support for Raycast v1.x files was removed in Nanocast v0.10.5.",
   },
   steps: [
     {
@@ -19,14 +19,14 @@ export const migration = {
     },
     {
       title: "Open Settings → Backup",
-      body: "Choose the file and enter the passphrase. If the passphrase is wrong, Tinycast says so.",
+      body: "Choose the file and enter the passphrase. If the passphrase is wrong, Nanocast says so.",
     },
     {
       title: "Choose what to import",
       body: "Import everything, or only the parts you want.",
     },
     {
-      title: "Quit and reopen Tinycast",
+      title: "Quit and reopen Nanocast",
       body: "Quit from the menu bar icon, because closing Settings isn't enough. Everything is in place after the restart.",
     },
   ],
